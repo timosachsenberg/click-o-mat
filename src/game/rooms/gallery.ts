@@ -1,16 +1,23 @@
-import type { RoomDef } from '../../engine/types';
+import { Layer, type RoomDef } from '../../engine/types';
 
 /**
- * A room whose background is a preloaded **PNG** (`gallery-bg`) instead of a
- * paint() function, populated by a **PNG-spritesheet** NPC ("Blobbo", the
- * critter). Demonstrates the asset pipeline end to end.
+ * The layer-system showcase: a PNG image backdrop, two animated sconce
+ * layers (spritesheet anims), and a foreground pillar (alpha PNG at
+ * Layer.FRONT) that actors walk behind. Also home to Blobbo, the
+ * PNG-spritesheet NPC.
  */
 export const galleryRoom: RoomDef = {
   id: 'gallery',
   name: 'The Gallery',
 
-  // No paint() — the engine draws this preloaded image instead.
-  background: 'gallery-bg',
+  layers: [
+    { id: 'bg', depth: Layer.BEHIND, image: 'gallery-bg' },
+    // Animated wall sconces (same depth as bg; array order stacks them above).
+    { id: 'sconce-left', depth: Layer.BEHIND, anim: 'sconce-flicker', x: 362, y: 128 },
+    { id: 'sconce-right', depth: Layer.BEHIND, anim: 'sconce-flicker', x: 600, y: 128 },
+    // Foreground column: always in front of actors, alpha PNG.
+    { id: 'pillar', depth: Layer.FRONT, image: 'pillar', x: 290, y: 90 },
+  ],
 
   walkArea: [
     { x: 60, y: 314 },

@@ -14,10 +14,14 @@ export const ASSETS: AssetManifest = {
   images: [
     // A 960×450 room background.
     { key: 'gallery-bg', url: `${base}img/gallery-bg.png` },
+    // Foreground column with alpha (a Layer.FRONT overlay in the gallery).
+    { key: 'pillar', url: `${base}img/pillar.png` },
   ],
   spritesheets: [
     // 8×3 grid of 48×48 frames (front/side/back × idle/walk/talk).
     { key: 'critter', url: `${base}img/critter.png`, frameWidth: 48, frameHeight: 48 },
+    // 4 flame frames of 32×48 (an animated wall-sconce layer).
+    { key: 'sconce', url: `${base}img/sconce.png`, frameWidth: 32, frameHeight: 48 },
   ],
   // Animations follow the actor key convention `<textureSet>-<pose>-<variant>`
   // so an actor with textureSet "critter" picks them up automatically.
@@ -31,5 +35,7 @@ export const ASSETS: AssetManifest = {
     { key: 'critter-walk-back', texture: 'critter', frames: [16, 17, 18, 19], frameRate: 9 },
     { key: 'critter-talk-side', texture: 'critter', frames: [20, 21], frameRate: 7 },
     { key: 'critter-talk-back', texture: 'critter', frames: [22, 23], frameRate: 7 },
+    // Ambient layer animation (not an actor — used via LayerDef.anim).
+    { key: 'sconce-flicker', texture: 'sconce', frames: [0, 1, 2, 3], frameRate: 8 },
   ],
 };

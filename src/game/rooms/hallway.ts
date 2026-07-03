@@ -1,15 +1,11 @@
-import type { RoomDef } from '../../engine/types';
+import { Layer, type RoomDef } from '../../engine/types';
 import type { GameState } from '../../engine/GameState';
 
 function plantX(state: GameState): number {
   return state.getFlag('plantMoved') ? 790 : 700;
 }
 
-export const hallwayRoom: RoomDef = {
-  id: 'hallway',
-  name: 'Hall of Science',
-
-  paint(g, state) {
+function paintHallBg(g: CanvasRenderingContext2D, state: GameState): void {
     // Wall & floor
     g.fillStyle = '#5a4a5e';
     g.fillRect(0, 0, 960, 300);
@@ -103,7 +99,58 @@ export const hallwayRoom: RoomDef = {
       g.lineTo(696, 414);
       g.stroke();
     }
-  },
+}
+
+/** The movable ficus, in local coords of its 260×120 layer canvas. */
+function paintHallPlant(g: CanvasRenderingContext2D, state: GameState): void {
+  const x = plantX(state) - 620;
+  // Pot
+  g.fillStyle = '#a05a30';
+  g.beginPath();
+  g.moveTo(x - 24, 74);
+  g.lineTo(x + 24, 74);
+  g.lineTo(x + 17, 108);
+  g.lineTo(x - 17, 108);
+  g.closePath();
+  g.fill();
+  g.fillStyle = '#7e4624';
+  g.fillRect(x - 26, 70, 52, 9);
+  // Bush
+  g.fillStyle = '#3e7a38';
+  for (const [dx, dy, r] of [
+    [0, 40, 26],
+    [-20, 55, 18],
+    [20, 55, 18],
+    [-12, 28, 16],
+    [14, 26, 15],
+    [0, 14, 14],
+  ]) {
+    g.beginPath();
+    g.arc(x + dx, dy, r, 0, Math.PI * 2);
+    g.fill();
+  }
+  g.fillStyle = '#57a04e';
+  for (const [dx, dy, r] of [
+    [-8, 34, 9],
+    [12, 44, 8],
+    [2, 20, 7],
+  ]) {
+    g.beginPath();
+    g.arc(x + dx, dy, r, 0, Math.PI * 2);
+    g.fill();
+  }
+}
+
+export const hallwayRoom: RoomDef = {
+  id: 'hallway',
+  name: 'Hall of Science',
+
+  layers: [
+    { id: 'bg', depth: Layer.BEHIND, paint: paintHallBg },
+    // Occluder: actors above y=424 pass behind the plant. Its paint reads
+    // the plantMoved flag, so pushing it aside is just setFlag + repaint().
+    { id: 'plant', depth: 424, x: 620, y: 316, w: 260, h: 120, paint: paintHallPlant },
+  ],
 
   walkArea: [
     { x: 60, y: 312 },
@@ -123,55 +170,6 @@ export const hallwayRoom: RoomDef = {
     ];
   },
   scaling: { yTop: 312, scaleTop: 0.72, yBottom: 445, scaleBottom: 1.05 },
-
-  walkBehinds: [
-    {
-      key: 'plant',
-      x: 620,
-      y: 316,
-      w: 260,
-      h: 120,
-      depthY: 424,
-      draw(g, state) {
-        const x = plantX(state) - 620;
-        // Pot
-        g.fillStyle = '#a05a30';
-        g.beginPath();
-        g.moveTo(x - 24, 74);
-        g.lineTo(x + 24, 74);
-        g.lineTo(x + 17, 108);
-        g.lineTo(x - 17, 108);
-        g.closePath();
-        g.fill();
-        g.fillStyle = '#7e4624';
-        g.fillRect(x - 26, 70, 52, 9);
-        // Bush
-        g.fillStyle = '#3e7a38';
-        for (const [dx, dy, r] of [
-          [0, 40, 26],
-          [-20, 55, 18],
-          [20, 55, 18],
-          [-12, 28, 16],
-          [14, 26, 15],
-          [0, 14, 14],
-        ]) {
-          g.beginPath();
-          g.arc(x + dx, dy, r, 0, Math.PI * 2);
-          g.fill();
-        }
-        g.fillStyle = '#57a04e';
-        for (const [dx, dy, r] of [
-          [-8, 34, 9],
-          [12, 44, 8],
-          [2, 20, 7],
-        ]) {
-          g.beginPath();
-          g.arc(x + dx, dy, r, 0, Math.PI * 2);
-          g.fill();
-        }
-      },
-    },
-  ],
 
   music: 'hall-theme',
 

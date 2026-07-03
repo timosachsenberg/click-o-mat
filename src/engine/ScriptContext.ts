@@ -89,9 +89,29 @@ export class ScriptContext {
     await this.eng.runDialog(dialogId);
   }
 
-  /** Repaint background/walk-behinds and rebuild the walk area from state. */
+  /** Repaint paint-layers, re-evaluate layer visibility, and rebuild the walk
+   *  area from state. Call after changing flags that room art depends on. */
   repaint(): void {
     this.eng.roomScene.repaintRoom();
+  }
+
+  /** Live Phaser object of a room layer — for transient cutscene tweens only.
+   *  Durable changes must go through flags + repaint(), or they'll be lost on
+   *  room reload and won't survive save/load. */
+  layerObj(id: string): Phaser.GameObjects.Image | Phaser.GameObjects.Sprite {
+    return this.eng.roomScene.layerObj(id);
+  }
+
+  /** Tween any game object's properties and await completion. */
+  tween(targets: unknown, props: Record<string, unknown>, duration = 400): Promise<void> {
+    return new Promise((resolve) => {
+      this.eng.roomScene.tweens.add({
+        targets,
+        duration,
+        ...props,
+        onComplete: () => resolve(),
+      } as Phaser.Types.Tweens.TweenBuilderConfig);
+    });
   }
 
   /** Play a sound effect — a loaded audio key, or a built-in synth bleep. */

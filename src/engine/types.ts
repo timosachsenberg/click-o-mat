@@ -98,38 +98,64 @@ export interface RoomEntry {
   facing?: Facing;
 }
 
-/** A prop rendered between background and foreground; actors above `depthY`
- *  (i.e. further away) are drawn behind it. */
-export interface WalkBehindDef {
-  key: string;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  depthY: number;
-  draw: (g: CanvasRenderingContext2D, state: GameState) => void;
+/** Depth constants for LayerDef.depth. Actors live on the same axis at their
+ *  feet-y (0..room height), so a layer's depth positions it among them. */
+export const Layer = {
+  /** Behind all actors — backdrops. */
+  BEHIND: -1000,
+  /** In front of all actors — foreground overlays (still below speech/UI). */
+  FRONT: 5000,
+} as const;
+
+/**
+ * One visual layer of a room. All layers, actors, and props share a single
+ * depth axis: `Layer.BEHIND` < actor feet-y (0..room height) < `Layer.FRONT`.
+ * A layer with depth in the actor band acts as an occluder with a horizontal
+ * baseline: actors whose feet are above it (y < depth) render behind it.
+ * For diagonal occluders (stair railings), slice the art into several layers,
+ * each with its own baseline.
+ */
+export interface LayerDef {
+  id: string;
+  /** Layer.BEHIND, an occluder baseline in 0..room height, or Layer.FRONT.
+   *  Equal depths stack in array order. */
+  depth: number;
+  /** Source (exactly one of image / paint / anim): a preloaded texture key… */
+  image?: string;
+  /** …or a canvas painter, re-drawn on ctx.repaint() so art can react to
+   *  game state… */
+  paint?: (g: CanvasRenderingContext2D, state: GameState) => void;
+  /** …or an animation key from the asset manifest, played on a sprite. */
+  anim?: string;
+  /** Top-left placement in room coords (default 0,0). */
+  x?: number;
+  y?: number;
+  /** paint: canvas size (default: full room). image/anim: display-size override
+   *  (default: the texture's natural size). */
+  w?: number;
+  h?: number;
+  /** Layer only shown while this returns true; re-evaluated on repaint(). */
+  visible?: (state: GameState) => boolean;
+  /** Camera scroll factor: 1 = fixed to the world (default), <1 = drifts
+   *  slower than the camera for parallax depth. Don't put hotspots over
+   *  parallax layers — their visuals shift against world coordinates. */
+  parallax?: number;
 }
 
 export interface RoomDef {
   id: string;
   name?: string;
-  /** Texture key of a preloaded background image (e.g. a PNG, 960×450). When
-   *  set, it is drawn instead of `paint`. A static image; not re-run on
-   *  repaint(). Provide `paint` instead if the background reacts to state. */
-  background?: string;
-  /** Paints the background into a canvas. Re-run whenever ctx.repaint() is
-   *  called, so it may draw conditionally on game state. Optional when
-   *  `background` is given. */
-  paint?: (g: CanvasRenderingContext2D, state: GameState) => void;
+  /** The room's visual stack: backdrops, occluders, foreground overlays. */
+  layers: LayerDef[];
   /** Boundary polygon of the walkable floor (room coords). May depend on state. */
   walkArea: Vec2[] | ((state: GameState) => Vec2[]);
   /** Non-walkable obstacle polygons fully inside the walk area. */
   holes?: Vec2[][] | ((state: GameState) => Vec2[][]);
-  /** Perspective scaling: actors lerp between scaleTop (at yTop) and scaleBottom. */
+  /** Perspective scaling: actors lerp between scaleTop (at yTop) and scaleBottom.
+   *  Omit for uniform actor size (side-view rooms). */
   scaling?: { yTop: number; scaleTop: number; yBottom: number; scaleBottom: number };
   hotspots: HotspotDef[];
   actors?: RoomActorPlacement[];
-  walkBehinds?: WalkBehindDef[];
   /** Named spawn points for the player, referenced by goToRoom(). */
   entries: Record<string, RoomEntry>;
   /** Background music key (a loaded audio file or a built-in procedural track)

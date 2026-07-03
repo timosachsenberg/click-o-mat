@@ -1,10 +1,7 @@
-import type { RoomDef } from '../../engine/types';
+import { Layer, type RoomDef } from '../../engine/types';
+import type { GameState } from '../../engine/GameState';
 
-export const labRoom: RoomDef = {
-  id: 'lab',
-  name: "Dr. Fred's Lab Annex",
-
-  paint(g, state) {
+function paintLabBg(g: CanvasRenderingContext2D, state: GameState): void {
     // Wall & floor
     g.fillStyle = '#46586a';
     g.fillRect(0, 0, 960, 300);
@@ -123,7 +120,34 @@ export const labRoom: RoomDef = {
     g.beginPath();
     g.arc(850, 226, 4, 0, Math.PI * 2); // knob
     g.fill();
-  },
+}
+
+/** The floor lamp, in local coords of its 70×225 layer canvas. */
+function paintLabLamp(g: CanvasRenderingContext2D): void {
+  g.fillStyle = '#2e3a48';
+  g.beginPath();
+  g.ellipse(32, 212, 22, 8, 0, 0, Math.PI * 2); // base
+  g.fill();
+  g.fillRect(29, 36, 7, 176); // pole
+  g.fillStyle = '#c8b060';
+  g.beginPath();
+  g.moveTo(12, 40);
+  g.lineTo(52, 40);
+  g.lineTo(44, 6);
+  g.lineTo(20, 6);
+  g.closePath();
+  g.fill(); // shade
+}
+
+export const labRoom: RoomDef = {
+  id: 'lab',
+  name: "Dr. Fred's Lab Annex",
+
+  layers: [
+    { id: 'bg', depth: Layer.BEHIND, paint: paintLabBg },
+    // Occluder: actors whose feet are above y=342 render behind the lamp.
+    { id: 'lamp', depth: 342, x: 270, y: 128, w: 70, h: 225, paint: paintLabLamp },
+  ],
 
   walkArea: [
     { x: 70, y: 312 },
@@ -148,32 +172,6 @@ export const labRoom: RoomDef = {
     ],
   ],
   scaling: { yTop: 312, scaleTop: 0.72, yBottom: 445, scaleBottom: 1.05 },
-
-  walkBehinds: [
-    {
-      key: 'lamp',
-      x: 270,
-      y: 128,
-      w: 70,
-      h: 225,
-      depthY: 342,
-      draw(g) {
-        g.fillStyle = '#2e3a48';
-        g.beginPath();
-        g.ellipse(32, 212, 22, 8, 0, 0, Math.PI * 2); // base
-        g.fill();
-        g.fillRect(29, 36, 7, 176); // pole
-        g.fillStyle = '#c8b060';
-        g.beginPath();
-        g.moveTo(12, 40);
-        g.lineTo(52, 40);
-        g.lineTo(44, 6);
-        g.lineTo(20, 6);
-        g.closePath();
-        g.fill(); // shade
-      },
-    },
-  ],
 
   music: 'lab-theme',
 

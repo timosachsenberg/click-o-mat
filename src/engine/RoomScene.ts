@@ -7,7 +7,7 @@ import { makeCanvasTex, redrawCanvasTex } from './canvasTex';
 import { audio } from './Audio';
 import { DEFAULT_RESPONSES } from './verbs';
 import { GAME_W, ROOM_H } from './constants';
-import type { Facing, HotspotDef, RoomDef, ScriptOrLine, Vec2, VerbId } from './types';
+import type { Facing, HotspotDef, LayerDef, RoomDef, ScriptOrLine, Vec2, VerbId } from './types';
 
 interface RestoreInfo {
   pos?: Vec2;
@@ -23,7 +23,7 @@ export class RoomScene extends Phaser.Scene {
   walkArea!: WalkArea;
   roomDef!: RoomDef;
 
-  private walkBehindImages: Phaser.GameObjects.Image[] = [];
+  private layerObjs = new Map<string, Phaser.GameObjects.Image | Phaser.GameObjects.Sprite>();
   private hoverHotspot: HotspotDef | null = null;
   private debugGfx: Phaser.GameObjects.Graphics | null = null;
   private fadeRect!: Phaser.GameObjects.Rectangle;
@@ -57,7 +57,7 @@ export class RoomScene extends Phaser.Scene {
     for (const actor of this.actors.values()) actor.destroy();
     this.actors.clear();
     this.children.removeAll(true);
-    this.walkBehindImages = [];
+    this.layerObjs.clear();
     this.debugGfx = null;
     this.hoverHotspot = null;
 
@@ -67,25 +67,10 @@ export class RoomScene extends Phaser.Scene {
     // Crossfade to this room's music (if it declares one).
     if (def.music !== undefined) audio.playMusic(def.music);
 
-    // Background: a preloaded image (e.g. PNG) if the room provides one,
-    // otherwise a canvas texture from the room's paint() function.
-    if (def.background) {
-      const img = this.add.image(0, 0, def.background).setOrigin(0).setDepth(-1000);
-      img.setDisplaySize(GAME_W, ROOM_H);
-    } else if (def.paint) {
-      const bgKey = `room-bg-${roomId}`;
-      const paint = def.paint;
-      makeCanvasTex(this, bgKey, GAME_W, ROOM_H, (g) => paint(g, engine.state));
-      this.add.image(0, 0, bgKey).setOrigin(0).setDepth(-1000);
-    }
-
-    // Walk-behind props: depth equals their floor line so actors sort around them.
-    for (const wb of def.walkBehinds ?? []) {
-      const key = `room-wb-${roomId}-${wb.key}`;
-      makeCanvasTex(this, key, wb.w, wb.h, (g) => wb.draw(g, engine.state));
-      const img = this.add.image(wb.x, wb.y, key).setOrigin(0).setDepth(wb.depthY);
-      img.setData('wb', wb);
-      this.walkBehindImages.push(img);
+    // Build the layer stack. All layers share one depth axis with the actors:
+    // BEHIND < feet-y occluder baselines < FRONT.
+    for (const layer of def.layers) {
+      this.layerObjs.set(layer.id, this.buildLayer(roomId, layer));
     }
 
     this.rebuildWalkArea();
@@ -130,18 +115,67 @@ export class RoomScene extends Phaser.Scene {
     }
   }
 
-  /** Re-run the room's paint functions and walk-area builders against
-   *  current state (e.g. after picking something up or moving a prop). */
+  /** Create the Phaser object for one layer definition. */
+  private buildLayer(
+    roomId: string,
+    layer: LayerDef
+  ): Phaser.GameObjects.Image | Phaser.GameObjects.Sprite {
+    const sources = [layer.image, layer.paint, layer.anim].filter((s) => s !== undefined);
+    if (sources.length !== 1) {
+      throw new Error(
+        `Layer "${layer.id}" in room "${roomId}" must have exactly one of image/paint/anim`
+      );
+    }
+    const x = layer.x ?? 0;
+    const y = layer.y ?? 0;
+    let obj: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite;
+
+    if (layer.paint) {
+      const paint = layer.paint;
+      const key = `room-layer-${roomId}-${layer.id}`;
+      makeCanvasTex(this, key, layer.w ?? GAME_W, layer.h ?? ROOM_H, (g) =>
+        paint(g, engine.state)
+      );
+      obj = this.add.image(x, y, key).setOrigin(0);
+    } else if (layer.anim) {
+      const anim = this.anims.get(layer.anim);
+      if (!anim) throw new Error(`Layer "${layer.id}": unknown animation "${layer.anim}"`);
+      const first = anim.frames[0];
+      const sprite = this.add.sprite(x, y, first.textureKey, first.textureFrame).setOrigin(0);
+      sprite.play(layer.anim);
+      if (layer.w && layer.h) sprite.setDisplaySize(layer.w, layer.h);
+      obj = sprite;
+    } else {
+      obj = this.add.image(x, y, layer.image!).setOrigin(0);
+      if (layer.w && layer.h) obj.setDisplaySize(layer.w, layer.h);
+    }
+
+    obj.setDepth(layer.depth);
+    if (layer.parallax !== undefined) obj.setScrollFactor(layer.parallax);
+    obj.setVisible(layer.visible ? !!layer.visible(engine.state) : true);
+    obj.setData('layer', layer);
+    return obj;
+  }
+
+  /** Live Phaser object of a layer — for transient cutscene tweens; durable
+   *  changes belong in flags + repaint(). */
+  layerObj(id: string): Phaser.GameObjects.Image | Phaser.GameObjects.Sprite {
+    const obj = this.layerObjs.get(id);
+    if (!obj) throw new Error(`No layer "${id}" in room "${this.roomDef.id}"`);
+    return obj;
+  }
+
+  /** Re-run the room's paint layers, visibility conditions, and walk-area
+   *  builders against current state (e.g. after picking something up). */
   repaintRoom(): void {
     const def = this.roomDef;
-    // Image backgrounds are static; only canvas paint() backgrounds redraw.
-    if (!def.background && def.paint) {
-      const paint = def.paint;
-      redrawCanvasTex(this, `room-bg-${def.id}`, (g) => paint(g, engine.state));
-    }
-    for (const img of this.walkBehindImages) {
-      const wb = img.getData('wb') as NonNullable<RoomDef['walkBehinds']>[number];
-      redrawCanvasTex(this, `room-wb-${def.id}-${wb.key}`, (g) => wb.draw(g, engine.state));
+    for (const [id, obj] of this.layerObjs) {
+      const layer = obj.getData('layer') as LayerDef;
+      if (layer.paint) {
+        const paint = layer.paint;
+        redrawCanvasTex(this, `room-layer-${def.id}-${id}`, (g) => paint(g, engine.state));
+      }
+      obj.setVisible(layer.visible ? !!layer.visible(engine.state) : true);
     }
     this.rebuildWalkArea();
     if (this.debugGfx) this.drawDebug();
