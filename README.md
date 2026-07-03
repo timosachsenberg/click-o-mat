@@ -355,6 +355,7 @@ hotspots and items, and script reactions.** Everything else in the engine
 | Camera flash / shake, title cards | `engine/ScriptContext.ts` |
 | **Music & SFX** — per-room tracks with crossfade, volume/mute, procedural *or* loaded audio | `engine/Audio.ts` |
 | **Options menu** — volume sliders, mute, save/load (⚙ top-right) | `engine/UIScene.ts` |
+| **Retro title screen** — pixel-upscaled lettering, no font assets; the start click doubles as the audio-unlock gesture | `engine/TitleScene.ts` |
 | Debug overlay (walk area, holes, hotspots) — press `D` | `engine/RoomScene.ts` |
 | **PNG assets** — image backgrounds + spritesheet-animated actors | `engine/BootScene.ts`, `game/assets.ts` |
 

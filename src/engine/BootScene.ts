@@ -71,7 +71,7 @@ export class BootScene extends Phaser.Scene {
       });
     }
 
-    this.scene.start('room');
+    this.scene.start('title');
   }
 
   // ---- humanoid character ------------------------------------------------

@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { engine } from './engine/Engine';
 import { audio } from './engine/Audio';
 import { BootScene } from './engine/BootScene';
+import { TitleScene } from './engine/TitleScene';
 import { RoomScene } from './engine/RoomScene';
 import { UIScene } from './engine/UIScene';
 import { GAME_W, GAME_H } from './engine/constants';
@@ -27,5 +28,5 @@ new Phaser.Game({
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
-  scene: [BootScene, RoomScene, UIScene],
+  scene: [BootScene, TitleScene, RoomScene, UIScene],
 });
