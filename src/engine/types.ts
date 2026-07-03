@@ -154,17 +154,34 @@ export interface RoomDef {
   walkArea: Vec2[] | ((state: GameState) => Vec2[]);
   /** Non-walkable obstacle polygons fully inside the walk area. */
   holes?: Vec2[][] | ((state: GameState) => Vec2[][]);
-  /** Perspective scaling: actors lerp between scaleTop (at yTop) and scaleBottom.
-   *  Omit for uniform actor size (side-view rooms). */
-  scaling?: { yTop: number; scaleTop: number; yBottom: number; scaleBottom: number };
+  /** Perspective scaling: either a linear band (actors lerp between scaleTop
+   *  at yTop and scaleBottom at yBottom) or a full scale map — a function of
+   *  the actor's feet position, for trails/switchbacks where apparent
+   *  distance isn't linear in y. Omit for uniform size (side-view rooms). */
+  scaling?:
+    | { yTop: number; scaleTop: number; yBottom: number; scaleBottom: number }
+    | ((x: number, y: number) => number);
   hotspots: HotspotDef[];
   actors?: RoomActorPlacement[];
+  /** Ambient background activity: each entry runs its script on a randomized
+   *  interval (min..max ms) WITHOUT locking input — birds flying past,
+   *  passing shadows, machinery. Scripts here must be pure staging: read
+   *  state if needed, but don't set flags or block on player interaction.
+   *  Cancelled automatically when the room changes. */
+  ambients?: AmbientDef[];
   /** Named spawn points for the player, referenced by goToRoom(). */
   entries: Record<string, RoomEntry>;
   /** Background music key (a loaded audio file or a built-in procedural track)
    *  to crossfade to on entering. Omit to leave the current music playing. */
   music?: string;
   onEnter?: Script;
+}
+
+/** A recurring, non-blocking background event in a room. */
+export interface AmbientDef {
+  /** Random delay range [min, max] in ms between runs. */
+  every: [number, number];
+  run: Script;
 }
 
 export interface DialogChoice {

@@ -92,7 +92,11 @@ step through the hallway's **GALLERY** door to visit a room built from PNG art
 (a PNG background, the spritesheet critter Blobbo, animated sconces, and a
 foreground pillar). Through the gallery's **archway** lies the Grand Staircase —
 a two-story scrolling room; walk up the stairs and watch the camera follow and
-the banister slide in front of you.
+the banister slide in front of you. Finally, the staircase's **front door
+(marked OUT)** leads outside: climb the mountain's switchback trail and watch
+yourself shrink into the distance, birds cross the sky, cloud shadows drift
+over the meadow, and — from the summit — **look at the view** for a full
+zoom-out.
 
 ---
 
@@ -332,6 +336,9 @@ hotspots and items, and script reactions.** Everything else in the engine
 | Perspective scaling (actors shrink toward the back wall) | `engine/Actor.ts` |
 | **Layer system** — backdrops, occluders (walk-behinds), foreground overlays, animated layers, one shared depth axis | `engine/types.ts`, `engine/RoomScene.ts` |
 | **Scrolling rooms** — rooms larger than the screen, camera follows the player (both axes), per-layer parallax | `engine/RoomScene.ts` |
+| **Ambient events** — recurring non-blocking background activity (birds, shadows, machinery) | `engine/RoomScene.ts` |
+| **Scale maps** — actor size as a function of position, for trails and non-linear perspective | `engine/Actor.ts` |
+| **Camera zoom** — scripted pull-backs for reveals and vistas (`ctx.zoomCamera`) | `engine/ScriptContext.ts` |
 | Inventory with paging + item icons | `engine/UIScene.ts` |
 | Use-item-on-hotspot and item-on-item combinations | `engine/RoomScene.ts`, `engine/UIScene.ts` |
 | Branching dialog trees (conditions, one-shot choices, jumps) | `engine/DialogRunner.ts` |
@@ -418,13 +425,40 @@ export const myRoom: RoomDef = {
   layers: [ /* the visual stack — see "Layers & depth" */ ],
   walkArea: [ {x,y}, ... ],            // floor polygon (can be a fn of state)
   holes: [ [ {x,y}, ... ] ],           // obstacles carved out of the floor
-  scaling: { yTop, scaleTop, yBottom, scaleBottom },  // omit for side-view rooms
+  scaling: { yTop, scaleTop, yBottom, scaleBottom },  // or (x, y) => number
   music: 'kitchen-theme',              // optional; omit to keep current music
   entries: { start: { x, y, facing } },// named spawn points
   hotspots: [ /* see below */ ],
+  ambients: [ /* recurring background events — see below */ ],
   onEnter: async (ctx) => { /* optional cutscene */ },
 };
 ```
+
+**Scaling** is either a linear y-band or a full **scale map** — a function of
+the actor's feet position, for switchback trails and other scenes where
+apparent distance isn't linear in y (the mountain uses a smoothstep on height).
+Omit it entirely for side-view rooms. Walk speed follows the scale
+automatically, so a distant actor also moves believably slowly.
+
+**Ambients** are recurring, *non-blocking* background events — the mechanism
+for "something regularly happening" (SCUMM's local scripts):
+
+```ts
+ambients: [
+  {
+    every: [8000, 15000],   // random delay range between runs, ms
+    run: async (ctx) => {   // runs WITHOUT locking input
+      const bird = ctx.layerObj('bird');
+      bird.setPosition(-60, 120 + Math.random() * 260);
+      await ctx.tween(bird, { x: 2000 }, 6000);
+    },
+  },
+],
+```
+
+Ambient scripts must be pure staging: tween layers, play sounds — but don't
+set flags or talk to the player. They're cancelled automatically on room
+change.
 
 Layer `paint` functions, `walkArea`, and `holes` all receive the current
 `GameState`, so a room redraws and re-computes its geometry from state whenever
@@ -474,6 +508,11 @@ Rules and tips:
   to tween (`await ctx.tween(ctx.layerObj('bookcase'), { x: '+=80' }, 900)`),
   but durable changes must go through flags + `ctx.repaint()` or they won't
   survive room changes and save/load.
+- **Parallax + zoom caveat:** a parallax layer drifts against the world by
+  `scroll × (1 − parallax)`, and `ctx.zoomCamera` raises the camera's minimum
+  scroll — so in rooms that zoom out, oversize parallax layers beyond the room
+  bounds or their edges show (the mountain's sky is 2320×1200 at −200,−150 for
+  a 1920×900 room).
 
 ### A hotspot
 
@@ -528,6 +567,7 @@ Every handler and cutscene receives a `ctx`. The essentials:
 | `ctx.sfx(name)` | Play a sound effect (loaded key, or a built-in bleep: `pickup`/`open`/`zap`/`deny`/`win`/`step`) |
 | `ctx.playMusic(key)` / `ctx.stopMusic()` | Start/switch or fade out background music |
 | `ctx.flash(color?, ms?)` / `ctx.shake(ms?, intensity?)` | Camera effects |
+| `ctx.zoomCamera(zoom, ms?)` | Tween camera zoom (cutscene-scoped; rooms reset to 1) |
 | `ctx.showTitle(text)` | Big centered title card |
 
 ## Using PNG assets

@@ -61,6 +61,14 @@ const TRACKS: Record<string, Track> = {
     bass: [-21, null, null, -16, null, null, -14, null, null, -19, null, null, -21, null, null, -16],
     lead: [15, 12, 10, 12, 15, 19, 15, 12, 14, 10, 7, 10, 14, 17, 14, 12],
   },
+  // Open, airy major stride for the mountainside.
+  'mountain-theme': {
+    bpm: 96,
+    bassType: 'triangle',
+    leadType: 'triangle',
+    bass: [-24, null, null, null, -17, null, null, null, -19, null, null, null, -12, null, -14, null],
+    lead: [0, 4, 7, 12, null, 12, 9, 7, 5, 9, 12, 16, null, 12, 9, 7],
+  },
 };
 
 interface AudioSettings {

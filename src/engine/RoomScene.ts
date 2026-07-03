@@ -7,7 +7,16 @@ import { makeCanvasTex, redrawCanvasTex } from './canvasTex';
 import { audio } from './Audio';
 import { DEFAULT_RESPONSES } from './verbs';
 import { GAME_W, ROOM_H } from './constants';
-import type { Facing, HotspotDef, LayerDef, RoomDef, ScriptOrLine, Vec2, VerbId } from './types';
+import type {
+  AmbientDef,
+  Facing,
+  HotspotDef,
+  LayerDef,
+  RoomDef,
+  ScriptOrLine,
+  Vec2,
+  VerbId,
+} from './types';
 
 interface RestoreInfo {
   pos?: Vec2;
@@ -26,6 +35,9 @@ export class RoomScene extends Phaser.Scene {
   roomSize = { w: GAME_W, h: ROOM_H };
 
   private layerObjs = new Map<string, Phaser.GameObjects.Image | Phaser.GameObjects.Sprite>();
+  private ambientTimers: Phaser.Time.TimerEvent[] = [];
+  /** Bumped on every room change so in-flight ambients stop rescheduling. */
+  private ambientEpoch = 0;
   private hoverHotspot: HotspotDef | null = null;
   private debugGfx: Phaser.GameObjects.Graphics | null = null;
   private fadeRect!: Phaser.GameObjects.Rectangle;
@@ -57,6 +69,9 @@ export class RoomScene extends Phaser.Scene {
     if (!def) throw new Error(`Unknown room: ${roomId}`);
 
     this.cameras.main.stopFollow();
+    this.ambientEpoch++;
+    for (const t of this.ambientTimers) t.remove();
+    this.ambientTimers = [];
     for (const actor of this.actors.values()) actor.destroy();
     this.actors.clear();
     this.children.removeAll(true);
@@ -73,6 +88,7 @@ export class RoomScene extends Phaser.Scene {
     const cam = this.cameras.main;
     cam.setViewport(0, 0, GAME_W, ROOM_H);
     cam.setBounds(0, 0, this.roomSize.w, this.roomSize.h);
+    cam.setZoom(1); // zoom is a cutscene-scoped effect; rooms start at 1:1
 
     // Crossfade to this room's music (if it declares one).
     if (def.music !== undefined) audio.playMusic(def.music);
@@ -129,6 +145,28 @@ export class RoomScene extends Phaser.Scene {
         }
       })();
     }
+
+    for (const ambient of def.ambients ?? []) this.scheduleAmbient(ambient);
+  }
+
+  /** Run an ambient on a randomized interval. Ambients never touch the busy
+   *  count (they must not lock input) and stop rescheduling once the room
+   *  changes; an in-flight run that outlives its room just errors into the
+   *  catch when it touches torn-down objects. */
+  private scheduleAmbient(ambient: AmbientDef): void {
+    const epoch = this.ambientEpoch;
+    const [min, max] = ambient.every;
+    const timer = this.time.delayedCall(min + Math.random() * (max - min), () => {
+      void (async () => {
+        try {
+          await ambient.run(engine.makeContext());
+        } catch {
+          // staging only — a room change mid-run is not an error
+        }
+        if (epoch === this.ambientEpoch) this.scheduleAmbient(ambient);
+      })();
+    });
+    this.ambientTimers.push(timer);
   }
 
   /** Create the Phaser object for one layer definition. */
@@ -206,6 +244,9 @@ export class RoomScene extends Phaser.Scene {
   }
 
   async transitionTo(roomId: string, entryId?: string): Promise<void> {
+    // If a cutscene left the camera zoomed, snap back so the fade overlay
+    // (scrollFactor 0, but still zoom-scaled by Phaser) covers the viewport.
+    this.cameras.main.setZoom(1);
     await this.fade(1);
     this.loadRoom(roomId, entryId);
     await this.fade(0);

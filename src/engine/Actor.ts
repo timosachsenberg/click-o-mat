@@ -175,7 +175,10 @@ export class Actor {
 
   applyPerspective(scaling: RoomDef['scaling']): void {
     let scale = this.def.baseScale ?? 1;
-    if (scaling) {
+    if (typeof scaling === 'function') {
+      // Scale map: arbitrary perspective as a function of feet position.
+      scale *= scaling(this.x, this.y);
+    } else if (scaling) {
       const t = Phaser.Math.Clamp(
         (this.y - scaling.yTop) / (scaling.yBottom - scaling.yTop),
         0,

@@ -130,6 +130,23 @@ export class ScriptContext {
     audio.stopMusic();
   }
 
+  /** Tween the camera zoom (1 = normal, <1 = pull back to reveal more of the
+   *  room). Cutscene-scoped: rooms always start at zoom 1, and transitions
+   *  snap back. The room must be at least viewport/zoom large (960×450 at
+   *  zoom 0.5 needs a 1920×900 room) or the camera runs out of world. */
+  zoomCamera(zoom: number, duration = 900): Promise<void> {
+    const cam = this.eng.roomScene.cameras.main;
+    return new Promise((resolve) => {
+      this.eng.roomScene.tweens.add({
+        targets: cam,
+        zoom,
+        duration,
+        ease: 'Sine.easeInOut',
+        onComplete: () => resolve(),
+      });
+    });
+  }
+
   flash(color = 0xffffff, duration = 300): void {
     this.eng.roomScene.cameras.main.flash(duration, color >> 16, (color >> 8) & 0xff, color & 0xff);
   }

@@ -102,7 +102,7 @@ function paintRoom(g: CanvasRenderingContext2D): void {
   const windows: Array<[number, number, number, number]> = [
     [250, 120, 140, 190],
     [1150, 120, 150, 190],
-    [1170, 430, 150, 160],
+    [1230, 430, 140, 160],
   ];
   for (const [wx, wy, ww, wh] of windows) {
     g.clearRect(wx, wy, ww, wh);
@@ -232,6 +232,25 @@ function paintRoom(g: CanvasRenderingContext2D): void {
   g.beginPath();
   g.arc(206, 606, 4, 0, Math.PI * 2);
   g.fill();
+
+  // Front door to the outside (ground floor, right of the stairs)
+  g.fillStyle = '#3a2c20';
+  g.fillRect(1090, 500, 96, 186);
+  g.fillStyle = '#6b4a30';
+  g.fillRect(1098, 508, 80, 178);
+  g.strokeStyle = '#4a3222';
+  g.lineWidth = 2;
+  g.strokeRect(1106, 522, 64, 70);
+  g.strokeRect(1106, 602, 64, 74);
+  g.fillStyle = '#d4b430';
+  g.beginPath();
+  g.arc(1106, 600, 4, 0, Math.PI * 2);
+  g.fill();
+  g.fillStyle = '#c8a24a'; // "OUT" plate
+  g.fillRect(1116, 486, 44, 12);
+  g.fillStyle = '#33281c';
+  g.font = 'bold 9px monospace';
+  g.fillText('OUT', 1128, 495);
 }
 
 export const stairhallRoom: RoomDef = {
@@ -292,6 +311,7 @@ export const stairhallRoom: RoomDef = {
 
   entries: {
     fromGallery: { x: 250, y: 720, facing: 'right' },
+    fromOutside: { x: 1138, y: 718, facing: 'down' },
   },
 
   async onEnter(ctx) {
@@ -318,6 +338,25 @@ export const stairhallRoom: RoomDef = {
         use: async (ctx) => {
           ctx.sfx('open');
           await ctx.goToRoom('gallery', 'fromStairs');
+        },
+      },
+    },
+    {
+      id: 'front-door',
+      name: 'front door',
+      rect: { x: 1090, y: 486, w: 96, h: 200 },
+      walkTo: { x: 1138, y: 715 },
+      facing: 'up',
+      defaultVerb: 'open',
+      on: {
+        lookat: 'The front door. Outside: nature, allegedly.',
+        open: async (ctx) => {
+          ctx.sfx('open');
+          await ctx.goToRoom('mountain', 'fromDoor');
+        },
+        use: async (ctx) => {
+          ctx.sfx('open');
+          await ctx.goToRoom('mountain', 'fromDoor');
         },
       },
     },
@@ -376,8 +415,8 @@ export const stairhallRoom: RoomDef = {
     {
       id: 'ground-window',
       name: 'window',
-      rect: { x: 1170, y: 430, w: 150, h: 160 },
-      walkTo: { x: 1245, y: 715 },
+      rect: { x: 1230, y: 430, w: 140, h: 160 },
+      walkTo: { x: 1300, y: 715 },
       facing: 'up',
       on: {
         lookat: 'Clouds drifting past the moon. Very atmospheric. Very rent-inflating.',

@@ -22,6 +22,8 @@ export const ASSETS: AssetManifest = {
     { key: 'critter', url: `${base}img/critter.png`, frameWidth: 48, frameHeight: 48 },
     // 4 flame frames of 32×48 (an animated wall-sconce layer).
     { key: 'sconce', url: `${base}img/sconce.png`, frameWidth: 32, frameHeight: 48 },
+    // 2 flap frames of 40×28 (an ambient bird that crosses the mountain sky).
+    { key: 'bird', url: `${base}img/bird.png`, frameWidth: 40, frameHeight: 28 },
   ],
   // Animations follow the actor key convention `<textureSet>-<pose>-<variant>`
   // so an actor with textureSet "critter" picks them up automatically.
@@ -35,7 +37,8 @@ export const ASSETS: AssetManifest = {
     { key: 'critter-walk-back', texture: 'critter', frames: [16, 17, 18, 19], frameRate: 9 },
     { key: 'critter-talk-side', texture: 'critter', frames: [20, 21], frameRate: 7 },
     { key: 'critter-talk-back', texture: 'critter', frames: [22, 23], frameRate: 7 },
-    // Ambient layer animation (not an actor — used via LayerDef.anim).
+    // Ambient layer animations (not actors — used via LayerDef.anim).
     { key: 'sconce-flicker', texture: 'sconce', frames: [0, 1, 2, 3], frameRate: 8 },
+    { key: 'bird-flap', texture: 'bird', frames: [0, 1], frameRate: 6 },
   ],
 };
