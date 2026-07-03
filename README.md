@@ -1,4 +1,4 @@
-# Point-and-Click Adventure Engine (Phaser 4)
+# Click-o-mat — Point-and-Click Adventure Engine (Phaser 4)
 
 A SCUMM-style point-and-click adventure engine — everything you need to build
 something in the spirit of *Day of the Tentacle*. Written in TypeScript on
@@ -7,17 +7,303 @@ describe rooms, items, and dialog as plain objects rather than wiring up scenes
 by hand.
 
 The repo ships with a short, fully playable demo ("Ned the Tentacle") that
-exercises every feature.
+exercises every feature. All character art, icons, and sound in the demo are
+generated procedurally at runtime, so there are **no binary assets** — the whole
+thing is code.
+
+![the lab room](docs/screenshot.png)
+
+---
+
+## Getting started
+
+### Requirements
+
+- **Node.js 18 or newer** (developed on Node 24). Check with `node --version`.
+- npm (bundled with Node). No global installs needed.
+
+### 1. Install dependencies
 
 ```bash
 npm install
-npm run dev      # http://localhost:5173
-npm run build    # type-check + production bundle into dist/
 ```
 
-All character art, icons, and sound in the demo are generated procedurally at
-runtime, so there are **no binary assets** — the whole thing is code. Replace
-`BootScene` with a real asset loader when you have art.
+This pulls in Phaser 4, Vite, and TypeScript into `node_modules/` (git-ignored).
+
+### 2. Start the dev server
+
+```bash
+npm run dev
+```
+
+Vite prints a local URL — open it in your browser:
+
+```
+  ➜  Local:   http://localhost:5173/
+```
+
+The server hot-reloads: edit any file under `src/` and the game refreshes
+automatically. Stop it with `Ctrl-C`.
+
+> **On WSL / a VM?** If `localhost` doesn't resolve from your Windows browser,
+> run `npm run dev -- --host` and use the printed **Network** URL
+> (e.g. `http://172.22.x.x:5173/`) instead.
+
+### 3. Build for production
+
+```bash
+npm run build     # type-checks with tsc, then bundles to dist/
+npm run preview   # serve the built dist/ locally to sanity-check it
+```
+
+`dist/` is a static site — drop it on any static host (GitHub Pages, Netlify,
+S3, itch.io, …). `vite.config.ts` sets `base: './'` so it works from any
+subpath.
+
+### Controls
+
+| Action | Input |
+| --- | --- |
+| Walk | **Left-click** the floor |
+| Perform a verb | **Left-click a verb**, then click the target |
+| Quick default verb | **Right-click** a hotspot (look / open / talk, as configured) |
+| Use / combine items | **Click an inventory item** to arm it, then click a hotspot ("Use X with…") or another item (combine) |
+| Choose a dialog line | **Click** the line; click anywhere to **skip** speech |
+| Save / Load | **F5** / **F9** |
+| Debug overlay | **D** (draws walk area, obstacles, hotspots) |
+
+### Playing the demo
+
+Bring Ned the Tentacle something *warm, fuzzy, and radioactive*:
+
+1. Take the **battery** off the lab table.
+2. Go through the right-hand **door** to the hallway; **push** the ficus aside
+   to uncover a **key**.
+3. Back in the lab, **use the key** on the cabinet to free a **hamster**.
+4. **Use the battery** on the Zap-O-Matic to power it, then **use the hamster**
+   on it to irradiate him into a *glowing hamster*.
+5. **Give the glowing hamster** to Ned. Roll credits.
+
+Also try just **talking to Ned** (right-click him) to see the dialog tree.
+
+---
+
+## Tutorial: build your first room
+
+This walks through adding a brand-new room — a small **closet** — reachable
+from the demo's lab. You'll touch a background, a walkable floor, a hotspot, an
+item, and a room-to-room door. It assumes `npm run dev` is running so you can
+watch each change live.
+
+Everything you edit lives under `src/game/`. You never need to touch
+`src/engine/`.
+
+### Step 1 — Create the room file
+
+Create `src/game/rooms/closet.ts`:
+
+```ts
+import type { RoomDef } from '../../engine/types';
+
+export const closetRoom: RoomDef = {
+  id: 'closet',
+  name: 'Broom Closet',
+
+  // Draw the background into a 960×450 canvas. `state` lets you draw
+  // conditionally; this room is static so we ignore it.
+  paint(g, _state) {
+    g.fillStyle = '#2b2440';         // back wall
+    g.fillRect(0, 0, 960, 300);
+    g.fillStyle = '#4a3d2e';         // floor
+    g.fillRect(0, 300, 960, 150);
+
+    // A shelf on the back wall
+    g.fillStyle = '#6b5638';
+    g.fillRect(360, 150, 240, 14);
+  },
+
+  // The walkable floor, as a polygon in room coordinates (0,0 = top-left).
+  walkArea: [
+    { x: 60, y: 312 },
+    { x: 900, y: 312 },
+    { x: 920, y: 445 },
+    { x: 40, y: 445 },
+  ],
+
+  // Actors shrink toward the back wall for a fake-perspective look.
+  scaling: { yTop: 312, scaleTop: 0.72, yBottom: 445, scaleBottom: 1.05 },
+
+  // Named spawn points. goToRoom('closet', 'fromLab') drops the player here.
+  entries: {
+    fromLab: { x: 120, y: 400, facing: 'right' },
+  },
+
+  hotspots: [
+    // We'll add hotspots in the next steps.
+  ],
+};
+```
+
+### Step 2 — Register the room
+
+Open `src/game/index.ts` and add the room to the `rooms` map:
+
+```ts
+import { closetRoom } from './rooms/closet';
+
+export const CONTENT: GameContent = {
+  rooms: {
+    lab: labRoom,
+    hallway: hallwayRoom,
+    closet: closetRoom,          // <-- add this
+  },
+  // ...unchanged
+};
+```
+
+The room now exists, but nothing leads to it yet.
+
+### Step 3 — Add a door out (and back)
+
+A door is just a hotspot whose handler calls `ctx.goToRoom(...)`. Add this to
+the closet's `hotspots` array so you can get back to the lab:
+
+```ts
+{
+  id: 'closet-exit',
+  name: 'door',
+  rect: { x: 20, y: 130, w: 90, h: 180 },  // clickable region
+  walkTo: { x: 120, y: 400 },              // player walks here first
+  facing: 'left',
+  defaultVerb: 'open',                     // used on right-click
+  on: {
+    lookat: 'The door back to the lab.',
+    open: async (ctx) => {
+      ctx.sfx('open');
+      await ctx.goToRoom('lab', 'fromHallway');
+    },
+  },
+},
+```
+
+Now wire a door **into** the closet from the lab. Open
+`src/game/rooms/lab.ts` and add a hotspot to its `hotspots` array (put it
+anywhere in the room art you like — here it reuses the poster's wall):
+
+```ts
+{
+  id: 'closet-door',
+  name: 'closet door',
+  rect: { x: 210, y: 60, w: 60, h: 120 },
+  walkTo: { x: 240, y: 330 },
+  facing: 'up',
+  defaultVerb: 'open',
+  on: {
+    lookat: 'A narrow door. Probably a closet.',
+    open: async (ctx) => {
+      ctx.sfx('open');
+      await ctx.goToRoom('closet', 'fromLab');
+    },
+  },
+},
+```
+
+Save, then in the lab **right-click** that spot — you should fade into the
+closet, and the closet door takes you back. Press **D** in either room to see
+the walk area (green), obstacles (red), and hotspot boxes (yellow) — invaluable
+while placing `rect` and `walkTo` coordinates.
+
+### Step 4 — Add an item to pick up
+
+Let's put a **flashlight** on the shelf. First define the item in
+`src/game/items.ts`:
+
+```ts
+flashlight: {
+  id: 'flashlight',
+  name: 'flashlight',
+  icon: 'icon-key',   // reuse an existing icon for now (see note below)
+  lookAt: 'A heavy flashlight. The batteries feel dead.',
+},
+```
+
+Then add a hotspot for it in the closet. Note the `visible` guard and the
+`batteryTaken`-style flag so it disappears once taken:
+
+```ts
+{
+  id: 'flashlight',
+  name: 'flashlight',
+  rect: { x: 430, y: 118, w: 80, h: 36 },
+  walkTo: { x: 470, y: 330 },
+  facing: 'up',
+  defaultVerb: 'pickup',
+  visible: (state) => !state.getFlag('flashlightTaken'),
+  on: {
+    lookat: 'A flashlight, sitting on the shelf.',
+    pickup: async (ctx) => {
+      ctx.setFlag('flashlightTaken');   // remember it's gone
+      ctx.addItem('flashlight');        // add to inventory (plays a jingle + toast)
+      ctx.repaint();                     // redraw so any state-based art updates
+    },
+  },
+},
+```
+
+Right-click the flashlight — it jumps into your inventory and the hotspot
+vanishes (because `visible` now returns false). Click it in the inventory to
+arm it, and you'll see "Use flashlight with…" in the sentence line.
+
+> **About the icon:** icons are texture keys generated in
+> `src/engine/BootScene.ts` (`makeIcons()`). To give the flashlight its own
+> icon, add a `makeCanvasTex(this, 'icon-flashlight', 64, 48, (g) => { ... })`
+> block there and set `icon: 'icon-flashlight'`. Until then, reusing an
+> existing key like `icon-key` is fine.
+
+### Step 5 — React to using one item on another
+
+Suppose the flashlight needs the demo's battery. Give the flashlight a
+`combine` entry (also in `items.ts`):
+
+```ts
+flashlight: {
+  id: 'flashlight',
+  name: 'flashlight',
+  icon: 'icon-key',
+  lookAt: 'A heavy flashlight. The batteries feel dead.',
+  combine: {
+    // Triggered by "Use battery with flashlight" (or the reverse)
+    battery: async (ctx) => {
+      if (!ctx.hasItem('battery')) return;
+      ctx.removeItem('battery');
+      ctx.sfx('pickup');
+      await ctx.playerSay('Click. Now it works. Science!');
+      ctx.setFlag('flashlightOn');
+    },
+  },
+},
+```
+
+In-game: pick up the battery in the lab, pick up the flashlight in the closet,
+then click one item in the inventory and the other to combine them.
+
+That's the whole loop — **draw a room, register it, connect it with doors, add
+hotspots and items, and script reactions.** Everything else in the engine
+(pathfinding, animation, dialog, save/load) is automatic.
+
+### Where to go next
+
+- **Talkable NPCs:** add an actor in `actors.ts`, place it via the room's
+  `actors: [{ id, x, y }]`, and give a hotspot a `talkto` handler that calls
+  `ctx.dialog('your-dialog-id')`. Define the tree in `dialogs.ts`.
+- **Cutscenes:** a room's `onEnter` script (or any handler) can `await`
+  `ctx.walkTo`, `ctx.say`, `ctx.wait`, `ctx.flash`, `ctx.shake`,
+  `ctx.showTitle`, etc. — see the full API below.
+- **Conditional art:** because `paint`/`walkArea`/`holes` receive `state`, you
+  can open doors, move furniture, or reveal items by flipping a flag and calling
+  `ctx.repaint()`. See how the lab cabinet and hallway plant do it.
+
+---
 
 ## Feature checklist
 
@@ -40,14 +326,28 @@ runtime, so there are **no binary assets** — the whole thing is code. Replace
 | Camera flash / shake, title cards, bleep SFX | `engine/ScriptContext.ts`, `engine/Sfx.ts` |
 | Debug overlay (walk area, holes, hotspots) — press `D` | `engine/RoomScene.ts` |
 
-## Controls
+## Project layout
 
-- **Left-click floor** — walk there.
-- **Left-click a verb, then a hotspot** — perform that verb.
-- **Right-click a hotspot** — its default verb (look/open/talk, as configured).
-- **Click an inventory item** — arm it for "Use … with"; click another item to combine.
-- **During dialog** — click a line to choose it; click anywhere to skip speech.
-- **`F5` / `F9`** — save / load. **`D`** — toggle the debug overlay.
+```
+src/
+  main.ts              Phaser game bootstrap (registers scenes + content)
+  engine/              The reusable engine — you rarely edit this
+    Engine.ts          Singleton: content registries, state, cross-scene wiring
+    BootScene.ts       Generates all placeholder art + animations
+    RoomScene.ts       Current room: art, actors, hotspots, interaction FSM
+    UIScene.ts         Verb grid, sentence line, inventory, dialog choices
+    Actor.ts           Character sprite: movement, animation, speech
+    Pathfinder.ts      Walkable-area pathfinding (visibility graph + Dijkstra)
+    ScriptContext.ts   The async API game scripts call (walk/say/flags/…)
+    DialogRunner.ts    Drives branching dialog trees
+    GameState.ts       Flags, inventory, location + save/load serialization
+    types.ts           All content-definition types (RoomDef, HotspotDef, …)
+    ...                geometry, verbs, sfx, canvas helpers, constants
+  game/                YOUR game content
+    index.ts           Registers all rooms/items/actors/dialogs
+    rooms/*.ts         One file per room
+    items.ts  actors.ts  dialogs.ts
+```
 
 ## Architecture
 
@@ -72,7 +372,7 @@ async open(ctx) {
 }
 ```
 
-## Authoring content
+## Content reference
 
 All game content lives under `src/game/` and is registered in
 `src/game/index.ts`. Nothing in `src/engine/` needs to change to build a new
@@ -130,6 +430,25 @@ default responses (`engine/verbs.ts`).
 - **Actors** (`actors.ts`): id, name, speech color, texture set, speed.
 - **Dialogs** (`dialogs.ts`): nodes of choices, each with optional `if`
   condition, `once` flag, `script`, and `next`/`end` to control flow.
+
+### The `ScriptContext` API
+
+Every handler and cutscene receives a `ctx`. The essentials:
+
+| Call | Does |
+| --- | --- |
+| `ctx.playerSay(text)` / `ctx.say(actorId, text)` | Show a speech line (await to block until dismissed) |
+| `ctx.walkTo(actorId, x, y)` | Walk an actor along the floor to a point |
+| `ctx.face(actorId, dir)` | Turn an actor (`'up'`/`'down'`/`'left'`/`'right'`) |
+| `ctx.wait(ms)` | Pause |
+| `ctx.goToRoom(id, entry?)` | Fade to another room at a named entry |
+| `ctx.dialog(id)` | Run a dialog tree |
+| `ctx.flag(key)` / `ctx.setFlag(key, val?)` | Read / write world state |
+| `ctx.hasItem(id)` / `ctx.addItem(id)` / `ctx.removeItem(id)` | Inventory |
+| `ctx.repaint()` | Redraw room art + rebuild walk area from current state |
+| `ctx.sfx(name)` | Play a bleep (`pickup`/`open`/`zap`/`deny`/`win`/`step`) |
+| `ctx.flash(color?, ms?)` / `ctx.shake(ms?, intensity?)` | Camera effects |
+| `ctx.showTitle(text)` | Big centered title card |
 
 ## The demo puzzle
 
