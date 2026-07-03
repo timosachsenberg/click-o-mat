@@ -93,6 +93,7 @@ export class UIScene extends Phaser.Scene {
     this.input.keyboard?.on('keydown-M', () => this.toggleMute());
     this.input.keyboard?.on('keydown-ESC', () => {
       if (engine.menuOpen) this.toggleOptions(false);
+      else engine.startSkip(); // fast-forward the current cutscene, if any
     });
 
     this.refresh();
@@ -409,6 +410,7 @@ export class UIScene extends Phaser.Scene {
     this.choiceContainer.removeAll(true);
     this.choiceContainer.setVisible(true);
     engine.choicesShowing = true;
+    engine.skipping = false; // a fast-forward always stops at a choice
     return new Promise<number>((resolve) => {
       this.choiceResolve = resolve;
       texts.forEach((text, i) => {

@@ -72,6 +72,7 @@ subpath.
 | Use / combine items | **Click an inventory item** to arm it, then click a hotspot ("Use X with…") or another item (combine) |
 | Choose a dialog line | **Click** the line; click anywhere to **skip** speech |
 | Save / Load | **F5** / **F9**, or the options menu |
+| Skip a cutscene | **Esc** (fast-forwards to the end; stops at dialog choices) |
 | Options menu | **⚙ button** (top-right): volume sliders, mute, save/load — **Esc** closes |
 | Mute / unmute audio | **M**, or the 🔊 button (top-right) |
 | Debug overlay | **D** (draws walk area, obstacles, hotspots) |
@@ -338,6 +339,8 @@ hotspots and items, and script reactions.** Everything else in the engine
 | **Layer system** — backdrops, occluders (walk-behinds), foreground overlays, animated layers, one shared depth axis | `engine/types.ts`, `engine/RoomScene.ts` |
 | **Scrolling rooms** — rooms larger than the screen, camera follows the player (both axes), per-layer parallax | `engine/RoomScene.ts` |
 | **Ambient events** — recurring non-blocking background activity (birds, shadows, machinery) | `engine/RoomScene.ts` |
+| **Regions** — walk-on/walk-off triggers with once + conditions | `engine/RoomScene.ts` |
+| **Cutscene skipping** — Esc fast-forwards say/wait/walk/tween/zoom to the end | `engine/Engine.ts` |
 | **Scale maps** — actor size as a function of position, for trails and non-linear perspective | `engine/Actor.ts` |
 | **Camera zoom** — scripted pull-backs for reveals and vistas (`ctx.zoomCamera`) | `engine/ScriptContext.ts` |
 | Inventory with paging + item icons | `engine/UIScene.ts` |
@@ -462,6 +465,44 @@ Ambient scripts must be pure staging: tween layers, play sounds — but don't
 set flags or talk to the player. They're cancelled automatically on room
 change.
 
+**Regions** are walk-on/walk-off triggers, checked against the player's feet
+every frame — traps, proximity reactions, auto-cutscenes:
+
+```ts
+regions: [
+  {
+    id: 'trapdoor',
+    rect: { x: 400, y: 700, w: 90, h: 40 },   // or polygon: [...]
+    once: true,                                // fire each event only once ever
+    active: (state) => !state.getFlag('trapDisarmed'),
+    onEnter: async (ctx) => { /* stops the player's walk, runs as a cutscene */ },
+    onExit: async (ctx) => { /* optional */ },
+  },
+],
+```
+
+Only *player-driven* movement fires regions: script-driven walks, spawning
+inside one, and cutscene fast-forwards update containment silently.
+`RoomDef.onExit` complements `onEnter` for leaving a room (bookkeeping and
+parting lines; gate exits in the door script instead — onExit isn't
+cancellable).
+
+**Cutscene skipping** needs nothing from your scripts. Esc fast-forwards
+whatever is running: showing and future lines dismiss instantly, `ctx.wait`
+returns, walks teleport to their destinations, tweens and camera zooms jump to
+their end values. Plain walking isn't skippable, and a fast-forward always
+stops at the next dialog choice. Because scripts run to completion (just
+instantly), all flags and state end up exactly as if the scene had played out.
+
+**`ctx.once(key, script?)`** is the sugar for first-time-only logic — it
+persists as a flag, so it survives save/load:
+
+```ts
+async onEnter(ctx) {
+  await ctx.once('cellar-intro', async () => { /* first visit cutscene */ });
+}
+```
+
 Layer `paint` functions, `walkArea`, and `holes` all receive the current
 `GameState`, so a room redraws and re-computes its geometry from state whenever
 you call `ctx.repaint()` — that's how the cabinet opens and the plant slides
@@ -562,6 +603,7 @@ Every handler and cutscene receives a `ctx`. The essentials:
 | `ctx.goToRoom(id, entry?)` | Fade to another room at a named entry |
 | `ctx.dialog(id)` | Run a dialog tree |
 | `ctx.flag(key)` / `ctx.setFlag(key, val?)` | Read / write world state |
+| `ctx.once(key, script?)` | Run something only the first time (persisted); returns whether it ran |
 | `ctx.hasItem(id)` / `ctx.addItem(id)` / `ctx.removeItem(id)` | Inventory |
 | `ctx.repaint()` | Redraw paint layers, re-check layer visibility, rebuild walk area |
 | `ctx.layerObj(id)` | Live Phaser object of a layer (transient cutscene tweens only) |

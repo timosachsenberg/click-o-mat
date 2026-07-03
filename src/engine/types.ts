@@ -169,12 +169,17 @@ export interface RoomDef {
    *  state if needed, but don't set flags or block on player interaction.
    *  Cancelled automatically when the room changes. */
   ambients?: AmbientDef[];
+  /** Walk-on/walk-off triggers, checked against the player's position. */
+  regions?: RegionDef[];
   /** Named spawn points for the player, referenced by goToRoom(). */
   entries: Record<string, RoomEntry>;
   /** Background music key (a loaded audio file or a built-in procedural track)
    *  to crossfade to on entering. Omit to leave the current music playing. */
   music?: string;
   onEnter?: Script;
+  /** Runs (and is awaited) just before leaving via goToRoom — bookkeeping,
+   *  parting lines. Not cancellable; gate exits in the door script instead. */
+  onExit?: Script;
 }
 
 /** A recurring, non-blocking background event in a room. */
@@ -182,6 +187,24 @@ export interface AmbientDef {
   /** Random delay range [min, max] in ms between runs. */
   every: [number, number];
   run: Script;
+}
+
+/**
+ * A walk-on trigger: fires when the PLAYER's feet cross into/out of the
+ * area. Only fires from player-driven movement — script-driven walks update
+ * containment silently, and spawning inside a region does not fire it.
+ */
+export interface RegionDef {
+  id: string;
+  rect?: Rect;
+  polygon?: Vec2[];
+  /** Fire each event (enter/exit) only once ever; persisted as flags
+   *  `region:<room>:<id>:enter|exit`. */
+  once?: boolean;
+  /** Region only exists while this returns true (default: always). */
+  active?: (state: GameState) => boolean;
+  onEnter?: Script;
+  onExit?: Script;
 }
 
 export interface DialogChoice {

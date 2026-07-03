@@ -1,7 +1,7 @@
 import type { Engine } from './Engine';
 import type { GameState } from './GameState';
 import type { Actor } from './Actor';
-import type { Facing } from './types';
+import type { Facing, Script } from './types';
 import { audio, type SfxName } from './Audio';
 import { ROOM_H, GAME_W } from './constants';
 
@@ -78,7 +78,27 @@ export class ScriptContext {
   }
 
   wait(ms: number): Promise<void> {
-    return new Promise((resolve) => this.scene.time.delayedCall(ms, resolve));
+    if (this.eng.skipping) return Promise.resolve();
+    return new Promise((resolve) => {
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        this.eng.events.off('skipCutscene', finish);
+        resolve();
+      };
+      this.scene.time.delayedCall(ms, finish);
+      this.eng.events.on('skipCutscene', finish); // Esc releases in-flight waits
+    });
+  }
+
+  /** Run `script` only the first time this key is seen (persisted as flag
+   *  `once:<key>`). Returns whether it ran — usable bare as a guard, too. */
+  async once(key: string, script?: Script): Promise<boolean> {
+    if (this.state.getFlag(`once:${key}`)) return false;
+    this.state.setFlag(`once:${key}`);
+    if (script) await script(this);
+    return true;
   }
 
   async goToRoom(roomId: string, entryId?: string): Promise<void> {
@@ -102,15 +122,21 @@ export class ScriptContext {
     return this.eng.roomScene.layerObj(id);
   }
 
-  /** Tween any game object's properties and await completion. */
+  /** Tween any game object's properties and await completion. Skip-aware:
+   *  during a cutscene fast-forward the tween jumps straight to its end. */
   tween(targets: unknown, props: Record<string, unknown>, duration = 400): Promise<void> {
     return new Promise((resolve) => {
-      this.eng.roomScene.tweens.add({
+      const t = this.eng.roomScene.tweens.add({
         targets,
         duration,
         ...props,
-        onComplete: () => resolve(),
+        onComplete: () => {
+          this.eng.untrackTween(t);
+          resolve();
+        },
       } as Phaser.Types.Tweens.TweenBuilderConfig);
+      this.eng.trackTween(t);
+      if (this.eng.skipping) t.complete();
     });
   }
 
@@ -136,15 +162,7 @@ export class ScriptContext {
    *  zoom 0.5 needs a 1920×900 room) or the camera runs out of world. */
   zoomCamera(zoom: number, duration = 900): Promise<void> {
     const cam = this.eng.roomScene.cameras.main;
-    return new Promise((resolve) => {
-      this.eng.roomScene.tweens.add({
-        targets: cam,
-        zoom,
-        duration,
-        ease: 'Sine.easeInOut',
-        onComplete: () => resolve(),
-      });
-    });
+    return this.tween(cam, { zoom, ease: 'Sine.easeInOut' }, duration);
   }
 
   flash(color = 0xffffff, duration = 300): void {

@@ -283,16 +283,36 @@ export const mountainRoom: RoomDef = {
     },
   ],
 
+  // First-visit reveal cutscene (skippable with Esc, like all cutscenes).
   async onEnter(ctx) {
-    if (ctx.flag('mountainSeen')) return;
-    ctx.setFlag('mountainSeen');
-    await ctx.wait(400);
-    await ctx.playerSay('Fresh air. Judgmental altitude.');
-    await ctx.zoomCamera(0.55, 1600);
-    await ctx.wait(900);
-    await ctx.zoomCamera(1, 1200);
-    await ctx.playerSay("And I'm going to climb that. For no reason whatsoever.");
+    await ctx.once('mountain-intro', async () => {
+      await ctx.wait(400);
+      await ctx.playerSay('Fresh air. Judgmental altitude.');
+      await ctx.zoomCamera(0.55, 1600);
+      await ctx.wait(900);
+      await ctx.zoomCamera(1, 1200);
+      await ctx.playerSay("And I'm going to climb that. For no reason whatsoever.");
+    });
   },
+
+  async onExit(ctx) {
+    await ctx.once('mountain-outro', () =>
+      ctx.playerSay('Back inside. My calves will remember this.')
+    );
+  },
+
+  regions: [
+    // Walk-on trigger at the foot of the trail: fires the first time the
+    // player steps onto leg 1, never from the meadow below it.
+    {
+      id: 'trailhead',
+      rect: { x: 1190, y: 744, w: 120, h: 44 },
+      once: true,
+      onEnter: async (ctx) => {
+        await ctx.playerSay('Here we go. Cardio.');
+      },
+    },
+  ],
 
   hotspots: [
     {

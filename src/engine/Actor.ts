@@ -107,6 +107,11 @@ export class Actor {
     const path = area.findPath({ x: this.x, y: this.y }, target);
     if (!path) return Promise.resolve('blocked');
     const end = path[path.length - 1];
+    if (engine.skipping) {
+      // Cutscene fast-forward: teleport to the (walkable) destination.
+      this.setPosition(end.x, end.y);
+      return Promise.resolve('arrived');
+    }
     if (dist({ x: this.x, y: this.y }, end) < 3) {
       return Promise.resolve('arrived');
     }
@@ -116,6 +121,18 @@ export class Actor {
     return new Promise<WalkResult>((resolve) => {
       this.walkResolve = resolve;
     });
+  }
+
+  /** Jump an in-flight walk to its destination (cutscene skip). */
+  finishWalk(): void {
+    if (!this.path || !this.walkResolve) return;
+    const end = this.path[this.path.length - 1];
+    this.setPosition(end.x, end.y);
+    this.path = null;
+    this.setPose('idle');
+    const resolve = this.walkResolve;
+    this.walkResolve = null;
+    resolve('arrived');
   }
 
   /** Cancel any in-progress walk (resolves it as 'cancelled'). */
@@ -131,6 +148,7 @@ export class Actor {
 
   /** Show a speech line above the actor's head; click or timeout dismisses it. */
   say(text: string): Promise<void> {
+    if (engine.skipping) return Promise.resolve(); // cutscene fast-forward
     this.dismissSpeech();
     this.setPose('talk');
     this.speech = this.scene.add

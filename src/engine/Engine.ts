@@ -65,10 +65,47 @@ export class Engine {
 
   endBusy(): void {
     this.busyCount = Math.max(0, this.busyCount - 1);
+    if (this.busyCount === 0) this.skipping = false; // cutscene over: stop fast-forwarding
   }
 
   resetBusy(): void {
     this.busyCount = 0;
+    this.skipping = false;
+  }
+
+  /** True while fast-forwarding the current cutscene (Esc). Script primitives
+   *  (say/wait/walkTo/tween/zoom) check this and complete instantly. */
+  skipping = false;
+
+  /** Script-created tweens currently in flight, so a skip can finish them. */
+  private activeTweens = new Set<Phaser.Tweens.Tween>();
+
+  trackTween(t: Phaser.Tweens.Tween): void {
+    this.activeTweens.add(t);
+  }
+
+  untrackTween(t: Phaser.Tweens.Tween): void {
+    this.activeTweens.delete(t);
+  }
+
+  /** Fast-forward the rest of the current cutscene: dismiss the showing line,
+   *  finish in-flight walks/waits/tweens, and make subsequent primitives
+   *  resolve instantly until the busy count returns to zero. Plain and
+   *  approach walks (interruptible) and dialogs are deliberately not
+   *  skippable — dialogs stop the fast-forward at their next choice. */
+  startSkip(): void {
+    if (!this.busy || this.interruptible || this.dialogMode || this.menuOpen) return;
+    this.skipping = true;
+    this.events.emit('skipLine'); // dismiss the currently showing speech
+    this.events.emit('skipCutscene'); // release in-flight ctx.wait()s
+    this.roomScene.finishWalks();
+    for (const t of [...this.activeTweens]) {
+      try {
+        t.complete();
+      } catch {
+        // a tween whose target died with a room change — ignore
+      }
+    }
   }
   /** ...unless we're merely in the auto-walk phase, which clicks may cancel. */
   interruptible = false;

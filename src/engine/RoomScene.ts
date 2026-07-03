@@ -12,7 +12,9 @@ import type {
   Facing,
   HotspotDef,
   LayerDef,
+  RegionDef,
   RoomDef,
+  Script,
   ScriptOrLine,
   Vec2,
   VerbId,
@@ -38,6 +40,8 @@ export class RoomScene extends Phaser.Scene {
   private ambientTimers: Phaser.Time.TimerEvent[] = [];
   /** Bumped on every room change so in-flight ambients stop rescheduling. */
   private ambientEpoch = 0;
+  /** Region ids the player currently stands in (transient, per room). */
+  private regionInside = new Set<string>();
   private hoverHotspot: HotspotDef | null = null;
   private debugGfx: Phaser.GameObjects.Graphics | null = null;
   private fadeRect!: Phaser.GameObjects.Rectangle;
@@ -123,6 +127,15 @@ export class RoomScene extends Phaser.Scene {
     // entering a room never starts with a camera swoosh.
     cam.startFollow(player.sprite, false, 0.12, 0.12);
     cam.centerOn(px, py);
+
+    // Regions: seed containment from the spawn position — standing inside a
+    // region at room entry must not fire its onEnter.
+    this.regionInside.clear();
+    for (const region of def.regions ?? []) {
+      if ((region.active?.(engine.state) ?? true) && regionContains(region, { x: px, y: py })) {
+        this.regionInside.add(region.id);
+      }
+    }
 
     // Room NPCs.
     for (const placement of def.actors ?? []) {
@@ -244,6 +257,9 @@ export class RoomScene extends Phaser.Scene {
   }
 
   async transitionTo(roomId: string, entryId?: string): Promise<void> {
+    // Parting hook of the room being left (bookkeeping, one-liners).
+    const exit = this.roomDef?.onExit;
+    if (exit) await exit(engine.makeContext());
     // If a cutscene left the camera zoomed, snap back so the fade overlay
     // (scrollFactor 0, but still zoom-scaled by Phaser) covers the viewport.
     this.cameras.main.setZoom(1);
@@ -258,10 +274,66 @@ export class RoomScene extends Phaser.Scene {
       this.tweens.add({
         targets: this.fadeRect,
         alpha: to,
-        duration: 220,
+        duration: engine.skipping ? 40 : 220,
         onComplete: () => resolve(),
       });
     });
+  }
+
+  /** Jump every in-flight walk to its destination (cutscene skip). */
+  finishWalks(): void {
+    for (const actor of this.actors.values()) actor.finishWalk();
+  }
+
+  // ---- regions (walk-on triggers) ------------------------------------------
+
+  /** Fire enter/exit scripts as the player crosses region boundaries. Only
+   *  player-driven movement fires: during cutscenes/dialog/menu (or a skip)
+   *  containment updates silently so no stale burst fires afterwards. */
+  private checkRegions(): void {
+    const regions = this.roomDef.regions;
+    if (!regions?.length) return;
+    const player = this.player;
+    if (!player) return;
+    const canFire =
+      (!engine.busy || engine.interruptible) &&
+      !engine.dialogMode &&
+      !engine.menuOpen &&
+      !engine.skipping;
+    const feet = { x: player.x, y: player.y };
+
+    for (const region of regions) {
+      const inside = (region.active?.(engine.state) ?? true) && regionContains(region, feet);
+      const was = this.regionInside.has(region.id);
+      if (inside === was) continue;
+      if (inside) this.regionInside.add(region.id);
+      else this.regionInside.delete(region.id);
+      if (!canFire) continue;
+
+      const script = inside ? region.onEnter : region.onExit;
+      if (!script) continue;
+      if (region.once) {
+        const key = `region:${this.roomDef.id}:${region.id}:${inside ? 'enter' : 'exit'}`;
+        if (engine.state.getFlag(key)) continue;
+        engine.state.setFlag(key);
+      }
+      this.fireRegion(script);
+    }
+  }
+
+  /** Run a region script as a cutscene: stop the player's current walk (its
+   *  owner releases its own busy count) and lock input for the script. */
+  private fireRegion(script: Script): void {
+    this.player?.stop();
+    engine.interruptible = false;
+    engine.beginBusy();
+    void (async () => {
+      try {
+        await script(engine.makeContext());
+      } finally {
+        engine.endBusy();
+      }
+    })();
   }
 
   // ---- input -------------------------------------------------------------
@@ -412,6 +484,7 @@ export class RoomScene extends Phaser.Scene {
     for (const actor of this.actors.values()) {
       actor.update(delta, this.roomDef.scaling);
     }
+    this.checkRegions();
     // Hover tracking for the sentence line (screen → world for hit-testing).
     const pointer = this.input.activePointer;
     let hover: HotspotDef | null = null;
@@ -467,5 +540,22 @@ export class RoomScene extends Phaser.Scene {
         g.strokeCircle(hs.walkTo.x, hs.walkTo.y, 4);
       }
     }
+    g.lineStyle(2, 0x00ccff, 0.8);
+    for (const region of this.roomDef.regions ?? []) {
+      if (region.active && !region.active(engine.state)) continue;
+      if (region.rect) g.strokeRect(region.rect.x, region.rect.y, region.rect.w, region.rect.h);
+      if (region.polygon) {
+        g.strokePoints(region.polygon.map((p) => new Phaser.Math.Vector2(p.x, p.y)), true);
+      }
+    }
   }
+}
+
+function regionContains(region: RegionDef, p: Vec2): boolean {
+  if (region.rect) {
+    const r = region.rect;
+    if (p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h) return true;
+  }
+  if (region.polygon && pointInPolygon(p, region.polygon)) return true;
+  return false;
 }
