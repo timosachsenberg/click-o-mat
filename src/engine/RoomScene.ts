@@ -63,7 +63,12 @@ export class RoomScene extends Phaser.Scene {
     });
     this.input.keyboard?.on('keydown-D', () => this.toggleDebug());
 
-    this.loadRoom(engine.startRoom, engine.startEntry);
+    // Continue from the title screen: state was already restored, we just
+    // start in the saved room at the saved position.
+    const restore = engine.pendingRestore;
+    engine.pendingRestore = null;
+    if (restore) this.loadRoom(engine.state.currentRoom, undefined, restore);
+    else this.loadRoom(engine.startRoom, engine.startEntry);
   }
 
   // ---- room lifecycle ----------------------------------------------------

@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { audio } from './Audio';
+import { engine } from './Engine';
 import { makeCanvasTex } from './canvasTex';
 import { GAME_W, GAME_H } from './constants';
 
@@ -11,6 +12,10 @@ import { GAME_W, GAME_H } from './constants';
  * begins immediately.
  */
 export class TitleScene extends Phaser.Scene {
+  private started = false;
+  private hasSave = false;
+  private continueImg!: Phaser.GameObjects.Image;
+
   constructor() {
     super('title');
   }
@@ -43,16 +48,31 @@ export class TitleScene extends Phaser.Scene {
     pixelText(this, 'title-engine', 'ENGINE', 12, 5, ['#b0f0ff', '#4fc3e8', '#2a6a9c']);
     this.add.image(centerX, 340, 'title-engine').setOrigin(0.5);
 
-    pixelText(this, 'title-prompt', '- CLICK TO START -', 9, 3, ['#9be89b', '#57a04e']);
-    const prompt = this.add.image(centerX, 460, 'title-prompt').setOrigin(0.5);
+    // Menu: click anywhere = new game; only the CONTINUE line loads a save.
+    this.started = false;
+    this.hasSave = engine.hasSave();
+
+    pixelText(this, 'title-new', '> NEW GAME <', 9, 3, ['#9be89b', '#57a04e']);
+    const newImg = this.add.image(centerX, 442, 'title-new').setOrigin(0.5);
     this.tweens.add({
-      targets: prompt,
-      alpha: 0.15,
-      duration: 650,
+      targets: newImg,
+      alpha: 0.3,
+      duration: 700,
       yoyo: true,
       repeat: -1,
       ease: 'Sine.easeInOut',
     });
+
+    pixelText(
+      this,
+      'title-continue',
+      'CONTINUE',
+      9,
+      3,
+      this.hasSave ? ['#b0f0ff', '#4fc3e8'] : ['#45455a', '#2e2e3e']
+    );
+    this.continueImg = this.add.image(centerX, 492, 'title-continue').setOrigin(0.5);
+    if (!this.hasSave) this.continueImg.setAlpha(0.55);
 
     this.add
       .text(centerX, 560, 'a Phaser 4 point-and-click adventure engine', {
@@ -69,12 +89,36 @@ export class TitleScene extends Phaser.Scene {
     });
     this.add.image(0, 0, 'title-scanlines').setOrigin(0).setDepth(10);
 
-    const begin = () => this.startGame();
-    this.input.once('pointerdown', begin);
-    this.input.keyboard?.once('keydown', begin);
+    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      if (this.started) return;
+      const overContinue =
+        this.hasSave && this.continueImg.getBounds().contains(pointer.x, pointer.y);
+      if (overContinue) this.continueGame();
+      else this.startGame();
+    });
+    this.input.keyboard?.on('keydown', (event: KeyboardEvent) => {
+      if (this.started) return;
+      if (event.key.toLowerCase() === 'c' && this.hasSave) this.continueGame();
+      else this.startGame();
+    });
   }
 
   private startGame(): void {
+    this.started = true;
+    this.begin();
+  }
+
+  private continueGame(): void {
+    this.started = true;
+    if (!engine.loadForStart()) {
+      // Corrupt/missing save: fall back to a fresh game.
+      this.begin();
+      return;
+    }
+    this.begin();
+  }
+
+  private begin(): void {
     audio.resume(); // the start click is the audio-unlock gesture
     const overlay = this.add
       .rectangle(0, 0, GAME_W, GAME_H, 0x000000)

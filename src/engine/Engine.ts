@@ -4,6 +4,7 @@ import type {
   ActorDef,
   AssetManifest,
   DialogDef,
+  Facing,
   ItemDef,
   RoomDef,
   ScriptOrLine,
@@ -203,6 +204,39 @@ export class Engine {
         pos: this.state.playerPos ?? undefined,
         facing: this.state.playerFacing,
       });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  hasSave(): boolean {
+    try {
+      return localStorage.getItem(SAVE_KEY) !== null;
+    } catch {
+      return false;
+    }
+  }
+
+  /** Player position/facing staged by loadForStart(), consumed by the room
+   *  scene's first loadRoom. */
+  pendingRestore: { pos?: { x: number; y: number }; facing?: Facing } | null = null;
+
+  /** Stage a saved game before the room scene exists (the title screen's
+   *  Continue): state is restored now, the room loads when 'room' starts. */
+  loadForStart(): boolean {
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) return false;
+      const data = JSON.parse(raw) as SaveData;
+      this.state = GameState.fromSave(data);
+      this.clearSelection();
+      this.resetBusy();
+      this.dialogMode = false;
+      this.pendingRestore = {
+        pos: this.state.playerPos ?? undefined,
+        facing: this.state.playerFacing,
+      };
       return true;
     } catch {
       return false;
