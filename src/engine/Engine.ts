@@ -269,6 +269,15 @@ export class Engine {
     return false;
   }
 
+  deleteSave(slot: number): void {
+    try {
+      localStorage.removeItem(this.slotKey(slot));
+      this.events.emit('saves');
+    } catch {
+      /* ignore */
+    }
+  }
+
   /** Slot metadata for save/load UIs; null entries are empty slots. */
   listSaves(): Array<{ slot: number; when: number; room: string } | null> {
     const out: Array<{ slot: number; when: number; room: string } | null> = [];

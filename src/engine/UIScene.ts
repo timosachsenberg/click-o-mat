@@ -106,7 +106,16 @@ export class UIScene extends Phaser.Scene {
   private sliderFills: Array<{ fill: Phaser.GameObjects.Rectangle; get: () => number }> = [];
   private muteToggle!: Phaser.GameObjects.Text;
   private sliderDrag: { x0: number; w: number; set: (v: number) => void } | null = null;
-  private slotRows: Array<{ info: Phaser.GameObjects.Text; load: Phaser.GameObjects.Text }> = [];
+  private slotRows: Array<{
+    info: Phaser.GameObjects.Text;
+    save: Phaser.GameObjects.Text;
+    load: Phaser.GameObjects.Text;
+    del: Phaser.GameObjects.Text;
+    yes: Phaser.GameObjects.Text;
+    no: Phaser.GameObjects.Text;
+  }> = [];
+  /** A destructive slot action awaiting inline Yes/No confirmation. */
+  private pendingConfirm: { slot: number; action: 'save' | 'delete' } | null = null;
 
   private buildOptionsMenu(): void {
     this.optionsButton = this.add
@@ -200,8 +209,10 @@ export class UIScene extends Phaser.Scene {
     });
   }
 
-  /** One save-slot row: label · room+time info · Save · Load. */
+  /** One save-slot row: label · room+time info · Save · Load · ✕, where
+   *  overwriting or deleting flips the row into an inline Yes/No confirm. */
   private buildSlotRow(slot: number, y: number): void {
+    const name = SLOT_LABELS[slot] ?? `slot ${slot}`;
     const small = (x: number, text: string, color: string, bold = false) =>
       this.add
         .text(x, y, text, {
@@ -213,43 +224,74 @@ export class UIScene extends Phaser.Scene {
         .setOrigin(0, 0.5);
 
     const label = small(300, SLOT_LABELS[slot] ?? `SLOT ${slot}`, '#c9f0ff', true);
-    const info = small(378, '— empty —', '#6a6a8a');
+    const info = small(370, '— empty —', '#6a6a8a');
 
-    const btn = (x: number, text: string, onClick: () => void) => {
+    const btn = (x: number, text: string, color: string, onClick: () => void) => {
       const t = this.add
         .text(x, y, text, {
           fontFamily: 'Verdana, Arial, sans-serif',
           fontSize: '14px',
           fontStyle: 'bold',
-          color: '#8f7fd4',
+          color,
         })
         .setOrigin(0.5)
         .setInteractive({ useHandCursor: true });
       t.on('pointerover', () => t.setColor('#ffe066'));
-      t.on('pointerout', () => t.setColor('#8f7fd4'));
+      t.on('pointerout', () => t.setColor(color));
       t.on('pointerdown', onClick);
       return t;
     };
-    const save = btn(590, 'Save', () => {
-      const name = SLOT_LABELS[slot] ?? `slot ${slot}`;
+
+    const doSave = () => {
       this.toast(engine.save(slot) ? `Saved to ${name}.` : 'Save failed.');
       this.refreshOptions();
+    };
+
+    const save = btn(578, 'Save', '#8f7fd4', () => {
+      this.pendingConfirm = engine.hasSave(slot) ? { slot, action: 'save' } : null;
+      if (this.pendingConfirm) this.refreshOptions();
+      else doSave();
     });
-    const load = btn(645, 'Load', () => {
+    const load = btn(628, 'Load', '#8f7fd4', () => {
+      this.pendingConfirm = null;
       if (!engine.hasSave(slot)) {
         this.toast('That slot is empty.');
+        this.refreshOptions();
         return;
       }
       const ok = engine.load(slot);
-      this.toast(ok ? `Loaded ${SLOT_LABELS[slot] ?? `slot ${slot}`}.` : 'Load failed.');
+      this.toast(ok ? `Loaded ${name}.` : 'Load failed.');
       if (ok) this.toggleOptions(false);
     });
+    const del = btn(668, '✕', '#c06a6a', () => {
+      if (!engine.hasSave(slot)) return;
+      this.pendingConfirm = { slot, action: 'delete' };
+      this.refreshOptions();
+    });
+    const yes = btn(590, 'Yes', '#9be89b', () => {
+      const pc = this.pendingConfirm;
+      this.pendingConfirm = null;
+      if (!pc || pc.slot !== slot) {
+        this.refreshOptions();
+        return;
+      }
+      if (pc.action === 'save') {
+        doSave();
+      } else {
+        engine.deleteSave(slot);
+        this.toast(`Deleted ${name}.`);
+        this.refreshOptions();
+      }
+    });
+    const no = btn(640, 'No', '#ff8a7a', () => {
+      this.pendingConfirm = null;
+      this.refreshOptions();
+    });
+    yes.setVisible(false);
+    no.setVisible(false);
 
-    this.slotRows[slot] = { info, load };
-    this.optionsPanel.add(label);
-    this.optionsPanel.add(info);
-    this.optionsPanel.add(save);
-    this.optionsPanel.add(load);
+    this.slotRows[slot] = { info, save, load, del, yes, no };
+    for (const obj of [label, info, save, load, del, yes, no]) this.optionsPanel.add(obj);
   }
 
   private makeSlider(label: string, y: number, get: () => number, set: (v: number) => void): void {
@@ -287,6 +329,7 @@ export class UIScene extends Phaser.Scene {
   toggleOptions(open?: boolean): void {
     const next = open ?? !engine.menuOpen;
     engine.menuOpen = next;
+    this.pendingConfirm = null; // stale confirms never survive open/close
     this.optionsPanel.setVisible(next);
     if (next) this.refreshOptions();
   }
@@ -295,10 +338,23 @@ export class UIScene extends Phaser.Scene {
     for (const s of this.sliderFills) s.fill.width = 180 * s.get();
     this.muteToggle.setText(audio.muted ? 'Sound: OFF  (click to unmute)' : 'Sound: ON  (click to mute)');
     this.updateMuteButton();
-    // Slot listings
+    // Slot listings (a row in confirm mode shows the inline Yes/No instead)
     const saves = engine.listSaves();
+    const pc = this.pendingConfirm;
     this.slotRows.forEach((row, slot) => {
       const entry = saves[slot];
+      const confirming = pc?.slot === slot;
+      row.save.setVisible(!confirming);
+      row.load.setVisible(!confirming);
+      row.del.setVisible(!confirming);
+      row.yes.setVisible(confirming);
+      row.no.setVisible(confirming);
+      if (confirming) {
+        row.info
+          .setText(pc!.action === 'save' ? 'Overwrite this save?' : 'Delete this save?')
+          .setColor(pc!.action === 'save' ? '#ffe066' : '#ff8a7a');
+        return;
+      }
       if (entry) {
         const when = new Date(entry.when).toLocaleString([], {
           month: 'short',
@@ -309,9 +365,11 @@ export class UIScene extends Phaser.Scene {
         const room = entry.room.length > 13 ? `${entry.room.slice(0, 12)}…` : entry.room;
         row.info.setText(`${room} · ${when}`).setColor('#c9f0ff');
         row.load.setAlpha(1);
+        row.del.setAlpha(1);
       } else {
         row.info.setText('— empty —').setColor('#6a6a8a');
         row.load.setAlpha(0.35);
+        row.del.setAlpha(0.35);
       }
     });
   }

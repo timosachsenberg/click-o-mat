@@ -72,7 +72,7 @@ subpath.
 | Use / combine items | **Click an inventory item** to arm it, then click a hotspot ("Use X with…") or another item (combine) |
 | Choose a dialog line | **Click** the line; click anywhere to **skip** speech |
 | Quick save / load | **F5** / **F9** (the QUICK slot) |
-| Save slots | **⚙ options menu**: 4 slots showing room + time, Save/Load per slot |
+| Save slots | **⚙ options menu**: 4 slots showing room + time; Save/Load/✕ per slot, with inline confirmation before overwriting or deleting |
 | Skip a cutscene | **Esc** (fast-forwards to the end; stops at dialog choices) |
 | Options menu | **⚙ button** (top-right): volume sliders, mute, save slots — **Esc** closes |
 | Mute / unmute audio | **M**, or the 🔊 button (top-right) |
