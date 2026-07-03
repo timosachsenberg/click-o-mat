@@ -810,6 +810,32 @@ Bring Ned the Tentacle something *warm, fuzzy, and radioactive*:
    on it to irradiate him into a *glowing hamster*.
 5. **Give the glowing hamster** to Ned. Roll credits.
 
+## Testing
+
+The engine ships with an end-to-end Playwright harness (~130 checks across 15
+suites in `tests/`): the full demo puzzle, layers/occlusion, scrolling +
+world-coordinate input, ambients/scale-map/zoom, regions + cutscene skip,
+NPC-bound hotspots, ink dialogs (including save/load persistence), audio
+(verified through a WebAudio analyser — mute really silences output), the
+options menu, save slots with overwrite/delete confirmation, and the title
+screen's New Game/Continue.
+
+```bash
+npm i                                  # playwright is a devDependency
+npx playwright install chromium        # one-time browser download
+npm test                               # all suites (~15 min)
+node tests/run-all.mjs ink title       # just the suites matching those names
+```
+
+The runner starts its own Vite dev server (suites need the dev-only
+`window.__engine` debug hook) and writes failure screenshots to
+`tests/screenshots/` (git-ignored). The same suite runs in CI on every push
+(`.github/workflows/test.yml`). To smoke-test a deployed build:
+`BASE_URL=https://your-site/ node tests/smoke.mjs`.
+
+`tools/gen-assets.mjs` regenerates the placeholder PNGs
+(`OUT=public/img node tools/gen-assets.mjs`).
+
 ## Notes on scaling this up
 
 - **Real assets:** see [Using PNG assets](#using-png-assets) — add images and

@@ -6,13 +6,15 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node tests/run-all.mjs"
   },
   "dependencies": {
     "inkjs": "^2.4.0",
     "phaser": "^4.2.0"
   },
   "devDependencies": {
+    "playwright": "^1.61.1",
     "typescript": "^5.6.3",
     "vite": "^6.0.0"
   }
