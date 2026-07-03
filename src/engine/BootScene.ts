@@ -40,6 +40,9 @@ export class BootScene extends Phaser.Scene {
         frameHeight: sheet.frameHeight,
       });
     }
+    for (const clip of engine.assets.audio ?? []) {
+      this.load.audio(clip.key, clip.url);
+    }
   }
 
   create(): void {

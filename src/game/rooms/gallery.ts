@@ -20,6 +20,8 @@ export const galleryRoom: RoomDef = {
   ],
   scaling: { yTop: 314, scaleTop: 0.72, yBottom: 445, scaleBottom: 1.05 },
 
+  music: 'gallery-theme',
+
   entries: {
     fromHallway: { x: 150, y: 360, facing: 'right' },
   },

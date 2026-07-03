@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { engine } from './Engine';
+import { audio } from './Audio';
 import { VERBS, verbLabel } from './verbs';
 import { GAME_W, ROOM_H, UI_H } from './constants';
 import type { VerbId } from './types';
@@ -87,7 +88,43 @@ export class UIScene extends Phaser.Scene {
       this.toast(engine.load() ? 'Game loaded.' : 'No saved game.');
     });
 
+    this.buildAudioButton();
+    this.input.keyboard?.on('keydown-M', () => this.toggleMute());
+
     this.refresh();
+  }
+
+  // ---- audio (mute) control ----------------------------------------------
+
+  private muteButton!: Phaser.GameObjects.Text;
+
+  private buildAudioButton(): void {
+    this.muteButton = this.add
+      .text(GAME_W - 12, 12, '', {
+        fontFamily: 'Verdana, Arial, sans-serif',
+        fontSize: '22px',
+        color: '#c9f0ff',
+        stroke: '#000000',
+        strokeThickness: 4,
+      })
+      .setOrigin(1, 0)
+      .setDepth(10000)
+      .setInteractive({ useHandCursor: true });
+    this.muteButton.on('pointerdown', () => {
+      audio.resume();
+      this.toggleMute();
+    });
+    this.updateMuteButton();
+  }
+
+  private toggleMute(): void {
+    const muted = audio.toggleMute();
+    this.updateMuteButton();
+    this.toast(muted ? 'Sound off' : 'Sound on');
+  }
+
+  private updateMuteButton(): void {
+    this.muteButton.setText(audio.muted ? '🔇' : '🔊');
   }
 
   // ---- verb grid ---------------------------------------------------------

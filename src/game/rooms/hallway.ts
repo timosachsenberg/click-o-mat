@@ -173,6 +173,8 @@ export const hallwayRoom: RoomDef = {
     },
   ],
 
+  music: 'hall-theme',
+
   entries: {
     fromLab: { x: 110, y: 345, facing: 'down' },
     fromGallery: { x: 866, y: 345, facing: 'down' },

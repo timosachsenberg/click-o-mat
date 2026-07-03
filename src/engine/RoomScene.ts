@@ -4,6 +4,7 @@ import { Actor } from './Actor';
 import { WalkArea } from './Pathfinder';
 import { pointInPolygon } from './geometry';
 import { makeCanvasTex, redrawCanvasTex } from './canvasTex';
+import { audio } from './Audio';
 import { DEFAULT_RESPONSES } from './verbs';
 import { GAME_W, ROOM_H } from './constants';
 import type { Facing, HotspotDef, RoomDef, ScriptOrLine, Vec2, VerbId } from './types';
@@ -35,9 +36,11 @@ export class RoomScene extends Phaser.Scene {
 
   create(): void {
     engine.roomScene = this;
+    audio.attachScene(this);
     this.scene.launch('ui');
 
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      audio.resume(); // browsers unlock audio only after a user gesture
       this.onPointerDown(pointer);
     });
     this.input.keyboard?.on('keydown-D', () => this.toggleDebug());
@@ -60,6 +63,9 @@ export class RoomScene extends Phaser.Scene {
 
     this.roomDef = def;
     engine.state.currentRoom = roomId;
+
+    // Crossfade to this room's music (if it declares one).
+    if (def.music !== undefined) audio.playMusic(def.music);
 
     // Background: a preloaded image (e.g. PNG) if the room provides one,
     // otherwise a canvas texture from the room's paint() function.

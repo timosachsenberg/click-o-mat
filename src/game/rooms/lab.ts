@@ -175,6 +175,8 @@ export const labRoom: RoomDef = {
     },
   ],
 
+  music: 'lab-theme',
+
   entries: {
     start: { x: 480, y: 410, facing: 'down' },
     fromHallway: { x: 866, y: 345, facing: 'down' },

@@ -132,6 +132,9 @@ export interface RoomDef {
   walkBehinds?: WalkBehindDef[];
   /** Named spawn points for the player, referenced by goToRoom(). */
   entries: Record<string, RoomEntry>;
+  /** Background music key (a loaded audio file or a built-in procedural track)
+   *  to crossfade to on entering. Omit to leave the current music playing. */
+  music?: string;
   onEnter?: Script;
 }
 
@@ -192,10 +195,20 @@ export interface AnimAsset {
   repeat?: number;
 }
 
+/** An audio file (SFX or music). `url` may be an array of formats (e.g. an
+ *  .ogg and an .mp3) for cross-browser fallback, as Phaser's loader accepts. */
+export interface AudioAsset {
+  key: string;
+  url: string | string[];
+}
+
 /** Everything the engine should preload before the game starts. All fields
  *  are optional — omit the whole manifest to run fully procedurally. */
 export interface AssetManifest {
   images?: ImageAsset[];
   spritesheets?: SpritesheetAsset[];
   anims?: AnimAsset[];
+  /** Audio files, played by key via ctx.sfx()/ctx.playMusic(). A loaded key
+   *  overrides a built-in procedural sound/track of the same name. */
+  audio?: AudioAsset[];
 }

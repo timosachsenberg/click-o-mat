@@ -2,7 +2,7 @@ import type { Engine } from './Engine';
 import type { GameState } from './GameState';
 import type { Actor } from './Actor';
 import type { Facing } from './types';
-import { sfx, type SfxName } from './Sfx';
+import { audio, type SfxName } from './Audio';
 import { ROOM_H, GAME_W } from './constants';
 
 /**
@@ -47,7 +47,7 @@ export class ScriptContext {
   addItem(id: string, opts: { silent?: boolean } = {}): void {
     this.state.addItem(id);
     if (!opts.silent) {
-      sfx('pickup');
+      audio.playSfx('pickup');
       const name = this.eng.items[id]?.name ?? id;
       this.eng.uiScene.toast(`Picked up: ${name}`);
     }
@@ -94,8 +94,20 @@ export class ScriptContext {
     this.eng.roomScene.repaintRoom();
   }
 
-  sfx(name: SfxName): void {
-    sfx(name);
+  /** Play a sound effect — a loaded audio key, or a built-in synth bleep. */
+  sfx(name: SfxName | string): void {
+    audio.playSfx(name);
+  }
+
+  /** Start/switch looping background music (loaded key or procedural track).
+   *  No-op if that track is already playing. */
+  playMusic(key: string): void {
+    audio.playMusic(key);
+  }
+
+  /** Fade out and stop the current music. */
+  stopMusic(): void {
+    audio.stopMusic();
   }
 
   flash(color = 0xffffff, duration = 300): void {

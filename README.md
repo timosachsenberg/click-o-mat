@@ -72,6 +72,7 @@ subpath.
 | Use / combine items | **Click an inventory item** to arm it, then click a hotspot ("Use X with…") or another item (combine) |
 | Choose a dialog line | **Click** the line; click anywhere to **skip** speech |
 | Save / Load | **F5** / **F9** |
+| Mute / unmute audio | **M**, or the 🔊 button (top-right) |
 | Debug overlay | **D** (draws walk area, obstacles, hotspots) |
 
 ### Playing the demo
@@ -327,7 +328,8 @@ hotspots and items, and script reactions.** Everything else in the engine
 | Flags / world state driving conditional art and hotspots | `engine/GameState.ts` |
 | Room transitions with fade + named entry points | `engine/RoomScene.ts` |
 | Save / load (localStorage) — `F5` / `F9` | `engine/Engine.ts` |
-| Camera flash / shake, title cards, bleep SFX | `engine/ScriptContext.ts`, `engine/Sfx.ts` |
+| Camera flash / shake, title cards | `engine/ScriptContext.ts` |
+| **Music & SFX** — per-room tracks with crossfade, volume/mute, procedural *or* loaded audio | `engine/Audio.ts` |
 | Debug overlay (walk area, holes, hotspots) — press `D` | `engine/RoomScene.ts` |
 | **PNG assets** — image backgrounds + spritesheet-animated actors | `engine/BootScene.ts`, `game/assets.ts` |
 
@@ -351,8 +353,9 @@ src/
     ScriptContext.ts   The async API game scripts call (walk/say/flags/…)
     DialogRunner.ts    Drives branching dialog trees
     GameState.ts       Flags, inventory, location + save/load serialization
+    Audio.ts           Music + SFX (procedural synth and/or loaded files)
     types.ts           All content-definition types (RoomDef, HotspotDef, …)
-    ...                geometry, verbs, sfx, canvas helpers, constants
+    ...                geometry, verbs, canvas helpers, constants
   game/                YOUR game content
     index.ts           Registers all rooms/items/actors/dialogs/assets
     assets.ts          PNG/spritesheet manifest (preloaded by BootScene)
@@ -459,7 +462,8 @@ Every handler and cutscene receives a `ctx`. The essentials:
 | `ctx.flag(key)` / `ctx.setFlag(key, val?)` | Read / write world state |
 | `ctx.hasItem(id)` / `ctx.addItem(id)` / `ctx.removeItem(id)` | Inventory |
 | `ctx.repaint()` | Redraw room art + rebuild walk area from current state |
-| `ctx.sfx(name)` | Play a bleep (`pickup`/`open`/`zap`/`deny`/`win`/`step`) |
+| `ctx.sfx(name)` | Play a sound effect (loaded key, or a built-in bleep: `pickup`/`open`/`zap`/`deny`/`win`/`step`) |
+| `ctx.playMusic(key)` / `ctx.stopMusic()` | Start/switch or fade out background music |
 | `ctx.flash(color?, ms?)` / `ctx.shake(ms?, intensity?)` | Camera effects |
 | `ctx.showTitle(text)` | Big centered title card |
 
@@ -540,6 +544,65 @@ is an 8×3 grid of 48×48 frames covering all nine pose/direction combinations.
 > The frames only need to exist for the poses/directions an actor actually
 > uses. A stationary NPC that only ever faces front needs just
 > `<set>-idle-front` and `<set>-talk-front`.
+
+## Music & sound
+
+The audio system (`engine/Audio.ts`) mixes two sources through one graph so
+volume and mute apply to everything uniformly:
+
+- **Procedural** — chiptune music tracks and bleep SFX synthesized with
+  WebAudio, so the demo has a soundtrack with **no audio files**.
+- **Loaded** — real audio files declared in the manifest and played through
+  Phaser. A loaded key always overrides a procedural one of the same name.
+
+Players get a **🔊 mute button** (top-right) and the **M** key. Master / music /
+SFX volumes and the mute state are exposed on the `audio` singleton and
+persisted to `localStorage`.
+
+### Per-room music
+
+Give a room a `music` key; the engine crossfades to it on entry (and leaves it
+playing if the next room omits `music`):
+
+```ts
+export const labRoom: RoomDef = {
+  id: 'lab',
+  music: 'lab-theme',   // a built-in procedural track, or a loaded audio key
+  // ...
+};
+```
+
+The demo ships three procedural tracks — `lab-theme`, `hall-theme`,
+`gallery-theme` — defined in `engine/Audio.ts`. Add your own by extending that
+`TRACKS` table (each is a bpm plus bass/lead note rows).
+
+### Sound effects from scripts
+
+```ts
+ctx.sfx('zap');          // built-in bleep, or a loaded audio key
+ctx.playMusic('boss');   // switch tracks mid-scene
+ctx.stopMusic();         // fade out
+```
+
+### Using real audio files
+
+Add them to the manifest (`game/assets.ts`); `BootScene` preloads them and they
+become playable by key. Because a loaded key wins over a procedural one, you can
+override the demo's synth sounds just by shipping files with the same names:
+
+```ts
+export const ASSETS: AssetManifest = {
+  audio: [
+    { key: 'lab-theme', url: `${import.meta.env.BASE_URL}audio/lab.ogg` },
+    { key: 'zap',       url: `${import.meta.env.BASE_URL}audio/zap.wav` },
+    // url may be an array of formats for cross-browser fallback:
+    { key: 'win', url: ['audio/win.ogg', 'audio/win.mp3'].map(u => import.meta.env.BASE_URL + u) },
+  ],
+};
+```
+
+> Browsers only start audio after a user gesture. The engine handles this: music
+> requested before the first click is deferred and starts on that click.
 
 ## The demo puzzle
 
