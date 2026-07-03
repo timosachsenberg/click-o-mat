@@ -1,6 +1,14 @@
 import Phaser from 'phaser';
 import { GameState, type SaveData } from './GameState';
-import type { ActorDef, DialogDef, ItemDef, RoomDef, ScriptOrLine, VerbId } from './types';
+import type {
+  ActorDef,
+  AssetManifest,
+  DialogDef,
+  ItemDef,
+  RoomDef,
+  ScriptOrLine,
+  VerbId,
+} from './types';
 import { runDialog } from './DialogRunner';
 import { ScriptContext } from './ScriptContext';
 import type { RoomScene } from './RoomScene';
@@ -11,6 +19,8 @@ export interface GameContent {
   items: Record<string, ItemDef>;
   actors: Record<string, ActorDef>;
   dialogs: Record<string, DialogDef>;
+  /** Optional images/spritesheets/animations to preload before the game runs. */
+  assets?: AssetManifest;
   playerId: string;
   startRoom: string;
   startEntry: string;
@@ -30,6 +40,7 @@ export class Engine {
   items: Record<string, ItemDef> = {};
   actors: Record<string, ActorDef> = {};
   dialogs: Record<string, DialogDef> = {};
+  assets: AssetManifest = {};
   playerId = 'player';
   startRoom = '';
   startEntry = 'start';
@@ -55,6 +66,7 @@ export class Engine {
     this.items = content.items;
     this.actors = content.actors;
     this.dialogs = content.dialogs;
+    this.assets = content.assets ?? {};
     this.playerId = content.playerId;
     this.startRoom = content.startRoom;
     this.startEntry = content.startEntry;

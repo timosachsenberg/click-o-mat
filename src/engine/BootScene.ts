@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { makeCanvasTex } from './canvasTex';
+import { engine } from './Engine';
 
 type Variant = 'front' | 'back' | 'side';
 type Pose = 'idle' | 'walk' | 'talk';
@@ -17,16 +18,32 @@ interface GuyColors {
 }
 
 /**
- * Generates every placeholder texture (characters, icons) and all
- * animations, then hands off to the room + UI scenes. Swap this scene for a
- * real asset loader when you have art.
+ * Loads real assets from the manifest (`engine.assets`) AND generates the
+ * demo's procedural placeholder art. The two paths coexist: a game can be
+ * fully procedural, fully PNG-based, or a mix. Hands off to the room + UI
+ * scenes once everything is ready.
  */
 export class BootScene extends Phaser.Scene {
   constructor() {
     super('boot');
   }
 
+  /** Queue every image/spritesheet in the manifest. Phaser runs this before
+   *  create(), so the textures exist by the time we build animations. */
+  preload(): void {
+    for (const img of engine.assets.images ?? []) {
+      this.load.image(img.key, img.url);
+    }
+    for (const sheet of engine.assets.spritesheets ?? []) {
+      this.load.spritesheet(sheet.key, sheet.url, {
+        frameWidth: sheet.frameWidth,
+        frameHeight: sheet.frameHeight,
+      });
+    }
+  }
+
   create(): void {
+    // Procedural placeholder art for the demo characters + icons.
     this.makeHumanoidSet('guy', {
       skin: '#f2c99a',
       hair: '#5a3820',
@@ -39,6 +56,18 @@ export class BootScene extends Phaser.Scene {
     this.makeIcons();
     this.registerAnims('guy');
     this.registerAnims('tent');
+
+    // Animations built from loaded spritesheets in the manifest.
+    for (const a of engine.assets.anims ?? []) {
+      if (this.anims.exists(a.key)) continue;
+      this.anims.create({
+        key: a.key,
+        frames: this.anims.generateFrameNumbers(a.texture, { frames: a.frames }),
+        frameRate: a.frameRate,
+        repeat: a.repeat ?? -1,
+      });
+    }
+
     this.scene.start('room');
   }
 

@@ -113,9 +113,14 @@ export interface WalkBehindDef {
 export interface RoomDef {
   id: string;
   name?: string;
+  /** Texture key of a preloaded background image (e.g. a PNG, 960×450). When
+   *  set, it is drawn instead of `paint`. A static image; not re-run on
+   *  repaint(). Provide `paint` instead if the background reacts to state. */
+  background?: string;
   /** Paints the background into a canvas. Re-run whenever ctx.repaint() is
-   *  called, so it may draw conditionally on game state. */
-  paint: (g: CanvasRenderingContext2D, state: GameState) => void;
+   *  called, so it may draw conditionally on game state. Optional when
+   *  `background` is given. */
+  paint?: (g: CanvasRenderingContext2D, state: GameState) => void;
   /** Boundary polygon of the walkable floor (room coords). May depend on state. */
   walkArea: Vec2[] | ((state: GameState) => Vec2[]);
   /** Non-walkable obstacle polygons fully inside the walk area. */
@@ -153,4 +158,44 @@ export interface DialogDef {
   id: string;
   start: string;
   nodes: Record<string, DialogNode>;
+}
+
+// ---- asset manifest --------------------------------------------------------
+
+/** A single image (background, inventory icon, prop) loaded from a URL. */
+export interface ImageAsset {
+  key: string;
+  url: string;
+}
+
+/** A grid spritesheet: all frames the same size, addressed by index. */
+export interface SpritesheetAsset {
+  key: string;
+  url: string;
+  frameWidth: number;
+  frameHeight: number;
+}
+
+/**
+ * An animation built from spritesheet frames. Use the actor key convention
+ * `<textureSet>-<pose>-<variant>` (pose: idle|walk|talk, variant:
+ * front|back|side) so actors pick it up automatically.
+ */
+export interface AnimAsset {
+  key: string;
+  /** Texture key of the spritesheet the frames come from. */
+  texture: string;
+  /** Frame indices, in play order. */
+  frames: number[];
+  frameRate: number;
+  /** -1 = loop forever (the default). */
+  repeat?: number;
+}
+
+/** Everything the engine should preload before the game starts. All fields
+ *  are optional — omit the whole manifest to run fully procedurally. */
+export interface AssetManifest {
+  images?: ImageAsset[];
+  spritesheets?: SpritesheetAsset[];
+  anims?: AnimAsset[];
 }

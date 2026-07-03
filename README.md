@@ -86,7 +86,9 @@ Bring Ned the Tentacle something *warm, fuzzy, and radioactive*:
    on it to irradiate him into a *glowing hamster*.
 5. **Give the glowing hamster** to Ned. Roll credits.
 
-Also try just **talking to Ned** (right-click him) to see the dialog tree.
+Also try just **talking to Ned** (right-click him) to see the dialog tree, and
+step through the hallway's **GALLERY** door to visit a room built from PNG art
+(a PNG background and the spritesheet critter, Blobbo).
 
 ---
 
@@ -327,6 +329,12 @@ hotspots and items, and script reactions.** Everything else in the engine
 | Save / load (localStorage) — `F5` / `F9` | `engine/Engine.ts` |
 | Camera flash / shake, title cards, bleep SFX | `engine/ScriptContext.ts`, `engine/Sfx.ts` |
 | Debug overlay (walk area, holes, hotspots) — press `D` | `engine/RoomScene.ts` |
+| **PNG assets** — image backgrounds + spritesheet-animated actors | `engine/BootScene.ts`, `game/assets.ts` |
+
+Procedural art and PNG art coexist: the lab and hallway are drawn in code,
+while the **Gallery** (reachable through the GALLERY door in the hallway) uses a
+PNG background and a PNG-spritesheet character ("Blobbo"). See
+[Using PNG assets](#using-png-assets).
 
 ## Project layout
 
@@ -346,9 +354,12 @@ src/
     types.ts           All content-definition types (RoomDef, HotspotDef, …)
     ...                geometry, verbs, sfx, canvas helpers, constants
   game/                YOUR game content
-    index.ts           Registers all rooms/items/actors/dialogs
+    index.ts           Registers all rooms/items/actors/dialogs/assets
+    assets.ts          PNG/spritesheet manifest (preloaded by BootScene)
     rooms/*.ts         One file per room
     items.ts  actors.ts  dialogs.ts
+public/
+  img/                 PNG assets (served verbatim, copied into dist/)
 ```
 
 ## Architecture
@@ -452,6 +463,84 @@ Every handler and cutscene receives a `ctx`. The essentials:
 | `ctx.flash(color?, ms?)` / `ctx.shake(ms?, intensity?)` | Camera effects |
 | `ctx.showTitle(text)` | Big centered title card |
 
+## Using PNG assets
+
+The engine draws the demo procedurally so it needs no files, but it fully
+supports real **PNG** art — image backgrounds, inventory icons, and
+spritesheet-animated characters. You mix and match freely; the Gallery room in
+the demo is entirely PNG-driven while the other rooms stay procedural.
+
+### 1. Drop files in `public/img/`
+
+Anything under `public/` is served verbatim in dev and copied into `dist/` on
+build, so `public/img/hero.png` is reachable at `img/hero.png`.
+
+### 2. Declare them in the asset manifest
+
+`src/game/assets.ts` lists what to preload. `BootScene` loads it all before the
+game starts. (Prefix URLs with `import.meta.env.BASE_URL` so they resolve both
+locally and under the GitHub Pages subpath.)
+
+```ts
+export const ASSETS: AssetManifest = {
+  images: [
+    { key: 'gallery-bg', url: `${import.meta.env.BASE_URL}img/gallery-bg.png` },
+  ],
+  spritesheets: [
+    { key: 'critter', url: `${import.meta.env.BASE_URL}img/critter.png`,
+      frameWidth: 48, frameHeight: 48 },
+  ],
+  anims: [
+    // Key convention: `<textureSet>-<pose>-<variant>`
+    // pose = idle|walk|talk, variant = front|back|side
+    { key: 'critter-idle-front', texture: 'critter', frames: [0, 1], frameRate: 2 },
+    { key: 'critter-walk-side',  texture: 'critter', frames: [12,13,14,15], frameRate: 9 },
+    // ...one per pose × direction the actor uses
+  ],
+};
+```
+
+The manifest is registered in `src/game/index.ts` as `assets: ASSETS`.
+
+### 3a. PNG background
+
+Give a room a `background` (a loaded image key) instead of a `paint` function:
+
+```ts
+export const galleryRoom: RoomDef = {
+  id: 'gallery',
+  background: 'gallery-bg',   // <-- the preloaded PNG, drawn at 960×450
+  walkArea: [ ... ],
+  // ...no paint() needed
+};
+```
+
+(If your background needs to change with game state, keep using `paint(g,
+state)` + `ctx.repaint()` instead — that path is still there.)
+
+### 3b. PNG-spritesheet character
+
+An actor's `textureSet` is the naming prefix the engine looks animations up by.
+Point it at your spritesheet key and define animations named
+`<textureSet>-<pose>-<variant>` — that's the **entire** contract. No engine
+changes, and such an actor walks, talks, and path-finds like any other:
+
+```ts
+critter: {
+  id: 'critter', name: 'Blobbo', talkColor: '#ffcf6a',
+  textureSet: 'critter',      // matches the spritesheet + anim key prefix
+  baseScale: 1.5, speed: 130,
+},
+```
+
+Place it in a room (`actors: [{ id: 'critter', x, y }]`) and give a hotspot a
+`talkto` handler, exactly as with procedural actors. The demo's `critter.png`
+is an 8×3 grid of 48×48 frames covering all nine pose/direction combinations.
+
+> The frames only need to exist for the poses/directions an actor actually
+> uses. A stationary NPC that only ever faces front needs just
+> `<set>-idle-front` and `<set>-talk-front`.
+
 ## The demo puzzle
 
 Bring Ned the Tentacle something *warm, fuzzy, and radioactive*:
@@ -465,9 +554,10 @@ Bring Ned the Tentacle something *warm, fuzzy, and radioactive*:
 
 ## Notes on scaling this up
 
-- **Real assets:** swap `BootScene` for `scene.load.spritesheet(...)` /
-  `load.image(...)` and delete the procedural drawing. The `Actor` animation
-  keys (`<set>-<pose>-<variant>`) are the only contract to keep.
+- **Real assets:** see [Using PNG assets](#using-png-assets) — add images and
+  spritesheets to `game/assets.ts` and they're preloaded automatically. To go
+  fully asset-based, drop the procedural generators in `BootScene` once every
+  actor/icon has a PNG.
 - **More save slots:** `Engine.save/load` take no slot argument today; add a
   slot id and key by it.
 - **Larger rooms / scrolling:** the camera is currently fixed to one screen;

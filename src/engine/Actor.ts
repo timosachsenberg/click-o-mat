@@ -41,7 +41,13 @@ export class Actor {
     y: number,
     facing: Facing = 'down'
   ) {
-    this.sprite = scene.add.sprite(x, y, `${def.textureSet}-front-idle-0`);
+    // Procedural actors have a `<set>-front-idle-0` texture; spritesheet
+    // actors just have the sheet key (frame 0). Fall back so both work.
+    const proceduralKey = `${def.textureSet}-front-idle-0`;
+    const initialKey = scene.textures.exists(proceduralKey)
+      ? proceduralKey
+      : def.textureSet;
+    this.sprite = scene.add.sprite(x, y, initialKey);
     this.sprite.setOrigin(0.5, 1);
     this.facing = facing;
     this.applyPose();

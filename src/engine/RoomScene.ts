@@ -61,10 +61,17 @@ export class RoomScene extends Phaser.Scene {
     this.roomDef = def;
     engine.state.currentRoom = roomId;
 
-    // Background (painted into a canvas texture so it can react to state).
-    const bgKey = `room-bg-${roomId}`;
-    makeCanvasTex(this, bgKey, GAME_W, ROOM_H, (g) => def.paint(g, engine.state));
-    this.add.image(0, 0, bgKey).setOrigin(0).setDepth(-1000);
+    // Background: a preloaded image (e.g. PNG) if the room provides one,
+    // otherwise a canvas texture from the room's paint() function.
+    if (def.background) {
+      const img = this.add.image(0, 0, def.background).setOrigin(0).setDepth(-1000);
+      img.setDisplaySize(GAME_W, ROOM_H);
+    } else if (def.paint) {
+      const bgKey = `room-bg-${roomId}`;
+      const paint = def.paint;
+      makeCanvasTex(this, bgKey, GAME_W, ROOM_H, (g) => paint(g, engine.state));
+      this.add.image(0, 0, bgKey).setOrigin(0).setDepth(-1000);
+    }
 
     // Walk-behind props: depth equals their floor line so actors sort around them.
     for (const wb of def.walkBehinds ?? []) {
@@ -121,7 +128,11 @@ export class RoomScene extends Phaser.Scene {
    *  current state (e.g. after picking something up or moving a prop). */
   repaintRoom(): void {
     const def = this.roomDef;
-    redrawCanvasTex(this, `room-bg-${def.id}`, (g) => def.paint(g, engine.state));
+    // Image backgrounds are static; only canvas paint() backgrounds redraw.
+    if (!def.background && def.paint) {
+      const paint = def.paint;
+      redrawCanvasTex(this, `room-bg-${def.id}`, (g) => paint(g, engine.state));
+    }
     for (const img of this.walkBehindImages) {
       const wb = img.getData('wb') as NonNullable<RoomDef['walkBehinds']>[number];
       redrawCanvasTex(this, `room-wb-${def.id}-${wb.key}`, (g) => wb.draw(g, engine.state));

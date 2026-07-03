@@ -72,6 +72,25 @@ export const hallwayRoom: RoomDef = {
     g.font = 'bold 20px monospace';
     g.fillText('HALL OF SCIENCE', 442, 128);
 
+    // Door to the gallery (right wall)
+    g.fillStyle = '#3a2c20';
+    g.fillRect(824, 120, 100, 188);
+    g.fillStyle = '#6b5040';
+    g.fillRect(832, 128, 84, 180);
+    g.strokeStyle = '#4a3628';
+    g.lineWidth = 2;
+    g.strokeRect(842, 142, 64, 70);
+    g.strokeRect(842, 224, 64, 70);
+    g.fillStyle = '#d4b430';
+    g.beginPath();
+    g.arc(840, 224, 4, 0, Math.PI * 2); // knob
+    g.fill();
+    g.fillStyle = '#c8a24a'; // little "GALLERY" plate
+    g.fillRect(846, 108, 56, 12);
+    g.fillStyle = '#33281c';
+    g.font = 'bold 9px monospace';
+    g.fillText('GALLERY', 850, 117);
+
     // Key on the floor, revealed once the plant has been pushed aside
     if (state.getFlag('plantMoved') && !state.getFlag('keyTaken')) {
       g.strokeStyle = '#e6c860';
@@ -156,6 +175,7 @@ export const hallwayRoom: RoomDef = {
 
   entries: {
     fromLab: { x: 110, y: 345, facing: 'down' },
+    fromGallery: { x: 866, y: 345, facing: 'down' },
   },
 
   hotspots: [
@@ -175,6 +195,25 @@ export const hallwayRoom: RoomDef = {
         use: async (ctx) => {
           ctx.sfx('open');
           await ctx.goToRoom('lab', 'fromHallway');
+        },
+      },
+    },
+    {
+      id: 'gallerydoor',
+      name: 'gallery door',
+      rect: { x: 824, y: 120, w: 100, h: 188 },
+      walkTo: { x: 872, y: 334 },
+      facing: 'up',
+      defaultVerb: 'open',
+      on: {
+        lookat: 'A door marked GALLERY. Culture awaits.',
+        open: async (ctx) => {
+          ctx.sfx('open');
+          await ctx.goToRoom('gallery', 'fromHallway');
+        },
+        use: async (ctx) => {
+          ctx.sfx('open');
+          await ctx.goToRoom('gallery', 'fromHallway');
         },
       },
     },
