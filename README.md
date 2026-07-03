@@ -347,6 +347,7 @@ hotspots and items, and script reactions.** Everything else in the engine
 | Inventory with paging + item icons | `engine/UIScene.ts` |
 | Use-item-on-hotspot and item-on-item combinations | `engine/RoomScene.ts`, `engine/UIScene.ts` |
 | Branching dialog trees (conditions, one-shot choices, jumps) | `engine/DialogRunner.ts` |
+| **ink dialogs** — author conversations in inkle's ink language, state save-persisted | `engine/InkDialogRunner.ts`, `game/blobbo.ink` |
 | Async scripting API (walk, say, wait, flags, cutscenes) | `engine/ScriptContext.ts` |
 | Flags / world state driving conditional art and hotspots | `engine/GameState.ts` |
 | Room transitions with fade + named entry points | `engine/RoomScene.ts` |
@@ -605,6 +606,32 @@ gallery's Blobbo does exactly this.
 - **Actors** (`actors.ts`): id, name, speech color, texture set, speed.
 - **Dialogs** (`dialogs.ts`): nodes of choices, each with optional `if`
   condition, `once` flag, `script`, and `next`/`end` to control flow.
+
+### ink dialogs
+
+Conversations can also be authored in
+[ink](https://www.inklestudios.com/ink/), inkle's narrative scripting
+language — better for writer-heavy dialog (weave syntax, automatic read
+counts, an editor with live preview). Blobbo's conversation is the working
+example: `src/game/blobbo.ink`, wired up in `src/game/blobboDialog.ts`:
+
+```ts
+story ??= new Compiler(blobboSource).Compile() as unknown as InkStory;
+await ctx.inkDialog(story, {
+  entry: 'chat',
+  stateFlag: 'ink:blobbo',                       // persists read counts/choices in a save flag
+  speakers: { BLOBBO: 'critter', NORB: 'norb' }, // "BLOBBO: line" -> that actor speaks
+  vars: { has_hamster: ctx.hasItem('hamster') }, // game state in
+  bindings: { sfx: (n) => ctx.sfx(n) },          // ink EXTERNAL functions
+  onEnd: (get) => { if (get('friend')) ctx.setFlag('blobboFriend'); },  // state out
+});
+```
+
+It runs through the same choice UI, speech, busy, and Esc-skip machinery as
+native dialogs. Because the full ink state is serialized into a normal game
+flag after each conversation, exhausted once-only choices and ink variables
+survive save/load. The engine side (`engine/InkDialogRunner.ts`) is
+structurally typed — games that don't use ink don't depend on it.
 
 ### The `ScriptContext` API
 

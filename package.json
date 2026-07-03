@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "inkjs": "^2.4.0",
     "phaser": "^4.2.0"
   },
   "devDependencies": {

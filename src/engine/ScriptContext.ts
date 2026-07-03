@@ -3,6 +3,7 @@ import type { GameState } from './GameState';
 import type { Actor } from './Actor';
 import type { Facing, Script } from './types';
 import { audio, type SfxName } from './Audio';
+import { runInkDialog, type InkDialogOptions, type InkStory } from './InkDialogRunner';
 import { ROOM_H, GAME_W } from './constants';
 
 /**
@@ -113,6 +114,11 @@ export class ScriptContext {
 
   async dialog(dialogId: string): Promise<void> {
     await this.eng.runDialog(dialogId);
+  }
+
+  /** Run an ink story as a conversation (see InkDialogRunner). */
+  async inkDialog(story: InkStory, opts: InkDialogOptions): Promise<void> {
+    await runInkDialog(this.eng, story, opts);
   }
 
   /** Repaint paint-layers, re-evaluate layer visibility, and rebuild the walk

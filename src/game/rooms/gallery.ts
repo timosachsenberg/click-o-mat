@@ -1,4 +1,5 @@
 import { Layer, type RoomDef } from '../../engine/types';
+import { talkToBlobbo } from '../blobboDialog';
 
 /**
  * The layer-system showcase: a PNG image backdrop, two animated sconce
@@ -146,16 +147,8 @@ export const galleryRoom: RoomDef = {
       defaultVerb: 'talkto',
       on: {
         lookat: 'A small orange critter. He appears to be an art enthusiast.',
-        talkto: async (ctx) => {
-          await ctx.say('critter', 'Bloop! Welcome to my gallery.');
-          await ctx.playerSay('Your gallery? You have no arms to hang anything.');
-          await ctx.say('critter', 'Bloop. I curate with my MIND.');
-          if (!ctx.hasItem('battery') && !ctx.hasItem('key')) {
-            await ctx.playerSay("Fair enough.");
-          } else {
-            await ctx.say('critter', "Also: nice inventory. Very adventurer-chic.");
-          }
-        },
+        // Blobbo's conversation is authored in ink (src/game/blobbo.ink).
+        talkto: (ctx) => talkToBlobbo(ctx),
         pickup: 'He is a protected local artist. Hands off.',
         push: 'You do not push a curator. It is simply not done.',
       },
