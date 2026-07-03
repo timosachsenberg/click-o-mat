@@ -89,9 +89,151 @@ export class UIScene extends Phaser.Scene {
     });
 
     this.buildAudioButton();
+    this.buildOptionsMenu();
     this.input.keyboard?.on('keydown-M', () => this.toggleMute());
+    this.input.keyboard?.on('keydown-ESC', () => {
+      if (engine.menuOpen) this.toggleOptions(false);
+    });
 
     this.refresh();
+  }
+
+  // ---- options menu --------------------------------------------------------
+
+  private optionsButton!: Phaser.GameObjects.Text;
+  private optionsPanel!: Phaser.GameObjects.Container;
+  private sliderFills: Array<{ fill: Phaser.GameObjects.Rectangle; get: () => number }> = [];
+  private muteToggle!: Phaser.GameObjects.Text;
+  private sliderDrag: { x0: number; w: number; set: (v: number) => void } | null = null;
+
+  private buildOptionsMenu(): void {
+    this.optionsButton = this.add
+      .text(GAME_W - 54, 12, '⚙', {
+        fontFamily: 'Verdana, Arial, sans-serif',
+        fontSize: '24px',
+        color: '#c9f0ff',
+        stroke: '#000000',
+        strokeThickness: 4,
+      })
+      .setOrigin(1, 0)
+      .setDepth(10000)
+      .setInteractive({ useHandCursor: true });
+    this.optionsButton.on('pointerdown', () => {
+      audio.resume();
+      this.toggleOptions();
+    });
+
+    // Panel
+    this.optionsPanel = this.add.container(0, 0).setDepth(30000).setVisible(false);
+    const bg = this.add
+      .rectangle(GAME_W / 2, 225, 380, 280, 0x1a1626, 0.97)
+      .setStrokeStyle(2, 0x8f7fd4);
+    // Swallow clicks so the room never sees them through the panel.
+    bg.setInteractive();
+    const title = this.add
+      .text(GAME_W / 2, 112, 'OPTIONS', {
+        fontFamily: 'Verdana, Arial, sans-serif',
+        fontSize: '20px',
+        fontStyle: 'bold',
+        color: '#ffe066',
+      })
+      .setOrigin(0.5);
+    this.optionsPanel.add(bg);
+    this.optionsPanel.add(title);
+
+    this.makeSlider('Master', 158, () => audio.settings.master, (v) => audio.setMasterVolume(v));
+    this.makeSlider('Music', 200, () => audio.settings.music, (v) => audio.setMusicVolume(v));
+    this.makeSlider('Sound FX', 242, () => audio.settings.sfx, (v) => audio.setSfxVolume(v));
+
+    this.muteToggle = this.add
+      .text(GAME_W / 2, 286, '', {
+        fontFamily: 'Verdana, Arial, sans-serif',
+        fontSize: '16px',
+        color: '#9be89b',
+      })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true });
+    this.muteToggle.on('pointerdown', () => this.toggleMute());
+    this.optionsPanel.add(this.muteToggle);
+
+    const button = (x: number, label: string, onClick: () => void) => {
+      const t = this.add
+        .text(x, 330, label, {
+          fontFamily: 'Verdana, Arial, sans-serif',
+          fontSize: '17px',
+          fontStyle: 'bold',
+          color: '#8f7fd4',
+        })
+        .setOrigin(0.5)
+        .setInteractive({ useHandCursor: true });
+      t.on('pointerover', () => t.setColor('#ffe066'));
+      t.on('pointerout', () => t.setColor('#8f7fd4'));
+      t.on('pointerdown', onClick);
+      this.optionsPanel.add(t);
+    };
+    button(390, 'Save', () => this.toast(engine.save() ? 'Game saved.' : 'Save failed.'));
+    button(480, 'Load', () => {
+      const ok = engine.load();
+      this.toast(ok ? 'Game loaded.' : 'No saved game.');
+      if (ok) this.toggleOptions(false);
+    });
+    button(570, 'Close', () => this.toggleOptions(false));
+
+    // Slider dragging (shared handlers)
+    this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
+      if (!this.sliderDrag || !pointer.isDown) return;
+      const v = Phaser.Math.Clamp((pointer.x - this.sliderDrag.x0) / this.sliderDrag.w, 0, 1);
+      this.sliderDrag.set(v);
+      this.refreshOptions();
+    });
+    this.input.on('pointerup', () => {
+      this.sliderDrag = null;
+    });
+  }
+
+  private makeSlider(label: string, y: number, get: () => number, set: (v: number) => void): void {
+    const trackX = 440;
+    const trackW = 180;
+    const text = this.add
+      .text(320, y, label, {
+        fontFamily: 'Verdana, Arial, sans-serif',
+        fontSize: '15px',
+        color: '#c9f0ff',
+      })
+      .setOrigin(0, 0.5);
+    const track = this.add.rectangle(trackX, y, trackW, 8, 0x4a4370).setOrigin(0, 0.5);
+    const fill = this.add
+      .rectangle(trackX, y, trackW * get(), 8, 0x8f7fd4)
+      .setOrigin(0, 0.5);
+    // Wider invisible hit zone for comfortable clicking/dragging.
+    const hit = this.add
+      .rectangle(trackX, y, trackW, 28, 0x000000, 0.001)
+      .setOrigin(0, 0.5)
+      .setInteractive({ useHandCursor: true });
+    hit.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      const v = Phaser.Math.Clamp((pointer.x - trackX) / trackW, 0, 1);
+      set(v);
+      this.sliderDrag = { x0: trackX, w: trackW, set };
+      this.refreshOptions();
+    });
+    this.optionsPanel.add(text);
+    this.optionsPanel.add(track);
+    this.optionsPanel.add(fill);
+    this.optionsPanel.add(hit);
+    this.sliderFills.push({ fill, get });
+  }
+
+  toggleOptions(open?: boolean): void {
+    const next = open ?? !engine.menuOpen;
+    engine.menuOpen = next;
+    this.optionsPanel.setVisible(next);
+    if (next) this.refreshOptions();
+  }
+
+  private refreshOptions(): void {
+    for (const s of this.sliderFills) s.fill.width = 180 * s.get();
+    this.muteToggle.setText(audio.muted ? 'Sound: OFF  (click to unmute)' : 'Sound: ON  (click to mute)');
+    this.updateMuteButton();
   }
 
   // ---- audio (mute) control ----------------------------------------------
@@ -120,6 +262,7 @@ export class UIScene extends Phaser.Scene {
   private toggleMute(): void {
     const muted = audio.toggleMute();
     this.updateMuteButton();
+    if (engine.menuOpen) this.refreshOptions();
     this.toast(muted ? 'Sound off' : 'Sound on');
   }
 
@@ -149,7 +292,7 @@ export class UIScene extends Phaser.Scene {
       t.on('pointerover', () => this.styleVerb(verb.id, true));
       t.on('pointerout', () => this.styleVerb(verb.id, false));
       t.on('pointerdown', () => {
-        if (engine.busy || engine.dialogMode) return;
+        if (engine.busy || engine.dialogMode || engine.menuOpen) return;
         engine.setVerb(engine.selectedVerb === verb.id ? null : verb.id);
       });
       this.verbTexts.set(verb.id, t);
@@ -219,7 +362,7 @@ export class UIScene extends Phaser.Scene {
   }
 
   private onSlotClick(slotIndex: number): void {
-    if (engine.busy || engine.dialogMode) return;
+    if (engine.busy || engine.dialogMode || engine.menuOpen) return;
     const itemId = this.invSlots[slotIndex].itemId;
     if (!itemId) return;
     const item = engine.items[itemId];
@@ -281,7 +424,7 @@ export class UIScene extends Phaser.Scene {
         t.on('pointerover', () => t.setColor('#ffe066'));
         t.on('pointerout', () => t.setColor('#9be89b'));
         t.on('pointerdown', () => {
-          if (!this.choiceResolve) return;
+          if (!this.choiceResolve || engine.menuOpen) return;
           const r = this.choiceResolve;
           this.choiceResolve = null;
           engine.choicesShowing = false;

@@ -75,6 +75,8 @@ export class Engine {
   dialogMode = false;
   /** True while dialog choices are on screen awaiting a pick. */
   choicesShowing = false;
+  /** True while the options menu is open; gameplay input is blocked. */
+  menuOpen = false;
 
   selectedVerb: VerbId | null = null;
   pendingItem: string | null = null;

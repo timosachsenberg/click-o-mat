@@ -71,7 +71,8 @@ subpath.
 | Quick default verb | **Right-click** a hotspot (look / open / talk, as configured) |
 | Use / combine items | **Click an inventory item** to arm it, then click a hotspot ("Use X with…") or another item (combine) |
 | Choose a dialog line | **Click** the line; click anywhere to **skip** speech |
-| Save / Load | **F5** / **F9** |
+| Save / Load | **F5** / **F9**, or the options menu |
+| Options menu | **⚙ button** (top-right): volume sliders, mute, save/load — **Esc** closes |
 | Mute / unmute audio | **M**, or the 🔊 button (top-right) |
 | Debug overlay | **D** (draws walk area, obstacles, hotspots) |
 
@@ -348,6 +349,7 @@ hotspots and items, and script reactions.** Everything else in the engine
 | Save / load (localStorage) — `F5` / `F9` | `engine/Engine.ts` |
 | Camera flash / shake, title cards | `engine/ScriptContext.ts` |
 | **Music & SFX** — per-room tracks with crossfade, volume/mute, procedural *or* loaded audio | `engine/Audio.ts` |
+| **Options menu** — volume sliders, mute, save/load (⚙ top-right) | `engine/UIScene.ts` |
 | Debug overlay (walk area, holes, hotspots) — press `D` | `engine/RoomScene.ts` |
 | **PNG assets** — image backgrounds + spritesheet-animated actors | `engine/BootScene.ts`, `game/assets.ts` |
 

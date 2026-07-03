@@ -267,6 +267,7 @@ export class RoomScene extends Phaser.Scene {
   // ---- input -------------------------------------------------------------
 
   private onPointerDown(pointer: Phaser.Input.Pointer): void {
+    if (engine.menuOpen) return; // options menu captures all input
     if (pointer.y >= ROOM_H) return; // UI band: handled by UIScene
     if (engine.dialogMode) {
       engine.events.emit('skipLine');
@@ -414,7 +415,7 @@ export class RoomScene extends Phaser.Scene {
     // Hover tracking for the sentence line (screen → world for hit-testing).
     const pointer = this.input.activePointer;
     let hover: HotspotDef | null = null;
-    if (pointer.y < ROOM_H && !engine.dialogMode) {
+    if (pointer.y < ROOM_H && !engine.dialogMode && !engine.menuOpen) {
       const wp = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
       hover = this.hotspotAt({ x: wp.x, y: wp.y });
     }
