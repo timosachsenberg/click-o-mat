@@ -22,6 +22,8 @@ export class RoomScene extends Phaser.Scene {
   actors = new Map<string, Actor>();
   walkArea!: WalkArea;
   roomDef!: RoomDef;
+  /** World size of the current room (defaults to one screen). */
+  roomSize = { w: GAME_W, h: ROOM_H };
 
   private layerObjs = new Map<string, Phaser.GameObjects.Image | Phaser.GameObjects.Sprite>();
   private hoverHotspot: HotspotDef | null = null;
@@ -54,6 +56,7 @@ export class RoomScene extends Phaser.Scene {
     const def = engine.rooms[roomId];
     if (!def) throw new Error(`Unknown room: ${roomId}`);
 
+    this.cameras.main.stopFollow();
     for (const actor of this.actors.values()) actor.destroy();
     this.actors.clear();
     this.children.removeAll(true);
@@ -62,7 +65,14 @@ export class RoomScene extends Phaser.Scene {
     this.hoverHotspot = null;
 
     this.roomDef = def;
+    this.roomSize = def.size ?? { w: GAME_W, h: ROOM_H };
     engine.state.currentRoom = roomId;
+
+    // Camera: the room band of the screen is a window onto the room's world.
+    // Rooms exactly one screen large never scroll (bounds pin the camera).
+    const cam = this.cameras.main;
+    cam.setViewport(0, 0, GAME_W, ROOM_H);
+    cam.setBounds(0, 0, this.roomSize.w, this.roomSize.h);
 
     // Crossfade to this room's music (if it declares one).
     if (def.music !== undefined) audio.playMusic(def.music);
@@ -75,11 +85,12 @@ export class RoomScene extends Phaser.Scene {
 
     this.rebuildWalkArea();
 
-    // Fade overlay for room transitions, always on top.
+    // Fade overlay for room transitions: pinned to the camera, always on top.
     this.fadeRect = this.add
       .rectangle(0, 0, GAME_W, ROOM_H, 0x000000)
       .setOrigin(0)
       .setDepth(50000)
+      .setScrollFactor(0)
       .setAlpha(0);
 
     // Player.
@@ -91,6 +102,11 @@ export class RoomScene extends Phaser.Scene {
     const player = new Actor(this, playerDef, px, py, pFacing);
     player.applyPerspective(def.scaling);
     this.actors.set(playerDef.id, player);
+
+    // Follow the player through scrolling rooms; snap to them immediately so
+    // entering a room never starts with a camera swoosh.
+    cam.startFollow(player.sprite, false, 0.12, 0.12);
+    cam.centerOn(px, py);
 
     // Room NPCs.
     for (const placement of def.actors ?? []) {
@@ -104,12 +120,12 @@ export class RoomScene extends Phaser.Scene {
 
     if (def.onEnter) {
       const script = def.onEnter;
-      engine.busy = true;
+      engine.beginBusy();
       void (async () => {
         try {
           await script(engine.makeContext());
         } finally {
-          engine.busy = false;
+          engine.endBusy();
         }
       })();
     }
@@ -133,7 +149,7 @@ export class RoomScene extends Phaser.Scene {
     if (layer.paint) {
       const paint = layer.paint;
       const key = `room-layer-${roomId}-${layer.id}`;
-      makeCanvasTex(this, key, layer.w ?? GAME_W, layer.h ?? ROOM_H, (g) =>
+      makeCanvasTex(this, key, layer.w ?? this.roomSize.w, layer.h ?? this.roomSize.h, (g) =>
         paint(g, engine.state)
       );
       obj = this.add.image(x, y, key).setOrigin(0);
@@ -226,7 +242,9 @@ export class RoomScene extends Phaser.Scene {
       }
     }
 
-    const point = { x: pointer.x, y: pointer.y };
+    // Screen → world: in scrolling rooms the camera offsets everything.
+    const wp = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+    const point = { x: wp.x, y: wp.y };
     const hotspot = this.hotspotAt(point);
     const rightClick = pointer.rightButtonDown();
 
@@ -254,13 +272,13 @@ export class RoomScene extends Phaser.Scene {
     const player = this.player;
     if (!player) return;
     const seq = ++this.interactionSeq;
-    engine.busy = true;
+    engine.beginBusy();
     engine.interruptible = true;
     try {
       await player.walkTo(target, this.walkArea);
     } finally {
+      engine.endBusy(); // always pairs with our own beginBusy
       if (seq === this.interactionSeq) {
-        engine.busy = false;
         engine.interruptible = false;
       }
     }
@@ -271,7 +289,7 @@ export class RoomScene extends Phaser.Scene {
     const player = this.player;
     if (!player) return;
     const seq = ++this.interactionSeq;
-    engine.busy = true;
+    engine.beginBusy();
     try {
       if (hotspot.walkTo) {
         engine.interruptible = true;
@@ -292,8 +310,8 @@ export class RoomScene extends Phaser.Scene {
       if (typeof script === 'string') await player.say(script);
       else if (script) await script(ctx);
     } finally {
+      engine.endBusy(); // always pairs with our own beginBusy
       if (seq === this.interactionSeq) {
-        engine.busy = false;
         engine.interruptible = false;
         engine.clearSelection();
       }
@@ -352,11 +370,12 @@ export class RoomScene extends Phaser.Scene {
     for (const actor of this.actors.values()) {
       actor.update(delta, this.roomDef.scaling);
     }
-    // Hover tracking for the sentence line.
+    // Hover tracking for the sentence line (screen → world for hit-testing).
     const pointer = this.input.activePointer;
     let hover: HotspotDef | null = null;
     if (pointer.y < ROOM_H && !engine.dialogMode) {
-      hover = this.hotspotAt({ x: pointer.x, y: pointer.y });
+      const wp = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+      hover = this.hotspotAt({ x: wp.x, y: wp.y });
     }
     if (hover !== this.hoverHotspot) {
       this.hoverHotspot = hover;

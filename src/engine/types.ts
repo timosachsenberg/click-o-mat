@@ -145,6 +145,9 @@ export interface LayerDef {
 export interface RoomDef {
   id: string;
   name?: string;
+  /** World size of the room. Defaults to one screen (960×450). Larger rooms
+   *  scroll: the camera follows the player within these bounds. */
+  size?: { w: number; h: number };
   /** The room's visual stack: backdrops, occluders, foreground overlays. */
   layers: LayerDef[];
   /** Boundary polygon of the walkable floor (room coords). May depend on state. */

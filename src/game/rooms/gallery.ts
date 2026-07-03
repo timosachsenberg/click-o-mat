@@ -31,6 +31,7 @@ export const galleryRoom: RoomDef = {
 
   entries: {
     fromHallway: { x: 150, y: 360, facing: 'right' },
+    fromStairs: { x: 878, y: 368, facing: 'down' },
   },
 
   // Blobbo the critter, animated from the loaded spritesheet.
@@ -60,6 +61,25 @@ export const galleryRoom: RoomDef = {
         use: async (ctx) => {
           ctx.sfx('open');
           await ctx.goToRoom('hallway', 'fromGallery');
+        },
+      },
+    },
+    {
+      id: 'archway',
+      name: 'archway',
+      rect: { x: 830, y: 116, w: 116, h: 188 },
+      walkTo: { x: 885, y: 362 },
+      facing: 'up',
+      defaultVerb: 'open',
+      on: {
+        lookat: 'A grand archway. Somewhere beyond it, a staircase awaits.',
+        open: async (ctx) => {
+          ctx.sfx('open');
+          await ctx.goToRoom('stairhall', 'fromGallery');
+        },
+        use: async (ctx) => {
+          ctx.sfx('open');
+          await ctx.goToRoom('stairhall', 'fromGallery');
         },
       },
     },

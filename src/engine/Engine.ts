@@ -49,8 +49,27 @@ export class Engine {
   roomScene!: RoomScene;
   uiScene!: UIScene;
 
-  /** True while a script/cutscene runs; room clicks then only skip lines... */
-  busy = false;
+  /** Reference count of concurrently running scripts/cutscenes. Overlaps are
+   *  real: a door script is still finishing while the next room's onEnter
+   *  cutscene already runs — a single boolean would be cleared too early. */
+  private busyCount = 0;
+
+  /** True while any script/cutscene runs; room clicks then only skip lines... */
+  get busy(): boolean {
+    return this.busyCount > 0;
+  }
+
+  beginBusy(): void {
+    this.busyCount++;
+  }
+
+  endBusy(): void {
+    this.busyCount = Math.max(0, this.busyCount - 1);
+  }
+
+  resetBusy(): void {
+    this.busyCount = 0;
+  }
   /** ...unless we're merely in the auto-walk phase, which clicks may cancel. */
   interruptible = false;
   dialogMode = false;
@@ -100,14 +119,14 @@ export class Engine {
   /** Run a standalone script (item look-at, combines) with input locked. */
   async runScript(script: ScriptOrLine | undefined, fallbackLine: string): Promise<void> {
     if (this.busy) return;
-    this.busy = true;
+    this.beginBusy();
     try {
       const ctx = this.makeContext();
       const s = script ?? fallbackLine;
       if (typeof s === 'string') await ctx.playerSay(s);
       else await s(ctx);
     } finally {
-      this.busy = false;
+      this.endBusy();
       this.clearSelection();
     }
   }
@@ -139,7 +158,7 @@ export class Engine {
       const data = JSON.parse(raw) as SaveData;
       this.state = GameState.fromSave(data);
       this.clearSelection();
-      this.busy = false;
+      this.resetBusy();
       this.dialogMode = false;
       this.roomScene.loadRoom(this.state.currentRoom, undefined, {
         pos: this.state.playerPos ?? undefined,

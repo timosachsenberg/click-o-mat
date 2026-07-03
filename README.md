@@ -89,7 +89,10 @@ Bring Ned the Tentacle something *warm, fuzzy, and radioactive*:
 
 Also try just **talking to Ned** (right-click him) to see the dialog tree, and
 step through the hallway's **GALLERY** door to visit a room built from PNG art
-(a PNG background and the spritesheet critter, Blobbo).
+(a PNG background, the spritesheet critter Blobbo, animated sconces, and a
+foreground pillar). Through the gallery's **archway** lies the Grand Staircase —
+a two-story scrolling room; walk up the stairs and watch the camera follow and
+the banister slide in front of you.
 
 ---
 
@@ -108,24 +111,31 @@ Everything you edit lives under `src/game/`. You never need to touch
 Create `src/game/rooms/closet.ts`:
 
 ```ts
-import type { RoomDef } from '../../engine/types';
+import { Layer, type RoomDef } from '../../engine/types';
 
 export const closetRoom: RoomDef = {
   id: 'closet',
   name: 'Broom Closet',
 
-  // Draw the background into a 960×450 canvas. `state` lets you draw
-  // conditionally; this room is static so we ignore it.
-  paint(g, _state) {
-    g.fillStyle = '#2b2440';         // back wall
-    g.fillRect(0, 0, 960, 300);
-    g.fillStyle = '#4a3d2e';         // floor
-    g.fillRect(0, 300, 960, 150);
+  // A room is a stack of layers. This one only needs a backdrop, painted
+  // into a 960×450 canvas. `state` lets you draw conditionally; this room
+  // is static so we ignore it.
+  layers: [
+    {
+      id: 'bg',
+      depth: Layer.BEHIND,
+      paint(g, _state) {
+        g.fillStyle = '#2b2440';         // back wall
+        g.fillRect(0, 0, 960, 300);
+        g.fillStyle = '#4a3d2e';         // floor
+        g.fillRect(0, 300, 960, 150);
 
-    // A shelf on the back wall
-    g.fillStyle = '#6b5638';
-    g.fillRect(360, 150, 240, 14);
-  },
+        // A shelf on the back wall
+        g.fillStyle = '#6b5638';
+        g.fillRect(360, 150, 240, 14);
+      },
+    },
+  ],
 
   // The walkable floor, as a polygon in room coordinates (0,0 = top-left).
   walkArea: [
@@ -320,7 +330,8 @@ hotspots and items, and script reactions.** Everything else in the engine
 | Walkable-area pathfinding around obstacles (visibility graph + Dijkstra) | `engine/Pathfinder.ts` |
 | Directional walk / idle / talk character animations | `engine/Actor.ts`, `engine/BootScene.ts` |
 | Perspective scaling (actors shrink toward the back wall) | `engine/Actor.ts` |
-| Walk-behind props (depth sorting around furniture) | `engine/RoomScene.ts` |
+| **Layer system** — backdrops, occluders (walk-behinds), foreground overlays, animated layers, one shared depth axis | `engine/types.ts`, `engine/RoomScene.ts` |
+| **Scrolling rooms** — rooms larger than the screen, camera follows the player (both axes), per-layer parallax | `engine/RoomScene.ts` |
 | Inventory with paging + item icons | `engine/UIScene.ts` |
 | Use-item-on-hotspot and item-on-item combinations | `engine/RoomScene.ts`, `engine/UIScene.ts` |
 | Branching dialog trees (conditions, one-shot choices, jumps) | `engine/DialogRunner.ts` |
@@ -335,8 +346,12 @@ hotspots and items, and script reactions.** Everything else in the engine
 
 Procedural art and PNG art coexist: the lab and hallway are drawn in code,
 while the **Gallery** (reachable through the GALLERY door in the hallway) uses a
-PNG background and a PNG-spritesheet character ("Blobbo"). See
-[Using PNG assets](#using-png-assets).
+PNG background, a PNG-spritesheet character ("Blobbo"), animated wall sconces,
+and a foreground pillar you can walk behind. Beyond the gallery's archway, the
+**Grand Staircase** shows off scrolling: a 1400×800 two-story room where the
+camera follows you up the stairs, a parallax night sky drifts behind the
+windows, and the banister occludes you on the way up. See
+[Layers & depth](#layers--depth) and [Using PNG assets](#using-png-assets).
 
 ## Project layout
 
@@ -370,7 +385,7 @@ public/
 Three Phaser scenes run together:
 
 - **`BootScene`** generates all textures + animations, then starts the game.
-- **`RoomScene`** owns the current room: background, walk-behinds, actors,
+- **`RoomScene`** owns the current room: the layer stack, actors, camera,
   hotspot hit-testing, and the verb-interaction state machine.
 - **`UIScene`** is a persistent overlay: sentence line, verb grid, inventory,
   and dialog choices.
@@ -399,20 +414,66 @@ game.
 ```ts
 export const myRoom: RoomDef = {
   id: 'kitchen',
-  paint: (g, state) => { /* draw background into a canvas ctx */ },
+  size: { w: 1400, h: 800 },           // optional; omit for one screen (960×450)
+  layers: [ /* the visual stack — see "Layers & depth" */ ],
   walkArea: [ {x,y}, ... ],            // floor polygon (can be a fn of state)
   holes: [ [ {x,y}, ... ] ],           // obstacles carved out of the floor
-  scaling: { yTop, scaleTop, yBottom, scaleBottom },
-  walkBehinds: [ /* props actors can pass behind */ ],
+  scaling: { yTop, scaleTop, yBottom, scaleBottom },  // omit for side-view rooms
+  music: 'kitchen-theme',              // optional; omit to keep current music
   entries: { start: { x, y, facing } },// named spawn points
   hotspots: [ /* see below */ ],
   onEnter: async (ctx) => { /* optional cutscene */ },
 };
 ```
 
-`paint`, `walkArea`, and `holes` all receive the current `GameState`, so a room
-redraws and re-computes its geometry from state whenever you call
-`ctx.repaint()` — that's how the cabinet opens and the plant slides aside.
+Layer `paint` functions, `walkArea`, and `holes` all receive the current
+`GameState`, so a room redraws and re-computes its geometry from state whenever
+you call `ctx.repaint()` — that's how the cabinet opens and the plant slides
+aside. Rooms larger than one screen scroll: the camera follows the player
+within the room's bounds, and all coordinates (walk areas, hotspots, entries)
+are simply world coordinates.
+
+### Layers & depth
+
+A room's visuals are an array of `LayerDef`s sharing **one depth axis** with
+the actors, whose depth is their feet-`y`:
+
+```
+Layer.BEHIND  <  0 … room height (occluder baselines)  <  Layer.FRONT
+```
+
+```ts
+layers: [
+  // Backdrop: an image or a paint() canvas, behind everyone.
+  { id: 'bg', depth: Layer.BEHIND, image: 'kitchen-bg' },
+  // Parallax: drifts slower than the camera (scrolling rooms only).
+  { id: 'sky', depth: Layer.BEHIND, parallax: 0.85, paint: paintSky },
+  // Animated layer: an animation from the asset manifest, looping.
+  { id: 'fire', depth: Layer.BEHIND, anim: 'fire-flicker', x: 500, y: 200 },
+  // Occluder ("walk-behind"): actors with feet above y=340 render behind it.
+  { id: 'table', depth: 340, x: 280, y: 220, w: 200, h: 130, paint: paintTable },
+  // Foreground: always in front of actors (still under speech text and UI).
+  { id: 'vine', depth: Layer.FRONT, image: 'hanging-vine', x: 700, y: 0 },
+],
+```
+
+Rules and tips:
+
+- Each layer has **exactly one** source: `image` (static texture), `paint`
+  (canvas, re-drawn on `ctx.repaint()`), or `anim` (manifest animation).
+- Every layer accepts `visible: (state) => boolean`, re-checked on
+  `repaint()` — conditional set dressing without redrawing.
+- Alpha PNGs composite correctly everywhere; transparency is visual only
+  (clicks are resolved by hotspot geometry, never by pixels).
+- Equal depths stack in array order.
+- **Diagonal occluders** (stair banisters, sloped counters): slice the art
+  into a few layers, each with its own baseline — see the three `rail-*`
+  slices in `src/game/rooms/stairhall.ts`, the same approach AGS and SCUMM
+  used.
+- For cutscene flourishes, `ctx.layerObj(id)` returns the live Phaser object
+  to tween (`await ctx.tween(ctx.layerObj('bookcase'), { x: '+=80' }, 900)`),
+  but durable changes must go through flags + `ctx.repaint()` or they won't
+  survive room changes and save/load.
 
 ### A hotspot
 
@@ -461,7 +522,9 @@ Every handler and cutscene receives a `ctx`. The essentials:
 | `ctx.dialog(id)` | Run a dialog tree |
 | `ctx.flag(key)` / `ctx.setFlag(key, val?)` | Read / write world state |
 | `ctx.hasItem(id)` / `ctx.addItem(id)` / `ctx.removeItem(id)` | Inventory |
-| `ctx.repaint()` | Redraw room art + rebuild walk area from current state |
+| `ctx.repaint()` | Redraw paint layers, re-check layer visibility, rebuild walk area |
+| `ctx.layerObj(id)` | Live Phaser object of a layer (transient cutscene tweens only) |
+| `ctx.tween(obj, props, ms?)` | Tween any game object and await completion |
 | `ctx.sfx(name)` | Play a sound effect (loaded key, or a built-in bleep: `pickup`/`open`/`zap`/`deny`/`win`/`step`) |
 | `ctx.playMusic(key)` / `ctx.stopMusic()` | Start/switch or fade out background music |
 | `ctx.flash(color?, ms?)` / `ctx.shake(ms?, intensity?)` | Camera effects |
@@ -506,21 +569,24 @@ export const ASSETS: AssetManifest = {
 
 The manifest is registered in `src/game/index.ts` as `assets: ASSETS`.
 
-### 3a. PNG background
+### 3a. PNG backgrounds and props
 
-Give a room a `background` (a loaded image key) instead of a `paint` function:
+Any layer can be a loaded image — a backdrop, an occluder, or a foreground
+overlay (see [Layers & depth](#layers--depth)):
 
 ```ts
 export const galleryRoom: RoomDef = {
   id: 'gallery',
-  background: 'gallery-bg',   // <-- the preloaded PNG, drawn at 960×450
+  layers: [
+    { id: 'bg', depth: Layer.BEHIND, image: 'gallery-bg' },      // backdrop PNG
+    { id: 'pillar', depth: Layer.FRONT, image: 'pillar', x: 290, y: 90 }, // alpha PNG
+  ],
   walkArea: [ ... ],
-  // ...no paint() needed
 };
 ```
 
-(If your background needs to change with game state, keep using `paint(g,
-state)` + `ctx.repaint()` instead — that path is still there.)
+(If a layer's art needs to change with game state, use `paint(g, state)` +
+`ctx.repaint()` instead, or a `visible: (state) => ...` condition.)
 
 ### 3b. PNG-spritesheet character
 
@@ -623,5 +689,6 @@ Bring Ned the Tentacle something *warm, fuzzy, and radioactive*:
   actor/icon has a PNG.
 - **More save slots:** `Engine.save/load` take no slot argument today; add a
   slot id and key by it.
-- **Larger rooms / scrolling:** the camera is currently fixed to one screen;
-  set world bounds and `camera.startFollow(player.sprite)` in `RoomScene`.
+- **Diagonal occlusion without slicing:** if a scene ever truly needs it,
+  extend `LayerDef.depth` to accept `(actorX) => number` — the slice approach
+  has covered every case so far.

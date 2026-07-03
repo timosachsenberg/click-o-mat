@@ -152,6 +152,7 @@ export class ScriptContext {
       })
       .setOrigin(0.5)
       .setDepth(20000)
+      .setScrollFactor(0) // stay centered even in scrolled rooms
       .setScale(0.2);
     this.eng.roomScene.tweens.add({ targets: t, scale: 1, duration: 500, ease: 'Back.Out' });
   }

@@ -3,7 +3,6 @@ import type { ActorDef, Facing, RoomDef, Vec2 } from './types';
 import type { WalkArea } from './Pathfinder';
 import { dist } from './geometry';
 import { engine } from './Engine';
-import { GAME_W } from './constants';
 
 export type WalkResult = 'arrived' | 'cancelled' | 'blocked';
 type Pose = 'idle' | 'walk' | 'talk';
@@ -166,8 +165,11 @@ export class Actor {
 
   private positionSpeech(): void {
     if (!this.speech) return;
-    const x = Phaser.Math.Clamp(this.x, 90, GAME_W - 90);
-    const y = Math.max(30 + this.speech.height, this.y - this.sprite.displayHeight - 12);
+    // Keep the line readable inside the camera's current view (rooms can
+    // scroll, so screen edges are the camera's world view, not 0..GAME_W).
+    const view = this.scene.cameras.main.worldView;
+    const x = Phaser.Math.Clamp(this.x, view.x + 90, view.right - 90);
+    const y = Math.max(view.y + 30 + this.speech.height, this.y - this.sprite.displayHeight - 12);
     this.speech.setPosition(x, y);
   }
 
