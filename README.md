@@ -11,7 +11,9 @@ exercises every feature. All character art, icons, and sound in the demo are
 generated procedurally at runtime, so there are **no binary assets** — the whole
 thing is code.
 
-![the lab room](docs/screenshot.png)
+### ▶ [Play the demo in your browser](https://timosachsenberg.github.io/click-o-mat/)
+
+[![the lab room](docs/screenshot.png)](https://timosachsenberg.github.io/click-o-mat/)
 
 ---
 
