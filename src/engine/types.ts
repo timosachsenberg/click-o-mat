@@ -49,6 +49,12 @@ export interface HotspotDef {
   /** Clickable region — either an axis-aligned rect or a polygon (room coords). */
   rect?: Rect;
   polygon?: Vec2[];
+  /** Or bind the hotspot to a live actor: the clickable area follows the
+   *  actor's sprite bounds each frame, the approach point (unless walkTo is
+   *  set) is computed beside the actor, and the actor stops walking and
+   *  turns to face the player when interacted with. Inactive while the
+   *  actor isn't in the current room. */
+  actor?: string;
   /** Where the player walks before interacting. Omit for "interact from anywhere". */
   walkTo?: Vec2;
   /** Direction the player faces once arrived. */

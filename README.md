@@ -340,6 +340,7 @@ hotspots and items, and script reactions.** Everything else in the engine
 | **Scrolling rooms** — rooms larger than the screen, camera follows the player (both axes), per-layer parallax | `engine/RoomScene.ts` |
 | **Ambient events** — recurring non-blocking background activity (birds, shadows, machinery) | `engine/RoomScene.ts` |
 | **Regions** — walk-on/walk-off triggers with once + conditions | `engine/RoomScene.ts` |
+| **NPC hotspots** — clickable areas that follow moving actors | `engine/RoomScene.ts` |
 | **Cutscene skipping** — Esc fast-forwards say/wait/walk/tween/zoom to the end | `engine/Engine.ts` |
 | **Scale maps** — actor size as a function of position, for trails and non-linear perspective | `engine/Actor.ts` |
 | **Camera zoom** — scripted pull-backs for reveals and vistas (`ctx.zoomCamera`) | `engine/ScriptContext.ts` |
@@ -564,6 +565,7 @@ Rules and tips:
   id: 'cabinet',
   name: 'wall cabinet',                // shown in the sentence line
   rect: { x, y, w, h },                // or polygon: [{x,y}, ...]
+                                       // or actor: 'npcId' — see below
   walkTo: { x, y }, facing: 'up',      // where the player stands to interact
   defaultVerb: 'open',                 // used on right-click
   visible: (state) => !state.getFlag('hidden'),
@@ -581,6 +583,20 @@ Rules and tips:
 Any handler is either a **string** (spoken by the player) or an **async
 function** receiving the `ScriptContext`. Missing verbs fall back to sensible
 default responses (`engine/verbs.ts`).
+
+**NPC hotspots** bind to a live actor instead of fixed geometry — essential
+for characters that move:
+
+```ts
+{ id: 'blobbo', name: 'Blobbo', actor: 'critter', defaultVerb: 'talkto',
+  on: { talkto: async (ctx) => { ... } } }
+```
+
+The clickable area follows the actor's sprite every frame, the player's
+approach point is computed beside wherever the actor currently stands
+(`walkTo` overrides it), and on interaction the actor stops walking and turns
+to face the player. Pair it with an ambient that strolls the NPC around — the
+gallery's Blobbo does exactly this.
 
 ### Items, actors, dialogs
 

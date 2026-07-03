@@ -37,6 +37,19 @@ export const galleryRoom: RoomDef = {
   // Blobbo the critter, animated from the loaded spritesheet.
   actors: [{ id: 'critter', x: 640, y: 420, facing: 'down' }],
 
+  // Blobbo strolls his gallery; his actor-bound hotspot follows him.
+  ambients: [
+    {
+      every: [6000, 11000],
+      run: async (ctx) => {
+        if (ctx.busy) return; // don't wander off mid-conversation
+        const x = 470 + Math.random() * 390;
+        const y = 350 + Math.random() * 85;
+        await ctx.walkTo('critter', x, y);
+      },
+    },
+  ],
+
   async onEnter(ctx) {
     if (ctx.flag('gallerySeen')) return;
     ctx.setFlag('gallerySeen');
@@ -128,9 +141,8 @@ export const galleryRoom: RoomDef = {
     {
       id: 'critter',
       name: 'Blobbo',
-      rect: { x: 596, y: 360, w: 90, h: 80 },
-      walkTo: { x: 560, y: 425 },
-      facing: 'right',
+      // Live-bound hotspot: follows him around the room as he wanders.
+      actor: 'critter',
       defaultVerb: 'talkto',
       on: {
         lookat: 'A small orange critter. He appears to be an art enthusiast.',

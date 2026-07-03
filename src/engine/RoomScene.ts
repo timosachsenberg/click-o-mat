@@ -405,9 +405,18 @@ export class RoomScene extends Phaser.Scene {
     const seq = ++this.interactionSeq;
     engine.beginBusy();
     try {
-      if (hotspot.walkTo) {
+      const targetActor = hotspot.actor ? this.actors.get(hotspot.actor) : undefined;
+      // Approach point: explicit walkTo, or computed beside a bound actor.
+      let walkTarget = hotspot.walkTo;
+      if (!walkTarget && targetActor) {
+        const side = player.x <= targetActor.x ? -1 : 1;
+        const gap = 55 * targetActor.sprite.scale + 25;
+        walkTarget = { x: targetActor.x + side * gap, y: targetActor.y };
+      }
+
+      if (walkTarget) {
         engine.interruptible = true;
-        const result = await player.walkTo(hotspot.walkTo, this.walkArea);
+        const result = await player.walkTo(walkTarget, this.walkArea);
         if (seq !== this.interactionSeq) return; // superseded by a newer click
         engine.interruptible = false;
         if (result === 'cancelled') return;
@@ -416,7 +425,14 @@ export class RoomScene extends Phaser.Scene {
           return;
         }
         if (hotspot.facing) player.setFacing(hotspot.facing);
+        else if (targetActor) player.setFacing(facingBetween(player, targetActor));
         else player.setFacing(this.faceToward(player, hotspot));
+      }
+
+      // A bound actor pauses its stroll and turns to the player.
+      if (targetActor) {
+        targetActor.stop();
+        targetActor.setFacing(facingBetween(targetActor, player));
       }
 
       const ctx = engine.makeContext();
@@ -470,6 +486,16 @@ export class RoomScene extends Phaser.Scene {
     for (let i = list.length - 1; i >= 0; i--) {
       const hs = list[i];
       if (hs.visible && !hs.visible(engine.state)) continue;
+      if (hs.actor) {
+        // Live-bound: the hit area is the actor's current sprite bounds.
+        const a = this.actors.get(hs.actor);
+        if (a) {
+          const b = a.sprite.getBounds();
+          Phaser.Geom.Rectangle.Inflate(b, 6, 6);
+          if (b.contains(p.x, p.y)) return hs;
+        }
+        continue;
+      }
       if (hs.rect) {
         const r = hs.rect;
         if (p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h) return hs;
@@ -532,6 +558,14 @@ export class RoomScene extends Phaser.Scene {
     g.lineStyle(1, 0xffff00, 0.8);
     for (const hs of this.roomDef.hotspots) {
       if (hs.visible && !hs.visible(engine.state)) continue;
+      if (hs.actor) {
+        const a = this.actors.get(hs.actor);
+        if (a) {
+          const b = a.sprite.getBounds();
+          g.strokeRect(b.x - 6, b.y - 6, b.width + 12, b.height + 12);
+        }
+        continue;
+      }
       if (hs.rect) g.strokeRect(hs.rect.x, hs.rect.y, hs.rect.w, hs.rect.h);
       if (hs.polygon) {
         g.strokePoints(hs.polygon.map((p) => new Phaser.Math.Vector2(p.x, p.y)), true);
@@ -549,6 +583,14 @@ export class RoomScene extends Phaser.Scene {
       }
     }
   }
+}
+
+/** Dominant-axis facing from one actor toward another. */
+function facingBetween(from: Actor, to: Actor): Facing {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  if (Math.abs(dx) > Math.abs(dy)) return dx > 0 ? 'right' : 'left';
+  return dy > 0 ? 'down' : 'up';
 }
 
 function regionContains(region: RegionDef, p: Vec2): boolean {

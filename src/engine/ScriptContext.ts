@@ -16,6 +16,12 @@ export class ScriptContext {
     return this.eng.state;
   }
 
+  /** True while a cutscene/interaction is running. Ambients can use this to
+   *  skip their flourish while the player is mid-scene. */
+  get busy(): boolean {
+    return this.eng.busy;
+  }
+
   get scene(): Phaser.Scene {
     return this.eng.roomScene;
   }

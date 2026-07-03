@@ -377,9 +377,9 @@ export const labRoom: RoomDef = {
     {
       id: 'tent',
       name: 'Ned the Tentacle',
-      rect: { x: 714, y: 314, w: 62, h: 94 },
-      walkTo: { x: 688, y: 414 },
-      facing: 'right',
+      // Live-bound hotspot (he doesn't move, but this stays correct if he
+      // ever does — and he turns to face whoever addresses him).
+      actor: 'tent',
       defaultVerb: 'talkto',
       on: {
         lookat: 'A green tentacle. Friendly, in a boneless sort of way.',
