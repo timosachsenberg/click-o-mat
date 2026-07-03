@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { engine } from './Engine';
+import { engine, SAVE_SLOTS, SLOT_LABELS } from './Engine';
 import { audio } from './Audio';
 import { VERBS, verbLabel } from './verbs';
 import { GAME_W, ROOM_H, UI_H } from './constants';
@@ -82,10 +82,10 @@ export class UIScene extends Phaser.Scene {
     engine.events.on('ui', () => this.refresh());
 
     this.input.keyboard?.on('keydown-F5', () => {
-      this.toast(engine.save() ? 'Game saved.' : 'Save failed.');
+      this.toast(engine.save() ? 'Quick-saved.' : 'Save failed.');
     });
     this.input.keyboard?.on('keydown-F9', () => {
-      this.toast(engine.load() ? 'Game loaded.' : 'No saved game.');
+      this.toast(engine.load() ? 'Quick save loaded.' : 'No quick save.');
     });
 
     this.buildAudioButton();
@@ -106,6 +106,7 @@ export class UIScene extends Phaser.Scene {
   private sliderFills: Array<{ fill: Phaser.GameObjects.Rectangle; get: () => number }> = [];
   private muteToggle!: Phaser.GameObjects.Text;
   private sliderDrag: { x0: number; w: number; set: (v: number) => void } | null = null;
+  private slotRows: Array<{ info: Phaser.GameObjects.Text; load: Phaser.GameObjects.Text }> = [];
 
   private buildOptionsMenu(): void {
     this.optionsButton = this.add
@@ -127,12 +128,12 @@ export class UIScene extends Phaser.Scene {
     // Panel
     this.optionsPanel = this.add.container(0, 0).setDepth(30000).setVisible(false);
     const bg = this.add
-      .rectangle(GAME_W / 2, 225, 380, 280, 0x1a1626, 0.97)
+      .rectangle(GAME_W / 2, 270, 400, 440, 0x1a1626, 0.97)
       .setStrokeStyle(2, 0x8f7fd4);
     // Swallow clicks so the room never sees them through the panel.
     bg.setInteractive();
     const title = this.add
-      .text(GAME_W / 2, 112, 'OPTIONS', {
+      .text(GAME_W / 2, 74, 'OPTIONS', {
         fontFamily: 'Verdana, Arial, sans-serif',
         fontSize: '20px',
         fontStyle: 'bold',
@@ -142,12 +143,12 @@ export class UIScene extends Phaser.Scene {
     this.optionsPanel.add(bg);
     this.optionsPanel.add(title);
 
-    this.makeSlider('Master', 158, () => audio.settings.master, (v) => audio.setMasterVolume(v));
-    this.makeSlider('Music', 200, () => audio.settings.music, (v) => audio.setMusicVolume(v));
-    this.makeSlider('Sound FX', 242, () => audio.settings.sfx, (v) => audio.setSfxVolume(v));
+    this.makeSlider('Master', 112, () => audio.settings.master, (v) => audio.setMasterVolume(v));
+    this.makeSlider('Music', 150, () => audio.settings.music, (v) => audio.setMusicVolume(v));
+    this.makeSlider('Sound FX', 188, () => audio.settings.sfx, (v) => audio.setSfxVolume(v));
 
     this.muteToggle = this.add
-      .text(GAME_W / 2, 286, '', {
+      .text(GAME_W / 2, 222, '', {
         fontFamily: 'Verdana, Arial, sans-serif',
         fontSize: '16px',
         color: '#9be89b',
@@ -157,28 +158,35 @@ export class UIScene extends Phaser.Scene {
     this.muteToggle.on('pointerdown', () => this.toggleMute());
     this.optionsPanel.add(this.muteToggle);
 
-    const button = (x: number, label: string, onClick: () => void) => {
-      const t = this.add
-        .text(x, 330, label, {
+    // Save slots
+    this.optionsPanel.add(
+      this.add
+        .text(GAME_W / 2, 254, '— SAVES —', {
           fontFamily: 'Verdana, Arial, sans-serif',
-          fontSize: '17px',
-          fontStyle: 'bold',
+          fontSize: '14px',
           color: '#8f7fd4',
         })
         .setOrigin(0.5)
-        .setInteractive({ useHandCursor: true });
-      t.on('pointerover', () => t.setColor('#ffe066'));
-      t.on('pointerout', () => t.setColor('#8f7fd4'));
-      t.on('pointerdown', onClick);
-      this.optionsPanel.add(t);
-    };
-    button(390, 'Save', () => this.toast(engine.save() ? 'Game saved.' : 'Save failed.'));
-    button(480, 'Load', () => {
-      const ok = engine.load();
-      this.toast(ok ? 'Game loaded.' : 'No saved game.');
-      if (ok) this.toggleOptions(false);
+    );
+    for (let slot = 0; slot < SAVE_SLOTS; slot++) this.buildSlotRow(slot, 284 + slot * 34);
+
+    const close = this.add
+      .text(GAME_W / 2, 448, 'Close', {
+        fontFamily: 'Verdana, Arial, sans-serif',
+        fontSize: '17px',
+        fontStyle: 'bold',
+        color: '#8f7fd4',
+      })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true });
+    close.on('pointerover', () => close.setColor('#ffe066'));
+    close.on('pointerout', () => close.setColor('#8f7fd4'));
+    close.on('pointerdown', () => this.toggleOptions(false));
+    this.optionsPanel.add(close);
+
+    engine.events.on('saves', () => {
+      if (engine.menuOpen) this.refreshOptions();
     });
-    button(570, 'Close', () => this.toggleOptions(false));
 
     // Slider dragging (shared handlers)
     this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
@@ -190,6 +198,58 @@ export class UIScene extends Phaser.Scene {
     this.input.on('pointerup', () => {
       this.sliderDrag = null;
     });
+  }
+
+  /** One save-slot row: label · room+time info · Save · Load. */
+  private buildSlotRow(slot: number, y: number): void {
+    const small = (x: number, text: string, color: string, bold = false) =>
+      this.add
+        .text(x, y, text, {
+          fontFamily: 'Verdana, Arial, sans-serif',
+          fontSize: bold ? '14px' : '12px',
+          fontStyle: bold ? 'bold' : 'normal',
+          color,
+        })
+        .setOrigin(0, 0.5);
+
+    const label = small(300, SLOT_LABELS[slot] ?? `SLOT ${slot}`, '#c9f0ff', true);
+    const info = small(378, '— empty —', '#6a6a8a');
+
+    const btn = (x: number, text: string, onClick: () => void) => {
+      const t = this.add
+        .text(x, y, text, {
+          fontFamily: 'Verdana, Arial, sans-serif',
+          fontSize: '14px',
+          fontStyle: 'bold',
+          color: '#8f7fd4',
+        })
+        .setOrigin(0.5)
+        .setInteractive({ useHandCursor: true });
+      t.on('pointerover', () => t.setColor('#ffe066'));
+      t.on('pointerout', () => t.setColor('#8f7fd4'));
+      t.on('pointerdown', onClick);
+      return t;
+    };
+    const save = btn(590, 'Save', () => {
+      const name = SLOT_LABELS[slot] ?? `slot ${slot}`;
+      this.toast(engine.save(slot) ? `Saved to ${name}.` : 'Save failed.');
+      this.refreshOptions();
+    });
+    const load = btn(645, 'Load', () => {
+      if (!engine.hasSave(slot)) {
+        this.toast('That slot is empty.');
+        return;
+      }
+      const ok = engine.load(slot);
+      this.toast(ok ? `Loaded ${SLOT_LABELS[slot] ?? `slot ${slot}`}.` : 'Load failed.');
+      if (ok) this.toggleOptions(false);
+    });
+
+    this.slotRows[slot] = { info, load };
+    this.optionsPanel.add(label);
+    this.optionsPanel.add(info);
+    this.optionsPanel.add(save);
+    this.optionsPanel.add(load);
   }
 
   private makeSlider(label: string, y: number, get: () => number, set: (v: number) => void): void {
@@ -235,6 +295,25 @@ export class UIScene extends Phaser.Scene {
     for (const s of this.sliderFills) s.fill.width = 180 * s.get();
     this.muteToggle.setText(audio.muted ? 'Sound: OFF  (click to unmute)' : 'Sound: ON  (click to mute)');
     this.updateMuteButton();
+    // Slot listings
+    const saves = engine.listSaves();
+    this.slotRows.forEach((row, slot) => {
+      const entry = saves[slot];
+      if (entry) {
+        const when = new Date(entry.when).toLocaleString([], {
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+        const room = entry.room.length > 13 ? `${entry.room.slice(0, 12)}…` : entry.room;
+        row.info.setText(`${room} · ${when}`).setColor('#c9f0ff');
+        row.load.setAlpha(1);
+      } else {
+        row.info.setText('— empty —').setColor('#6a6a8a');
+        row.load.setAlpha(0.35);
+      }
+    });
   }
 
   // ---- audio (mute) control ----------------------------------------------

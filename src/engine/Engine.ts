@@ -27,7 +27,18 @@ export interface GameContent {
   startEntry: string;
 }
 
-const SAVE_KEY = 'pnc-adventure-save';
+const LEGACY_SAVE_KEY = 'pnc-adventure-save';
+const SAVE_PREFIX = 'pnc-save-';
+/** Slot 0 is the quick slot (F5/F9); the rest are manual. */
+export const SAVE_SLOTS = 4;
+export const SLOT_LABELS = ['QUICK', 'SLOT 1', 'SLOT 2', 'SLOT 3'];
+
+interface SaveFile {
+  v: 1;
+  when: number;
+  room: string;
+  data: SaveData;
+}
 
 /**
  * Global engine singleton: content registries, live game state, current
@@ -129,6 +140,7 @@ export class Engine {
     this.playerId = content.playerId;
     this.startRoom = content.startRoom;
     this.startEntry = content.startEntry;
+    this.migrateLegacySave();
   }
 
   setVerb(verb: VerbId | null): void {
@@ -177,45 +189,108 @@ export class Engine {
     await runDialog(this, def);
   }
 
-  save(): boolean {
+  // ---- save slots ----------------------------------------------------------
+  // Slot 0 is the quick slot (F5/F9); slots 1..SAVE_SLOTS-1 are manual.
+
+  private slotKey(slot: number): string {
+    return `${SAVE_PREFIX}${slot}`;
+  }
+
+  private readSlot(slot: number): SaveFile | null {
+    try {
+      const raw = localStorage.getItem(this.slotKey(slot));
+      if (!raw) return null;
+      const parsed = JSON.parse(raw) as SaveFile | SaveData;
+      // Tolerate a bare SaveData (pre-wrapper format).
+      if ('data' in parsed && parsed.data) return parsed as SaveFile;
+      return { v: 1, when: 0, room: '', data: parsed as SaveData };
+    } catch {
+      return null;
+    }
+  }
+
+  /** One-time migration of the old single-save key into the quick slot. */
+  migrateLegacySave(): void {
+    try {
+      const raw = localStorage.getItem(LEGACY_SAVE_KEY);
+      if (raw && !localStorage.getItem(this.slotKey(0))) {
+        const data = JSON.parse(raw) as SaveData;
+        const file: SaveFile = { v: 1, when: Date.now(), room: data.currentRoom ?? '', data };
+        localStorage.setItem(this.slotKey(0), JSON.stringify(file));
+      }
+      localStorage.removeItem(LEGACY_SAVE_KEY);
+    } catch {
+      /* ignore */
+    }
+  }
+
+  save(slot = 0): boolean {
     try {
       const player = this.roomScene.actors.get(this.playerId);
       if (player) {
         this.state.playerPos = { x: player.x, y: player.y };
         this.state.playerFacing = player.facing;
       }
-      localStorage.setItem(SAVE_KEY, JSON.stringify(this.state.toSave()));
+      const file: SaveFile = {
+        v: 1,
+        when: Date.now(),
+        room: this.rooms[this.state.currentRoom]?.name ?? this.state.currentRoom,
+        data: this.state.toSave(),
+      };
+      localStorage.setItem(this.slotKey(slot), JSON.stringify(file));
+      this.events.emit('saves'); // slot listings refresh
       return true;
     } catch {
       return false;
     }
   }
 
-  load(): boolean {
-    try {
-      const raw = localStorage.getItem(SAVE_KEY);
-      if (!raw) return false;
-      const data = JSON.parse(raw) as SaveData;
-      this.state = GameState.fromSave(data);
-      this.clearSelection();
-      this.resetBusy();
-      this.dialogMode = false;
-      this.roomScene.loadRoom(this.state.currentRoom, undefined, {
-        pos: this.state.playerPos ?? undefined,
-        facing: this.state.playerFacing,
-      });
-      return true;
-    } catch {
-      return false;
-    }
+  private applyLoaded(data: SaveData): void {
+    this.state = GameState.fromSave(data);
+    this.clearSelection();
+    this.resetBusy();
+    this.dialogMode = false;
   }
 
-  hasSave(): boolean {
-    try {
-      return localStorage.getItem(SAVE_KEY) !== null;
-    } catch {
-      return false;
+  load(slot = 0): boolean {
+    const file = this.readSlot(slot);
+    if (!file) return false;
+    this.applyLoaded(file.data);
+    this.roomScene.loadRoom(this.state.currentRoom, undefined, {
+      pos: this.state.playerPos ?? undefined,
+      facing: this.state.playerFacing,
+    });
+    return true;
+  }
+
+  hasSave(slot?: number): boolean {
+    if (slot !== undefined) return this.readSlot(slot) !== null;
+    for (let s = 0; s < SAVE_SLOTS; s++) if (this.readSlot(s) !== null) return true;
+    return false;
+  }
+
+  /** Slot metadata for save/load UIs; null entries are empty slots. */
+  listSaves(): Array<{ slot: number; when: number; room: string } | null> {
+    const out: Array<{ slot: number; when: number; room: string } | null> = [];
+    for (let s = 0; s < SAVE_SLOTS; s++) {
+      const f = this.readSlot(s);
+      out.push(f ? { slot: s, when: f.when, room: f.room } : null);
     }
+    return out;
+  }
+
+  /** The most recently written slot, or null if there are no saves. */
+  latestSlot(): number | null {
+    let best: number | null = null;
+    let bestWhen = -1;
+    for (let s = 0; s < SAVE_SLOTS; s++) {
+      const f = this.readSlot(s);
+      if (f && f.when >= bestWhen) {
+        bestWhen = f.when;
+        best = s;
+      }
+    }
+    return best;
   }
 
   /** Player position/facing staged by loadForStart(), consumed by the room
@@ -223,24 +298,19 @@ export class Engine {
   pendingRestore: { pos?: { x: number; y: number }; facing?: Facing } | null = null;
 
   /** Stage a saved game before the room scene exists (the title screen's
-   *  Continue): state is restored now, the room loads when 'room' starts. */
-  loadForStart(): boolean {
-    try {
-      const raw = localStorage.getItem(SAVE_KEY);
-      if (!raw) return false;
-      const data = JSON.parse(raw) as SaveData;
-      this.state = GameState.fromSave(data);
-      this.clearSelection();
-      this.resetBusy();
-      this.dialogMode = false;
-      this.pendingRestore = {
-        pos: this.state.playerPos ?? undefined,
-        facing: this.state.playerFacing,
-      };
-      return true;
-    } catch {
-      return false;
-    }
+   *  Continue): state is restored now, the room loads when 'room' starts.
+   *  Without a slot argument, the most recent save wins. */
+  loadForStart(slot?: number): boolean {
+    const s = slot ?? this.latestSlot();
+    if (s === null) return false;
+    const file = this.readSlot(s);
+    if (!file) return false;
+    this.applyLoaded(file.data);
+    this.pendingRestore = {
+      pos: this.state.playerPos ?? undefined,
+      facing: this.state.playerFacing,
+    };
+    return true;
   }
 }
 

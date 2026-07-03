@@ -71,9 +71,10 @@ subpath.
 | Quick default verb | **Right-click** a hotspot (look / open / talk, as configured) |
 | Use / combine items | **Click an inventory item** to arm it, then click a hotspot ("Use X with…") or another item (combine) |
 | Choose a dialog line | **Click** the line; click anywhere to **skip** speech |
-| Save / Load | **F5** / **F9**, or the options menu |
+| Quick save / load | **F5** / **F9** (the QUICK slot) |
+| Save slots | **⚙ options menu**: 4 slots showing room + time, Save/Load per slot |
 | Skip a cutscene | **Esc** (fast-forwards to the end; stops at dialog choices) |
-| Options menu | **⚙ button** (top-right): volume sliders, mute, save/load — **Esc** closes |
+| Options menu | **⚙ button** (top-right): volume sliders, mute, save slots — **Esc** closes |
 | Mute / unmute audio | **M**, or the 🔊 button (top-right) |
 | Debug overlay | **D** (draws walk area, obstacles, hotspots) |
 
@@ -351,7 +352,7 @@ hotspots and items, and script reactions.** Everything else in the engine
 | Async scripting API (walk, say, wait, flags, cutscenes) | `engine/ScriptContext.ts` |
 | Flags / world state driving conditional art and hotspots | `engine/GameState.ts` |
 | Room transitions with fade + named entry points | `engine/RoomScene.ts` |
-| Save / load (localStorage) — `F5` / `F9` | `engine/Engine.ts` |
+| Save / load — 4 slots (quick + 3 manual) with room + timestamp, legacy-save migration | `engine/Engine.ts` |
 | Camera flash / shake, title cards | `engine/ScriptContext.ts` |
 | **Music & SFX** — per-room tracks with crossfade, volume/mute, procedural *or* loaded audio | `engine/Audio.ts` |
 | **Options menu** — volume sliders, mute, save/load (⚙ top-right) | `engine/UIScene.ts` |
@@ -815,8 +816,9 @@ Bring Ned the Tentacle something *warm, fuzzy, and radioactive*:
   spritesheets to `game/assets.ts` and they're preloaded automatically. To go
   fully asset-based, drop the procedural generators in `BootScene` once every
   actor/icon has a PNG.
-- **More save slots:** `Engine.save/load` take no slot argument today; add a
-  slot id and key by it.
+- **More save slots:** bump `SAVE_SLOTS` (and `SLOT_LABELS`) in
+  `engine/Engine.ts` — storage, the options menu, and the title screen's
+  Continue all follow it.
 - **Diagonal occlusion without slicing:** if a scene ever truly needs it,
   extend `LayerDef.depth` to accept `(actorX) => number` — the slice approach
   has covered every case so far.
