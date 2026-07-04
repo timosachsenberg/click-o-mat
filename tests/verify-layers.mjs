@@ -77,10 +77,10 @@ await settle();
 const pillar = await layer('pillar');
 check('pillar at Layer.FRONT', pillar.depth === 5000, `(depth=${pillar.depth})`);
 
-const s1 = await layer('sconce-left');
+const s1 = await layer('sconce');
 check('sconce plays sconce-flicker', s1.anim === 'sconce-flicker' && s1.playing, `(anim=${s1.anim})`);
 await page.waitForTimeout(700);
-const s2 = await layer('sconce-left');
+const s2 = await layer('sconce');
 check('sconce frames advance', s1.frame !== s2.frame, `(${s1.frame} -> ${s2.frame})`);
 
 // --- bench collision: solid furniture, actors path around it

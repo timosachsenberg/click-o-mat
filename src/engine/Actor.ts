@@ -190,10 +190,17 @@ export class Actor {
 
   private positionSpeech(): void {
     if (!this.speech) return;
-    // Keep the line readable inside the camera's current view (rooms can
-    // scroll, so screen edges are the camera's world view, not 0..GAME_W).
+    // Keep the WHOLE line inside the camera's current view (rooms can scroll,
+    // so screen edges are the camera's world view, not 0..GAME_W). The text
+    // is centre-anchored, so clamp by its half-width — otherwise a wide line
+    // spoken near an edge spills off-screen. If it's wider than the view,
+    // just centre it.
+    const margin = 10;
     const view = this.scene.cameras.main.worldView;
-    const x = Phaser.Math.Clamp(this.x, view.x + 90, view.right - 90);
+    const halfW = this.speech.width / 2;
+    const minX = view.x + margin + halfW;
+    const maxX = view.right - margin - halfW;
+    const x = minX <= maxX ? Phaser.Math.Clamp(this.x, minX, maxX) : view.centerX;
     const y = Math.max(view.y + 30 + this.speech.height, this.y - this.sprite.displayHeight - 12);
     this.speech.setPosition(x, y);
   }

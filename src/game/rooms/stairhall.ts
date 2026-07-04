@@ -118,23 +118,23 @@ function paintRoom(g: CanvasRenderingContext2D): void {
     g.stroke();
   }
 
-  // Ancestor portrait on the landing wall
+  // Ancestor portrait on the landing wall (clear of the window at x250-390)
   g.fillStyle = '#c8a24a';
-  g.fillRect(322, 212, 106, 136);
+  g.fillRect(442, 212, 106, 136);
   g.fillStyle = '#241c2c';
-  g.fillRect(330, 220, 90, 120);
+  g.fillRect(450, 220, 90, 120);
   g.fillStyle = '#d8c8a8';
   g.beginPath();
-  g.ellipse(375, 268, 22, 28, 0, 0, Math.PI * 2); // a stern face
+  g.ellipse(495, 268, 22, 28, 0, 0, Math.PI * 2); // a stern face
   g.fill();
   g.fillStyle = '#3a2c20';
-  g.fillRect(353, 238, 44, 14); // severe haircut
+  g.fillRect(473, 238, 44, 14); // severe haircut
   g.fillStyle = '#222222';
-  g.fillRect(364, 262, 5, 5);
-  g.fillRect(382, 262, 5, 5);
-  g.fillRect(366, 284, 18, 3); // disapproving mouth
+  g.fillRect(484, 262, 5, 5);
+  g.fillRect(502, 262, 5, 5);
+  g.fillRect(486, 284, 18, 3); // disapproving mouth
   g.fillStyle = '#2a2438';
-  g.fillRect(345, 296, 60, 30); // formal collar
+  g.fillRect(465, 296, 60, 30); // formal collar
 
   // Chandelier
   g.strokeStyle = '#2e2114';
@@ -380,8 +380,8 @@ export const stairhallRoom: RoomDef = {
     {
       id: 'portrait',
       name: 'ancestor portrait',
-      rect: { x: 322, y: 212, w: 106, h: 136 },
-      walkTo: { x: 375, y: 456 },
+      rect: { x: 442, y: 212, w: 106, h: 136 },
+      walkTo: { x: 495, y: 456 },
       facing: 'up',
       on: {
         lookat: async (ctx) => {
