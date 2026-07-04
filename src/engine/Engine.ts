@@ -220,6 +220,10 @@ export class Engine {
   async switchTo(id: string): Promise<void> {
     if (id === this.state.activeChar || !this.state.party.includes(id)) return;
     if (this.busy) return;
+    // Which room are we leaving? Capture BEFORE reassigning activeChar —
+    // currentRoom proxies to the active character's room, so reading it after
+    // the switch would always equal the target and never transition.
+    const fromRoom = this.state.currentRoom;
     // Park the current character at their live position.
     const cur = this.roomScene.actors.get(this.state.activeChar);
     if (cur) {
@@ -229,7 +233,7 @@ export class Engine {
     const targetRoom = this.state.chars[id].room;
     this.state.activeChar = id;
     this.clearSelection();
-    if (targetRoom && targetRoom !== this.state.currentRoom) {
+    if (targetRoom && targetRoom !== fromRoom) {
       await this.roomScene.transitionTo(targetRoom);
     } else {
       this.roomScene.retargetPlayer();

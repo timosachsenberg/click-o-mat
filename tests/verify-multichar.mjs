@@ -109,14 +109,25 @@ await parkCam(300, 812);
 await page.waitForTimeout(200);
 await clickWorld(132, 700, { button: 'right' }); // front door -> stairhall
 await settle();
-check('Norb moved inside (stairhall)', (await S()).room === 'stairhall');
+// Assert on the ACTUAL loaded scene, not just state.
+const sceneRoom = () => page.evaluate(() => window.__engine.roomScene.roomDef.id);
+const playerControllable = () => page.evaluate(() => !!window.__engine.roomScene.actors.get(window.__engine.state.activeChar));
+check('Norb moved inside (stairhall)', (await sceneRoom()) === 'stairhall');
 check('Pia parked on the mountain', (await page.evaluate(() => window.__engine.state.chars.pia.room)) === 'mountain');
-// Switch to Pia → camera fades back to the mountain.
+// Switch to Pia (in another room) → the scene must actually fade to the mountain
+// and Pia must be controllable there.
 await page.keyboard.press('2');
 await settle();
-await page.waitForTimeout(400);
+await page.waitForTimeout(500);
 s = await S();
-check('switching to Pia transitions to her room', s.active === 'pia' && s.room === 'mountain');
+check('switch-to-other-room changes active char', s.active === 'pia');
+check('switch-to-other-room loads that room in the scene', (await sceneRoom()) === 'mountain', `(scene=${await sceneRoom()})`);
+check('switched-to character is controllable', await playerControllable());
+// And back: switching to Norb returns the scene to the stair hall.
+await page.keyboard.press('1');
+await settle();
+await page.waitForTimeout(500);
+check('switching back loads the other room too', (await sceneRoom()) === 'stairhall', `(scene=${await sceneRoom()})`);
 
 console.log('ERRORS:', errors.length ? '\n' + errors.slice(0, 8).join('\n') : 'none');
 if (errors.length) process.exitCode = 1;
