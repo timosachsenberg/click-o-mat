@@ -196,11 +196,14 @@ export class ScriptContext {
         stroke: '#000000',
         strokeThickness: 8,
         align: 'center',
+        wordWrap: { width: GAME_W - 80 }, // wrap long titles
       })
       .setOrigin(0.5)
       .setDepth(20000)
-      .setScrollFactor(0) // stay centered even in scrolled rooms
-      .setScale(0.2);
-    this.eng.roomScene.tweens.add({ targets: t, scale: 1, duration: 500, ease: 'Back.Out' });
+      .setScrollFactor(0); // stay centered even in scrolled rooms
+    // Shrink to fit if a single unbreakable line is still too wide/tall.
+    const fit = Math.min(1, (GAME_W - 40) / t.width, (ROOM_H - 40) / t.height);
+    t.setScale(0.2 * fit);
+    this.eng.roomScene.tweens.add({ targets: t, scale: fit, duration: 500, ease: 'Back.Out' });
   }
 }

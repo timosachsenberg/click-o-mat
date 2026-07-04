@@ -35,6 +35,7 @@ const ALL_SUITES = [
   'verify-triggers.mjs',
   'verify-qol.mjs',
   'verify-speech.mjs',
+  'verify-textlayout.mjs',
   'verify-scroll.mjs',
   'playthrough.mjs',
   'verify-outdoor.mjs',

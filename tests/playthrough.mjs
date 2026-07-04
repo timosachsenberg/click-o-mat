@@ -76,14 +76,14 @@ for (let i = 0; i < 100; i++) {
   if (st.choices) {
     // Read the actual choice text positions from Phaser, then click by content.
     const choices = await page.evaluate(() =>
-      window.__engine.uiScene.choiceContainer.list.map((t) => ({
-        text: t.text, x: t.x, y: t.y,
-      }))
+      window.__engine.uiScene.choiceContainer.list
+        .filter((t) => t.type === 'Text' && t.visible && t.text.startsWith('●'))
+        .map((t) => { const b = t.getBounds(); return { text: t.text, x: b.centerX, y: b.centerY }; })
     );
     const f = await flags();
     const wanted = f.knowsWant ? 'I have to go now.' : 'Is there anything you want?';
     const target = choices.find((c) => c.text.includes(wanted));
-    if (target) { await click(target.x + 10, target.y); await page.waitForTimeout(300); }
+    if (target) { await click(target.x, target.y); await page.waitForTimeout(300); }
   } else if (st.busy && !st.inter) {
     await click(480, 240); // skip lines, never cancel walks
   }

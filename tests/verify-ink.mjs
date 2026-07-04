@@ -30,7 +30,9 @@ const settle = async () => {
 };
 const choices = () => page.evaluate(() =>
   window.__engine.choicesShowing
-    ? window.__engine.roomScene.scene.get('ui') && window.__engine.uiScene.choiceContainer.list.map((t) => ({ text: t.text, x: t.x, y: t.y }))
+    ? window.__engine.uiScene.choiceContainer.list
+        .filter((t) => t.type === 'Text' && t.visible && t.text.startsWith('●'))
+        .map((t) => { const b = t.getBounds(); return { text: t.text, x: b.centerX, y: b.centerY }; })
     : null
 );
 /** Wait for choices, then pick the one whose text contains `substr`.
@@ -47,7 +49,7 @@ const pick = async (substr) => {
   if (!list) throw new Error(`no choices appeared for "${substr}"`);
   const target = list.find((c) => c.text.includes(substr));
   if (!target) throw new Error(`choice "${substr}" not offered; got: ${list.map((c) => c.text).join(' | ')}`);
-  await click(target.x + 10, target.y);
+  await click(target.x, target.y);
   await page.waitForTimeout(300);
   return list.map((c) => c.text);
 };

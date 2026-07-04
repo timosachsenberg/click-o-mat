@@ -80,9 +80,11 @@ for (let i = 0; i < 80; i++) {
   const st = await page.evaluate(() => ({ b: window.__engine.busy, i: window.__engine.interruptible, c: window.__engine.choicesShowing, d: window.__engine.dialogMode }));
   if (!st.b && !st.d) break;
   if (st.c) {
-    const list = await page.evaluate(() => window.__engine.uiScene.choiceContainer.list.map((t) => ({ text: t.text, x: t.x, y: t.y })));
+    const list = await page.evaluate(() => window.__engine.uiScene.choiceContainer.list
+      .filter((t) => t.type === 'Text' && t.visible && t.text.startsWith('●'))
+      .map((t) => { const b = t.getBounds(); return { text: t.text, x: b.centerX, y: b.centerY }; }));
     const exit = list.find((c) => c.text.includes('I should go') || c.text.includes('Goodbye'));
-    if (exit) { await click(exit.x + 10, exit.y); await page.waitForTimeout(300); continue; }
+    if (exit) { await click(exit.x, exit.y); await page.waitForTimeout(300); continue; }
   }
   if (st.b && !st.i) await click(480, 240);
   await page.waitForTimeout(250);

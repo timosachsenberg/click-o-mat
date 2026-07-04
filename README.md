@@ -73,7 +73,7 @@ subpath.
 | Default verb, explicitly | **Right-click** a hotspot |
 | Reveal hotspots | Hold **Tab** — name labels over everything interactive |
 | Use / combine items | **Click an inventory item** to arm it, then click a hotspot ("Use X with…") or another item (combine); **right-click an item** to look at it; **mouse wheel** pages the inventory |
-| Choose a dialog line | **Click** the line; click anywhere to **skip** speech |
+| Choose a dialog line | **Click** the line; long menus paginate (**"▾ More choices"** or mouse wheel); click anywhere to **skip** speech |
 | Quick save / load | **F5** / **F9** (the QUICK slot) |
 | Save slots | **⚙ options menu**: 4 slots showing room + time; Save/Load/✕ per slot, with inline confirmation before overwriting or deleting |
 | Skip a cutscene | **Esc** (fast-forwards to the end; stops at dialog choices) |
@@ -611,7 +611,9 @@ gallery's Blobbo does exactly this.
   for item-on-item.
 - **Actors** (`actors.ts`): id, name, speech color, texture set, speed.
 - **Dialogs** (`dialogs.ts`): nodes of choices, each with optional `if`
-  condition, `once` flag, `script`, and `next`/`end` to control flow.
+  condition, `once` flag, `script`, and `next`/`end` to control flow. Choice
+  menus lay out by each line's real height (no overlap when a choice wraps)
+  and paginate automatically when they don't all fit the UI band.
 
 ### ink dialogs
 

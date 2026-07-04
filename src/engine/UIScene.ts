@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { engine, SAVE_SLOTS, SLOT_LABELS } from './Engine';
 import { audio } from './Audio';
 import { VERBS, verbLabel } from './verbs';
-import { GAME_W, ROOM_H, UI_H } from './constants';
+import { GAME_W, GAME_H, ROOM_H, UI_H } from './constants';
 import type { VerbId } from './types';
 
 const PANEL_BG = 0x1a1626;
@@ -37,6 +37,8 @@ export class UIScene extends Phaser.Scene {
   /** Exposed for automated testing: the live choice text objects. */
   choiceContainer!: Phaser.GameObjects.Container;
   private choiceResolve: ((index: number) => void) | null = null;
+  /** Set while paginated choices are showing; the wheel cycles pages. */
+  private choiceChangePage: ((dir: number) => void) | null = null;
 
   constructor() {
     super('ui');
@@ -71,6 +73,8 @@ export class UIScene extends Phaser.Scene {
         color: '#ffe066',
         stroke: '#000000',
         strokeThickness: 4,
+        align: 'center',
+        wordWrap: { width: GAME_W - 40 }, // never spill off the sides
       })
       .setOrigin(0.5)
       .setAlpha(0);
@@ -102,11 +106,17 @@ export class UIScene extends Phaser.Scene {
       });
     });
 
-    // Mouse wheel over the inventory pages through it.
+    // Mouse wheel: page through dialog choices when they're showing, else
+    // through the inventory.
     this.input.on(
       'wheel',
       (pointer: Phaser.Input.Pointer, _objs: unknown, _dx: number, dy: number) => {
-        if (engine.dialogMode || engine.menuOpen) return;
+        if (engine.menuOpen) return;
+        if (engine.choicesShowing && this.choiceChangePage) {
+          this.choiceChangePage(dy > 0 ? 1 : -1);
+          return;
+        }
+        if (engine.dialogMode) return;
         if (pointer.y < ROOM_H || pointer.x < 430) return;
         this.changePage(dy > 0 ? 1 : -1);
       }
@@ -565,43 +575,112 @@ export class UIScene extends Phaser.Scene {
     this.gameplayUI.setVisible(!on);
     if (!on) {
       engine.choicesShowing = false;
+      this.choiceChangePage = null;
       this.choiceContainer.setVisible(false);
       this.choiceContainer.removeAll(true);
     }
     this.refreshSentence();
   }
 
-  /** Show dialog choices; resolves with the picked index. */
+  /** Show dialog choices; resolves with the picked index. Choices are laid
+   *  out by their real (wrapped) height so they never overlap, and paginated
+   *  when they don't all fit in the UI band. */
   presentChoices(texts: string[]): Promise<number> {
     this.choiceContainer.removeAll(true);
     this.choiceContainer.setVisible(true);
     engine.choicesShowing = true;
     engine.skipping = false; // a fast-forward always stops at a choice
+
+    const GAP = 5;
+    const NAV_H = 22;
+    const topY = ROOM_H + 10;
+    const maxBottom = GAME_H - 6;
+
     return new Promise<number>((resolve) => {
       this.choiceResolve = resolve;
-      texts.forEach((text, i) => {
+
+      const pick = (index: number) => {
+        if (!this.choiceResolve || engine.menuOpen) return;
+        const r = this.choiceResolve;
+        this.choiceResolve = null;
+        engine.choicesShowing = false;
+        this.choiceChangePage = null;
+        this.choiceContainer.setVisible(false);
+        this.choiceContainer.removeAll(true);
+        r(index);
+      };
+
+      // Build the (top-left anchored) choice objects and measure heights.
+      const items = texts.map((text, i) => {
         const t = this.add
-          .text(30, ROOM_H + 34 + i * 24, `● ${text}`, {
+          .text(30, 0, `● ${text}`, {
             fontFamily: 'Verdana, Arial, sans-serif',
             fontSize: '16px',
             color: '#9be89b',
             wordWrap: { width: GAME_W - 60 },
           })
-          .setOrigin(0, 0.5)
+          .setOrigin(0, 0)
           .setInteractive({ useHandCursor: true });
         t.on('pointerover', () => t.setColor('#ffe066'));
         t.on('pointerout', () => t.setColor('#9be89b'));
-        t.on('pointerdown', () => {
-          if (!this.choiceResolve || engine.menuOpen) return;
-          const r = this.choiceResolve;
-          this.choiceResolve = null;
-          engine.choicesShowing = false;
-          this.choiceContainer.setVisible(false);
-          this.choiceContainer.removeAll(true);
-          r(i);
-        });
+        t.on('pointerdown', () => pick(i));
         this.choiceContainer.add(t);
+        return { t, h: t.height };
       });
+
+      // Greedy pack into pages; reserve nav space only if multi-page.
+      const pack = (reserve: number) => {
+        const avail = maxBottom - topY - reserve;
+        const pages: Array<Array<(typeof items)[number]>> = [];
+        let cur: Array<(typeof items)[number]> = [];
+        let used = 0;
+        for (const it of items) {
+          if (used + it.h > avail && cur.length) {
+            pages.push(cur);
+            cur = [];
+            used = 0;
+          }
+          cur.push(it);
+          used += it.h + GAP;
+        }
+        if (cur.length) pages.push(cur);
+        return pages;
+      };
+      let pages = pack(0);
+      if (pages.length > 1) pages = pack(NAV_H);
+      const multi = pages.length > 1;
+
+      const nav = this.add
+        .text(30, maxBottom - NAV_H + 4, '', {
+          fontFamily: 'Verdana, Arial, sans-serif',
+          fontSize: '14px',
+          fontStyle: 'bold',
+          color: '#8f7fd4',
+        })
+        .setOrigin(0, 0)
+        .setInteractive({ useHandCursor: true });
+      nav.on('pointerover', () => nav.setColor('#ffe066'));
+      nav.on('pointerout', () => nav.setColor('#8f7fd4'));
+      this.choiceContainer.add(nav);
+
+      let page = 0;
+      const render = () => {
+        for (const it of items) it.t.setVisible(false);
+        let y = topY;
+        for (const it of pages[page]) {
+          it.t.setPosition(30, y).setVisible(true);
+          y += it.h + GAP;
+        }
+        nav.setVisible(multi).setText(`▾ More choices  (${page + 1}/${pages.length})`);
+      };
+      const changePage = (dir: number) => {
+        if (!multi) return;
+        page = (page + dir + pages.length) % pages.length;
+        render();
+      };
+      nav.on('pointerdown', () => changePage(1));
+      this.choiceChangePage = changePage; // wheel paging (see wheel handler)
+      render();
     });
   }
 
