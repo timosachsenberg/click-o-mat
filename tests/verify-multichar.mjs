@@ -44,10 +44,10 @@ let s = await S();
 check('starts single-character', s.party.length === 1 && s.active === 'norb', `(party=${s.party})`);
 
 // Jump to the mountain (skip the climb) and pick up the canteen.
-await page.evaluate(() => {
+await page.evaluate(async () => {
   window.__engine.state.setFlag('mountain-intro-done');
   window.__engine.state.setFlag('once:mountain-intro');
-  window.__engine.roomScene.loadRoom('mountain', 'fromDoor');
+  await window.__engine.roomScene.enterRoom('mountain', 'fromDoor');
 });
 await settle();
 await page.evaluate(() => window.__engine.roomScene.actors.get('norb').setPosition(492, 828));

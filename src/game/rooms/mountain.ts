@@ -1,5 +1,6 @@
 import { Layer, type RoomDef } from '../../engine/types';
 import type { GameState } from '../../engine/GameState';
+import { MOUNTAIN_ASSETS } from '../assets';
 
 /**
  * The outdoor showcase (leave the mansion through the stair hall's front
@@ -220,6 +221,8 @@ function paintCloudShadow(g: CanvasRenderingContext2D): void {
 export const mountainRoom: RoomDef = {
   id: 'mountain',
   name: 'The Mountain',
+
+  assets: MOUNTAIN_ASSETS, // the bird spritesheet, loaded on first entry
 
   size: { w: 1920, h: 900 },
   music: 'mountain-theme',

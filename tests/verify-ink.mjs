@@ -62,7 +62,7 @@ const talkToBlobbo = async () => {
 };
 
 await settle(); // lab intro
-await page.evaluate(() => window.__engine.roomScene.loadRoom('gallery', 'fromHallway'));
+await page.evaluate(async () => await window.__engine.roomScene.enterRoom('gallery', 'fromHallway'));
 await settle();
 
 // --- first conversation
@@ -91,7 +91,7 @@ check('friend var synced out to a game flag', (await page.evaluate(() => window.
 await page.evaluate(() => window.__engine.save());
 await page.evaluate(() => window.__engine.load());
 await settle();
-await page.evaluate(() => window.__engine.roomScene.loadRoom('gallery', 'fromHallway'));
+await page.evaluate(async () => await window.__engine.roomScene.enterRoom('gallery', 'fromHallway'));
 await settle();
 await talkToBlobbo();
 const third = await pick('Goodbye, colleague');

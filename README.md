@@ -734,7 +734,10 @@ export const ASSETS: AssetManifest = {
 };
 ```
 
-The manifest is registered in `src/game/index.ts` as `assets: ASSETS`.
+A manifest can be **global** (registered in `src/game/index.ts` as
+`assets: ASSETS`, loaded at boot — use for shared assets like a player
+spritesheet) **or per-room**, which loads lazily. See
+[Lazy per-room loading](#lazy-per-room-asset-loading).
 
 ### 3a. PNG backgrounds and props
 
@@ -777,6 +780,34 @@ is an 8×3 grid of 48×48 frames covering all nine pose/direction combinations.
 > The frames only need to exist for the poses/directions an actor actually
 > uses. A stationary NPC that only ever faces front needs just
 > `<set>-idle-front` and `<set>-talk-front`.
+
+### Lazy per-room asset loading
+
+The global manifest loads everything at boot — fine for a few rooms, a heavy
+up-front download for dozens. Instead, give a **room** its own `assets`
+bundle: it loads the first time that room is entered (under the transition
+fade, with a brief "Loading…" overlay only if it's slow) and is cached for
+the rest of the session.
+
+```ts
+// src/game/rooms/gallery.ts
+export const galleryRoom: RoomDef = {
+  id: 'gallery',
+  assets: {                                  // loaded on first entry, then cached
+    images: [{ key: 'gallery-bg', url: `${BASE}img/gallery-bg.png` }],
+    spritesheets: [{ key: 'critter', url: `${BASE}img/critter.png`, frameWidth: 48, frameHeight: 48 }],
+    anims: [{ key: 'critter-idle-front', texture: 'critter', frames: [0, 1], frameRate: 2 }],
+  },
+  layers: [ ... ],
+};
+```
+
+Anything a room references (a `background`/layer image, an actor's spritesheet,
+a layer `anim`, room `music`) must be reachable either from the global manifest
+or from that room's `assets`. The demo puts **every** PNG on the room that uses
+it (the gallery's backdrop/pillar/critter/sconce, the mountain's bird), so the
+game boots with zero image downloads and only fetches art as you explore. Start
+big games this way; keep only genuinely shared assets in the global manifest.
 
 ## Music & sound
 
@@ -876,10 +907,10 @@ The runner starts its own Vite dev server (suites need the dev-only
 
 ## Notes on scaling this up
 
-- **Real assets:** see [Using PNG assets](#using-png-assets) — add images and
-  spritesheets to `game/assets.ts` and they're preloaded automatically. To go
-  fully asset-based, drop the procedural generators in `BootScene` once every
-  actor/icon has a PNG.
+- **Real assets:** see [Using PNG assets](#using-png-assets). Declare them
+  per-room (`RoomDef.assets`) so they [load lazily](#lazy-per-room-asset-loading)
+  as the player explores instead of all at boot. To go fully asset-based, drop
+  the procedural generators in `BootScene` once every actor/icon has a PNG.
 - **More save slots:** bump `SAVE_SLOTS` (and `SLOT_LABELS`) in
   `engine/Engine.ts` — storage, the options menu, and the title screen's
   Continue all follow it.

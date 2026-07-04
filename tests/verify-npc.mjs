@@ -45,7 +45,7 @@ const nedHit = await hotspotAt(745, 370);
 check('Ned actor-bound hotspot hit-tests on his sprite', nedHit === 'tent', `(got ${nedHit})`);
 
 // --- gallery: Blobbo wanders via ambient
-await page.evaluate(() => window.__engine.roomScene.loadRoom('gallery', 'fromHallway'));
+await page.evaluate(async () => await window.__engine.roomScene.enterRoom('gallery', 'fromHallway'));
 await settle();
 const c0 = await critter();
 let cMoved = null;

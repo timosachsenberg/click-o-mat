@@ -175,6 +175,10 @@ export interface RoomDef {
    *  state if needed, but don't set flags or block on player interaction.
    *  Cancelled automatically when the room changes. */
   ambients?: AmbientDef[];
+  /** Assets this room needs, loaded lazily on entry (under the transition
+   *  fade) and cached for re-entry. Anything not declared here must be in the
+   *  global manifest. Omit to rely entirely on the global manifest. */
+  assets?: AssetManifest;
   /** Walk-on/walk-off triggers, checked against the player's position. */
   regions?: RegionDef[];
   /** Named spawn points for the player, referenced by goToRoom(). */

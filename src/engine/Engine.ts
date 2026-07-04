@@ -62,6 +62,8 @@ export class Engine {
   actors: Record<string, ActorDef> = {};
   dialogs: Record<string, DialogDef> = {};
   assets: AssetManifest = {};
+  /** Rooms whose lazy asset bundle has finished loading this session. */
+  loadedRooms = new Set<string>();
   playerId = 'player';
   charStarts: Record<string, { room: string; entry: string }> = {};
   startRoom = '';
@@ -379,15 +381,22 @@ export class Engine {
     this.events.emit('party');
   }
 
-  load(slot = 0): boolean {
+  /** Load a save into the running game. Async because the saved room's lazy
+   *  assets may need fetching first. */
+  async load(slot = 0): Promise<boolean> {
     const file = this.readSlot(slot);
     if (!file) return false;
     this.applyLoaded(file.data);
-    this.roomScene.loadRoom(this.state.currentRoom, undefined, {
+    await this.roomScene.enterRoom(this.state.currentRoom, undefined, {
       pos: this.state.playerPos ?? undefined,
       facing: this.state.playerFacing,
     });
     return true;
+  }
+
+  /** Synchronous "is there a save in this slot?" without loading it. */
+  canLoad(slot = 0): boolean {
+    return this.readSlot(slot) !== null;
   }
 
   hasSave(slot?: number): boolean {

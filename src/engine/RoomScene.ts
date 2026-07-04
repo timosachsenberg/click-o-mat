@@ -5,6 +5,7 @@ import { WalkArea } from './Pathfinder';
 import { pointInPolygon } from './geometry';
 import { makeCanvasTex, redrawCanvasTex } from './canvasTex';
 import { audio } from './Audio';
+import { queueManifest, registerManifestAnims, runLoader } from './assetLoader';
 import { DEFAULT_RESPONSES } from './verbs';
 import { GAME_W, ROOM_H } from './constants';
 import type {
@@ -76,10 +77,55 @@ export class RoomScene extends Phaser.Scene {
 
     // Continue from the title screen: state was already restored, we just
     // start in the saved room at the saved position.
+    void this.bootFirstRoom();
+  }
+
+  private async bootFirstRoom(): Promise<void> {
     const restore = engine.pendingRestore;
     engine.pendingRestore = null;
-    if (restore) this.loadRoom(engine.state.currentRoom, undefined, restore);
-    else this.loadRoom(engine.startRoom, engine.startEntry);
+    if (restore) await this.enterRoom(engine.state.currentRoom, undefined, restore);
+    else await this.enterRoom(engine.startRoom, engine.startEntry);
+  }
+
+  /** Load a room's lazy assets, then load the room (no fade). Use this — not
+   *  loadRoom directly — for save-loads and scripted jumps, so lazy per-room
+   *  assets are always present before the room builds. */
+  async enterRoom(roomId: string, entryId?: string, restore?: RestoreInfo): Promise<void> {
+    await this.ensureRoomAssets(roomId);
+    this.loadRoom(roomId, entryId, restore);
+  }
+
+  /** Load a room's lazy asset bundle (idempotent; cached after first load).
+   *  Shows a brief "Loading…" overlay only if the load takes a moment. */
+  async ensureRoomAssets(roomId: string): Promise<void> {
+    if (engine.loadedRooms.has(roomId)) return;
+    const def = engine.rooms[roomId];
+    const queued = queueManifest(this, def?.assets);
+    if (queued) {
+      // Only flash the indicator if loading is slow (real PNGs on a cold
+      // cache); fast/procedural loads never show it.
+      const overlay = this.add
+        .container(0, 0)
+        .setDepth(60000)
+        .setScrollFactor(0)
+        .setVisible(false);
+      overlay.add(this.add.rectangle(0, 0, GAME_W, ROOM_H, 0x000000, 0.85).setOrigin(0));
+      overlay.add(
+        this.add
+          .text(GAME_W / 2, ROOM_H / 2, 'Loading…', {
+            fontFamily: 'Verdana, Arial, sans-serif',
+            fontSize: '22px',
+            color: '#c9f0ff',
+          })
+          .setOrigin(0.5)
+      );
+      const timer = this.time.delayedCall(180, () => overlay.setVisible(true));
+      await runLoader(this);
+      timer.remove();
+      overlay.destroy();
+    }
+    registerManifestAnims(this, def?.assets);
+    engine.loadedRooms.add(roomId);
   }
 
   // ---- room lifecycle ----------------------------------------------------
@@ -302,6 +348,7 @@ export class RoomScene extends Phaser.Scene {
     // (scrollFactor 0, but still zoom-scaled by Phaser) covers the viewport.
     this.cameras.main.setZoom(1);
     await this.fade(1);
+    await this.ensureRoomAssets(roomId); // lazy per-room assets, under the fade
     this.loadRoom(roomId, entryId);
     engine.autosave(); // every room transition refreshes the AUTO slot
     await this.fade(0);

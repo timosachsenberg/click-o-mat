@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { makeCanvasTex } from './canvasTex';
 import { engine } from './Engine';
+import { queueManifest, registerManifestAnims } from './assetLoader';
 
 type Variant = 'front' | 'back' | 'side';
 type Pose = 'idle' | 'walk' | 'talk';
@@ -28,21 +29,10 @@ export class BootScene extends Phaser.Scene {
     super('boot');
   }
 
-  /** Queue every image/spritesheet in the manifest. Phaser runs this before
-   *  create(), so the textures exist by the time we build animations. */
+  /** Queue the GLOBAL manifest (shared assets). Per-room bundles load lazily
+   *  when their room is entered — see RoomScene.ensureRoomAssets. */
   preload(): void {
-    for (const img of engine.assets.images ?? []) {
-      this.load.image(img.key, img.url);
-    }
-    for (const sheet of engine.assets.spritesheets ?? []) {
-      this.load.spritesheet(sheet.key, sheet.url, {
-        frameWidth: sheet.frameWidth,
-        frameHeight: sheet.frameHeight,
-      });
-    }
-    for (const clip of engine.assets.audio ?? []) {
-      this.load.audio(clip.key, clip.url);
-    }
+    queueManifest(this, engine.assets);
   }
 
   create(): void {
@@ -69,16 +59,8 @@ export class BootScene extends Phaser.Scene {
     this.registerAnims('pal');
     this.registerAnims('tent');
 
-    // Animations built from loaded spritesheets in the manifest.
-    for (const a of engine.assets.anims ?? []) {
-      if (this.anims.exists(a.key)) continue;
-      this.anims.create({
-        key: a.key,
-        frames: this.anims.generateFrameNumbers(a.texture, { frames: a.frames }),
-        frameRate: a.frameRate,
-        repeat: a.repeat ?? -1,
-      });
-    }
+    // Animations built from the global manifest's spritesheets.
+    registerManifestAnims(this, engine.assets);
 
     this.scene.start('title');
   }

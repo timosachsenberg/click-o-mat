@@ -28,7 +28,7 @@ const ROOM_W = 960, ROOM_H = 450;
 // Position the player, speak, and measure the speech text's on-screen bounds.
 async function speechBounds(room, entry, px, py, camScroll) {
   const r = await page.evaluate(async ({ room, entry, px, py, camScroll, text }) => {
-    window.__engine.roomScene.loadRoom(room, entry);
+    await window.__engine.roomScene.enterRoom(room, entry);
     const p = window.__engine.roomScene.actors.get('norb');
     p.setPosition(px, py);
     if (camScroll) { const c = window.__engine.roomScene.cameras.main; c.stopFollow(); c.setScroll(camScroll.x, camScroll.y); }

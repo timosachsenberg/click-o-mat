@@ -46,7 +46,7 @@ const CHECK = (label, ok, extra = '') => { console.log(`${ok ? 'PASS' : 'FAIL'} 
 await settle(); // lab intro
 
 // --- Esc skips the mountain intro cutscene
-await page.evaluate(() => window.__engine.roomScene.loadRoom('stairhall', 'fromGallery'));
+await page.evaluate(async () => await window.__engine.roomScene.enterRoom('stairhall', 'fromGallery'));
 await settle();
 await page.evaluate(() => window.__engine.roomScene.actors.get('norb').setPosition(1050, 720));
 await page.waitForTimeout(900);

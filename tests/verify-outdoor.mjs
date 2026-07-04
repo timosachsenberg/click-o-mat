@@ -48,7 +48,7 @@ const check = (label, ok, extra = '') => { console.log(`${ok ? 'PASS' : 'FAIL'} 
 await settle(); // lab intro
 
 // Jump to the stair hall and use the NEW front door for real.
-await page.evaluate(() => window.__engine.roomScene.loadRoom('stairhall', 'fromGallery'));
+await page.evaluate(async () => await window.__engine.roomScene.enterRoom('stairhall', 'fromGallery'));
 await settle();
 await page.evaluate(() => window.__engine.roomScene.actors.get('norb').setPosition(1000, 720));
 await page.waitForTimeout(900);

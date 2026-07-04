@@ -1,5 +1,6 @@
 import { Layer, type RoomDef } from '../../engine/types';
 import { talkToBlobbo } from '../blobboDialog';
+import { GALLERY_ASSETS } from '../assets';
 
 /**
  * The layer-system showcase: a PNG image backdrop, an animated sconce layer
@@ -9,6 +10,9 @@ import { talkToBlobbo } from '../blobboDialog';
 export const galleryRoom: RoomDef = {
   id: 'gallery',
   name: 'The Gallery',
+
+  // Loaded lazily on first entry (the PNGs below), then cached.
+  assets: GALLERY_ASSETS,
 
   layers: [
     { id: 'bg', depth: Layer.BEHIND, image: 'gallery-bg' },

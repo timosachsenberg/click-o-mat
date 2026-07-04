@@ -89,7 +89,11 @@ export class UIScene extends Phaser.Scene {
       this.toast(engine.save() ? 'Quick-saved.' : 'Save failed.');
     });
     this.input.keyboard?.on('keydown-F9', () => {
-      this.toast(engine.load() ? 'Quick save loaded.' : 'No quick save.');
+      if (!engine.canLoad()) {
+        this.toast('No quick save.');
+        return;
+      }
+      void engine.load().then(() => this.toast('Quick save loaded.'));
     });
 
     this.buildAudioButton();
@@ -375,9 +379,10 @@ export class UIScene extends Phaser.Scene {
         this.refreshOptions();
         return;
       }
-      const ok = engine.load(slot);
-      this.toast(ok ? `Loaded ${name}.` : 'Load failed.');
-      if (ok) this.toggleOptions(false);
+      void engine.load(slot).then((ok) => {
+        this.toast(ok ? `Loaded ${name}.` : 'Load failed.');
+        if (ok) this.toggleOptions(false);
+      });
     });
     const del = btn(668, '✕', '#c06a6a', () => {
       if (!engine.hasSave(slot)) return;

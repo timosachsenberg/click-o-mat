@@ -29,6 +29,7 @@ const ALL_SUITES = [
   'verify-slots.mjs',
   'verify-layers.mjs',
   'verify-png.mjs',
+  'verify-lazyload.mjs',
   'verify-audio.mjs',
   'verify-ink.mjs',
   'verify-npc.mjs',
