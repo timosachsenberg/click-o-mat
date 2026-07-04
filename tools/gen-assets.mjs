@@ -176,7 +176,10 @@ const { bg, sheet, pillar, sconce, bird } = await page.evaluate(() => {
 
   const drawCritter = (ctx, ox, oy, variant, pose, f) => {
     const cx = ox + 24;
-    const baseY = oy + 42;
+    // Feet land at the cell's bottom edge (origin is 0.5,1). baseY+12 (feet)
+    // + 3 (ellipse radius) must stay ≤ 48 or the art bleeds into the frame
+    // packed below it in the sheet.
+    const baseY = oy + 33;
     const bob = pose === 'walk' ? (f % 2 === 0 ? -2 : 0) : 0;
     const squish = pose === 'idle' && f % 2 === 1 ? 2 : 0;
     const cy = baseY + bob;
