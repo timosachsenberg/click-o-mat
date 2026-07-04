@@ -29,9 +29,11 @@ export interface GameContent {
 
 const LEGACY_SAVE_KEY = 'pnc-adventure-save';
 const SAVE_PREFIX = 'pnc-save-';
-/** Slot 0 is the quick slot (F5/F9); the rest are manual. */
-export const SAVE_SLOTS = 4;
-export const SLOT_LABELS = ['QUICK', 'SLOT 1', 'SLOT 2', 'SLOT 3'];
+/** Slot 0 is the quick slot (F5/F9); the last is the autosave. */
+export const SAVE_SLOTS = 5;
+export const SLOT_LABELS = ['QUICK', 'SLOT 1', 'SLOT 2', 'SLOT 3', 'AUTO'];
+export const AUTO_SLOT = 4;
+const TEXT_SPEED_KEY = 'pnc-text-speed';
 
 interface SaveFile {
   v: 1;
@@ -141,6 +143,40 @@ export class Engine {
     this.startRoom = content.startRoom;
     this.startEntry = content.startEntry;
     this.migrateLegacySave();
+    this.loadPrefs();
+  }
+
+  // ---- player preferences --------------------------------------------------
+
+  /** Text speed in [0, 1]; 0.5 is the classic timing. */
+  textSpeed = 0.5;
+
+  /** Multiplier applied to speech-line durations (fast → short). */
+  get textDurationScale(): number {
+    return 1.75 - 1.5 * this.textSpeed;
+  }
+
+  setTextSpeed(v: number): void {
+    this.textSpeed = Math.max(0, Math.min(1, v));
+    try {
+      localStorage.setItem(TEXT_SPEED_KEY, String(this.textSpeed));
+    } catch {
+      /* ignore */
+    }
+  }
+
+  private loadPrefs(): void {
+    try {
+      const raw = localStorage.getItem(TEXT_SPEED_KEY);
+      if (raw !== null) this.textSpeed = Math.max(0, Math.min(1, parseFloat(raw)));
+    } catch {
+      /* ignore */
+    }
+  }
+
+  /** Autosave into the AUTO slot (called on room transitions). */
+  autosave(): void {
+    this.save(AUTO_SLOT);
   }
 
   setVerb(verb: VerbId | null): void {

@@ -23,6 +23,8 @@ const TEXT_STYLE: Phaser.Types.GameObjects.Text.TextStyle = {
 export class Actor {
   sprite: Phaser.GameObjects.Sprite;
   facing: Facing = 'down';
+  /** Doubled-up walk speed for the current walk (double-click to run). */
+  sprint = false;
 
   private pose: Pose = 'idle';
   private path: Vec2[] | null = null;
@@ -129,6 +131,7 @@ export class Actor {
     const end = this.path[this.path.length - 1];
     this.setPosition(end.x, end.y);
     this.path = null;
+    this.sprint = false;
     this.setPose('idle');
     const resolve = this.walkResolve;
     this.walkResolve = null;
@@ -137,6 +140,7 @@ export class Actor {
 
   /** Cancel any in-progress walk (resolves it as 'cancelled'). */
   stop(): void {
+    this.sprint = false;
     if (this.walkResolve) {
       const resolve = this.walkResolve;
       this.walkResolve = null;
@@ -157,7 +161,10 @@ export class Actor {
       .setDepth(9000);
     this.positionSpeech();
 
-    const duration = Math.min(7000, Math.max(1400, text.length * 55));
+    const duration = Math.max(
+      600,
+      Math.min(7000, Math.max(1400, text.length * 55)) * engine.textDurationScale
+    );
     return new Promise<void>((resolve) => {
       this.speechResolve = resolve;
       this.speechTimer = this.scene.time.delayedCall(duration, () => this.dismissSpeech());
@@ -211,7 +218,7 @@ export class Actor {
   update(deltaMs: number, scaling: RoomDef['scaling']): void {
     if (this.path && this.pathIndex < this.path.length) {
       const target = this.path[this.pathIndex];
-      const speed = (this.def.speed ?? 220) * this.sprite.scale;
+      const speed = (this.def.speed ?? 220) * this.sprite.scale * (this.sprint ? 2.5 : 1);
       let remaining = (speed * deltaMs) / 1000;
       while (remaining > 0 && this.path && this.pathIndex < this.path.length) {
         const wp = this.path[this.pathIndex];
@@ -241,6 +248,7 @@ export class Actor {
       }
       if (this.path && this.pathIndex >= this.path.length) {
         this.path = null;
+        this.sprint = false;
         this.setPose('idle');
         const resolve = this.walkResolve;
         this.walkResolve = null;

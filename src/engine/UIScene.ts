@@ -91,6 +91,26 @@ export class UIScene extends Phaser.Scene {
     this.buildAudioButton();
     this.buildOptionsMenu();
     this.input.keyboard?.on('keydown-M', () => this.toggleMute());
+
+    // SCUMM-style verb hotkeys, laid out like the 3×3 grid on screen.
+    const VERB_KEYS = ['Q', 'W', 'E', 'A', 'S', 'D', 'Z', 'X', 'C'];
+    VERB_KEYS.forEach((key, i) => {
+      this.input.keyboard?.on(`keydown-${key}`, () => {
+        if (engine.busy || engine.dialogMode || engine.menuOpen) return;
+        const id = VERBS[i].id;
+        engine.setVerb(engine.selectedVerb === id ? null : id);
+      });
+    });
+
+    // Mouse wheel over the inventory pages through it.
+    this.input.on(
+      'wheel',
+      (pointer: Phaser.Input.Pointer, _objs: unknown, _dx: number, dy: number) => {
+        if (engine.dialogMode || engine.menuOpen) return;
+        if (pointer.y < ROOM_H || pointer.x < 430) return;
+        this.changePage(dy > 0 ? 1 : -1);
+      }
+    );
     this.input.keyboard?.on('keydown-ESC', () => {
       if (engine.menuOpen) this.toggleOptions(false);
       else engine.startSkip(); // fast-forward the current cutscene, if any
@@ -137,12 +157,12 @@ export class UIScene extends Phaser.Scene {
     // Panel
     this.optionsPanel = this.add.container(0, 0).setDepth(30000).setVisible(false);
     const bg = this.add
-      .rectangle(GAME_W / 2, 270, 400, 440, 0x1a1626, 0.97)
+      .rectangle(GAME_W / 2, 278, 400, 480, 0x1a1626, 0.97)
       .setStrokeStyle(2, 0x8f7fd4);
     // Swallow clicks so the room never sees them through the panel.
     bg.setInteractive();
     const title = this.add
-      .text(GAME_W / 2, 74, 'OPTIONS', {
+      .text(GAME_W / 2, 62, 'OPTIONS', {
         fontFamily: 'Verdana, Arial, sans-serif',
         fontSize: '20px',
         fontStyle: 'bold',
@@ -152,12 +172,13 @@ export class UIScene extends Phaser.Scene {
     this.optionsPanel.add(bg);
     this.optionsPanel.add(title);
 
-    this.makeSlider('Master', 112, () => audio.settings.master, (v) => audio.setMasterVolume(v));
-    this.makeSlider('Music', 150, () => audio.settings.music, (v) => audio.setMusicVolume(v));
-    this.makeSlider('Sound FX', 188, () => audio.settings.sfx, (v) => audio.setSfxVolume(v));
+    this.makeSlider('Master', 100, () => audio.settings.master, (v) => audio.setMasterVolume(v));
+    this.makeSlider('Music', 134, () => audio.settings.music, (v) => audio.setMusicVolume(v));
+    this.makeSlider('Sound FX', 168, () => audio.settings.sfx, (v) => audio.setSfxVolume(v));
+    this.makeSlider('Text speed', 202, () => engine.textSpeed, (v) => engine.setTextSpeed(v));
 
     this.muteToggle = this.add
-      .text(GAME_W / 2, 222, '', {
+      .text(GAME_W / 2, 234, '', {
         fontFamily: 'Verdana, Arial, sans-serif',
         fontSize: '16px',
         color: '#9be89b',
@@ -170,17 +191,17 @@ export class UIScene extends Phaser.Scene {
     // Save slots
     this.optionsPanel.add(
       this.add
-        .text(GAME_W / 2, 254, '— SAVES —', {
+        .text(GAME_W / 2, 260, '— SAVES —', {
           fontFamily: 'Verdana, Arial, sans-serif',
           fontSize: '14px',
           color: '#8f7fd4',
         })
         .setOrigin(0.5)
     );
-    for (let slot = 0; slot < SAVE_SLOTS; slot++) this.buildSlotRow(slot, 284 + slot * 34);
+    for (let slot = 0; slot < SAVE_SLOTS; slot++) this.buildSlotRow(slot, 286 + slot * 34);
 
     const close = this.add
-      .text(GAME_W / 2, 448, 'Close', {
+      .text(GAME_W / 2, 484, 'Close', {
         fontFamily: 'Verdana, Arial, sans-serif',
         fontSize: '17px',
         fontStyle: 'bold',
@@ -465,7 +486,9 @@ export class UIScene extends Phaser.Scene {
           .image(x + slotW / 2, y + slotH / 2, '__DEFAULT')
           .setVisible(false);
         const slotIndex = row * INV_SLOTS_X + col;
-        bg.on('pointerdown', () => this.onSlotClick(slotIndex));
+        bg.on('pointerdown', (pointer: Phaser.Input.Pointer) =>
+          this.onSlotClick(slotIndex, pointer)
+        );
         bg.on('pointerover', () => this.onSlotHover(slotIndex, true));
         bg.on('pointerout', () => this.onSlotHover(slotIndex, false));
         this.invSlots.push({ bg, icon, itemId: null });
@@ -499,11 +522,17 @@ export class UIScene extends Phaser.Scene {
     this.refresh();
   }
 
-  private onSlotClick(slotIndex: number): void {
+  private onSlotClick(slotIndex: number, pointer?: Phaser.Input.Pointer): void {
     if (engine.busy || engine.dialogMode || engine.menuOpen) return;
     const itemId = this.invSlots[slotIndex].itemId;
     if (!itemId) return;
     const item = engine.items[itemId];
+
+    // Right-click an item: look at it, no verb needed.
+    if (pointer?.rightButtonDown()) {
+      void engine.runScript(item.lookAt, `It's ${item.name}.`);
+      return;
+    }
 
     if (engine.pendingItem && engine.pendingItem !== itemId) {
       // Item-on-item combination; look up both directions.

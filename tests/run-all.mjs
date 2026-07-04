@@ -33,6 +33,7 @@ const ALL_SUITES = [
   'verify-ink.mjs',
   'verify-npc.mjs',
   'verify-triggers.mjs',
+  'verify-qol.mjs',
   'verify-scroll.mjs',
   'playthrough.mjs',
   'verify-outdoor.mjs',

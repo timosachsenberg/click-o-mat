@@ -84,6 +84,14 @@ const s2 = await layer('sconce-left');
 check('sconce frames advance', s1.frame !== s2.frame, `(${s1.frame} -> ${s2.frame})`);
 
 // --- bench collision: solid furniture, actors path around it
+// Park Blobbo out of the way first: he wanders, he's an actor-bound hotspot,
+// and smart-click would open his dialog if a walk click landed on him.
+await page.evaluate(() => {
+  const c = window.__engine.roomScene.actors.get('critter');
+  c.stop();
+  c.setPosition(830, 432);
+});
+await page.waitForTimeout(150);
 check('bench footprint is not walkable', !(await page.evaluate(() =>
   window.__engine.roomScene.walkArea.contains({ x: 490, y: 345 })
 )));

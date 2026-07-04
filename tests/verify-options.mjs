@@ -48,15 +48,15 @@ const after = await playerPos();
 check('room clicks blocked while menu open', Math.abs(before.x - after.x) < 2 && Math.abs(before.y - after.y) < 2, `(moved ${Math.hypot(after.x - before.x, after.y - before.y).toFixed(1)}px)`);
 
 // Music slider: click at 25% of the track (track x 440..620)
-await click(440 + 0.25 * 180, 150);
+await click(440 + 0.25 * 180, 134);
 await page.waitForTimeout(200);
 let music = await page.evaluate(() => window.__audio.settings.music);
 check('music slider sets ~0.25', Math.abs(music - 0.25) < 0.06, `(music=${music.toFixed(2)})`);
 
 // Drag the same slider to ~0.9
-await page.mouse.move(gx(440 + 0.25 * 180), gy(150));
+await page.mouse.move(gx(440 + 0.25 * 180), gy(134));
 await page.mouse.down();
-await page.mouse.move(gx(440 + 0.9 * 180), gy(150), { steps: 8 });
+await page.mouse.move(gx(440 + 0.9 * 180), gy(134), { steps: 8 });
 await page.mouse.up();
 await page.waitForTimeout(200);
 music = await page.evaluate(() => window.__audio.settings.music);
@@ -67,21 +67,21 @@ const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('pnc-au
 check('slider changes persist to localStorage', Math.abs(stored.music - music) < 0.001);
 
 // Mute toggle row
-await click(480, 222);
+await click(480, 234);
 await page.waitForTimeout(200);
 check('mute toggle in panel works', await page.evaluate(() => window.__audio.muted));
-await click(480, 222);
+await click(480, 234);
 await page.waitForTimeout(200);
 check('unmute toggle works', !(await page.evaluate(() => window.__audio.muted)));
 
 // Quick-slot Save button
 await page.evaluate(() => localStorage.removeItem('pnc-save-0'));
-await click(578, 284);
+await click(578, 286);
 await page.waitForTimeout(300);
 check('Save button writes a save', await page.evaluate(() => !!localStorage.getItem('pnc-save-0')));
 
 // Close restores gameplay
-await click(480, 448);
+await click(480, 484);
 await page.waitForTimeout(200);
 check('Close closes the menu', !(await page.evaluate(() => window.__engine.menuOpen)));
 await click(700, 420);

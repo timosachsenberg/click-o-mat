@@ -26,7 +26,7 @@ const settle = async () => {
   }
   throw new Error('settle timeout');
 };
-const Y0 = 284; // quick-slot row
+const Y0 = 286; // quick-slot row
 const savedWhen = () => page.evaluate(() => {
   const raw = localStorage.getItem('pnc-save-0');
   return raw ? JSON.parse(raw).when : null;
@@ -83,13 +83,13 @@ check('empty-slot ✕ no-op, Save on empty slot saves directly', (await savedWhe
 // --- confirm state resets when the panel closes
 await click(668, Y0); // ✕ -> confirm pending
 await page.waitForTimeout(200);
-await click(480, 448); // Close
+await click(480, 484); // Close
 await page.waitForTimeout(200);
 await click(894, 25); // reopen
 await page.waitForTimeout(300);
 // Row must be back to normal: Load (occupied slot) works instead of Yes/No
 check('pending confirm cleared on close (save intact)', (await savedWhen()) !== null);
-await click(480, 448);
+await click(480, 484);
 
 console.log('ERRORS:', errors.length ? '\n' + errors.slice(0, 8).join('\n') : 'none');
 if (errors.length) process.exitCode = 1;

@@ -67,16 +67,19 @@ subpath.
 | Action | Input |
 | --- | --- |
 | Walk | **Left-click** the floor |
-| Perform a verb | **Left-click a verb**, then click the target |
-| Quick default verb | **Right-click** a hotspot (look / open / talk, as configured) |
-| Use / combine items | **Click an inventory item** to arm it, then click a hotspot ("Use X with…") or another item (combine) |
+| Run | **Double-click** while walking (fast walk — triggers still fire) |
+| Smart action | **Left-click a hotspot** with no verb selected: performs its default (open the door, pick the thing up, talk) |
+| Perform a specific verb | **Left-click a verb** (or hotkeys **Q W E / A S D / Z X C**), then click the target |
+| Default verb, explicitly | **Right-click** a hotspot |
+| Reveal hotspots | Hold **Tab** — name labels over everything interactive |
+| Use / combine items | **Click an inventory item** to arm it, then click a hotspot ("Use X with…") or another item (combine); **right-click an item** to look at it; **mouse wheel** pages the inventory |
 | Choose a dialog line | **Click** the line; click anywhere to **skip** speech |
 | Quick save / load | **F5** / **F9** (the QUICK slot) |
 | Save slots | **⚙ options menu**: 4 slots showing room + time; Save/Load/✕ per slot, with inline confirmation before overwriting or deleting |
 | Skip a cutscene | **Esc** (fast-forwards to the end; stops at dialog choices) |
 | Options menu | **⚙ button** (top-right): volume sliders, mute, save slots — **Esc** closes |
 | Mute / unmute audio | **M**, or the 🔊 button (top-right) |
-| Debug overlay | **D** (draws walk area, obstacles, hotspots) |
+| Debug overlay | **F1** (draws walk area, obstacles, hotspots) |
 
 ### Playing the demo
 
@@ -231,7 +234,7 @@ anywhere in the room art you like — here it reuses the poster's wall):
 ```
 
 Save, then in the lab **right-click** that spot — you should fade into the
-closet, and the closet door takes you back. Press **D** in either room to see
+closet, and the closet door takes you back. Press **F1** in either room to see
 the walk area (green), obstacles (red), and hotspot boxes (yellow) — invaluable
 while placing `rect` and `walkTo` coordinates.
 
@@ -357,7 +360,8 @@ hotspots and items, and script reactions.** Everything else in the engine
 | **Music & SFX** — per-room tracks with crossfade, volume/mute, procedural *or* loaded audio | `engine/Audio.ts` |
 | **Options menu** — volume sliders, mute, save/load (⚙ top-right) | `engine/UIScene.ts` |
 | **Retro title screen** — pixel-upscaled lettering, New Game / Continue menu (Continue restores the save); the start click doubles as the audio-unlock gesture | `engine/TitleScene.ts` |
-| Debug overlay (walk area, holes, hotspots) — press `D` | `engine/RoomScene.ts` |
+| Debug overlay (walk area, holes, hotspots) — press `F1` | `engine/RoomScene.ts` |
+| **QoL**: smart left-click, double-click run, Tab hotspot reveal, verb hotkeys, autosave, text-speed slider | `engine/RoomScene.ts`, `engine/UIScene.ts` |
 | **PNG assets** — image backgrounds + spritesheet-animated actors | `engine/BootScene.ts`, `game/assets.ts` |
 
 Procedural art and PNG art coexist: the lab and hallway are drawn in code,

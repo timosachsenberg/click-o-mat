@@ -43,6 +43,9 @@ export class RoomScene extends Phaser.Scene {
   /** Region ids the player currently stands in (transient, per room). */
   private regionInside = new Set<string>();
   private hoverHotspot: HotspotDef | null = null;
+  /** Tab-held hotspot name labels (public so tests can observe them). */
+  hotspotLabels: Phaser.GameObjects.Container | null = null;
+  private lastClick = { time: 0, x: 0, y: 0 };
   private debugGfx: Phaser.GameObjects.Graphics | null = null;
   private fadeRect!: Phaser.GameObjects.Rectangle;
   /** Guards against a cancelled interaction clobbering a newer one's state. */
@@ -61,7 +64,15 @@ export class RoomScene extends Phaser.Scene {
       audio.resume(); // browsers unlock audio only after a user gesture
       this.onPointerDown(pointer);
     });
-    this.input.keyboard?.on('keydown-D', () => this.toggleDebug());
+    this.input.keyboard?.on('keydown-F1', () => this.toggleDebug());
+
+    // Hold Tab: label every visible hotspot (the pixel-hunting killer).
+    this.input.keyboard?.addCapture('TAB');
+    this.input.keyboard?.on('keydown-TAB', () => this.showHotspotLabels());
+    this.input.keyboard?.on('keyup-TAB', () => {
+      this.hotspotLabels?.destroy();
+      this.hotspotLabels = null;
+    });
 
     // Continue from the title screen: state was already restored, we just
     // start in the saved room at the saved position.
@@ -86,6 +97,7 @@ export class RoomScene extends Phaser.Scene {
     this.children.removeAll(true);
     this.layerObjs.clear();
     this.debugGfx = null;
+    this.hotspotLabels = null; // destroyed with the room's children
     this.hoverHotspot = null;
 
     this.roomDef = def;
@@ -270,6 +282,7 @@ export class RoomScene extends Phaser.Scene {
     this.cameras.main.setZoom(1);
     await this.fade(1);
     this.loadRoom(roomId, entryId);
+    engine.autosave(); // every room transition refreshes the AUTO slot
     await this.fade(0);
   }
 
@@ -350,6 +363,20 @@ export class RoomScene extends Phaser.Scene {
       engine.events.emit('skipLine');
       return;
     }
+    // Double-click while the player is auto-walking: break into a run
+    // (a fast real walk, so regions and onExit staging still fire — never a
+    // teleport).
+    const now = performance.now();
+    const isDouble =
+      now - this.lastClick.time < 350 &&
+      Math.hypot(pointer.x - this.lastClick.x, pointer.y - this.lastClick.y) < 40;
+    this.lastClick = { time: now, x: pointer.x, y: pointer.y };
+    if (isDouble && engine.busy && engine.interruptible) {
+      const player = this.player;
+      if (player) player.sprint = true;
+      return;
+    }
+
     if (engine.busy) {
       if (engine.interruptible) {
         // Cancel the auto-walk phase of the current interaction...
@@ -374,12 +401,53 @@ export class RoomScene extends Phaser.Scene {
         void this.performVerb(hotspot, hotspot.defaultVerb ?? 'lookat');
       } else if (engine.selectedVerb) {
         void this.performVerb(hotspot, engine.selectedVerb);
+      } else if (hotspot.defaultVerb) {
+        // Smart click: plain left-click performs the obvious action
+        // (open the door, pick up the thing, talk to them).
+        void this.performVerb(hotspot, hotspot.defaultVerb);
       } else {
         void this.walkPlayer(hotspot.walkTo ?? point);
       }
     } else {
       void this.walkPlayer(point);
     }
+  }
+
+  /** While Tab is held: name labels over every visible hotspot. */
+  private showHotspotLabels(): void {
+    if (this.hotspotLabels || engine.dialogMode || engine.menuOpen || !this.roomDef) return;
+    const container = this.add.container(0, 0).setDepth(45000);
+    for (const hs of this.roomDef.hotspots) {
+      if (hs.visible && !hs.visible(engine.state)) continue;
+      let cx: number | null = null;
+      let cy: number | null = null;
+      if (hs.actor) {
+        const a = this.actors.get(hs.actor);
+        if (a) {
+          cx = a.x;
+          cy = a.y - a.sprite.displayHeight * 0.6;
+        }
+      } else if (hs.rect) {
+        cx = hs.rect.x + hs.rect.w / 2;
+        cy = hs.rect.y + hs.rect.h / 2;
+      } else if (hs.polygon) {
+        cx = hs.polygon.reduce((s, p) => s + p.x, 0) / hs.polygon.length;
+        cy = hs.polygon.reduce((s, p) => s + p.y, 0) / hs.polygon.length;
+      }
+      if (cx === null || cy === null) continue;
+      container.add(
+        this.add
+          .text(cx, cy, hs.name, {
+            fontFamily: 'Verdana, Arial, sans-serif',
+            fontSize: '13px',
+            color: '#ffe066',
+            stroke: '#000000',
+            strokeThickness: 4,
+          })
+          .setOrigin(0.5)
+      );
+    }
+    this.hotspotLabels = container;
   }
 
   private get player(): Actor | undefined {
