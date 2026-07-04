@@ -83,6 +83,28 @@ await page.waitForTimeout(700);
 const s2 = await layer('sconce-left');
 check('sconce frames advance', s1.frame !== s2.frame, `(${s1.frame} -> ${s2.frame})`);
 
+// --- bench collision: solid furniture, actors path around it
+check('bench footprint is not walkable', !(await page.evaluate(() =>
+  window.__engine.roomScene.walkArea.contains({ x: 490, y: 345 })
+)));
+await click(490, 345); // click INTO the bench: player stops at its edge
+await settle();
+let p = await page.evaluate(() => {
+  const a = window.__engine.roomScene.actors.get('norb');
+  return { x: a.x, y: a.y };
+});
+check('walking into the bench stops outside it',
+  !(p.x > 422 && p.x < 558 && p.y > 318 && p.y < 370), `(${p.x.toFixed(0)},${p.y.toFixed(0)})`);
+await page.evaluate(() => window.__engine.roomScene.actors.get('norb').setPosition(400, 345));
+await page.waitForTimeout(150);
+await click(600, 345); // cross to the far side: path must go AROUND
+await settle();
+p = await page.evaluate(() => {
+  const a = window.__engine.roomScene.actors.get('norb');
+  return { x: a.x, y: a.y };
+});
+check('pathfinding routes around the bench', Math.abs(p.x - 600) < 15, `(x=${p.x.toFixed(0)})`);
+
 // Walk behind the pillar shaft (world x ~324-396) — player should be hidden
 await click(360, 400);
 await settle();

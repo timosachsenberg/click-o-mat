@@ -26,6 +26,17 @@ export const galleryRoom: RoomDef = {
     { x: 935, y: 445 },
     { x: 30, y: 445 },
   ],
+  holes: [
+    // The velvet bench: solid furniture, actors path around it. (The pillar
+    // needs no hole — it's a FRONT framing prop between camera and scene,
+    // its base below the walkable floor.)
+    [
+      { x: 422, y: 318 },
+      { x: 558, y: 318 },
+      { x: 558, y: 370 },
+      { x: 422, y: 370 },
+    ],
+  ],
   scaling: { yTop: 314, scaleTop: 0.72, yBottom: 445, scaleBottom: 1.05 },
 
   music: 'gallery-theme',
