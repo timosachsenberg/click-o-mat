@@ -345,6 +345,7 @@ hotspots and items, and script reactions.** Everything else in the engine
 | **Ambient events** — recurring non-blocking background activity (birds, shadows, machinery) | `engine/RoomScene.ts` |
 | **Regions** — walk-on/walk-off triggers with once + conditions | `engine/RoomScene.ts` |
 | **NPC hotspots** — clickable areas that follow moving actors | `engine/RoomScene.ts` |
+| **Multiple playable characters** (optional) — switchable party, per-character inventory, item passing, parked companions | `engine/GameState.ts`, `engine/Engine.ts` |
 | **Cutscene skipping** — Esc fast-forwards say/wait/walk/tween/zoom to the end | `engine/Engine.ts` |
 | **Scale maps** — actor size as a function of position, for trails and non-linear perspective | `engine/Actor.ts` |
 | **Camera zoom** — scripted pull-backs for reveals and vistas (`ctx.zoomCamera`) | `engine/ScriptContext.ts` |
@@ -610,6 +611,37 @@ gallery's Blobbo does exactly this.
 - **Items** (`items.ts`): id, name, icon texture, `lookAt`, and `combine` map
   for item-on-item.
 - **Actors** (`actors.ts`): id, name, speech color, texture set, speed.
+
+### Multiple playable characters (optional)
+
+Games can have several switchable characters (à la *Day of the Tentacle*).
+It's entirely **opt-in** — a game with one `playerId` and no party behaves
+exactly as a single-character game, and the switcher UI never appears.
+
+The model: **flags are global** (one shared world), while **location and
+inventory are per character**. Turn it on by declaring a `party` in the
+content, or grow it at runtime:
+
+```ts
+// Someone joins mid-game (the demo: Pia, a climber on the mountain):
+ctx.addToParty('pia');            // captures her current position; shows the switcher
+```
+
+Once there are 2+ characters:
+- A **portrait strip** (top-left) switches control; **number keys 1–6** do too.
+- Each character carries their **own inventory** (the panel shows the active
+  one). `ctx.hasItem(id, char?)` / `ctx.addItem(id, {char})` are character-aware.
+- Clicking a **co-located party member** switches to them; **giving** them an
+  item runs their hotspot's `onItem.give` handler if they have one (a scripted
+  exchange), else just transfers it. `ctx.giveTo(char, item)` does it from a
+  script.
+- Switching to someone in **another room** fades there; characters you leave
+  behind stay **parked** where you left them.
+- Save/load round-trips the whole party (old single-character saves migrate).
+
+In the demo: climb the mountain, talk to **Pia** at the summit to recruit her,
+then switch with the portraits / number keys, and hand her the meadow
+**canteen** for a reward.
 - **Dialogs** (`dialogs.ts`): nodes of choices, each with optional `if`
   condition, `once` flag, `script`, and `next`/`end` to control flow. Choice
   menus lay out by each line's real height (no overlap when a choice wraps)

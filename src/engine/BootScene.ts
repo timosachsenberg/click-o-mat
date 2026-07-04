@@ -55,9 +55,18 @@ export class BootScene extends Phaser.Scene {
       shoes: '#22202e',
       glasses: true,
     });
+    // A second humanoid (the companion) — different palette, no glasses.
+    this.makeHumanoidSet('pal', {
+      skin: '#e0a878',
+      hair: '#6b3a2a',
+      shirt: '#c04a6a',
+      pants: '#2e3a48',
+      shoes: '#22202e',
+    });
     this.makeTentacleSet('tent', '#4fae4a', '#2f7a2c');
     this.makeIcons();
     this.registerAnims('guy');
+    this.registerAnims('pal');
     this.registerAnims('tent');
 
     // Animations built from loaded spritesheets in the manifest.
@@ -150,6 +159,38 @@ export class BootScene extends Phaser.Scene {
     });
     makeCanvasTex(this, 'icon-hamster', 64, 48, (g) => drawHamsterIcon(g, false));
     makeCanvasTex(this, 'icon-glowhamster', 64, 48, (g) => drawHamsterIcon(g, true));
+    makeCanvasTex(this, 'icon-canteen', 64, 48, (g) => {
+      g.fillStyle = '#5a7a4a';
+      g.beginPath();
+      g.ellipse(32, 28, 15, 17, 0, 0, Math.PI * 2);
+      g.fill();
+      g.fillStyle = '#3a5230';
+      g.fillRect(27, 8, 10, 8); // cap
+      g.strokeStyle = '#2a3a22';
+      g.lineWidth = 2;
+      g.beginPath();
+      g.ellipse(32, 28, 15, 17, 0, 0, Math.PI * 2);
+      g.stroke();
+      g.fillStyle = '#e8e0c0';
+      g.fillRect(22, 26, 20, 5); // label stripe
+    });
+    makeCanvasTex(this, 'icon-medal', 64, 48, (g) => {
+      g.fillStyle = '#8a2a2a'; // ribbon
+      g.fillRect(26, 6, 5, 14);
+      g.fillRect(33, 6, 5, 14);
+      g.fillStyle = '#e0c040'; // disc
+      g.beginPath();
+      g.arc(32, 32, 12, 0, Math.PI * 2);
+      g.fill();
+      g.strokeStyle = '#a88820';
+      g.lineWidth = 2;
+      g.beginPath();
+      g.arc(32, 32, 12, 0, Math.PI * 2);
+      g.stroke();
+      g.fillStyle = '#a88820';
+      g.font = 'bold 12px monospace';
+      g.fillText('1', 29, 37);
+    });
   }
 }
 

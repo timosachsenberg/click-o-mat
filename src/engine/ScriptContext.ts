@@ -34,7 +34,7 @@ export class ScriptContext {
   }
 
   get player(): Actor {
-    return this.actor(this.eng.playerId);
+    return this.actor(this.eng.state.activeChar);
   }
 
   // ---- flags & inventory -------------------------------------------------
@@ -47,12 +47,13 @@ export class ScriptContext {
     this.state.setFlag(key, value);
   }
 
-  hasItem(id: string): boolean {
-    return this.state.hasItem(id);
+  /** Does a character hold the item? Defaults to the active character. */
+  hasItem(id: string, char?: string): boolean {
+    return this.state.hasItem(id, char ?? this.state.activeChar);
   }
 
-  addItem(id: string, opts: { silent?: boolean } = {}): void {
-    this.state.addItem(id);
+  addItem(id: string, opts: { silent?: boolean; char?: string } = {}): void {
+    this.state.addItem(id, opts.char ?? this.state.activeChar);
     if (!opts.silent) {
       audio.playSfx('pickup');
       const name = this.eng.items[id]?.name ?? id;
@@ -61,8 +62,34 @@ export class ScriptContext {
     this.eng.events.emit('ui');
   }
 
-  removeItem(id: string): void {
-    this.state.removeItem(id);
+  removeItem(id: string, char?: string): void {
+    this.state.removeItem(id, char ?? this.state.activeChar);
+    this.eng.events.emit('ui');
+  }
+
+  // ---- party / characters ------------------------------------------------
+
+  /** The id of the character the player currently controls. */
+  get activeCharId(): string {
+    return this.state.activeChar;
+  }
+
+  /** Add a character to the switchable party (shows the switcher UI). If
+   *  they're already an actor in the current room their position is captured;
+   *  otherwise pass a location. */
+  addToParty(id: string, at?: { room: string; pos: { x: number; y: number }; facing?: Facing }): void {
+    this.eng.addToParty(id, at);
+  }
+
+  /** Switch player control to another party member (fades if they're in a
+   *  different room). */
+  async switchTo(id: string): Promise<void> {
+    await this.eng.switchTo(id);
+  }
+
+  /** Move an item from one character to another (defaults: from active). */
+  giveTo(id: string, item: string, from?: string): void {
+    this.state.transferItem(item, from ?? this.state.activeChar, id);
     this.eng.events.emit('ui');
   }
 

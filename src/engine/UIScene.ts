@@ -126,7 +126,92 @@ export class UIScene extends Phaser.Scene {
       else engine.startSkip(); // fast-forward the current cutscene, if any
     });
 
+    this.buildPartyBar();
+
     this.refresh();
+  }
+
+  // ---- party switcher (only shown with 2+ characters) --------------------
+
+  private partyBar!: Phaser.GameObjects.Container;
+  private portraitFrames: Array<{ id: string; frame: Phaser.GameObjects.Rectangle }> = [];
+
+  private buildPartyBar(): void {
+    this.partyBar = this.add.container(0, 0).setDepth(10000);
+    engine.events.on('party', () => this.rebuildPartyBar());
+    engine.events.on('ui', () => this.updatePartyHighlight());
+    const NUM = ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX'];
+    NUM.forEach((key, i) => {
+      this.input.keyboard?.on(`keydown-${key}`, () => {
+        if (engine.busy || engine.dialogMode || engine.menuOpen) return;
+        const id = engine.state.party[i];
+        if (id) void engine.switchTo(id);
+      });
+    });
+    this.rebuildPartyBar();
+  }
+
+  private rebuildPartyBar(): void {
+    this.partyBar.removeAll(true);
+    this.portraitFrames = [];
+    if (engine.state.party.length < 2) {
+      this.partyBar.setVisible(false);
+      return;
+    }
+    this.partyBar.setVisible(true);
+    const size = 46;
+    const gap = 6;
+    const x0 = 12;
+    const y0 = 10;
+    engine.state.party.forEach((id, i) => {
+      const x = x0 + i * (size + gap);
+      const frame = this.add
+        .rectangle(x, y0, size, size, 0x1a1626, 0.85)
+        .setOrigin(0)
+        .setStrokeStyle(2, 0x4a4370)
+        .setInteractive({ useHandCursor: true });
+      frame.on('pointerdown', () => {
+        if (engine.busy || engine.dialogMode || engine.menuOpen) return;
+        void engine.switchTo(id);
+      });
+      this.partyBar.add(frame);
+
+      const texKey = `${engine.actors[id]?.textureSet}-front-idle-0`;
+      if (this.textures.exists(texKey)) {
+        const icon = this.add.image(x + size / 2, y0 + size - 3, texKey).setOrigin(0.5, 1);
+        icon.setScale((size - 8) / icon.height); // fit the figure in the box
+        this.partyBar.add(icon);
+      } else {
+        this.partyBar.add(
+          this.add
+            .text(x + size / 2, y0 + size / 2, (engine.actors[id]?.name ?? '?')[0], {
+              fontFamily: 'Verdana, Arial, sans-serif',
+              fontSize: '22px',
+              fontStyle: 'bold',
+              color: '#c9f0ff',
+            })
+            .setOrigin(0.5)
+        );
+      }
+      this.partyBar.add(
+        this.add
+          .text(x + 3, y0 + 1, String(i + 1), {
+            fontFamily: 'Verdana, Arial, sans-serif',
+            fontSize: '11px',
+            color: '#8f7fd4',
+          })
+          .setOrigin(0)
+      );
+      this.portraitFrames.push({ id, frame });
+    });
+    this.updatePartyHighlight();
+  }
+
+  private updatePartyHighlight(): void {
+    for (const p of this.portraitFrames) {
+      const active = p.id === engine.state.activeChar;
+      p.frame.setStrokeStyle(active ? 3 : 2, active ? 0x7dff7a : 0x4a4370);
+    }
   }
 
   // ---- options menu --------------------------------------------------------

@@ -102,7 +102,8 @@ export class RoomScene extends Phaser.Scene {
 
     this.roomDef = def;
     this.roomSize = def.size ?? { w: GAME_W, h: ROOM_H };
-    engine.state.currentRoom = roomId;
+    // (currentRoom for the active character is set once the player spawns,
+    // below — so the "spawn at parked position" check can compare rooms.)
 
     // Camera: the room band of the screen is a window onto the room's world.
     // Rooms exactly one screen large never scroll (bounds pin the camera).
@@ -130,15 +131,23 @@ export class RoomScene extends Phaser.Scene {
       .setScrollFactor(0)
       .setAlpha(0);
 
-    // Player.
+    // Active player character. Prefer an explicit restore, else its parked
+    // position, else the room's entry point.
+    const activeId = engine.state.activeChar;
+    const stored = engine.state.chars[activeId];
     const entry = def.entries[entryId ?? ''] ?? Object.values(def.entries)[0];
-    const px = restore?.pos?.x ?? entry?.x ?? GAME_W / 2;
-    const py = restore?.pos?.y ?? entry?.y ?? ROOM_H - 60;
-    const pFacing = restore?.facing ?? entry?.facing ?? 'down';
-    const playerDef = engine.actors[engine.playerId];
+    const useStored = !restore && !entryId && stored?.pos && stored.room === roomId;
+    const px = restore?.pos?.x ?? (useStored ? stored.pos!.x : entry?.x) ?? GAME_W / 2;
+    const py = restore?.pos?.y ?? (useStored ? stored.pos!.y : entry?.y) ?? ROOM_H - 60;
+    const pFacing = restore?.facing ?? (useStored ? stored.facing : entry?.facing) ?? 'down';
+    const playerDef = engine.actors[activeId];
     const player = new Actor(this, playerDef, px, py, pFacing);
     player.applyPerspective(def.scaling);
     this.actors.set(playerDef.id, player);
+    // Persist the active character's location for this room.
+    engine.state.currentRoom = roomId;
+    engine.state.playerPos = { x: px, y: py };
+    engine.state.playerFacing = pFacing;
 
     // Follow the player through scrolling rooms; snap to them immediately so
     // entering a room never starts with a camera swoosh.
@@ -154,8 +163,20 @@ export class RoomScene extends Phaser.Scene {
       }
     }
 
-    // Room NPCs.
+    // Co-located party members (other than the active one) stand parked at
+    // their stored positions; they're clickable to switch to / pass items.
+    for (const id of engine.state.party) {
+      if (id === activeId) continue;
+      const cs = engine.state.chars[id];
+      if (!cs || cs.room !== roomId || !cs.pos) continue;
+      const mate = new Actor(this, engine.actors[id], cs.pos.x, cs.pos.y, cs.facing);
+      mate.applyPerspective(def.scaling);
+      this.actors.set(id, mate);
+    }
+
+    // Room NPCs (skip any that are party members — those are spawned above).
     for (const placement of def.actors ?? []) {
+      if (engine.state.party.includes(placement.id)) continue;
       const adef = engine.actors[placement.id];
       const npc = new Actor(this, adef, placement.x, placement.y, placement.facing ?? 'down');
       npc.applyPerspective(def.scaling);
@@ -391,8 +412,29 @@ export class RoomScene extends Phaser.Scene {
     // Screen → world: in scrolling rooms the camera offsets everything.
     const wp = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
     const point = { x: wp.x, y: wp.y };
-    const hotspot = this.hotspotAt(point);
     const rightClick = pointer.rightButtonDown();
+
+    // Clicking a co-located party member: pass an armed item (give), or switch
+    // control to them (plain click).
+    const mate = this.partyMemberAt(point);
+    if (mate && !rightClick) {
+      if (engine.pendingItem && engine.pendingItemVerb === 'give') {
+        // If the member has a content hotspot with a give handler, run it (a
+        // scripted exchange); otherwise just transfer the item.
+        const bound = this.roomDef.hotspots.find(
+          (h) => h.actor === mate.def.id && (!h.visible || h.visible(engine.state))
+        );
+        if (bound) void this.performVerb(bound, 'give', engine.pendingItem);
+        else void this.passItemTo(mate.def.id, engine.pendingItem);
+        return;
+      }
+      if (!engine.pendingItem && !engine.selectedVerb) {
+        void engine.switchTo(mate.def.id);
+        return;
+      }
+    }
+
+    const hotspot = this.hotspotAt(point);
 
     if (hotspot) {
       if (engine.pendingItem && engine.pendingItemVerb) {
@@ -450,8 +492,67 @@ export class RoomScene extends Phaser.Scene {
     this.hotspotLabels = container;
   }
 
+  /** Re-point camera + state to the newly active character (same-room switch;
+   *  the character is already an actor in the room). */
+  retargetPlayer(): void {
+    const player = this.player;
+    if (!player) return;
+    const cam = this.cameras.main;
+    cam.stopFollow();
+    cam.startFollow(player.sprite, false, 0.12, 0.12);
+    cam.centerOn(player.x, player.y);
+    engine.state.currentRoom = this.roomDef.id;
+    engine.state.playerPos = { x: player.x, y: player.y };
+    engine.state.playerFacing = player.facing;
+    engine.events.emit('hover', null);
+  }
+
+  /** A co-located party member (not the active one) under the point, if any. */
+  private partyMemberAt(p: Vec2): Actor | null {
+    for (const id of engine.state.party) {
+      if (id === engine.state.activeChar) continue;
+      const a = this.actors.get(id);
+      if (!a) continue;
+      const b = a.sprite.getBounds();
+      Phaser.Geom.Rectangle.Inflate(b, 6, 6);
+      if (b.contains(p.x, p.y)) return a;
+    }
+    return null;
+  }
+
+  /** Walk the active character to a party member and hand over an item. */
+  private async passItemTo(charId: string, item: string): Promise<void> {
+    const player = this.player;
+    const mate = this.actors.get(charId);
+    if (!player || !mate) return;
+    const seq = ++this.interactionSeq;
+    engine.beginBusy();
+    try {
+      engine.interruptible = true;
+      const side = player.x <= mate.x ? -1 : 1;
+      const gap = 55 * mate.sprite.scale + 25;
+      const res = await player.walkTo({ x: mate.x + side * gap, y: mate.y }, this.walkArea);
+      if (seq !== this.interactionSeq) return;
+      engine.interruptible = false;
+      if (res === 'cancelled') return;
+      player.setFacing(facingBetween(player, mate));
+      mate.setFacing(facingBetween(mate, player));
+      engine.state.transferItem(item, engine.state.activeChar, charId);
+      engine.events.emit('ui');
+      const itemName = engine.items[item]?.name ?? item;
+      const charName = engine.actors[charId]?.name ?? charId;
+      engine.uiScene.toast(`Gave ${itemName} to ${charName}.`);
+    } finally {
+      engine.endBusy();
+      if (seq === this.interactionSeq) {
+        engine.interruptible = false;
+        engine.clearSelection();
+      }
+    }
+  }
+
   private get player(): Actor | undefined {
-    return this.actors.get(engine.playerId);
+    return this.actors.get(engine.state.activeChar);
   }
 
   /** Plain interruptible walk (no verb). */
@@ -554,21 +655,23 @@ export class RoomScene extends Phaser.Scene {
   // ---- hover & hit-testing -----------------------------------------------
 
   hotspotAt(p: Vec2): HotspotDef | null {
-    // Later hotspots are considered "on top".
     const list = this.roomDef.hotspots;
+    const shown = (hs: HotspotDef) => !hs.visible || hs.visible(engine.state);
+    // Actor-bound hotspots first: clicking directly on a character should
+    // reach the character, not an overlapping static hotspot behind it.
     for (let i = list.length - 1; i >= 0; i--) {
       const hs = list[i];
-      if (hs.visible && !hs.visible(engine.state)) continue;
-      if (hs.actor) {
-        // Live-bound: the hit area is the actor's current sprite bounds.
-        const a = this.actors.get(hs.actor);
-        if (a) {
-          const b = a.sprite.getBounds();
-          Phaser.Geom.Rectangle.Inflate(b, 6, 6);
-          if (b.contains(p.x, p.y)) return hs;
-        }
-        continue;
-      }
+      if (!hs.actor || !shown(hs)) continue;
+      const a = this.actors.get(hs.actor);
+      if (!a) continue;
+      const b = a.sprite.getBounds();
+      Phaser.Geom.Rectangle.Inflate(b, 6, 6);
+      if (b.contains(p.x, p.y)) return hs;
+    }
+    // Then static hotspots; later ones are "on top".
+    for (let i = list.length - 1; i >= 0; i--) {
+      const hs = list[i];
+      if (hs.actor || !shown(hs)) continue;
       if (hs.rect) {
         const r = hs.rect;
         if (p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h) return hs;

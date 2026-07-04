@@ -22,7 +22,14 @@ export interface GameContent {
   dialogs: Record<string, DialogDef>;
   /** Optional images/spritesheets/animations to preload before the game runs. */
   assets?: AssetManifest;
+  /** The starting (and, for single-character games, only) player character. */
   playerId: string;
+  /** Optional initial switchable party (defaults to just [playerId]).
+   *  Characters can also join at runtime via ctx.addToParty(). */
+  party?: string[];
+  /** Optional per-character start locations for party members other than the
+   *  starting one (room + named entry). */
+  charStarts?: Record<string, { room: string; entry: string }>;
   startRoom: string;
   startEntry: string;
 }
@@ -56,12 +63,27 @@ export class Engine {
   dialogs: Record<string, DialogDef> = {};
   assets: AssetManifest = {};
   playerId = 'player';
+  charStarts: Record<string, { room: string; entry: string }> = {};
   startRoom = '';
   startEntry = 'start';
 
   /** Scenes register themselves here on create(). */
   roomScene!: RoomScene;
   uiScene!: UIScene;
+
+  /** The character the player currently controls (drives the "player" actor,
+   *  ctx.player, the visible inventory, and save's live-position capture). */
+  get activeChar(): string {
+    return this.state.activeChar;
+  }
+
+  get party(): string[] {
+    return this.state.party;
+  }
+
+  get isMultiChar(): boolean {
+    return this.state.party.length > 1;
+  }
 
   /** Reference count of concurrently running scripts/cutscenes. Overlaps are
    *  real: a door script is still finishing while the next room's onEnter
@@ -140,10 +162,78 @@ export class Engine {
     this.dialogs = content.dialogs;
     this.assets = content.assets ?? {};
     this.playerId = content.playerId;
+    this.charStarts = content.charStarts ?? {};
     this.startRoom = content.startRoom;
     this.startEntry = content.startEntry;
+    this.initParty(content.party ?? [content.playerId]);
     this.migrateLegacySave();
     this.loadPrefs();
+  }
+
+  /** Seed the live state's party at their start locations. The starting
+   *  character (playerId) begins at startRoom/startEntry; others at their
+   *  charStarts entry. Positions get filled in when their room first loads. */
+  private initParty(party: string[]): void {
+    const members = party.includes(this.playerId) ? party : [this.playerId, ...party];
+    this.state.activeChar = this.playerId;
+    this.state.party = [];
+    for (const id of members) {
+      if (id === this.playerId) {
+        // The starting character's room/position are filled in when the first
+        // room loads — keep currentRoom '' until then (the title screen relies
+        // on that to know the game hasn't started).
+        this.state.ensureChar(id, { room: '', pos: null, facing: 'down', inventory: [] });
+      } else {
+        const start = this.charStarts[id];
+        const room = start?.room ?? '';
+        const entry = room ? this.rooms[room]?.entries[start?.entry ?? ''] : undefined;
+        this.state.ensureChar(id, {
+          room,
+          pos: entry ? { x: entry.x, y: entry.y } : null,
+          facing: entry?.facing ?? 'down',
+          inventory: [],
+        });
+      }
+    }
+  }
+
+  /** Add a character to the switchable party at runtime (e.g. a companion
+   *  joins). If they're already an actor in the current room, their live
+   *  position is captured; otherwise pass a location. Shows the switcher UI. */
+  addToParty(id: string, at?: { room: string; pos: { x: number; y: number }; facing?: Facing }): void {
+    if (this.state.party.includes(id)) return;
+    const live = this.roomScene?.actors.get(id);
+    if (at) {
+      this.state.ensureChar(id, { room: at.room, pos: { ...at.pos }, facing: at.facing ?? 'down' });
+    } else if (live) {
+      this.state.ensureChar(id, { room: this.state.currentRoom, pos: { x: live.x, y: live.y }, facing: live.facing });
+    } else {
+      this.state.ensureChar(id, {});
+    }
+    this.events.emit('party');
+  }
+
+  /** Switch player control to another party member. If they're in a different
+   *  room, fades there; if co-located, just re-points control + camera. */
+  async switchTo(id: string): Promise<void> {
+    if (id === this.state.activeChar || !this.state.party.includes(id)) return;
+    if (this.busy) return;
+    // Park the current character at their live position.
+    const cur = this.roomScene.actors.get(this.state.activeChar);
+    if (cur) {
+      this.state.chars[this.state.activeChar].pos = { x: cur.x, y: cur.y };
+      this.state.chars[this.state.activeChar].facing = cur.facing;
+    }
+    const targetRoom = this.state.chars[id].room;
+    this.state.activeChar = id;
+    this.clearSelection();
+    if (targetRoom && targetRoom !== this.state.currentRoom) {
+      await this.roomScene.transitionTo(targetRoom);
+    } else {
+      this.roomScene.retargetPlayer();
+    }
+    this.events.emit('party');
+    this.events.emit('ui');
   }
 
   // ---- player preferences --------------------------------------------------
@@ -262,7 +352,7 @@ export class Engine {
 
   save(slot = 0): boolean {
     try {
-      const player = this.roomScene.actors.get(this.playerId);
+      const player = this.roomScene.actors.get(this.state.activeChar);
       if (player) {
         this.state.playerPos = { x: player.x, y: player.y };
         this.state.playerFacing = player.facing;
@@ -282,10 +372,11 @@ export class Engine {
   }
 
   private applyLoaded(data: SaveData): void {
-    this.state = GameState.fromSave(data);
+    this.state = GameState.fromSave(data, this.playerId);
     this.clearSelection();
     this.resetBusy();
     this.dialogMode = false;
+    this.events.emit('party');
   }
 
   load(slot = 0): boolean {

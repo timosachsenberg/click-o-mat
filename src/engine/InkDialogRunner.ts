@@ -80,7 +80,7 @@ export async function runInkDialog(
       while (story.canContinue) {
         let line = (story.Continue() ?? '').trim();
         if (!line) continue;
-        let actorId = eng.playerId;
+        let actorId = eng.state.activeChar;
         const m = LINE_PREFIX.exec(line);
         if (m && opts.speakers?.[m[1]]) {
           actorId = opts.speakers[m[1]];

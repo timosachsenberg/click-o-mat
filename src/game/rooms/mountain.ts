@@ -1,4 +1,5 @@
 import { Layer, type RoomDef } from '../../engine/types';
+import type { GameState } from '../../engine/GameState';
 
 /**
  * The outdoor showcase (leave the mansion through the stair hall's front
@@ -69,7 +70,7 @@ function paintSky(g: CanvasRenderingContext2D): void {
   g.fill();
 }
 
-function paintTerrain(g: CanvasRenderingContext2D): void {
+function paintTerrain(g: CanvasRenderingContext2D, state: GameState): void {
   // Mountain mass
   g.fillStyle = '#8a7a68';
   g.beginPath();
@@ -125,6 +126,17 @@ function paintTerrain(g: CanvasRenderingContext2D): void {
     const tx = (i * 331) % 1920;
     const ty = 790 + ((i * 127) % 70);
     g.fillRect(tx, ty, 3, 6);
+  }
+  // A canteen lying in the grass (until someone picks it up).
+  if (!state.getFlag('canteenTaken')) {
+    g.fillStyle = '#5a7a4a';
+    g.beginPath();
+    g.ellipse(492, 822, 11, 13, 0.3, 0, Math.PI * 2);
+    g.fill();
+    g.fillStyle = '#3a5230';
+    g.fillRect(497, 808, 8, 6);
+    g.fillStyle = '#e8e0c0';
+    g.fillRect(484, 820, 14, 4);
   }
 
   // Trail: ledges + summit slab
@@ -261,6 +273,11 @@ export const mountainRoom: RoomDef = {
     fromDoor: { x: 170, y: 812, facing: 'right' },
   },
 
+  // Pia is a fellow climber at the summit — talk to her and she joins the
+  // party. Once she's a party member she's spawned from her saved position,
+  // not this placement (the engine skips party members here).
+  actors: [{ id: 'pia', x: 1180, y: 300, facing: 'right' }],
+
   ambients: [
     {
       every: [8000, 15000],
@@ -315,6 +332,65 @@ export const mountainRoom: RoomDef = {
   ],
 
   hotspots: [
+    // A canteen in the meadow (picked up by whoever is active).
+    {
+      id: 'canteen',
+      name: 'canteen',
+      rect: { x: 470, y: 806, w: 44, h: 34 },
+      walkTo: { x: 492, y: 828 },
+      facing: 'down',
+      defaultVerb: 'pickup',
+      visible: (state) => !state.getFlag('canteenTaken'),
+      on: {
+        lookat: 'A canteen someone left in the grass. Finders keepers.',
+        pickup: async (ctx) => {
+          ctx.setFlag('canteenTaken');
+          ctx.addItem('canteen');
+          ctx.repaint();
+        },
+      },
+    },
+    // Pia — talk to recruit her; give her the canteen for a reward. Once she
+    // joins, a plain click switches to her and she can carry her own items.
+    {
+      id: 'pia',
+      name: 'Pia',
+      actor: 'pia',
+      defaultVerb: 'talkto',
+      on: {
+        lookat: 'A fellow climber, admiring the view and guarding the summit.',
+        talkto: async (ctx) => {
+          if (!ctx.flag('piaJoined')) {
+            await ctx.say('pia', 'Made it! Took you long enough.');
+            await ctx.playerSay('Who are you?');
+            await ctx.say('pia', "Pia. I climb things. Want a partner? Two explorers, twice the reach.");
+            await ctx.playerSay('Sure — welcome aboard.');
+            ctx.setFlag('piaJoined');
+            ctx.addToParty('pia');
+            await ctx.say('pia', 'Click my portrait (or press 2) to take over. Oh — and I am parched.');
+          } else if (!ctx.flag('piaThanked')) {
+            await ctx.say('pia', 'Still parched. Got anything to drink up here?');
+          } else {
+            await ctx.say('pia', 'Best climb all week. Onward, partner.');
+          }
+        },
+      },
+      onItem: {
+        give: {
+          canteen: async (ctx) => {
+            ctx.removeItem('canteen');
+            ctx.sfx('pickup');
+            await ctx.say('pia', 'Water! You beautiful genius.');
+            await ctx.wait(300);
+            ctx.setFlag('piaThanked');
+            ctx.addItem('medal'); // she rewards whoever handed it over
+            await ctx.say('pia', "Here — the summit medal. You earned half of it.");
+            await ctx.playerSay('...Which half?');
+            await ctx.say('pia', 'The heavy half.');
+          },
+        },
+      },
+    },
     {
       id: 'mansion-door',
       name: 'front door',

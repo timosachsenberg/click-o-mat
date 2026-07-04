@@ -29,4 +29,16 @@ export const ITEMS: Record<string, ItemDef> = {
     icon: 'icon-glowhamster',
     lookAt: 'He glows with a warm green light and, I assume, purpose.',
   },
+  canteen: {
+    id: 'canteen',
+    name: 'canteen',
+    icon: 'icon-canteen',
+    lookAt: 'A dented canteen, sloshing with suspiciously fresh water.',
+  },
+  medal: {
+    id: 'medal',
+    name: 'summit medal',
+    icon: 'icon-medal',
+    lookAt: "A medal that reads 'I CLIMBED A MOUNTAIN AND ALL I GOT WAS THIS MEDAL.'",
+  },
 };
