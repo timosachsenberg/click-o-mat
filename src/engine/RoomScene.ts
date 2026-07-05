@@ -750,8 +750,11 @@ export class RoomScene extends Phaser.Scene {
     if (!this.roomDef) return;
     const dt = delta / 1000;
     for (const { obj, sx, sy } of this.tileLayers) {
-      obj.tilePositionX += sx * dt;
-      obj.tilePositionY += sy * dt;
+      // Subtract: increasing tilePosition scrolls the sampled texture the
+      // opposite way, so positive scrollX/scrollY read intuitively as the
+      // content moving right / DOWN (rain falls).
+      obj.tilePositionX -= sx * dt;
+      obj.tilePositionY -= sy * dt;
     }
     for (const actor of this.actors.values()) {
       actor.update(delta, this.roomDef.scaling);

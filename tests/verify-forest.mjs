@@ -49,7 +49,8 @@ check('rain texture loaded (lazy)', await page.evaluate(() => window.__engine.ro
 const rf1 = await page.evaluate(() => window.__engine.roomScene.layerObj('rain-near').tilePositionY);
 await page.waitForTimeout(300);
 const rf2 = await page.evaluate(() => window.__engine.roomScene.layerObj('rain-near').tilePositionY);
-check('rain scrolls (tilePosition advances)', rf2 > rf1, `(${rf1.toFixed(0)} -> ${rf2.toFixed(0)})`);
+// Rain falls downward → tilePositionY decreases (see the update() comment).
+check('rain scrolls downward', rf2 < rf1, `(${rf1.toFixed(0)} -> ${rf2.toFixed(0)})`);
 check('rain is a FRONT overlay', (await page.evaluate(() => window.__engine.roomScene.layerObj('rain-near').depth)) === 5000);
 
 // --- weather is configured as non-blocking ambients
@@ -62,17 +63,14 @@ await page.evaluate(() => {
   const a = window.__audio;
   if (!a.__wrapped) { const o = a.playSfx.bind(a); a.playSfx = (n) => { (window.__sfx ||= []).push(n); o(n); }; a.__wrapped = true; }
   window.__sfx = [];
+  // Record camera.flash() calls (the effect's isRunning window is too brief to poll).
+  const cam = window.__engine.roomScene.cameras.main;
+  if (!cam.__wrapped) { const o = cam.flash.bind(cam); cam.flash = (...args) => { window.__flashed = true; return o(...args); }; cam.__wrapped = true; }
+  window.__flashed = false;
 });
 await click(480, 60, { button: 'right' }); // the storm (sky) — look-at flashes + thunders
-let flashed = false;
-for (let i = 0; i < 40; i++) {
-  if (await page.evaluate(() => window.__engine.roomScene.cameras.main.flashEffect.isRunning)) { flashed = true; break; }
-  const st = await page.evaluate(() => ({ b: window.__engine.busy, i: window.__engine.interruptible }));
-  if (st.b && !st.i) await click(480, 240); // skip the spoken line
-  await page.waitForTimeout(100);
-}
-check('lightning produced a screen flash', flashed);
 await settle();
+check('lightning produced a screen flash', await page.evaluate(() => window.__flashed === true));
 check('thunder sound played', await page.evaluate(() => (window.__sfx || []).includes('thunder')), `(${await page.evaluate(() => JSON.stringify(window.__sfx))})`);
 
 // --- forest theme music is playing

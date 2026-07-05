@@ -588,8 +588,9 @@ Rules and tips:
 
 Give an `image` layer a `tile` and it renders as an infinitely-scrolling
 `TileSprite` covering `w×h`, advanced every frame — smooth motion with no
-seams and no frame-stepping. `scrollX`/`scrollY` are texture px per second,
-`scale` zooms the tile, and `alpha` (on any layer) sets opacity. The forest's
+seams and no frame-stepping. `scrollX`/`scrollY` are px per second, positive =
+right / **down** (so positive `scrollY` falls); `scale` zooms the tile, and
+`alpha` (on any layer) sets opacity. The forest's
 rain stacks two of them for depth — a faint slow far layer and a brighter fast
 near one, both slanted by a negative `scrollX` for wind:
 
