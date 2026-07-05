@@ -24,6 +24,12 @@ new Phaser.Game({
   height: GAME_H,
   parent: 'app',
   backgroundColor: '#000000',
+  // premultipliedAlpha:false fixes canvas/text textures rendering with an
+  // opaque BLACK box where they should be transparent — a WebGL premultiplied-
+  // alpha bug that only shows up on some GPUs/drivers. Every procedural sprite
+  // and Text object is a canvas-backed texture, so the whole demo is affected
+  // on those systems; this makes the alpha upload consistent across drivers.
+  render: { premultipliedAlpha: false },
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
