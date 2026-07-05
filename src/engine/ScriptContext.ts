@@ -157,7 +157,9 @@ export class ScriptContext {
   /** Live Phaser object of a room layer — for transient cutscene tweens only.
    *  Durable changes must go through flags + repaint(), or they'll be lost on
    *  room reload and won't survive save/load. */
-  layerObj(id: string): Phaser.GameObjects.Image | Phaser.GameObjects.Sprite {
+  layerObj(
+    id: string
+  ): Phaser.GameObjects.Image | Phaser.GameObjects.Sprite | Phaser.GameObjects.TileSprite {
     return this.eng.roomScene.layerObj(id);
   }
 

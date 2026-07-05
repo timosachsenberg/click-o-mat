@@ -44,13 +44,13 @@ await click(1810 - s.x, 800 - s.y, { button: 'right' }); // edge of the woods ->
 await settle();
 check('mountain woodland path reaches the forest', (await room()) === 'forest');
 
-// --- rain overlay animates (lazily-loaded spritesheet)
-check('rain sheet loaded (lazy)', await page.evaluate(() => window.__engine.roomScene.textures.exists('rain')));
-const rf1 = await page.evaluate(() => window.__engine.roomScene.layerObj('rain').anims.currentFrame.index);
-await page.waitForTimeout(400);
-const rf2 = await page.evaluate(() => window.__engine.roomScene.layerObj('rain').anims.currentFrame.index);
-check('rain animation advances', rf1 !== rf2, `(${rf1} -> ${rf2})`);
-check('rain layer is a FRONT overlay', (await page.evaluate(() => window.__engine.roomScene.layerObj('rain').depth)) === 5000);
+// --- rain: scrolling TileSprite layers (lazily-loaded texture)
+check('rain texture loaded (lazy)', await page.evaluate(() => window.__engine.roomScene.textures.exists('rain')));
+const rf1 = await page.evaluate(() => window.__engine.roomScene.layerObj('rain-near').tilePositionY);
+await page.waitForTimeout(300);
+const rf2 = await page.evaluate(() => window.__engine.roomScene.layerObj('rain-near').tilePositionY);
+check('rain scrolls (tilePosition advances)', rf2 > rf1, `(${rf1.toFixed(0)} -> ${rf2.toFixed(0)})`);
+check('rain is a FRONT overlay', (await page.evaluate(() => window.__engine.roomScene.layerObj('rain-near').depth)) === 5000);
 
 // --- weather is configured as non-blocking ambients
 const amb = await page.evaluate(() => window.__engine.roomScene.roomDef.ambients?.length ?? 0);

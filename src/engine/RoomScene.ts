@@ -37,7 +37,12 @@ export class RoomScene extends Phaser.Scene {
   /** World size of the current room (defaults to one screen). */
   roomSize = { w: GAME_W, h: ROOM_H };
 
-  private layerObjs = new Map<string, Phaser.GameObjects.Image | Phaser.GameObjects.Sprite>();
+  private layerObjs = new Map<
+    string,
+    Phaser.GameObjects.Image | Phaser.GameObjects.Sprite | Phaser.GameObjects.TileSprite
+  >();
+  /** Tiled scrolling layers (rain/water/fog), advanced each frame. */
+  private tileLayers: Array<{ obj: Phaser.GameObjects.TileSprite; sx: number; sy: number }> = [];
   private ambientTimers: Phaser.Time.TimerEvent[] = [];
   /** Bumped on every room change so in-flight ambients stop rescheduling. */
   private ambientEpoch = 0;
@@ -142,6 +147,7 @@ export class RoomScene extends Phaser.Scene {
     this.actors.clear();
     this.children.removeAll(true);
     this.layerObjs.clear();
+    this.tileLayers = [];
     this.debugGfx = null;
     this.hotspotLabels = null; // destroyed with the room's children
     this.hoverHotspot = null;
@@ -270,7 +276,7 @@ export class RoomScene extends Phaser.Scene {
   private buildLayer(
     roomId: string,
     layer: LayerDef
-  ): Phaser.GameObjects.Image | Phaser.GameObjects.Sprite {
+  ): Phaser.GameObjects.Image | Phaser.GameObjects.Sprite | Phaser.GameObjects.TileSprite {
     const sources = [layer.image, layer.paint, layer.anim].filter((s) => s !== undefined);
     if (sources.length !== 1) {
       throw new Error(
@@ -279,9 +285,18 @@ export class RoomScene extends Phaser.Scene {
     }
     const x = layer.x ?? 0;
     const y = layer.y ?? 0;
-    let obj: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite;
+    let obj: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite | Phaser.GameObjects.TileSprite;
 
-    if (layer.paint) {
+    if (layer.tile) {
+      // An infinitely-scrolling tiled texture (rain, water, fog, skies).
+      if (!layer.image) throw new Error(`Layer "${layer.id}": tile requires an image`);
+      const ts = this.add
+        .tileSprite(x, y, layer.w ?? this.roomSize.w, layer.h ?? this.roomSize.h, layer.image)
+        .setOrigin(0);
+      if (layer.tile.scale) ts.setTileScale(layer.tile.scale);
+      this.tileLayers.push({ obj: ts, sx: layer.tile.scrollX ?? 0, sy: layer.tile.scrollY ?? 0 });
+      obj = ts;
+    } else if (layer.paint) {
       const paint = layer.paint;
       const key = `room-layer-${roomId}-${layer.id}`;
       makeCanvasTex(this, key, layer.w ?? this.roomSize.w, layer.h ?? this.roomSize.h, (g) =>
@@ -303,6 +318,7 @@ export class RoomScene extends Phaser.Scene {
 
     obj.setDepth(layer.depth);
     if (layer.parallax !== undefined) obj.setScrollFactor(layer.parallax);
+    if (layer.alpha !== undefined) obj.setAlpha(layer.alpha);
     obj.setVisible(layer.visible ? !!layer.visible(engine.state) : true);
     obj.setData('layer', layer);
     return obj;
@@ -310,7 +326,9 @@ export class RoomScene extends Phaser.Scene {
 
   /** Live Phaser object of a layer — for transient cutscene tweens; durable
    *  changes belong in flags + repaint(). */
-  layerObj(id: string): Phaser.GameObjects.Image | Phaser.GameObjects.Sprite {
+  layerObj(
+    id: string
+  ): Phaser.GameObjects.Image | Phaser.GameObjects.Sprite | Phaser.GameObjects.TileSprite {
     const obj = this.layerObjs.get(id);
     if (!obj) throw new Error(`No layer "${id}" in room "${this.roomDef.id}"`);
     return obj;
@@ -730,6 +748,11 @@ export class RoomScene extends Phaser.Scene {
 
   override update(_time: number, delta: number): void {
     if (!this.roomDef) return;
+    const dt = delta / 1000;
+    for (const { obj, sx, sy } of this.tileLayers) {
+      obj.tilePositionX += sx * dt;
+      obj.tilePositionY += sy * dt;
+    }
     for (const actor of this.actors.values()) {
       actor.update(delta, this.roomDef.scaling);
     }

@@ -475,7 +475,8 @@ Ambient scripts must be pure staging: tween layers, play sounds — but don't
 set flags or talk to the player. They're cancelled automatically on room
 change. **Weather** is just ambients: the demo's forest (through the
 mountain's woodland path) runs lightning as `ctx.flash()` + a lagging
-`ctx.sfx('thunder')`, a looping rain overlay (`Layer.FRONT` anim), and wind
+`ctx.sfx('thunder')`, two scrolling rain layers (see
+[scrolling tiled layers](#scrolling-tiled-layers-rain-water-fog)), and wind
 that nudges the trees — all non-blocking, so the storm never takes control:
 
 ```ts
@@ -561,7 +562,9 @@ layers: [
 Rules and tips:
 
 - Each layer has **exactly one** source: `image` (static texture), `paint`
-  (canvas, re-drawn on `ctx.repaint()`), or `anim` (manifest animation).
+  (canvas, re-drawn on `ctx.repaint()`), or `anim` (manifest animation). An
+  `image` layer may add `tile` to scroll infinitely — see
+  [scrolling tiled layers](#scrolling-tiled-layers-rain-water-fog).
 - Every layer accepts `visible: (state) => boolean`, re-checked on
   `repaint()` — conditional set dressing without redrawing.
 - Alpha PNGs composite correctly everywhere; transparency is visual only
@@ -580,6 +583,24 @@ Rules and tips:
   scroll — so in rooms that zoom out, oversize parallax layers beyond the room
   bounds or their edges show (the mountain's sky is 2320×1200 at −200,−150 for
   a 1920×900 room).
+
+#### Scrolling tiled layers (rain, water, fog)
+
+Give an `image` layer a `tile` and it renders as an infinitely-scrolling
+`TileSprite` covering `w×h`, advanced every frame — smooth motion with no
+seams and no frame-stepping. `scrollX`/`scrollY` are texture px per second,
+`scale` zooms the tile, and `alpha` (on any layer) sets opacity. The forest's
+rain stacks two of them for depth — a faint slow far layer and a brighter fast
+near one, both slanted by a negative `scrollX` for wind:
+
+```ts
+{ id: 'rain-near', depth: Layer.FRONT, image: 'rain', alpha: 0.55,
+  tile: { scrollY: 1080, scrollX: -150, scale: 1.5 } },
+```
+
+The texture must tile seamlessly (the generator draws each rain streak again
+at every neighbouring tile offset so edge-crossing streaks wrap). Same
+mechanism drives drifting fog, flowing water, or a scrolling starfield.
 
 ### A hotspot
 

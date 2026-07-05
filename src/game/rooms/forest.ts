@@ -93,28 +93,35 @@ function paintTree(g: CanvasRenderingContext2D): void {
   }
 }
 
-function paintRain(g: CanvasRenderingContext2D): void {
-  // Placeholder — the visible rain is the animated 'rain' layer; this keeps
-  // a faint static wash so a paused frame still reads as wet.
-  g.fillStyle = 'rgba(120, 140, 170, 0.06)';
-  g.fillRect(0, 0, 960, 450);
-}
-
 export const forestRoom: RoomDef = {
   id: 'forest',
   name: 'Whispering Wood',
 
-  assets: FOREST_ASSETS, // the rain spritesheet, loaded on first entry
+  assets: FOREST_ASSETS, // the rain tile, loaded on first entry
   music: 'forest-theme',
 
   layers: [
     { id: 'bg', depth: Layer.BEHIND, paint: paintBackdrop },
-    { id: 'wash', depth: Layer.BEHIND, paint: paintRain },
     // Occluder trees: actors above the trunk base render behind them.
     { id: 'tree-l', depth: 402, x: 60, y: 60, w: 200, h: 360, paint: paintTree },
     { id: 'tree-r', depth: 428, x: 700, y: 80, w: 200, h: 360, paint: paintTree },
-    // Rain falls in front of everything (still under speech/UI).
-    { id: 'rain', depth: Layer.FRONT, anim: 'rain-fall', x: 0, y: 0, w: 960, h: 480 },
+    // Rain: two scrolling TileSprite layers for depth — a faint, small,
+    // slower far layer and a brighter, larger, faster near layer. scrollX
+    // gives the drops a wind-driven slant of travel.
+    {
+      id: 'rain-far',
+      depth: Layer.FRONT,
+      image: 'rain',
+      alpha: 0.4,
+      tile: { scrollY: 620, scrollX: -70, scale: 0.8 },
+    },
+    {
+      id: 'rain-near',
+      depth: Layer.FRONT,
+      image: 'rain',
+      alpha: 0.55,
+      tile: { scrollY: 1080, scrollX: -150, scale: 1.5 },
+    },
   ],
 
   // Clearing between the trees; trunk footprints are carved out.

@@ -146,6 +146,12 @@ export interface LayerDef {
    *  slower than the camera for parallax depth. Don't put hotspots over
    *  parallax layers — their visuals shift against world coordinates. */
   parallax?: number;
+  /** Opacity, 0..1 (default 1). */
+  alpha?: number;
+  /** Render an `image` as an infinitely-scrolling tiled texture (a
+   *  TileSprite) covering w×h — for rain, water, drifting fog, scrolling
+   *  skies. scrollX/scrollY are texture px per second; scale zooms the tile. */
+  tile?: { scrollX?: number; scrollY?: number; scale?: number };
 }
 
 export interface RoomDef {

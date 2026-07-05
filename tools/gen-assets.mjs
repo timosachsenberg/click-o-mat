@@ -380,25 +380,37 @@ const { bg, sheet, pillar, sconce, bird, rain } = await page.evaluate(() => {
     b.fill();
   }
 
-  // ---------- rain spritesheet: 4 frames of 480x270 (tiles the screen) ----------
-  // Each frame shifts the streak pattern down so cycling reads as falling rain.
+  // ---------- rain: one seamlessly-tileable 256x256 tile ----------
+  // A TileSprite repeats and scrolls this, so the motion is smooth (no frame
+  // stepping) and there are no seams. Each streak is drawn again at every
+  // neighbouring tile offset so streaks that cross an edge wrap cleanly.
+  const RT = 256;
   const rc = document.createElement('canvas');
-  rc.width = 480 * 4;
-  rc.height = 270;
+  rc.width = RT;
+  rc.height = RT;
   const rg = rc.getContext('2d');
-  rg.strokeStyle = 'rgba(200, 220, 255, 0.5)';
-  rg.lineWidth = 1.5;
-  const STREAKS = 130;
-  for (let f = 0; f < 4; f++) {
-    const ox = f * 480;
-    const shift = (f / 4) * 34; // one full period across the 4 frames (period ~34px)
-    for (let i = 0; i < STREAKS; i++) {
-      const x = (i * 97) % 480;
-      const y = (((i * 53) % 270) + shift) % 270;
-      rg.beginPath();
-      rg.moveTo(ox + x, y);
-      rg.lineTo(ox + x - 4, y + 14); // slight diagonal
-      rg.stroke();
+  rg.lineCap = 'round';
+  // Deterministic pseudo-random so re-runs are byte-identical.
+  let seed = 1337;
+  const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+  const drops = [];
+  for (let i = 0; i < 150; i++) {
+    drops.push({ x: rnd() * RT, y: rnd() * RT, len: 14 + rnd() * 12, a: 0.18 + rnd() * 0.22 });
+  }
+  const DX = -5; // wind slant over the drop's length
+  for (const d of drops) {
+    rg.strokeStyle = `rgba(200, 218, 245, ${d.a.toFixed(3)})`;
+    rg.lineWidth = 1 + (d.len > 20 ? 0.6 : 0);
+    // 3x3 neighbourhood so edge-crossing streaks tile seamlessly.
+    for (let ny = -1; ny <= 1; ny++) {
+      for (let nx = -1; nx <= 1; nx++) {
+        const ox = d.x + nx * RT;
+        const oy = d.y + ny * RT;
+        rg.beginPath();
+        rg.moveTo(ox, oy);
+        rg.lineTo(ox + DX * (d.len / 22), oy + d.len);
+        rg.stroke();
+      }
     }
   }
 
