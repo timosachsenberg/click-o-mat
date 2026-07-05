@@ -99,6 +99,7 @@ export class UIScene extends Phaser.Scene {
     this.buildAudioButton();
     this.buildOptionsMenu();
     this.input.keyboard?.on('keydown-M', () => this.toggleMute());
+    this.input.keyboard?.on('keydown-F2', () => this.toggleCommentary());
 
     // SCUMM-style verb hotkeys, laid out like the 3×3 grid on screen.
     const VERB_KEYS = ['Q', 'W', 'E', 'A', 'S', 'D', 'Z', 'X', 'C'];
@@ -224,6 +225,7 @@ export class UIScene extends Phaser.Scene {
   private optionsPanel!: Phaser.GameObjects.Container;
   private sliderFills: Array<{ fill: Phaser.GameObjects.Rectangle; get: () => number }> = [];
   private muteToggle!: Phaser.GameObjects.Text;
+  private commentaryToggle!: Phaser.GameObjects.Text;
   private sliderDrag: { x0: number; w: number; set: (v: number) => void } | null = null;
   private slotRows: Array<{
     info: Phaser.GameObjects.Text;
@@ -256,7 +258,7 @@ export class UIScene extends Phaser.Scene {
     // Panel
     this.optionsPanel = this.add.container(0, 0).setDepth(30000).setVisible(false);
     const bg = this.add
-      .rectangle(GAME_W / 2, 278, 400, 480, 0x1a1626, 0.97)
+      .rectangle(GAME_W / 2, 282, 400, 500, 0x1a1626, 0.97)
       .setStrokeStyle(2, 0x8f7fd4);
     // Swallow clicks so the room never sees them through the panel.
     bg.setInteractive();
@@ -277,7 +279,7 @@ export class UIScene extends Phaser.Scene {
     this.makeSlider('Text speed', 202, () => engine.textSpeed, (v) => engine.setTextSpeed(v));
 
     this.muteToggle = this.add
-      .text(GAME_W / 2, 234, '', {
+      .text(GAME_W / 2, 232, '', {
         fontFamily: 'Verdana, Arial, sans-serif',
         fontSize: '16px',
         color: '#9be89b',
@@ -287,20 +289,31 @@ export class UIScene extends Phaser.Scene {
     this.muteToggle.on('pointerdown', () => this.toggleMute());
     this.optionsPanel.add(this.muteToggle);
 
+    this.commentaryToggle = this.add
+      .text(GAME_W / 2, 258, '', {
+        fontFamily: 'Verdana, Arial, sans-serif',
+        fontSize: '16px',
+        color: '#c9b8ff',
+      })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true });
+    this.commentaryToggle.on('pointerdown', () => this.toggleCommentary());
+    this.optionsPanel.add(this.commentaryToggle);
+
     // Save slots
     this.optionsPanel.add(
       this.add
-        .text(GAME_W / 2, 260, '— SAVES —', {
+        .text(GAME_W / 2, 284, '— SAVES —', {
           fontFamily: 'Verdana, Arial, sans-serif',
           fontSize: '14px',
           color: '#8f7fd4',
         })
         .setOrigin(0.5)
     );
-    for (let slot = 0; slot < SAVE_SLOTS; slot++) this.buildSlotRow(slot, 286 + slot * 34);
+    for (let slot = 0; slot < SAVE_SLOTS; slot++) this.buildSlotRow(slot, 308 + slot * 34);
 
     const close = this.add
-      .text(GAME_W / 2, 484, 'Close', {
+      .text(GAME_W / 2, 500, 'Close', {
         fontFamily: 'Verdana, Arial, sans-serif',
         fontSize: '17px',
         fontStyle: 'bold',
@@ -458,6 +471,10 @@ export class UIScene extends Phaser.Scene {
   private refreshOptions(): void {
     for (const s of this.sliderFills) s.fill.width = 180 * s.get();
     this.muteToggle.setText(audio.muted ? 'Sound: OFF  (click to unmute)' : 'Sound: ON  (click to mute)');
+    this.commentaryToggle.setText(
+      engine.commentary ? "Director's commentary: ON  (F2)" : "Director's commentary: OFF  (F2)"
+    );
+    this.commentaryToggle.setColor(engine.commentary ? '#c9b8ff' : '#6b6488');
     this.updateMuteButton();
     // Slot listings (a row in confirm mode shows the inline Yes/No instead)
     const saves = engine.listSaves();
@@ -523,6 +540,25 @@ export class UIScene extends Phaser.Scene {
     this.updateMuteButton();
     if (engine.menuOpen) this.refreshOptions();
     this.toast(muted ? 'Sound off' : 'Sound on');
+  }
+
+  private toggleCommentary(): void {
+    engine.setCommentary(!engine.commentary);
+    if (engine.menuOpen) this.refreshOptions();
+    this.toast(engine.commentary ? "Director's commentary on" : "Director's commentary off");
+    // Turning it on narrates the current room right away (and lets you re-hear
+    // a room you've already visited this session).
+    if (engine.commentary && !engine.busy && !engine.dialogMode) {
+      const def = engine.roomScene?.roomDef;
+      if (def?.features?.length) {
+        engine.resetNarration(def.id);
+        engine.shouldNarrate(def.id); // claim it so room re-entry stays quiet
+        engine.beginBusy();
+        void engine.roomScene
+          .narrateFeatures(def)
+          .finally(() => engine.endBusy());
+      }
+    }
   }
 
   private updateMuteButton(): void {

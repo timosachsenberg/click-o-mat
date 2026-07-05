@@ -142,6 +142,13 @@ function paintLabLamp(g: CanvasRenderingContext2D): void {
 export const labRoom: RoomDef = {
   id: 'lab',
   name: "Dr. Fred's Lab Annex",
+  features: [
+    'the nine-verb interface & inventory',
+    'walk-area pathfinding around obstacles',
+    'depth-sorted occluders (the lamp & plant)',
+    'an actor-bound NPC hotspot (Ned)',
+    'item pickup, use, and combine',
+  ],
 
   layers: [
     { id: 'bg', depth: Layer.BEHIND, paint: paintLabBg },

@@ -41,6 +41,7 @@ export const SAVE_SLOTS = 5;
 export const SLOT_LABELS = ['QUICK', 'SLOT 1', 'SLOT 2', 'SLOT 3', 'AUTO'];
 export const AUTO_SLOT = 4;
 const TEXT_SPEED_KEY = 'pnc-text-speed';
+const COMMENTARY_KEY = 'pnc-commentary';
 
 interface SaveFile {
   v: 1;
@@ -261,10 +262,40 @@ export class Engine {
     }
   }
 
+  /** "Director's commentary": when on, the player narrates each room's
+   *  demonstrated engine features on first entry. Off by default; opt-in. */
+  commentary = false;
+  /** Rooms already narrated this session (so re-entry stays quiet). */
+  private narratedRooms = new Set<string>();
+
+  setCommentary(on: boolean): void {
+    this.commentary = on;
+    try {
+      localStorage.setItem(COMMENTARY_KEY, on ? '1' : '0');
+    } catch {
+      /* ignore */
+    }
+    this.events.emit('ui');
+  }
+
+  /** True once per room per session — used to fire commentary on first entry. */
+  shouldNarrate(roomId: string): boolean {
+    if (!this.commentary || this.narratedRooms.has(roomId)) return false;
+    this.narratedRooms.add(roomId);
+    return true;
+  }
+
+  /** Forget that a room was narrated, so commentary fires again on next entry
+   *  (used when the toggle is switched on while already in a room). */
+  resetNarration(roomId: string): void {
+    this.narratedRooms.delete(roomId);
+  }
+
   private loadPrefs(): void {
     try {
       const raw = localStorage.getItem(TEXT_SPEED_KEY);
       if (raw !== null) this.textSpeed = Math.max(0, Math.min(1, parseFloat(raw)));
+      this.commentary = localStorage.getItem(COMMENTARY_KEY) === '1';
     } catch {
       /* ignore */
     }

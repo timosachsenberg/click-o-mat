@@ -361,6 +361,7 @@ hotspots and items, and script reactions.** Everything else in the engine
 | Camera flash / shake, title cards | `engine/ScriptContext.ts` |
 | **Music & SFX** — per-room tracks with crossfade, volume/mute, procedural *or* loaded audio | `engine/Audio.ts` |
 | **Options menu** — volume sliders, mute, save/load (⚙ top-right) | `engine/UIScene.ts` |
+| **Director's commentary** (opt-in) — the player narrates each room's demonstrated engine features on first entry; toggle in options or press `F2` | `engine/RoomScene.ts`, `engine/UIScene.ts` |
 | **Retro title screen** — pixel-upscaled lettering, New Game / Continue menu (Continue restores the save); the start click doubles as the audio-unlock gesture | `engine/TitleScene.ts` |
 | Debug overlay (walk area, holes, hotspots) — press `F1` | `engine/RoomScene.ts` |
 | **QoL**: smart left-click, double-click run, Tab hotspot reveal, verb hotkeys, autosave, text-speed slider | `engine/RoomScene.ts`, `engine/UIScene.ts` |

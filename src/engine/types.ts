@@ -157,6 +157,10 @@ export interface LayerDef {
 export interface RoomDef {
   id: string;
   name?: string;
+  /** Short phrases naming the engine features this room shows off. When the
+   *  "Director's commentary" option is on, the player narrates these on first
+   *  entry. Purely informational — omit for a normal room. */
+  features?: string[];
   /** World size of the room. Defaults to one screen (960×450). Larger rooms
    *  scroll: the camera follows the player within these bounds. */
   size?: { w: number; h: number };

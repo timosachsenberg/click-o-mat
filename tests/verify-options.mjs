@@ -76,12 +76,12 @@ check('unmute toggle works', !(await page.evaluate(() => window.__audio.muted)))
 
 // Quick-slot Save button
 await page.evaluate(() => localStorage.removeItem('pnc-save-0'));
-await click(578, 286);
+await click(578, 308);
 await page.waitForTimeout(300);
 check('Save button writes a save', await page.evaluate(() => !!localStorage.getItem('pnc-save-0')));
 
 // Close restores gameplay
-await click(480, 484);
+await click(480, 500);
 await page.waitForTimeout(200);
 check('Close closes the menu', !(await page.evaluate(() => window.__engine.menuOpen)));
 await click(700, 420);

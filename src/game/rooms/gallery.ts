@@ -10,6 +10,14 @@ import { GALLERY_ASSETS } from '../assets';
 export const galleryRoom: RoomDef = {
   id: 'gallery',
   name: 'The Gallery',
+  features: [
+    'PNG backgrounds & spritesheets, lazily loaded on entry',
+    'an ink-scripted branching conversation (Blobbo)',
+    'an ambient wandering NPC',
+    'a Layer.FRONT foreground pillar you pass behind',
+    'an animated wall-sconce layer',
+    'a collision hole (the bench blocks walking)',
+  ],
 
   // Loaded lazily on first entry (the PNGs below), then cached.
   assets: GALLERY_ASSETS,

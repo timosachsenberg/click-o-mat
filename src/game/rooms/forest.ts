@@ -96,6 +96,12 @@ function paintTree(g: CanvasRenderingContext2D): void {
 export const forestRoom: RoomDef = {
   id: 'forest',
   name: 'Whispering Wood',
+  features: [
+    'scrolling tiled-texture rain in two depth layers',
+    'lightning and thunder as non-blocking weather ambients',
+    'walk-behind occluder trees',
+    'a procedural music theme',
+  ],
 
   assets: FOREST_ASSETS, // the rain tile, loaded on first entry
   music: 'forest-theme',

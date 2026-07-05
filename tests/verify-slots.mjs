@@ -7,8 +7,8 @@ const browser = await chromium.launch({ args: ['--autoplay-policy=no-user-gestur
 const check = (label, ok, extra = '') => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}${extra ? '  ' + extra : ''}`); if (!ok) process.exitCode = 1; };
 const errors = [];
 
-// Slot row geometry in the options panel: y = 284 + slot*34, Save x=590, Load x=645.
-const SLOT_Y = (s) => 286 + s * 34;
+// Slot row geometry in the options panel: y = 306 + slot*34, Save x=590, Load x=645.
+const SLOT_Y = (s) => 308 + s * 34;
 
 const newPage = async (context) => {
   const page = await context.newPage();
@@ -53,7 +53,7 @@ await page.waitForTimeout(300);
 await click(578, SLOT_Y(1)); // Save on slot 1
 await page.waitForTimeout(300);
 await page.screenshot({ path: `${SHOT}/slots-01-panel.png` });
-await click(480, 484); // Close
+await click(480, 500); // Close
 await page.waitForTimeout(300);
 
 // Gallery -> save to SLOT 2
@@ -81,7 +81,7 @@ await page.waitForTimeout(300);
 await click(628, SLOT_Y(3));
 await page.waitForTimeout(300);
 check('empty-slot Load is a no-op (menu stays open)', await page.evaluate(() => window.__engine.menuOpen));
-await click(480, 484);
+await click(480, 500);
 
 // Reload page: Continue loads the LATEST save (slot 2, gallery)
 await page.reload();

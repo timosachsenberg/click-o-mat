@@ -243,6 +243,13 @@ function paintCloudShadow(g: CanvasRenderingContext2D): void {
 export const mountainRoom: RoomDef = {
   id: 'mountain',
   name: 'The Mountain',
+  features: [
+    'a large scrolling outdoor room with a parallax sky',
+    'a non-linear scale map (you shrink climbing the trail)',
+    'a camera zoom-out (look at the view from the summit)',
+    'an optional second playable character (Pia)',
+    'ambient wildlife (a bird crossing the sky)',
+  ],
 
   assets: MOUNTAIN_ASSETS, // the bird spritesheet, loaded on first entry
 

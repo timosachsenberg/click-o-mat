@@ -256,6 +256,11 @@ function paintRoom(g: CanvasRenderingContext2D): void {
 export const stairhallRoom: RoomDef = {
   id: 'stairhall',
   name: 'The Grand Staircase',
+  features: [
+    'a room that scrolls both vertically and horizontally',
+    'a parallax layer drifting behind the action',
+    'a diagonal occluder sliced into baseline strips (the banister)',
+  ],
 
   size: { w: 1400, h: 800 },
 

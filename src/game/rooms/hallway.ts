@@ -144,6 +144,11 @@ function paintHallPlant(g: CanvasRenderingContext2D, state: GameState): void {
 export const hallwayRoom: RoomDef = {
   id: 'hallway',
   name: 'Hall of Science',
+  features: [
+    'room-to-room doors with fade transitions',
+    'smart-click default verbs (just click a door)',
+    'named entry points between rooms',
+  ],
 
   layers: [
     { id: 'bg', depth: Layer.BEHIND, paint: paintHallBg },

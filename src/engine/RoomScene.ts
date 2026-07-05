@@ -237,12 +237,14 @@ export class RoomScene extends Phaser.Scene {
 
     engine.events.emit('hover', null);
 
-    if (def.onEnter) {
-      const script = def.onEnter;
+    // Decide narration now (first entry, commentary on) — before onEnter runs.
+    const narrate = !!def.features?.length && engine.shouldNarrate(def.id);
+    if (def.onEnter || narrate) {
       engine.beginBusy();
       void (async () => {
         try {
-          await script(engine.makeContext());
+          if (def.onEnter) await def.onEnter(engine.makeContext());
+          if (narrate) await this.narrateFeatures(def);
         } finally {
           engine.endBusy();
         }
@@ -250,6 +252,15 @@ export class RoomScene extends Phaser.Scene {
     }
 
     for (const ambient of def.ambients ?? []) this.scheduleAmbient(ambient);
+  }
+
+  /** "Director's commentary": the player names the engine features this room
+   *  demonstrates, in one skippable speech bubble. */
+  async narrateFeatures(def: RoomDef): Promise<void> {
+    if (!def.features?.length) return;
+    await engine.makeContext().playerSay(
+      `(Commentary — this room shows off: ${def.features.join('; ')}.)`
+    );
   }
 
   /** Run an ambient on a randomized interval. Ambients never touch the busy
