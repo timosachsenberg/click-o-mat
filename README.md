@@ -102,7 +102,8 @@ the banister slide in front of you. Finally, the staircase's **front door
 (marked OUT)** leads outside: climb the mountain's switchback trail and watch
 yourself shrink into the distance, birds cross the sky, cloud shadows drift
 over the meadow, and — from the summit — **look at the view** for a full
-zoom-out.
+zoom-out. From the meadow's **edge of the woods** (far right), step into the
+**Whispering Wood** — a stormy forest with falling rain, lightning, and thunder.
 
 ---
 
@@ -342,7 +343,7 @@ hotspots and items, and script reactions.** Everything else in the engine
 | Perspective scaling (actors shrink toward the back wall) | `engine/Actor.ts` |
 | **Layer system** — backdrops, occluders (walk-behinds), foreground overlays, animated layers, one shared depth axis | `engine/types.ts`, `engine/RoomScene.ts` |
 | **Scrolling rooms** — rooms larger than the screen, camera follows the player (both axes), per-layer parallax | `engine/RoomScene.ts` |
-| **Ambient events** — recurring non-blocking background activity (birds, shadows, machinery) | `engine/RoomScene.ts` |
+| **Ambient events** — recurring non-blocking background activity (birds, shadows, weather: rain + lightning + thunder) | `engine/RoomScene.ts` |
 | **Regions** — walk-on/walk-off triggers with once + conditions | `engine/RoomScene.ts` |
 | **NPC hotspots** — clickable areas that follow moving actors | `engine/RoomScene.ts` |
 | **Multiple playable characters** (optional) — switchable party, per-character inventory, item passing, parked companions | `engine/GameState.ts`, `engine/Engine.ts` |
@@ -472,7 +473,21 @@ ambients: [
 
 Ambient scripts must be pure staging: tween layers, play sounds — but don't
 set flags or talk to the player. They're cancelled automatically on room
-change.
+change. **Weather** is just ambients: the demo's forest (through the
+mountain's woodland path) runs lightning as `ctx.flash()` + a lagging
+`ctx.sfx('thunder')`, a looping rain overlay (`Layer.FRONT` anim), and wind
+that nudges the trees — all non-blocking, so the storm never takes control:
+
+```ts
+ambients: [{
+  every: [7000, 16000],
+  run: async (ctx) => {
+    ctx.flash(0xdfe8ff, 110);                    // the strike (spares the UI)
+    await ctx.wait(500 + Math.random() * 1400);  // thunder lags the light
+    ctx.sfx('thunder');
+  },
+}],
+```
 
 **Regions** are walk-on/walk-off triggers, checked against the player's feet
 every frame — traps, proximity reactions, auto-cutscenes:

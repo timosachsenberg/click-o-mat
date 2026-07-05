@@ -128,6 +128,28 @@ function paintTerrain(g: CanvasRenderingContext2D, state: GameState): void {
     const ty = 790 + ((i * 127) % 70);
     g.fillRect(tx, ty, 3, 6);
   }
+
+  // A dark treeline at the far right — the edge of the woods, with a path in.
+  g.fillStyle = '#1a2a1c';
+  g.fillRect(1740, 560, 180, 340); // dense shadow behind the trees
+  g.fillStyle = '#213524';
+  for (let i = 0; i < 5; i++) {
+    const tx = 1770 + i * 38;
+    const th = 150 + ((i * 53) % 70);
+    const top = 800 - th;
+    g.beginPath();
+    g.arc(tx, top, 44, 0, Math.PI * 2);
+    g.fill();
+    g.fillRect(tx - 9, top, 18, th);
+  }
+  g.fillStyle = '#3a3226';
+  g.beginPath(); // the path leading in
+  g.moveTo(1700, 870);
+  g.lineTo(1815, 800);
+  g.lineTo(1900, 812);
+  g.lineTo(1900, 870);
+  g.closePath();
+  g.fill();
   // A canteen lying in the grass (until someone picks it up).
   if (!state.getFlag('canteenTaken')) {
     g.fillStyle = '#5a7a4a';
@@ -274,6 +296,7 @@ export const mountainRoom: RoomDef = {
 
   entries: {
     fromDoor: { x: 170, y: 812, facing: 'right' },
+    fromForest: { x: 1780, y: 800, facing: 'left' },
   },
 
   // Pia is a fellow climber at the summit — talk to her and she joins the
@@ -336,6 +359,26 @@ export const mountainRoom: RoomDef = {
 
   hotspots: [
     // A canteen in the meadow (picked up by whoever is active).
+    // A path into the woods at the far edge of the meadow.
+    {
+      id: 'forest-path',
+      name: 'edge of the woods',
+      rect: { x: 1760, y: 700, w: 160, h: 170 },
+      walkTo: { x: 1790, y: 800 },
+      facing: 'right',
+      defaultVerb: 'open',
+      on: {
+        lookat: 'A dark treeline. A path disappears into the woods. Ominous!',
+        open: async (ctx) => {
+          ctx.sfx('open');
+          await ctx.goToRoom('forest', 'fromMountain');
+        },
+        use: async (ctx) => {
+          ctx.sfx('open');
+          await ctx.goToRoom('forest', 'fromMountain');
+        },
+      },
+    },
     {
       id: 'canteen',
       name: 'canteen',

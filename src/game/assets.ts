@@ -49,3 +49,11 @@ export const MOUNTAIN_ASSETS: AssetManifest = {
   ],
   anims: [{ key: 'bird-flap', texture: 'bird', frames: [0, 1], frameRate: 6 }],
 };
+
+// The forest: the animated rain overlay (a 4-frame 480×270 loop, tiled).
+export const FOREST_ASSETS: AssetManifest = {
+  spritesheets: [
+    { key: 'rain', url: `${base}img/rain.png`, frameWidth: 480, frameHeight: 270 },
+  ],
+  anims: [{ key: 'rain-fall', texture: 'rain', frames: [0, 1, 2, 3], frameRate: 14 }],
+};

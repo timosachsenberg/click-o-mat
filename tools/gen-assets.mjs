@@ -13,7 +13,7 @@ const browser = await chromium.launch();
 const page = await browser.newPage();
 
 // Draw all assets inside the browser (real canvas) and return PNG data URLs.
-const { bg, sheet, pillar, sconce, bird } = await page.evaluate(() => {
+const { bg, sheet, pillar, sconce, bird, rain } = await page.evaluate(() => {
   // ---------- background: a small art gallery (960x450) ----------
   const bgc = document.createElement('canvas');
   bgc.width = 960;
@@ -380,12 +380,35 @@ const { bg, sheet, pillar, sconce, bird } = await page.evaluate(() => {
     b.fill();
   }
 
+  // ---------- rain spritesheet: 4 frames of 480x270 (tiles the screen) ----------
+  // Each frame shifts the streak pattern down so cycling reads as falling rain.
+  const rc = document.createElement('canvas');
+  rc.width = 480 * 4;
+  rc.height = 270;
+  const rg = rc.getContext('2d');
+  rg.strokeStyle = 'rgba(200, 220, 255, 0.5)';
+  rg.lineWidth = 1.5;
+  const STREAKS = 130;
+  for (let f = 0; f < 4; f++) {
+    const ox = f * 480;
+    const shift = (f / 4) * 34; // one full period across the 4 frames (period ~34px)
+    for (let i = 0; i < STREAKS; i++) {
+      const x = (i * 97) % 480;
+      const y = (((i * 53) % 270) + shift) % 270;
+      rg.beginPath();
+      rg.moveTo(ox + x, y);
+      rg.lineTo(ox + x - 4, y + 14); // slight diagonal
+      rg.stroke();
+    }
+  }
+
   return {
     bg: bgc.toDataURL('image/png'),
     sheet: sc.toDataURL('image/png'),
     pillar: pc.toDataURL('image/png'),
     sconce: scn.toDataURL('image/png'),
     bird: bc.toDataURL('image/png'),
+    rain: rc.toDataURL('image/png'),
   };
 });
 
@@ -399,5 +422,6 @@ await save('critter.png', sheet);
 await save('pillar.png', pillar);
 await save('sconce.png', sconce);
 await save('bird.png', bird);
+await save('rain.png', rain);
 
 await browser.close();

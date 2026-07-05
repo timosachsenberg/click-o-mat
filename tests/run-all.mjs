@@ -34,6 +34,7 @@ const ALL_SUITES = [
   'verify-ink.mjs',
   'verify-npc.mjs',
   'verify-multichar.mjs',
+  'verify-forest.mjs',
   'verify-triggers.mjs',
   'verify-qol.mjs',
   'verify-speech.mjs',

@@ -15,7 +15,7 @@
  * VU meter) read the live output level.
  */
 
-export type SfxName = 'pickup' | 'open' | 'zap' | 'deny' | 'win' | 'step';
+export type SfxName = 'pickup' | 'open' | 'zap' | 'deny' | 'win' | 'step' | 'thunder';
 
 const SFX_PATTERNS: Record<SfxName, Array<[freq: number, dur: number]>> = {
   pickup: [[660, 0.06], [880, 0.09]],
@@ -24,6 +24,8 @@ const SFX_PATTERNS: Record<SfxName, Array<[freq: number, dur: number]>> = {
   deny: [[220, 0.1], [165, 0.15]],
   win: [[523, 0.12], [659, 0.12], [784, 0.12], [1047, 0.25]],
   step: [[200, 0.03]],
+  // A low, rolling rumble — evokes thunder from the square-wave synth.
+  thunder: [[70, 0.35], [55, 0.5], [90, 0.25], [48, 0.45], [64, 0.6]],
 };
 
 interface Track {
@@ -68,6 +70,14 @@ const TRACKS: Record<string, Track> = {
     leadType: 'triangle',
     bass: [-24, null, null, null, -17, null, null, null, -19, null, null, null, -12, null, -14, null],
     lead: [0, 4, 7, 12, null, 12, 9, 7, 5, 9, 12, 16, null, 12, 9, 7],
+  },
+  // Slow, brooding minor for the stormy forest.
+  'forest-theme': {
+    bpm: 72,
+    bassType: 'triangle',
+    leadType: 'triangle',
+    bass: [-22, null, null, null, -25, null, null, null, -20, null, null, null, -27, null, null, null],
+    lead: [2, null, 5, null, 3, null, 2, null, -2, null, 2, null, 3, null, 2, null],
   },
 };
 

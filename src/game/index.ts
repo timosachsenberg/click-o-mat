@@ -7,6 +7,7 @@ import { hallwayRoom } from './rooms/hallway';
 import { galleryRoom } from './rooms/gallery';
 import { stairhallRoom } from './rooms/stairhall';
 import { mountainRoom } from './rooms/mountain';
+import { forestRoom } from './rooms/forest';
 
 export const CONTENT: GameContent = {
   rooms: {
@@ -15,6 +16,7 @@ export const CONTENT: GameContent = {
     gallery: galleryRoom,
     stairhall: stairhallRoom,
     mountain: mountainRoom,
+    forest: forestRoom,
   },
   items: ITEMS,
   actors: ACTORS,
