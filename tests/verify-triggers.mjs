@@ -69,12 +69,12 @@ CHECK('Esc fast-forwards the intro cutscene', skipMs >= 0 && skipMs < 2500, `(${
 CHECK('zoom back at 1 after skip', Math.abs((await scroll()).zoom - 1) < 0.02, `(zoom=${(await scroll()).zoom.toFixed(2)})`);
 CHECK('ctx.once flag set by intro', (await flag('once:mountain-intro')) === true);
 
-// --- room onExit (once) fires when leaving
+// --- leaving without having climbed: no parting line about calves
 await page.evaluate(() => window.__engine.roomScene.actors.get('norb').setPosition(300, 812));
 await page.waitForTimeout(900);
-await clickWorld(132, 700, { button: 'right' }); // door -> stairhall (onExit line first)
+await clickWorld(132, 700, { button: 'right' }); // door -> stairhall
 await settle();
-CHECK('room onExit ran once (flag set)', (await flag('once:mountain-outro')) === true);
+CHECK('no outro before climbing (flag unset)', !(await flag('once:mountain-outro')));
 CHECK('back in stairhall', (await room()) === 'stairhall');
 
 // --- re-entering: intro must NOT rerun (once), so busy clears fast, no zoom dip
@@ -124,6 +124,14 @@ p = await player();
 CHECK('walk actually in progress when Esc pressed', mid.x > 1020 && mid.x < 1390, `(x=${mid.x.toFixed(0)})`);
 CHECK('Esc does not teleport plain walks', p.x < 1390, `(x=${p.x.toFixed(0)})`);
 await settle();
+
+// --- after setting foot on the trail, the front door plays the outro (once)
+await page.evaluate(() => window.__engine.roomScene.actors.get('norb').setPosition(300, 812));
+await page.waitForTimeout(900);
+await clickWorld(132, 700, { button: 'right' }); // door -> stairhall (outro line first)
+await settle();
+CHECK('outro fired after climbing (flag set)', (await flag('once:mountain-outro')) === true);
+CHECK('back in stairhall after outro', (await room()) === 'stairhall');
 
 console.log('ERRORS:', errors.length ? '\n' + errors.slice(0, 8).join('\n') : 'none');
 if (errors.length) process.exitCode = 1;

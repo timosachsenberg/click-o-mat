@@ -345,12 +345,6 @@ export const mountainRoom: RoomDef = {
     });
   },
 
-  async onExit(ctx) {
-    await ctx.once('mountain-outro', () =>
-      ctx.playerSay('Back inside. My calves will remember this.')
-    );
-  },
-
   regions: [
     // Walk-on trigger at the foot of the trail: fires the first time the
     // player steps onto leg 1, never from the meadow below it.
@@ -359,6 +353,7 @@ export const mountainRoom: RoomDef = {
       rect: { x: 1190, y: 744, w: 120, h: 44 },
       once: true,
       onEnter: async (ctx) => {
+        ctx.setFlag('trailClimbed');
         await ctx.playerSay('Here we go. Cardio.');
       },
     },
@@ -453,12 +448,24 @@ export const mountainRoom: RoomDef = {
       defaultVerb: 'open',
       on: {
         lookat: 'The door back inside, where the oxygen lives.',
+        // The parting line belongs to this door only (not the forest path),
+        // and only once the calves have actually earned it on the trail.
         open: async (ctx) => {
           ctx.sfx('open');
+          if (ctx.flag('trailClimbed')) {
+            await ctx.once('mountain-outro', () =>
+              ctx.playerSay('Back inside. My calves will remember this.')
+            );
+          }
           await ctx.goToRoom('stairhall', 'fromOutside');
         },
         use: async (ctx) => {
           ctx.sfx('open');
+          if (ctx.flag('trailClimbed')) {
+            await ctx.once('mountain-outro', () =>
+              ctx.playerSay('Back inside. My calves will remember this.')
+            );
+          }
           await ctx.goToRoom('stairhall', 'fromOutside');
         },
       },
