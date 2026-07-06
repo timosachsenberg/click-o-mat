@@ -122,8 +122,8 @@ export const galleryRoom: RoomDef = {
     {
       id: 'painting-landscape',
       name: 'landscape painting',
-      rect: { x: 112, y: 62, w: 166, h: 126 },
-      walkTo: { x: 195, y: 330 },
+      rect: { x: 160, y: 62, w: 132, h: 126 },
+      walkTo: { x: 226, y: 330 },
       facing: 'up',
       on: {
         lookat: 'Rolling hills at sunset. The gift shop had it as a mousepad.',
@@ -143,8 +143,8 @@ export const galleryRoom: RoomDef = {
     {
       id: 'painting-night',
       name: 'night painting',
-      rect: { x: 682, y: 66, w: 166, h: 116 },
-      walkTo: { x: 765, y: 330 },
+      rect: { x: 642, y: 66, w: 166, h: 116 },
+      walkTo: { x: 725, y: 330 },
       facing: 'up',
       on: {
         lookat: 'A moon over dark hills. Peaceful. A little smug about it.',

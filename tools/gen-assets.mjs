@@ -96,7 +96,9 @@ const { bg, sheet, pillar, sconce, bird, rain } = await page.evaluate(() => {
     g.fillRect(x + w / 2 - 14, y + h + 14, 28, 8);
   };
 
-  painting(120, 70, 150, 110, (x, y, w, h) => {
+  // Sized to the wall gap: frame clear of the doorway (ends x146) and of the
+  // foreground pillar (opaque from x~300).
+  painting(168, 70, 116, 110, (x, y, w, h) => {
     const sky = g.createLinearGradient(0, y, 0, y + h);
     sky.addColorStop(0, '#8ec5e6');
     sky.addColorStop(1, '#d8ecc0');
@@ -128,7 +130,8 @@ const { bg, sheet, pillar, sconce, bird, rain } = await page.evaluate(() => {
     }
   });
 
-  painting(690, 74, 150, 100, (x, y, w, h) => {
+  // Between the sconce (ends x~632) and the archway (starts x830).
+  painting(650, 74, 150, 100, (x, y, w, h) => {
     g.fillStyle = '#122033';
     g.fillRect(x, y, w, h);
     g.fillStyle = '#e8e0c0'; // moon
