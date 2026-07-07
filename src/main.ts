@@ -6,6 +6,7 @@ import { TitleScene } from './engine/TitleScene';
 import { RoomScene } from './engine/RoomScene';
 import { UIScene } from './engine/UIScene';
 import { GAME_W, GAME_H } from './engine/constants';
+import { chooseRendererType, installCanvasTextureUploadFix } from './engine/renderCompat';
 import { CONTENT } from './game';
 
 engine.registerContent(CONTENT);
@@ -18,17 +19,20 @@ if (import.meta.env.DEV) {
 // Right-click is a game input (default verb), not a context menu.
 document.addEventListener('contextmenu', (e) => e.preventDefault());
 
+// Some GPUs/drivers lose the alpha channel when a canvas is uploaded as a
+// WebGL texture, turning every procedural sprite and Text object into an
+// opaque black box. renderCompat.ts documents the layered workarounds: canvas
+// uploads are rerouted through ImageData, a boot-time probe falls back to the
+// Canvas renderer when WebGL corrupts alpha anyway, and ?renderer=canvas or
+// ?renderer=webgl in the URL forces a renderer by hand.
+installCanvasTextureUploadFix();
+
 new Phaser.Game({
-  type: Phaser.AUTO,
+  type: chooseRendererType(),
   width: GAME_W,
   height: GAME_H,
   parent: 'app',
   backgroundColor: '#000000',
-  // premultipliedAlpha:false fixes canvas/text textures rendering with an
-  // opaque BLACK box where they should be transparent — a WebGL premultiplied-
-  // alpha bug that only shows up on some GPUs/drivers. Every procedural sprite
-  // and Text object is a canvas-backed texture, so the whole demo is affected
-  // on those systems; this makes the alpha upload consistent across drivers.
   render: { premultipliedAlpha: false },
   scale: {
     mode: Phaser.Scale.FIT,

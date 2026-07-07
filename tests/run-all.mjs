@@ -23,6 +23,7 @@ const BASE = `http://localhost:${PORT}`;
 const ALL_SUITES = [
   'verify-title.mjs',
   'smoke.mjs',
+  'verify-renderer.mjs',
   'verify-continue.mjs',
   'verify-slotmgmt.mjs',
   'verify-options.mjs',

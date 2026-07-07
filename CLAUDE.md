@@ -71,4 +71,4 @@ The README's "Content reference" section is the authoritative, detailed guide to
 - TypeScript is `strict` with `noUnusedLocals`; the build is type-check + bundle only (`noEmit`, Vite does the emit).
 - Commit messages follow conventional-commit style (`feat:`, `fix:`).
 - Right-click is a game input; `main.ts` suppresses the context menu.
-- Procedural textures are canvas-backed; the Phaser config sets `render: { premultipliedAlpha: false }` to avoid opaque-black-box rendering on some GPUs — keep this in mind when touching texture generation.
+- Procedural textures are canvas-backed, and some GPU/driver combos corrupt canvas-texture alpha on WebGL upload (opaque black boxes). `src/engine/renderCompat.ts` holds the layered workarounds: canvas uploads rerouted through `ImageData`, a boot-time probe that falls back to the Canvas renderer, and a `?renderer=canvas|webgl` URL override — keep this in mind when touching texture generation, and keep `tests/verify-renderer.mjs` passing.

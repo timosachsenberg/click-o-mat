@@ -62,6 +62,17 @@ npm run preview   # serve the built dist/ locally to sanity-check it
 S3, itch.io, …). `vite.config.ts` sets `base: './'` so it works from any
 subpath.
 
+### Troubleshooting: black boxes instead of transparency
+
+Some GPU/driver combinations corrupt the alpha channel when canvas-generated
+textures are uploaded to WebGL, so sprites render inside opaque black
+rectangles. The engine defends against this automatically
+(`src/engine/renderCompat.ts`): canvas textures are uploaded through a
+driver-independent path, and a boot-time probe switches to Phaser's Canvas
+renderer if WebGL still corrupts alpha. If you ever see black boxes anyway,
+append `?renderer=canvas` to the URL to force the Canvas renderer
+(`?renderer=webgl` forces WebGL back).
+
 ### Controls
 
 | Action | Input |
