@@ -19,12 +19,12 @@ if (import.meta.env.DEV) {
 // Right-click is a game input (default verb), not a context menu.
 document.addEventListener('contextmenu', (e) => e.preventDefault());
 
-// Some GPUs/drivers lose the alpha channel when a canvas is uploaded as a
-// WebGL texture, turning every procedural sprite and Text object into an
-// opaque black box. renderCompat.ts documents the layered workarounds: canvas
-// uploads are rerouted through ImageData, a boot-time probe falls back to the
-// Canvas renderer when WebGL corrupts alpha anyway, and ?renderer=canvas or
-// ?renderer=webgl in the URL forces a renderer by hand.
+// Some GPUs/drivers corrupt the alpha channel of canvas-backed WebGL
+// textures, turning every procedural sprite and Text object into an opaque
+// black box — and the corruption can be invisible to upload-side probes.
+// renderCompat.ts documents the details: the Canvas renderer is the default
+// (immune, and plenty fast at this resolution); ?renderer=webgl opts into
+// WebGL, where canvas uploads are rerouted through ImageData as a hardening.
 installCanvasTextureUploadFix();
 
 new Phaser.Game({

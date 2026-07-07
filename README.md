@@ -62,16 +62,17 @@ npm run preview   # serve the built dist/ locally to sanity-check it
 S3, itch.io, …). `vite.config.ts` sets `base: './'` so it works from any
 subpath.
 
-### Troubleshooting: black boxes instead of transparency
+### Renderer choice (and the WebGL black-box bug)
 
-Some GPU/driver combinations corrupt the alpha channel when canvas-generated
-textures are uploaded to WebGL, so sprites render inside opaque black
-rectangles. The engine defends against this automatically
-(`src/engine/renderCompat.ts`): canvas textures are uploaded through a
-driver-independent path, and a boot-time probe switches to Phaser's Canvas
-renderer if WebGL still corrupts alpha. If you ever see black boxes anyway,
-append `?renderer=canvas` to the URL to force the Canvas renderer
-(`?renderer=webgl` forces WebGL back).
+Some GPU/driver combinations corrupt the alpha channel of canvas-generated
+WebGL textures, so sprites render inside opaque black rectangles — and on
+real hardware this can happen in the draw path, where no boot-time probe can
+detect it. Since every texture in the demo is canvas-generated, the game
+defaults to Phaser's **Canvas renderer**, which is immune and easily fast
+enough at this resolution (`src/engine/renderCompat.ts`). Append
+`?renderer=webgl` to the URL to opt into WebGL on hardware you trust
+(canvas-texture uploads are hardened there too), or `?renderer=auto` for
+Phaser's own WebGL-first detection.
 
 ### Controls
 
