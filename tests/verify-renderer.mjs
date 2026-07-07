@@ -1,9 +1,11 @@
 /**
  * Renderer compatibility: transparent canvas textures must not render as
- * opaque black boxes (a GPU/driver bug class — see src/engine/renderCompat.ts),
- * and the ?renderer=canvas escape hatch must boot a working Canvas-renderer
- * game. Samples real framebuffer pixels around the lab's floor-lamp layer:
- * the layer's transparent margin must show the wall, not black.
+ * opaque black boxes (a GPU/driver bug class — see src/engine/renderCompat.ts).
+ * The Canvas renderer must be the default (real hardware corrupts alpha in
+ * WebGL in ways boot-time probes can't detect), and ?renderer=webgl must
+ * still boot a working WebGL game. Samples real framebuffer pixels around
+ * the lab's floor-lamp layer: the layer's transparent margin must show the
+ * wall, not black.
  */
 import { chromium } from 'playwright';
 
@@ -56,24 +58,24 @@ async function bootAndSample(browser, url, tag) {
 
 const browser = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] });
 
-// Default boot: probe should keep WebGL (where available) with the ImageData
-// upload fix active — transparency must survive.
+// Default boot: the Canvas renderer, immune to the WebGL alpha bug class.
 {
   const r = await bootAndSample(browser, BASE, 'default');
-  console.log(`default renderer type: ${r.rendererType} (1=CANVAS, 2=WEBGL)`);
+  check('default boot uses the Canvas renderer', r.rendererType === 1, `(type=${r.rendererType}, 1=CANVAS, 2=WEBGL)`);
   check('default: wall is not black (sanity)', r.wall.r + r.wall.g + r.wall.b > 60, fmt(r.wall));
   check('default: transparent layer margin shows wall', near(r.inLayer, r.wall), `(in-layer ${fmt(r.inLayer)} vs wall ${fmt(r.wall)})`);
   check('default: lamp shade still drawn', !near(r.shade, r.wall), fmt(r.shade));
   check('default: no console errors', r.errors.length === 0, r.errors.slice(0, 3).join(' | '));
 }
 
-// Forced Canvas renderer: the escape hatch for hardware where WebGL is broken.
+// Opt-in WebGL: must boot and render with transparency intact (the ImageData
+// upload hardening is active on this path).
 {
-  const r = await bootAndSample(browser, `${BASE}?renderer=canvas`, 'canvas');
-  check('?renderer=canvas boots the Canvas renderer', r.rendererType === 1, `(type=${r.rendererType})`);
-  check('canvas: transparent layer margin shows wall', near(r.inLayer, r.wall), `(in-layer ${fmt(r.inLayer)} vs wall ${fmt(r.wall)})`);
-  check('canvas: lamp shade still drawn', !near(r.shade, r.wall), fmt(r.shade));
-  check('canvas: no console errors', r.errors.length === 0, r.errors.slice(0, 3).join(' | '));
+  const r = await bootAndSample(browser, `${BASE}?renderer=webgl`, 'webgl');
+  check('?renderer=webgl boots the WebGL renderer', r.rendererType === 2, `(type=${r.rendererType})`);
+  check('webgl: transparent layer margin shows wall', near(r.inLayer, r.wall), `(in-layer ${fmt(r.inLayer)} vs wall ${fmt(r.wall)})`);
+  check('webgl: lamp shade still drawn', !near(r.shade, r.wall), fmt(r.shade));
+  check('webgl: no console errors', r.errors.length === 0, r.errors.slice(0, 3).join(' | '));
 }
 
 await browser.close();

@@ -5,21 +5,27 @@ import Phaser from 'phaser';
  * canvas-backed WebGL textures.
  *
  * Phaser uploads canvas textures by handing the HTMLCanvasElement straight to
- * `gl.texImage2D`. On some GPUs/drivers that canvas→texture copy takes an
- * accelerated path that loses transparency, so every procedural sprite and
- * Text object renders as an opaque black box. (The `premultipliedAlpha`
- * context attribute does NOT help — it only affects how the finished frame is
- * composited with the page, never texture uploads.)
+ * `gl.texImage2D`. On some GPUs/drivers the WebGL path corrupts transparency,
+ * so every procedural sprite and Text object renders as an opaque black box.
+ * (The `premultipliedAlpha` context attribute does NOT help — it only affects
+ * how the finished frame is composited with the page, never texture uploads.)
  *
- * Defense in depth, since the whole demo is canvas-backed textures:
- *  1. `installCanvasTextureUploadFix()` reroutes canvas uploads through
- *     ImageData (`getImageData` → `texImage2D`), the spec-defined CPU
- *     conversion path that behaves the same on all drivers.
- *  2. `chooseRendererType()` probes WebGL before the game boots: it uploads a
- *     tiny part-transparent ImageData, reads the texels back, and picks the
- *     Canvas renderer if the alpha didn't survive even that path.
- *  3. `?renderer=canvas` / `?renderer=webgl` in the URL overrides everything,
- *     as a user-reachable escape hatch on hardware we haven't seen.
+ * We first shipped WebGL-with-defenses: canvas uploads rerouted through
+ * ImageData plus a boot-time probe that uploaded a part-transparent test
+ * texture, read the texels back, and fell back to the Canvas renderer on
+ * corruption. Real hardware then surfaced drivers that PASS that probe (the
+ * readback is clean) and still corrupt alpha when the texture is drawn — the
+ * bug can live in the sampling/blending path, which no upload-side check can
+ * see. So:
+ *
+ *  1. `chooseRendererType()` now defaults to the Canvas renderer, which is
+ *     immune to the whole bug class and easily fast enough for a 960×600
+ *     point-and-click. `?renderer=webgl` (or `?renderer=auto`) opts back into
+ *     WebGL on hardware known to be good.
+ *  2. `installCanvasTextureUploadFix()` still hardens the opt-in WebGL path:
+ *     canvas uploads go through ImageData (`getImageData` → `texImage2D`),
+ *     the spec-defined CPU conversion path that behaves the same on all
+ *     drivers.
  */
 
 type TextureWrapperProto = {
@@ -34,6 +40,7 @@ type TextureWrapperProto = {
  * single choke point: initial creation, `CanvasTexture.refresh()`, Text
  * updates, and context-restore all go through it. The live canvas reference
  * is restored afterwards so later refreshes re-read current canvas content.
+ * A no-op unless the game runs with `?renderer=webgl` / `?renderer=auto`.
  */
 export function installCanvasTextureUploadFix(): void {
   const wrapper = (
@@ -64,69 +71,18 @@ export function installCanvasTextureUploadFix(): void {
 }
 
 /**
- * Upload a 2×2 ImageData (one opaque pixel, three transparent) to a WebGL
- * texture exactly the way Phaser does (UNPACK_PREMULTIPLY_ALPHA_WEBGL on) and
- * read the texels back. Returns false only when the driver demonstrably
- * corrupts the alpha channel; true on success or when the probe can't run
- * (no WebGL, incomplete framebuffer, exceptions) — Phaser.AUTO handles those.
+ * Pick the Phaser renderer: Canvas by default (see module comment),
+ * `?renderer=webgl` forces WebGL, `?renderer=auto` restores Phaser's own
+ * WebGL-first detection.
  */
-function webglPreservesCanvasAlpha(): boolean {
-  try {
-    const src = document.createElement('canvas');
-    src.width = 2;
-    src.height = 2;
-    const c2d = src.getContext('2d');
-    if (!c2d) return true;
-    c2d.fillStyle = 'rgba(255,0,0,1)';
-    c2d.fillRect(0, 0, 1, 1);
-    const data = c2d.getImageData(0, 0, 2, 2);
-
-    const glCanvas = document.createElement('canvas');
-    glCanvas.width = 2;
-    glCanvas.height = 2;
-    const gl = (glCanvas.getContext('webgl2') ??
-      glCanvas.getContext('webgl')) as WebGLRenderingContext | null;
-    if (!gl) return true;
-
-    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
-    const tex = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, tex);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, data);
-
-    const fbo = gl.createFramebuffer();
-    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
-    if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) return true;
-
-    const out = new Uint8Array(2 * 2 * 4);
-    gl.readPixels(0, 0, 2, 2, gl.RGBA, gl.UNSIGNED_BYTE, out);
-    const alphas = [out[3], out[7], out[11], out[15]];
-    // Exactly one pixel is opaque; the other three must come back transparent.
-    return alphas.filter((a) => a < 16).length === 3 && alphas.some((a) => a > 240);
-  } catch {
-    return true;
-  }
-}
-
-/** Pick the Phaser renderer: URL override first, else probe, else AUTO. */
 export function chooseRendererType(): number {
   let override: string | null = null;
   try {
     override = new URLSearchParams(window.location.search).get('renderer');
   } catch {
-    /* no window/location (headless) — fall through to the probe */
+    /* no window/location (headless) — use the default */
   }
-  if (override === 'canvas') return Phaser.CANVAS;
   if (override === 'webgl') return Phaser.WEBGL;
-
-  if (!webglPreservesCanvasAlpha()) {
-    console.warn(
-      'click-o-mat: this WebGL driver corrupts canvas-texture transparency; ' +
-        'falling back to the Canvas renderer. Force WebGL with ?renderer=webgl.'
-    );
-    return Phaser.CANVAS;
-  }
-  return Phaser.AUTO;
+  if (override === 'auto') return Phaser.AUTO;
+  return Phaser.CANVAS;
 }
