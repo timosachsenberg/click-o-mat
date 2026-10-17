@@ -1,6 +1,7 @@
 import { Layer, type RoomDef } from '../../engine/types';
 import { talkToBlobbo } from '../blobboDialog';
 import { GALLERY_ASSETS } from '../assets';
+import { defs, grainDefs, grainOverlay } from '../art/toon';
 
 /**
  * The layer-system showcase: a PNG image backdrop, an animated sconce layer
@@ -24,6 +25,9 @@ export const galleryRoom: RoomDef = {
 
   layers: [
     { id: 'bg', depth: Layer.BEHIND, image: 'gallery-bg' },
+    // Paper grain over the PNG, as runtime SVG: baked into the PNG, the
+    // noise would bloat the file ~20× (it doesn't compress).
+    { id: 'grain', depth: Layer.BEHIND, svg: defs(grainDefs(23)) + grainOverlay(960, 450) },
     // Animated wall sconce, in the clear wall gap between the abstract and
     // moon paintings (the left of the room is doorway + painting + pillar).
     { id: 'sconce', depth: Layer.BEHIND, anim: 'sconce-flicker', x: 600, y: 128 },

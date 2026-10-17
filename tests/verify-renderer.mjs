@@ -4,8 +4,8 @@
  * The Canvas renderer must be the default (real hardware corrupts alpha in
  * WebGL in ways boot-time probes can't detect), and ?renderer=webgl must
  * still boot a working WebGL game. Samples real framebuffer pixels around
- * the lab's floor-lamp layer: the layer's transparent margin must show the
- * wall, not black.
+ * the lab's floor-lamp layer: the layer's transparent margin must show
+ * exactly what is behind it (the same pixel with the layer hidden), not black.
  */
 import { chromium } from 'playwright';
 
@@ -46,14 +46,24 @@ async function bootAndSample(browser, url, tag) {
   );
 
   // Lamp layer canvas spans x 270..340, y 128..353; its left margin is
-  // transparent (pole starts at local x 29). Wall reference just outside.
-  const wall = await px(260, 208);
+  // transparent (pole starts at local x 29). Each spot is sampled with the
+  // layer shown and again hidden: the margin must not change, the shade
+  // must. (The walls are textured, so a neighbouring wall pixel is no exact
+  // reference — the same pixel without the layer is.)
+  const lampVisible = (v) => page.evaluate(async (vis) => {
+    window.__engine.roomScene.layerObj('lamp').setVisible(vis);
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  }, v);
   const inLayer = await px(275, 208);
   const shade = await px(302, 148); // lamp shade art — the texture must still draw
-
   await page.screenshot({ path: `${SHOT}/renderer-${tag}.png` });
+  await lampVisible(false);
+  const wall = await px(275, 208);
+  const behindShade = await px(302, 148);
+  await lampVisible(true);
+
   await page.close();
-  return { rendererType, wall, inLayer, shade, errors };
+  return { rendererType, wall, inLayer, shade, behindShade, errors };
 }
 
 const browser = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] });
@@ -63,8 +73,8 @@ const browser = await chromium.launch({ args: ['--autoplay-policy=no-user-gestur
   const r = await bootAndSample(browser, BASE, 'default');
   check('default boot uses the Canvas renderer', r.rendererType === 1, `(type=${r.rendererType}, 1=CANVAS, 2=WEBGL)`);
   check('default: wall is not black (sanity)', r.wall.r + r.wall.g + r.wall.b > 60, fmt(r.wall));
-  check('default: transparent layer margin shows wall', near(r.inLayer, r.wall), `(in-layer ${fmt(r.inLayer)} vs wall ${fmt(r.wall)})`);
-  check('default: lamp shade still drawn', !near(r.shade, r.wall), fmt(r.shade));
+  check('default: transparent layer margin shows wall', near(r.inLayer, r.wall, 3), `(in-layer ${fmt(r.inLayer)} vs without layer ${fmt(r.wall)})`);
+  check('default: lamp shade still drawn', !near(r.shade, r.behindShade), `${fmt(r.shade)} vs without layer ${fmt(r.behindShade)}`);
   check('default: no console errors', r.errors.length === 0, r.errors.slice(0, 3).join(' | '));
 }
 
@@ -73,8 +83,8 @@ const browser = await chromium.launch({ args: ['--autoplay-policy=no-user-gestur
 {
   const r = await bootAndSample(browser, `${BASE}?renderer=webgl`, 'webgl');
   check('?renderer=webgl boots the WebGL renderer', r.rendererType === 2, `(type=${r.rendererType})`);
-  check('webgl: transparent layer margin shows wall', near(r.inLayer, r.wall), `(in-layer ${fmt(r.inLayer)} vs wall ${fmt(r.wall)})`);
-  check('webgl: lamp shade still drawn', !near(r.shade, r.wall), fmt(r.shade));
+  check('webgl: transparent layer margin shows wall', near(r.inLayer, r.wall, 3), `(in-layer ${fmt(r.inLayer)} vs without layer ${fmt(r.wall)})`);
+  check('webgl: lamp shade still drawn', !near(r.shade, r.behindShade), `${fmt(r.shade)} vs without layer ${fmt(r.behindShade)}`);
   check('webgl: no console errors', r.errors.length === 0, r.errors.slice(0, 3).join(' | '));
 }
 

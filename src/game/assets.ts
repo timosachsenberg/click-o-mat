@@ -10,8 +10,8 @@ const base = import.meta.env.BASE_URL;
  * the global boot manifest is what lets a large game start fast — only the
  * rooms you visit pay for their art.
  *
- * The demo's shared characters (Norb, Pia, Ned) and icons are procedural
- * (generated in BootScene), so nothing needs to be in the global manifest.
+ * The demo's shared characters (Norb, Pia, Ned) and icons are procedural SVG
+ * art (see art/characters.ts, art/icons.ts) in the global manifest.
  */
 
 // The gallery: PNG backdrop, foreground pillar, Blobbo's spritesheet, and the

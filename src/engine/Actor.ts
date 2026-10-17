@@ -7,8 +7,8 @@ import { engine } from './Engine';
 export type WalkResult = 'arrived' | 'cancelled' | 'blocked';
 type Pose = 'idle' | 'walk' | 'talk';
 
+/** Speech text style (fontFamily comes from the UI theme at use time). */
 const TEXT_STYLE: Phaser.Types.GameObjects.Text.TextStyle = {
-  fontFamily: 'Verdana, Arial, sans-serif',
   fontSize: '17px',
   align: 'center',
   stroke: '#000000',
@@ -156,7 +156,7 @@ export class Actor {
     this.dismissSpeech();
     this.setPose('talk');
     this.speech = this.scene.add
-      .text(0, 0, text, { ...TEXT_STYLE, color: this.def.talkColor })
+      .text(0, 0, text, { ...TEXT_STYLE, fontFamily: engine.theme.font, color: this.def.talkColor })
       .setOrigin(0.5, 1)
       .setDepth(9000);
     this.positionSpeech();

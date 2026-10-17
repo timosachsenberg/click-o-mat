@@ -1,4 +1,5 @@
-import type { AssetManifest } from './types';
+import type { ActorPose, ActorVariant, AssetManifest } from './types';
+import { makeSvgTex } from './svgTex';
 
 /**
  * Shared asset-loading helpers used by both the boot-time global manifest and
@@ -43,6 +44,48 @@ export function registerManifestAnims(scene: Phaser.Scene, m: AssetManifest | un
       frameRate: a.frameRate,
       repeat: a.repeat ?? -1,
     });
+  }
+}
+
+const VARIANTS: ActorVariant[] = ['front', 'back', 'side'];
+
+/** Rasterize a manifest's inline SVG images and SVG actor frames (skipping
+ *  textures that already exist) and register the actors' animations. */
+export async function prepareSvgAssets(scene: Phaser.Scene, m: AssetManifest | undefined): Promise<void> {
+  if (!m) return;
+  const jobs: Promise<void>[] = [];
+  for (const img of m.svgImages ?? []) {
+    if (!scene.textures.exists(img.key)) {
+      jobs.push(makeSvgTex(scene, img.key, img.width, img.height, img.svg));
+    }
+  }
+  for (const a of m.svgActors ?? []) {
+    for (const variant of VARIANTS) {
+      for (const pose of Object.keys(a.poses) as ActorPose[]) {
+        for (let f = 0; f < a.poses[pose].frames; f++) {
+          const key = `${a.key}-${variant}-${pose}-${f}`;
+          if (!scene.textures.exists(key)) {
+            jobs.push(makeSvgTex(scene, key, a.width, a.height, a.draw(variant, pose, f)));
+          }
+        }
+      }
+    }
+  }
+  await Promise.all(jobs);
+  for (const a of m.svgActors ?? []) {
+    for (const variant of VARIANTS) {
+      for (const pose of Object.keys(a.poses) as ActorPose[]) {
+        const animKey = `${a.key}-${pose}-${variant}`;
+        if (scene.anims.exists(animKey)) continue;
+        const { frames, frameRate } = a.poses[pose];
+        scene.anims.create({
+          key: animKey,
+          frames: Array.from({ length: frames }, (_, f) => ({ key: `${a.key}-${variant}-${pose}-${f}` })),
+          frameRate,
+          repeat: -1,
+        });
+      }
+    }
   }
 }
 

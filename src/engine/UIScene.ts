@@ -6,10 +6,7 @@ import { GAME_W, GAME_H, ROOM_H, UI_H } from './constants';
 import type { VerbId } from './types';
 
 const PANEL_BG = 0x1a1626;
-const VERB_COLOR = '#8f7fd4';
-const VERB_HOVER = '#ffe066';
-const VERB_SELECTED = '#7dff7a';
-const SENTENCE_COLOR = '#c9f0ff';
+const SLOT_FRAME = 0x4a4370;
 const INV_SLOTS_X = 4;
 const INV_SLOTS_Y = 2;
 
@@ -47,16 +44,19 @@ export class UIScene extends Phaser.Scene {
   create(): void {
     engine.uiScene = this;
 
-    this.add
-      .rectangle(0, ROOM_H, GAME_W, UI_H, PANEL_BG)
-      .setOrigin(0)
-      .setStrokeStyle(2, 0x3a3356);
+    if (engine.theme.panel) this.add.image(0, ROOM_H, engine.theme.panel).setOrigin(0);
+    else {
+      this.add
+        .rectangle(0, ROOM_H, GAME_W, UI_H, PANEL_BG)
+        .setOrigin(0)
+        .setStrokeStyle(2, 0x3a3356);
+    }
 
     this.sentenceText = this.add
       .text(GAME_W / 2, ROOM_H + 14, '', {
-        fontFamily: 'Verdana, Arial, sans-serif',
+        fontFamily: engine.theme.font,
         fontSize: '17px',
-        color: SENTENCE_COLOR,
+        color: engine.theme.sentence,
       })
       .setOrigin(0.5, 0.5);
 
@@ -68,7 +68,7 @@ export class UIScene extends Phaser.Scene {
 
     this.toastText = this.add
       .text(GAME_W / 2, ROOM_H - 24, '', {
-        fontFamily: 'Verdana, Arial, sans-serif',
+        fontFamily: engine.theme.font,
         fontSize: '15px',
         color: '#ffe066',
         stroke: '#000000',
@@ -190,7 +190,7 @@ export class UIScene extends Phaser.Scene {
         this.partyBar.add(
           this.add
             .text(x + size / 2, y0 + size / 2, (engine.actors[id]?.name ?? '?')[0], {
-              fontFamily: 'Verdana, Arial, sans-serif',
+              fontFamily: engine.theme.font,
               fontSize: '22px',
               fontStyle: 'bold',
               color: '#c9f0ff',
@@ -201,7 +201,7 @@ export class UIScene extends Phaser.Scene {
       this.partyBar.add(
         this.add
           .text(x + 3, y0 + 1, String(i + 1), {
-            fontFamily: 'Verdana, Arial, sans-serif',
+            fontFamily: engine.theme.font,
             fontSize: '11px',
             color: '#8f7fd4',
           })
@@ -241,7 +241,7 @@ export class UIScene extends Phaser.Scene {
   private buildOptionsMenu(): void {
     this.optionsButton = this.add
       .text(GAME_W - 54, 12, '⚙', {
-        fontFamily: 'Verdana, Arial, sans-serif',
+        fontFamily: engine.theme.font,
         fontSize: '24px',
         color: '#c9f0ff',
         stroke: '#000000',
@@ -264,7 +264,7 @@ export class UIScene extends Phaser.Scene {
     bg.setInteractive();
     const title = this.add
       .text(GAME_W / 2, 62, 'OPTIONS', {
-        fontFamily: 'Verdana, Arial, sans-serif',
+        fontFamily: engine.theme.font,
         fontSize: '20px',
         fontStyle: 'bold',
         color: '#ffe066',
@@ -280,7 +280,7 @@ export class UIScene extends Phaser.Scene {
 
     this.muteToggle = this.add
       .text(GAME_W / 2, 232, '', {
-        fontFamily: 'Verdana, Arial, sans-serif',
+        fontFamily: engine.theme.font,
         fontSize: '16px',
         color: '#9be89b',
       })
@@ -291,7 +291,7 @@ export class UIScene extends Phaser.Scene {
 
     this.commentaryToggle = this.add
       .text(GAME_W / 2, 258, '', {
-        fontFamily: 'Verdana, Arial, sans-serif',
+        fontFamily: engine.theme.font,
         fontSize: '16px',
         color: '#c9b8ff',
       })
@@ -304,7 +304,7 @@ export class UIScene extends Phaser.Scene {
     this.optionsPanel.add(
       this.add
         .text(GAME_W / 2, 284, '— SAVES —', {
-          fontFamily: 'Verdana, Arial, sans-serif',
+          fontFamily: engine.theme.font,
           fontSize: '14px',
           color: '#8f7fd4',
         })
@@ -314,7 +314,7 @@ export class UIScene extends Phaser.Scene {
 
     const close = this.add
       .text(GAME_W / 2, 500, 'Close', {
-        fontFamily: 'Verdana, Arial, sans-serif',
+        fontFamily: engine.theme.font,
         fontSize: '17px',
         fontStyle: 'bold',
         color: '#8f7fd4',
@@ -349,7 +349,7 @@ export class UIScene extends Phaser.Scene {
     const small = (x: number, text: string, color: string, bold = false) =>
       this.add
         .text(x, y, text, {
-          fontFamily: 'Verdana, Arial, sans-serif',
+          fontFamily: engine.theme.font,
           fontSize: bold ? '14px' : '12px',
           fontStyle: bold ? 'bold' : 'normal',
           color,
@@ -362,7 +362,7 @@ export class UIScene extends Phaser.Scene {
     const btn = (x: number, text: string, color: string, onClick: () => void) => {
       const t = this.add
         .text(x, y, text, {
-          fontFamily: 'Verdana, Arial, sans-serif',
+          fontFamily: engine.theme.font,
           fontSize: '14px',
           fontStyle: 'bold',
           color,
@@ -433,7 +433,7 @@ export class UIScene extends Phaser.Scene {
     const trackW = 180;
     const text = this.add
       .text(320, y, label, {
-        fontFamily: 'Verdana, Arial, sans-serif',
+        fontFamily: engine.theme.font,
         fontSize: '15px',
         color: '#c9f0ff',
       })
@@ -519,7 +519,7 @@ export class UIScene extends Phaser.Scene {
   private buildAudioButton(): void {
     this.muteButton = this.add
       .text(GAME_W - 12, 12, '', {
-        fontFamily: 'Verdana, Arial, sans-serif',
+        fontFamily: engine.theme.font,
         fontSize: '22px',
         color: '#c9f0ff',
         stroke: '#000000',
@@ -577,10 +577,10 @@ export class UIScene extends Phaser.Scene {
       const row = Math.floor(i / 3);
       const t = this.add
         .text(originX + col * colW, originY + row * rowH, verb.label, {
-          fontFamily: 'Verdana, Arial, sans-serif',
+          fontFamily: engine.theme.font,
           fontSize: '19px',
           fontStyle: 'bold',
-          color: VERB_COLOR,
+          color: engine.theme.verb,
         })
         .setOrigin(0, 0.5)
         .setInteractive({ useHandCursor: true });
@@ -598,8 +598,9 @@ export class UIScene extends Phaser.Scene {
   private styleVerb(id: VerbId, hover: boolean): void {
     const t = this.verbTexts.get(id);
     if (!t) return;
-    if (engine.selectedVerb === id) t.setColor(VERB_SELECTED);
-    else t.setColor(hover ? VERB_HOVER : VERB_COLOR);
+    const th = engine.theme;
+    if (engine.selectedVerb === id) t.setColor(th.verbSelected);
+    else t.setColor(hover ? th.verbHover : th.verb);
   }
 
   // ---- inventory ---------------------------------------------------------
@@ -613,11 +614,16 @@ export class UIScene extends Phaser.Scene {
       for (let col = 0; col < INV_SLOTS_X; col++) {
         const x = originX + col * (slotW + 8);
         const y = originY + row * (slotH + 8);
+        // A themed slot texture sits under the (then transparent) hit box,
+        // which keeps its frame stroke for the item-in-hand highlight.
+        if (engine.theme.slot) {
+          this.gameplayUI.add(this.add.image(x, y, engine.theme.slot).setOrigin(0));
+        }
         const bg = this.add
-          .rectangle(x, y, slotW, slotH, 0x262038)
+          .rectangle(x, y, slotW, slotH, 0x262038, engine.theme.slot ? 0 : 1)
           .setOrigin(0)
-          .setStrokeStyle(1, 0x4a4370)
           .setInteractive({ useHandCursor: true });
+        this.styleSlot(bg, false);
         const icon = this.add
           .image(x + slotW / 2, y + slotH / 2, '__DEFAULT')
           .setVisible(false);
@@ -633,9 +639,9 @@ export class UIScene extends Phaser.Scene {
       }
     }
     const arrowStyle = {
-      fontFamily: 'Verdana, Arial, sans-serif',
+      fontFamily: engine.theme.font,
       fontSize: '22px',
-      color: VERB_COLOR,
+      color: engine.theme.verb,
     };
     this.invPrev = this.add
       .text(440, ROOM_H + 55, '▲', arrowStyle)
@@ -649,6 +655,13 @@ export class UIScene extends Phaser.Scene {
       .on('pointerdown', () => this.changePage(1));
     this.gameplayUI.add(this.invPrev);
     this.gameplayUI.add(this.invNext);
+  }
+
+  /** Slot frame: highlighted for the item in hand; otherwise a thin frame,
+   *  hidden when the theme draws its own slot art. */
+  private styleSlot(bg: Phaser.GameObjects.Rectangle, inHand: boolean): void {
+    if (inHand) bg.setStrokeStyle(2, Phaser.Display.Color.HexStringToColor(engine.theme.verbSelected).color);
+    else bg.setStrokeStyle(1, SLOT_FRAME, engine.theme.slot ? 0 : 1);
   }
 
   private changePage(dir: number): void {
@@ -740,7 +753,7 @@ export class UIScene extends Phaser.Scene {
       const items = texts.map((text, i) => {
         const t = this.add
           .text(30, 0, `● ${text}`, {
-            fontFamily: 'Verdana, Arial, sans-serif',
+            fontFamily: engine.theme.font,
             fontSize: '16px',
             color: '#9be89b',
             wordWrap: { width: GAME_W - 60 },
@@ -778,7 +791,7 @@ export class UIScene extends Phaser.Scene {
 
       const nav = this.add
         .text(30, maxBottom - NAV_H + 4, '', {
-          fontFamily: 'Verdana, Arial, sans-serif',
+          fontFamily: engine.theme.font,
           fontSize: '14px',
           fontStyle: 'bold',
           color: '#8f7fd4',
@@ -825,14 +838,10 @@ export class UIScene extends Phaser.Scene {
       slot.itemId = itemId;
       if (itemId) {
         slot.icon.setTexture(engine.items[itemId].icon).setVisible(true);
-        slot.bg.setStrokeStyle(
-          engine.pendingItem === itemId ? 2 : 1,
-          engine.pendingItem === itemId ? 0x7dff7a : 0x4a4370
-        );
       } else {
         slot.icon.setVisible(false);
-        slot.bg.setStrokeStyle(1, 0x4a4370);
       }
+      this.styleSlot(slot.bg, !!itemId && engine.pendingItem === itemId);
     });
     this.invPrev.setVisible(this.invPage > 0);
     this.invNext.setVisible(this.invPage < maxPage);

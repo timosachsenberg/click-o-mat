@@ -4,8 +4,9 @@ import { Actor } from './Actor';
 import { WalkArea } from './Pathfinder';
 import { pointInPolygon } from './geometry';
 import { makeCanvasTex, redrawCanvasTex } from './canvasTex';
+import { makeSvgTex } from './svgTex';
 import { audio } from './Audio';
-import { queueManifest, registerManifestAnims, runLoader } from './assetLoader';
+import { prepareSvgAssets, queueManifest, registerManifestAnims, runLoader } from './assetLoader';
 import { DEFAULT_RESPONSES } from './verbs';
 import { GAME_W, ROOM_H } from './constants';
 import type {
@@ -25,6 +26,17 @@ interface RestoreInfo {
   pos?: Vec2;
   facing?: Facing;
 }
+
+/** One rasterized variant of an SVG layer (see RoomScene.svgEntry). */
+interface SvgEntry {
+  layerId: string;
+  key: string;
+  ready: boolean;
+  done: Promise<void>;
+}
+
+/** Rasterized variants kept per SVG layer before the oldest are evicted. */
+const SVG_VARIANTS_PER_LAYER = 6;
 
 /**
  * Hosts the current room: background, walk-behind props, actors, hotspot
@@ -56,6 +68,10 @@ export class RoomScene extends Phaser.Scene {
   private fadeRect!: Phaser.GameObjects.Rectangle;
   /** Guards against a cancelled interaction clobbering a newer one's state. */
   private interactionSeq = 0;
+  /** Rasterized SVG layer textures: room id → (size + markup → entry). Kept
+   *  for the current and the previous room, so walking back is instant. */
+  private svgCache = new Map<string, Map<string, SvgEntry>>();
+  private svgSeq = 0;
 
   constructor() {
     super('room');
@@ -97,6 +113,7 @@ export class RoomScene extends Phaser.Scene {
    *  assets are always present before the room builds. */
   async enterRoom(roomId: string, entryId?: string, restore?: RestoreInfo): Promise<void> {
     await this.ensureRoomAssets(roomId);
+    await this.prepareSvgLayers(roomId);
     this.loadRoom(roomId, entryId, restore);
   }
 
@@ -118,7 +135,7 @@ export class RoomScene extends Phaser.Scene {
       overlay.add(
         this.add
           .text(GAME_W / 2, ROOM_H / 2, 'Loading…', {
-            fontFamily: 'Verdana, Arial, sans-serif',
+            fontFamily: engine.theme.font,
             fontSize: '22px',
             color: '#c9f0ff',
           })
@@ -130,6 +147,7 @@ export class RoomScene extends Phaser.Scene {
       overlay.destroy();
     }
     registerManifestAnims(this, def?.assets);
+    await prepareSvgAssets(this, def?.assets);
     engine.loadedRooms.add(roomId);
   }
 
@@ -288,10 +306,12 @@ export class RoomScene extends Phaser.Scene {
     roomId: string,
     layer: LayerDef
   ): Phaser.GameObjects.Image | Phaser.GameObjects.Sprite | Phaser.GameObjects.TileSprite {
-    const sources = [layer.image, layer.paint, layer.anim].filter((s) => s !== undefined);
+    const sources = [layer.image, layer.paint, layer.anim, layer.svg].filter(
+      (s) => s !== undefined
+    );
     if (sources.length !== 1) {
       throw new Error(
-        `Layer "${layer.id}" in room "${roomId}" must have exactly one of image/paint/anim`
+        `Layer "${layer.id}" in room "${roomId}" must have exactly one of image/paint/anim/svg`
       );
     }
     const x = layer.x ?? 0;
@@ -314,6 +334,12 @@ export class RoomScene extends Phaser.Scene {
         paint(g, engine.state)
       );
       obj = this.add.image(x, y, key).setOrigin(0);
+    } else if (layer.svg !== undefined) {
+      // Normally already rasterized by prepareSvgLayers (then this is sync);
+      // otherwise it stays blank until its texture has decoded.
+      const img = this.add.image(x, y, '__DEFAULT').setOrigin(0);
+      void this.refreshSvgLayer(roomId, img, layer);
+      obj = img;
     } else if (layer.anim) {
       const anim = this.anims.get(layer.anim);
       if (!anim) throw new Error(`Layer "${layer.id}": unknown animation "${layer.anim}"`);
@@ -345,20 +371,116 @@ export class RoomScene extends Phaser.Scene {
     return obj;
   }
 
-  /** Re-run the room's paint layers, visibility conditions, and walk-area
-   *  builders against current state (e.g. after picking something up). */
-  repaintRoom(): void {
+  /** Re-run the room's paint/svg layers, visibility conditions, and
+   *  walk-area builders against current state (e.g. after picking something
+   *  up). Resolves once any newly-needed SVG variants have decoded and been
+   *  swapped in; everything else has taken effect when this returns. */
+  repaintRoom(): Promise<void> {
     const def = this.roomDef;
+    const pending: Promise<void>[] = [];
     for (const [id, obj] of this.layerObjs) {
       const layer = obj.getData('layer') as LayerDef;
       if (layer.paint) {
         const paint = layer.paint;
         redrawCanvasTex(this, `room-layer-${def.id}-${id}`, (g) => paint(g, engine.state));
+      } else if (layer.svg !== undefined) {
+        pending.push(this.refreshSvgLayer(def.id, obj as Phaser.GameObjects.Image, layer));
       }
       obj.setVisible(layer.visible ? !!layer.visible(engine.state) : true);
     }
     this.rebuildWalkArea();
     if (this.debugGfx) this.drawDebug();
+    return Promise.all(pending).then(() => undefined);
+  }
+
+  // ---- SVG layers ------------------------------------------------------------
+
+  /** Rasterize every SVG layer of a room for the current state (cached), and
+   *  drop the cached textures of rooms other than this and the current one. */
+  private async prepareSvgLayers(roomId: string): Promise<void> {
+    const def = engine.rooms[roomId];
+    if (!def) return;
+    const current = this.roomDef?.id;
+    for (const [rid, entries] of this.svgCache) {
+      if (rid === roomId || rid === current) continue;
+      for (const e of entries.values()) void e.done.then(() => this.textures.remove(e.key));
+      this.svgCache.delete(rid);
+    }
+    await Promise.all(
+      def.layers.filter((l) => l.svg !== undefined).map((l) => this.svgEntry(roomId, l).done)
+    );
+  }
+
+  /** The cached texture for a layer's current SVG markup, rasterizing it on
+   *  first use. Failures are logged and leave the layer blank rather than
+   *  wedging the room transition. */
+  private svgEntry(roomId: string, layer: LayerDef): SvgEntry {
+    const size = engine.rooms[roomId]?.size ?? { w: GAME_W, h: ROOM_H };
+    const w = layer.w ?? size.w;
+    const h = layer.h ?? size.h;
+    const markup = typeof layer.svg === 'function' ? layer.svg(engine.state) : layer.svg!;
+    const id = `${layer.id}|${w}x${h}|${markup}`;
+    let entries = this.svgCache.get(roomId);
+    if (!entries) {
+      entries = new Map();
+      this.svgCache.set(roomId, entries);
+    }
+    const hit = entries.get(id);
+    if (hit) {
+      entries.delete(id); // re-insert: Map order doubles as LRU order
+      entries.set(id, hit);
+      return hit;
+    }
+    const entry: SvgEntry = {
+      layerId: layer.id,
+      key: `room-svg-${roomId}-${layer.id}-${this.svgSeq++}`,
+      ready: false,
+      done: Promise.resolve(),
+    };
+    entry.done = makeSvgTex(this, entry.key, w, h, markup).then(
+      () => {
+        entry.ready = true;
+      },
+      (err: unknown) => {
+        console.error(`SVG layer "${layer.id}" in room "${roomId}":`, err);
+        makeCanvasTex(this, entry.key, w, h, () => {});
+        entry.ready = true;
+      }
+    );
+    entries.set(id, entry);
+    this.evictSvgVariants(entries, layer.id);
+    return entry;
+  }
+
+  /** Keep at most SVG_VARIANTS_PER_LAYER rasterized variants of one layer,
+   *  never evicting the texture a live layer object is showing. */
+  private evictSvgVariants(entries: Map<string, SvgEntry>, layerId: string): void {
+    const own = [...entries].filter(([, e]) => e.layerId === layerId);
+    const shown = this.layerObjs.get(layerId)?.texture.key;
+    for (const [id, e] of own.slice(0, Math.max(0, own.length - SVG_VARIANTS_PER_LAYER))) {
+      if (e.key === shown) continue;
+      entries.delete(id);
+      void e.done.then(() => this.textures.remove(e.key));
+    }
+  }
+
+  /** Point an SVG layer's image at the texture for its current markup —
+   *  immediately when cached, else once it has decoded (unless the layer
+   *  was rebuilt or repainted to yet another variant in the meantime). */
+  private refreshSvgLayer(
+    roomId: string,
+    img: Phaser.GameObjects.Image,
+    layer: LayerDef
+  ): Promise<void> {
+    const entry = this.svgEntry(roomId, layer);
+    img.setData('svgKey', entry.key);
+    if (entry.ready) {
+      img.setTexture(entry.key);
+      return Promise.resolve();
+    }
+    return entry.done.then(() => {
+      if (img.scene && img.getData('svgKey') === entry.key) img.setTexture(entry.key);
+    });
   }
 
   private rebuildWalkArea(): void {
@@ -378,6 +500,7 @@ export class RoomScene extends Phaser.Scene {
     this.cameras.main.setZoom(1);
     await this.fade(1);
     await this.ensureRoomAssets(roomId); // lazy per-room assets, under the fade
+    await this.prepareSvgLayers(roomId); // vector art rasterizes under it too
     this.loadRoom(roomId, entryId);
     engine.autosave(); // every room transition refreshes the AUTO slot
     await this.fade(0);
@@ -556,7 +679,7 @@ export class RoomScene extends Phaser.Scene {
       container.add(
         this.add
           .text(cx, cy, hs.name, {
-            fontFamily: 'Verdana, Arial, sans-serif',
+            fontFamily: engine.theme.font,
             fontSize: '13px',
             color: '#ffe066',
             stroke: '#000000',

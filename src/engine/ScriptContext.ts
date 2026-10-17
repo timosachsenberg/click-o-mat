@@ -148,10 +148,12 @@ export class ScriptContext {
     await runInkDialog(this.eng, story, opts);
   }
 
-  /** Repaint paint-layers, re-evaluate layer visibility, and rebuild the walk
-   *  area from state. Call after changing flags that room art depends on. */
-  repaint(): void {
-    this.eng.roomScene.repaintRoom();
+  /** Repaint paint/svg layers, re-evaluate layer visibility, and rebuild the
+   *  walk area from state. Call after changing flags that room art depends
+   *  on. Takes effect immediately, except an SVG layer whose new markup has
+   *  not been rasterized yet — await the result to wait for that too. */
+  repaint(): Promise<void> {
+    return this.eng.roomScene.repaintRoom();
   }
 
   /** Live Phaser object of a room layer — for transient cutscene tweens only.
@@ -218,7 +220,7 @@ export class ScriptContext {
   showTitle(text: string): void {
     const t = this.eng.roomScene.add
       .text(GAME_W / 2, ROOM_H / 2, text, {
-        fontFamily: 'Verdana, Arial, sans-serif',
+        fontFamily: this.eng.theme.font,
         fontSize: '52px',
         fontStyle: 'bold',
         color: '#ffe066',

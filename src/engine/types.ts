@@ -126,18 +126,29 @@ export interface LayerDef {
   /** Layer.BEHIND, an occluder baseline in 0..room height, or Layer.FRONT.
    *  Equal depths stack in array order. */
   depth: number;
-  /** Source (exactly one of image / paint / anim): a preloaded texture key… */
+  /** Source (exactly one of image / paint / anim / svg): a preloaded
+   *  texture key… */
   image?: string;
   /** …or a canvas painter, re-drawn on ctx.repaint() so art can react to
    *  game state… */
   paint?: (g: CanvasRenderingContext2D, state: GameState) => void;
-  /** …or an animation key from the asset manifest, played on a sprite. */
+  /** …or an animation key from the asset manifest, played on a sprite… */
   anim?: string;
+  /** …or SVG vector art, rasterized once into a w×h texture. Either inner
+   *  markup (wrapped in an `<svg>` whose user units are layer pixels) or a
+   *  complete `<svg>` document (e.g. an Inkscape file imported with Vite's
+   *  `?raw`, scaled to w×h). A function of state is re-evaluated on
+   *  repaint(); each distinct result is rasterized once and cached, so
+   *  toggling between known states swaps instantly. Rasterization is async:
+   *  rooms prepare their SVG layers under the transition fade, and a repaint
+   *  that yields new markup swaps the texture once it has decoded (await
+   *  ctx.repaint() to wait for that). */
+  svg?: string | ((state: GameState) => string);
   /** Top-left placement in room coords (default 0,0). */
   x?: number;
   y?: number;
-  /** paint: canvas size (default: full room). image/anim: display-size override
-   *  (default: the texture's natural size). */
+  /** paint/svg: canvas size (default: full room). image/anim: display-size
+   *  override (default: the texture's natural size). */
   w?: number;
   h?: number;
   /** Layer only shown while this returns true; re-evaluated on repaint(). */
@@ -291,6 +302,52 @@ export interface AudioAsset {
   url: string | string[];
 }
 
+/** The look of the engine's built-in UI (verb band, inventory, speech,
+ *  menus). Omitted fields keep the engine's default look. */
+export interface UITheme {
+  /** CSS font-family for all engine text. Web fonts must be declared by the
+   *  page (e.g. a bundled @font-face); boot waits for them to load. */
+  font: string;
+  /** Texture key drawn as the 960×150 verb/inventory band (else a flat panel). */
+  panel?: string;
+  /** Texture key drawn behind each 104×58 inventory slot (else a flat box). */
+  slot?: string;
+  /** Verb colours: idle, hovered, selected (selected also marks the item in hand). */
+  verb: string;
+  verbHover: string;
+  verbSelected: string;
+  /** The sentence line ("Use battery with Zap-O-Matic"). */
+  sentence: string;
+}
+
+/** Inline vector art rasterized into a width×height texture (an inventory
+ *  icon, a prop). `svg` is inner markup in pixel units or a full document. */
+export interface SvgImageAsset {
+  key: string;
+  width: number;
+  height: number;
+  svg: string;
+}
+
+export type ActorVariant = 'front' | 'back' | 'side';
+export type ActorPose = 'idle' | 'walk' | 'talk';
+
+/**
+ * A procedurally drawn character: `draw` returns SVG markup for one frame of
+ * one pose/variant (side views face right; the engine mirrors them for
+ * left). Every frame is rasterized once into its own width×height texture
+ * (`<key>-<variant>-<pose>-<frame>`), and the looping actor animations
+ * `<key>-<pose>-<variant>` are registered — so an ActorDef just names `key`
+ * as its textureSet. Feet belong at the bottom-centre of the frame.
+ */
+export interface SvgActorAsset {
+  key: string;
+  width: number;
+  height: number;
+  poses: Record<ActorPose, { frames: number; frameRate: number }>;
+  draw: (variant: ActorVariant, pose: ActorPose, frame: number) => string;
+}
+
 /** Everything the engine should preload before the game starts. All fields
  *  are optional — omit the whole manifest to run fully procedurally. */
 export interface AssetManifest {
@@ -300,4 +357,9 @@ export interface AssetManifest {
   /** Audio files, played by key via ctx.sfx()/ctx.playMusic(). A loaded key
    *  overrides a built-in procedural sound/track of the same name. */
   audio?: AudioAsset[];
+  /** Inline SVG images, rasterized when the manifest loads. */
+  svgImages?: SvgImageAsset[];
+  /** Procedural SVG characters, rasterized frame by frame when the manifest
+   *  loads, with their actor animations registered. */
+  svgActors?: SvgActorAsset[];
 }
