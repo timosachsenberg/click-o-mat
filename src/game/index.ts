@@ -8,6 +8,8 @@ import { galleryRoom } from './rooms/gallery';
 import { stairhallRoom } from './rooms/stairhall';
 import { mountainRoom } from './rooms/mountain';
 import { forestRoom } from './rooms/forest';
+import { CHARACTER_SPRITES } from './art/characters';
+import { ICONS } from './art/icons';
 
 export const CONTENT: GameContent = {
   rooms: {
@@ -21,8 +23,10 @@ export const CONTENT: GameContent = {
   items: ITEMS,
   actors: ACTORS,
   dialogs: DIALOGS,
-  // No global asset manifest: every PNG in the demo is declared on the room
-  // that uses it (see gallery/mountain) and loads lazily on entry.
+  // The global manifest holds only the procedural SVG cast and inventory
+  // icons (rasterized at boot). Every PNG in the demo is declared on the room
+  // that uses it (see gallery/mountain/forest) and loads lazily on entry.
+  assets: { svgActors: CHARACTER_SPRITES, svgImages: ICONS },
   playerId: 'norb',
   startRoom: 'lab',
   startEntry: 'start',
