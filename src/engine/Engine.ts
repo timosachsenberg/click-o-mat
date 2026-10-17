@@ -8,6 +8,7 @@ import type {
   ItemDef,
   RoomDef,
   ScriptOrLine,
+  UITheme,
   VerbId,
 } from './types';
 import { runDialog } from './DialogRunner';
@@ -32,7 +33,18 @@ export interface GameContent {
   charStarts?: Record<string, { room: string; entry: string }>;
   startRoom: string;
   startEntry: string;
+  /** Optional look for the built-in UI (font, panel art, colours). */
+  theme?: Partial<UITheme>;
 }
+
+/** The engine's own UI look, used for anything a game's theme leaves out. */
+export const DEFAULT_THEME: UITheme = {
+  font: 'Verdana, Arial, sans-serif',
+  verb: '#8f7fd4',
+  verbHover: '#ffe066',
+  verbSelected: '#7dff7a',
+  sentence: '#c9f0ff',
+};
 
 const LEGACY_SAVE_KEY = 'pnc-adventure-save';
 const SAVE_PREFIX = 'pnc-save-';
@@ -63,6 +75,7 @@ export class Engine {
   actors: Record<string, ActorDef> = {};
   dialogs: Record<string, DialogDef> = {};
   assets: AssetManifest = {};
+  theme: UITheme = { ...DEFAULT_THEME };
   /** Rooms whose lazy asset bundle has finished loading this session. */
   loadedRooms = new Set<string>();
   playerId = 'player';
@@ -164,6 +177,7 @@ export class Engine {
     this.actors = content.actors;
     this.dialogs = content.dialogs;
     this.assets = content.assets ?? {};
+    this.theme = { ...DEFAULT_THEME, ...content.theme };
     this.playerId = content.playerId;
     this.charStarts = content.charStarts ?? {};
     this.startRoom = content.startRoom;

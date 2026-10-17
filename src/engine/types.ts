@@ -302,6 +302,24 @@ export interface AudioAsset {
   url: string | string[];
 }
 
+/** The look of the engine's built-in UI (verb band, inventory, speech,
+ *  menus). Omitted fields keep the engine's default look. */
+export interface UITheme {
+  /** CSS font-family for all engine text. Web fonts must be declared by the
+   *  page (e.g. a bundled @font-face); boot waits for them to load. */
+  font: string;
+  /** Texture key drawn as the 960×150 verb/inventory band (else a flat panel). */
+  panel?: string;
+  /** Texture key drawn behind each 104×58 inventory slot (else a flat box). */
+  slot?: string;
+  /** Verb colours: idle, hovered, selected (selected also marks the item in hand). */
+  verb: string;
+  verbHover: string;
+  verbSelected: string;
+  /** The sentence line ("Use battery with Zap-O-Matic"). */
+  sentence: string;
+}
+
 /** Inline vector art rasterized into a width×height texture (an inventory
  *  icon, a prop). `svg` is inner markup in pixel units or a full document. */
 export interface SvgImageAsset {

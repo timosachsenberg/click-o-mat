@@ -7,9 +7,12 @@ describe rooms, items, and dialog as plain objects rather than wiring up scenes
 by hand.
 
 The repo ships with a short, fully playable demo ("Ned the Tentacle") that
-exercises every feature. All character art, icons, and sound in the demo are
-generated procedurally at runtime, so there are **no binary assets** — the whole
-thing is code.
+exercises every feature. Its art is **SVG vector art written in code** — a
+cartoon look with crooked, ink-outlined shapes, cel shading and a paper-grain
+finish, in the spirit of *Day of the Tentacle* and *Return to Monkey Island* —
+rasterized in the browser at runtime, and its sound is synthesized. Apart from
+a few PNGs that exercise the image pipeline (themselves rendered from SVG
+sources), the whole thing is code.
 
 ### ▶ [Play the demo in your browser](https://timosachsenberg.github.io/click-o-mat/)
 
@@ -140,23 +143,18 @@ export const closetRoom: RoomDef = {
   id: 'closet',
   name: 'Broom Closet',
 
-  // A room is a stack of layers. This one only needs a backdrop, painted
-  // into a 960×450 canvas. `state` lets you draw conditionally; this room
-  // is static so we ignore it.
+  // A room is a stack of layers. This one only needs a backdrop: SVG
+  // markup in room pixels (a 960×450 canvas), rasterized once on entry.
   layers: [
     {
       id: 'bg',
       depth: Layer.BEHIND,
-      paint(g, _state) {
-        g.fillStyle = '#2b2440';         // back wall
-        g.fillRect(0, 0, 960, 300);
-        g.fillStyle = '#4a3d2e';         // floor
-        g.fillRect(0, 300, 960, 150);
-
-        // A shelf on the back wall
-        g.fillStyle = '#6b5638';
-        g.fillRect(360, 150, 240, 14);
-      },
+      svg: `
+        <rect width="960" height="300" fill="#2b2440"/>
+        <rect y="300" width="960" height="150" fill="#4a3d2e"/>
+        <rect x="360" y="150" width="240" height="14" fill="#6b5638"
+              stroke="#1e1424" stroke-width="3"/>
+      `,
     },
   ],
 
@@ -181,6 +179,12 @@ export const closetRoom: RoomDef = {
   ],
 };
 ```
+
+Back wall, floor, and a shelf. `svg` can also be a function of `state` for
+art that changes during play, and if you'd rather draw with the canvas 2D API,
+a `paint(g, state)` layer fills the same canvas imperatively. The demo's rooms
+use a small helper toolkit (`src/game/art/toon.ts`) for the hand-inked look —
+see [Vector art (SVG)](#vector-art-svg).
 
 ### Step 2 — Register the room
 
@@ -292,10 +296,11 @@ Right-click the flashlight — it jumps into your inventory and the hotspot
 vanishes (because `visible` now returns false). Click it in the inventory to
 arm it, and you'll see "Use flashlight with…" in the sentence line.
 
-> **About the icon:** icons are texture keys generated in
-> `src/engine/BootScene.ts` (`makeIcons()`). To give the flashlight its own
-> icon, add a `makeCanvasTex(this, 'icon-flashlight', 64, 48, (g) => { ... })`
-> block there and set `icon: 'icon-flashlight'`. Until then, reusing an
+> **About the icon:** icons are texture keys. The demo's are SVG drawings in
+> `src/game/art/icons.ts`, listed as `svgImages` in the global asset manifest
+> and rasterized at boot. To give the flashlight its own icon, add
+> `{ key: 'icon-flashlight', width: 64, height: 48, svg: '…' }` to that list
+> (or load a PNG) and set `icon: 'icon-flashlight'`. Until then, reusing an
 > existing key like `icon-key` is fine.
 
 ### Step 5 — React to using one item on another
@@ -337,9 +342,10 @@ hotspots and items, and script reactions.** Everything else in the engine
 - **Cutscenes:** a room's `onEnter` script (or any handler) can `await`
   `ctx.walkTo`, `ctx.say`, `ctx.wait`, `ctx.flash`, `ctx.shake`,
   `ctx.showTitle`, etc. — see the full API below.
-- **Conditional art:** because `paint`/`walkArea`/`holes` receive `state`, you
-  can open doors, move furniture, or reveal items by flipping a flag and calling
-  `ctx.repaint()`. See how the lab cabinet and hallway plant do it.
+- **Conditional art:** because `svg`/`paint`/`walkArea`/`holes` receive
+  `state`, you can open doors, move furniture, or reveal items by flipping a
+  flag and calling `ctx.repaint()`. See how the lab cabinet and hallway plant
+  do it.
 
 ---
 
@@ -351,7 +357,9 @@ hotspots and items, and script reactions.** Everything else in the engine
 | Sentence line ("Use battery with Zap-O-Matic") | `engine/UIScene.ts` |
 | Left-click walk / right-click default verb | `engine/RoomScene.ts` |
 | Walkable-area pathfinding around obstacles (visibility graph + Dijkstra) | `engine/Pathfinder.ts` |
-| Directional walk / idle / talk character animations | `engine/Actor.ts`, `engine/BootScene.ts` |
+| Directional walk / idle / talk character animations | `engine/Actor.ts`, `engine/assetLoader.ts` |
+| **SVG vector art** — room layers from SVG markup (static or state-driven, cached per variant), procedural SVG characters and icons | `engine/svgTex.ts`, `engine/RoomScene.ts`, `game/art/` |
+| **UI theme** — font, panel/slot art and verb colours for the built-in interface | `engine/types.ts`, `engine/UIScene.ts`, `game/art/ui.ts` |
 | Perspective scaling (actors shrink toward the back wall) | `engine/Actor.ts` |
 | **Layer system** — backdrops, occluders (walk-behinds), foreground overlays, animated layers, one shared depth axis | `engine/types.ts`, `engine/RoomScene.ts` |
 | **Scrolling rooms** — rooms larger than the screen, camera follows the player (both axes), per-layer parallax | `engine/RoomScene.ts` |
@@ -377,10 +385,10 @@ hotspots and items, and script reactions.** Everything else in the engine
 | **Retro title screen** — pixel-upscaled lettering, New Game / Continue menu (Continue restores the save); the start click doubles as the audio-unlock gesture | `engine/TitleScene.ts` |
 | Debug overlay (walk area, holes, hotspots) — press `F1` | `engine/RoomScene.ts` |
 | **QoL**: smart left-click, double-click run, Tab hotspot reveal, verb hotkeys, autosave, text-speed slider | `engine/RoomScene.ts`, `engine/UIScene.ts` |
-| **PNG assets** — image backgrounds + spritesheet-animated actors | `engine/BootScene.ts`, `game/assets.ts` |
+| **PNG assets** — image backgrounds + spritesheet-animated actors | `engine/assetLoader.ts`, `game/assets.ts` |
 
-Procedural art and PNG art coexist: the lab and hallway are drawn in code,
-while the **Gallery** (reachable through the GALLERY door in the hallway) uses a
+Vector art and PNG art coexist: most rooms are SVG drawn in code, while the
+**Gallery** (reachable through the GALLERY door in the hallway) uses a
 PNG background, a PNG-spritesheet character ("Blobbo"), animated wall sconces,
 and a foreground pillar you can walk behind. Beyond the gallery's archway, the
 **Grand Staircase** shows off scrolling: a 1400×800 two-story room where the
@@ -395,7 +403,7 @@ src/
   main.ts              Phaser game bootstrap (registers scenes + content)
   engine/              The reusable engine — you rarely edit this
     Engine.ts          Singleton: content registries, state, cross-scene wiring
-    BootScene.ts       Generates all placeholder art + animations
+    BootScene.ts       Loads the global manifest (files + SVG art), then the title
     RoomScene.ts       Current room: art, actors, hotspots, interaction FSM
     UIScene.ts         Verb grid, sentence line, inventory, dialog choices
     Actor.ts           Character sprite: movement, animation, speech
@@ -405,21 +413,27 @@ src/
     GameState.ts       Flags, inventory, location + save/load serialization
     Audio.ts           Music + SFX (procedural synth and/or loaded files)
     types.ts           All content-definition types (RoomDef, HotspotDef, …)
-    ...                geometry, verbs, canvas helpers, constants
+    svgTex.ts          SVG markup → canvas texture rasterizer
+    ...                geometry, verbs, asset loader, canvas helpers, constants
   game/                YOUR game content
     index.ts           Registers all rooms/items/actors/dialogs/assets
-    assets.ts          PNG/spritesheet manifest (preloaded by BootScene)
-    rooms/*.ts         One file per room
+    assets.ts          Per-room PNG/spritesheet bundles (loaded lazily)
+    art/               SVG art: toon.ts toolkit, characters, icons, UI panel,
+                       pngSources.ts (source art of the PNGs in public/img)
+    rooms/*.ts         One file per room (logic + its SVG art)
     items.ts  actors.ts  dialogs.ts
 public/
   img/                 PNG assets (served verbatim, copied into dist/)
+tools/
+  gen-assets.mjs       Re-renders public/img/*.png from art/pngSources.ts
 ```
 
 ## Architecture
 
 Three Phaser scenes run together:
 
-- **`BootScene`** generates all textures + animations, then starts the game.
+- **`BootScene`** loads the global asset manifest — files, plus SVG art
+  rasterized into textures — then starts the game.
 - **`RoomScene`** owns the current room: the layer stack, actors, camera,
   hotspot hit-testing, and the verb-interaction state machine.
 - **`UIScene`** is a persistent overlay: sentence line, verb grid, inventory,
@@ -541,7 +555,7 @@ async onEnter(ctx) {
 }
 ```
 
-Layer `paint` functions, `walkArea`, and `holes` all receive the current
+Layer `svg`/`paint` sources, `walkArea`, and `holes` all receive the current
 `GameState`, so a room redraws and re-computes its geometry from state whenever
 you call `ctx.repaint()` — that's how the cabinet opens and the plant slides
 aside. Rooms larger than one screen scroll: the camera follows the player
@@ -559,8 +573,11 @@ Layer.BEHIND  <  0 … room height (occluder baselines)  <  Layer.FRONT
 
 ```ts
 layers: [
-  // Backdrop: an image or a paint() canvas, behind everyone.
+  // Backdrop: an image, SVG markup, or a paint() canvas, behind everyone.
   { id: 'bg', depth: Layer.BEHIND, image: 'kitchen-bg' },
+  // State-driven SVG overlay: one cached texture per distinct markup.
+  { id: 'oven', depth: Layer.BEHIND, x: 600, y: 180, w: 120, h: 110,
+    svg: (state) => (state.getFlag('ovenOpen') ? OVEN_OPEN : OVEN_SHUT) },
   // Parallax: drifts slower than the camera (scrolling rooms only).
   { id: 'sky', depth: Layer.BEHIND, parallax: 0.85, paint: paintSky },
   // Animated layer: an animation from the asset manifest, looping.
@@ -574,9 +591,10 @@ layers: [
 
 Rules and tips:
 
-- Each layer has **exactly one** source: `image` (static texture), `paint`
-  (canvas, re-drawn on `ctx.repaint()`), or `anim` (manifest animation). An
-  `image` layer may add `tile` to scroll infinitely — see
+- Each layer has **exactly one** source: `image` (static texture), `svg`
+  (vector markup, see [Vector art (SVG)](#vector-art-svg)), `paint` (canvas,
+  re-drawn on `ctx.repaint()`), or `anim` (manifest animation). An `image`
+  layer may add `tile` to scroll infinitely — see
   [scrolling tiled layers](#scrolling-tiled-layers-rain-water-fog).
 - Every layer accepts `visible: (state) => boolean`, re-checked on
   `repaint()` — conditional set dressing without redrawing.
@@ -615,6 +633,97 @@ near one, both slanted by a negative `scrollX` for wind:
 The texture must tile seamlessly (the generator draws each rain streak again
 at every neighbouring tile offset so edge-crossing streaks wrap). Same
 mechanism drives drifting fog, flowing water, or a scrolling starfield.
+
+### Vector art (SVG)
+
+Art can be written as SVG — by hand, generated by code, or drawn in
+Inkscape/Illustrator — and the engine rasterizes it into ordinary textures, so
+it behaves exactly like PNG or `paint` art (depth, occlusion, parallax,
+tweens) while staying resolution-independent in the source.
+
+**SVG layers.** A layer's `svg` is either inner markup, whose user units are
+the layer's pixels (`w×h`, default the room size), or a complete `<svg>`
+document, which is scaled to `w×h` — so a drawing file works via Vite's raw
+import:
+
+```ts
+import cellarSvg from '../art/cellar.svg?raw';
+
+layers: [
+  { id: 'bg', depth: Layer.BEHIND, svg: cellarSvg },
+  // A function of state: each distinct result is rasterized once and cached.
+  { id: 'hatch', depth: Layer.BEHIND, x: 400, y: 260, w: 90, h: 50,
+    svg: (state) => hatchArt(state.getFlag('hatchOpen')) },
+],
+```
+
+- Layers are rasterized **once**, under the room-transition fade, and the
+  textures for the current and previous room stay cached (walking back is
+  instant). Drawing a live SVG every frame would re-run its filters each
+  frame; this way a grain filter or a big gradient costs nothing at runtime.
+- `ctx.repaint()` re-evaluates `svg` functions. A variant seen before swaps in
+  synchronously; a new one swaps once decoded (a few ms) — `await
+  ctx.repaint()` if a script must wait for it. Static art plus small
+  state overlays (`visible`, or a small `svg` function layer) keeps repaints
+  cheap; the demo's backdrops never change, only their overlays do.
+- SVG drawn as an image is sandboxed by the browser: no scripts, no external
+  files, and no web fonts — text uses system fonts (pick generic fallbacks).
+  Undecodable markup is logged with the parser's message and leaves the layer
+  blank instead of stalling the room.
+- Big layers: prefer tiled `<pattern>`s for texture (the demo's grain is a
+  256 px tile) over filters applied to huge shapes.
+
+**SVG characters and icons.** The asset manifest takes procedural SVG art too
+(`svgActors`, `svgImages`), rasterized at boot (global manifest) or on first
+entry (a room's manifest):
+
+```ts
+assets: {
+  svgImages: [{ key: 'icon-flashlight', width: 64, height: 48, svg: FLASHLIGHT }],
+  svgActors: [{
+    key: 'guy', width: 64, height: 120,
+    poses: { idle: { frames: 8, frameRate: 4 }, walk: { frames: 8, frameRate: 12 },
+             talk: { frames: 4, frameRate: 8 } },
+    // One frame of one pose/direction; side views face right (mirrored for left).
+    draw: (variant, pose, frame) => drawGuy(variant, pose, frame),
+  }],
+},
+```
+
+Each frame becomes a texture and the `<key>-<pose>-<variant>` animations are
+registered, so an actor just uses `textureSet: 'guy'`. The demo's cast
+(`src/game/art/characters.ts`) are puppets posed from joint angles — walk
+cycles are a few lines of trigonometry, not hand-drawn frames.
+
+**The demo's toolkit.** `src/game/art/toon.ts` is a small, game-side helper
+library for the house style: `wobble()` (hand-drawn, slightly bowed edges),
+`crookedRect()` (DOTT architecture never stands plumb), `inked()` (fill + ink
+outline), `glow()` light pools, `vignette()`, and `grainOverlay()` (paper
+grain + painted mottle). Seeds are fixed, so markup — and the texture cache —
+is stable across repaints.
+
+**Author in SVG, ship PNG.** `tools/gen-assets.mjs` renders the gallery's
+PNGs from `src/game/art/pngSources.ts` (loaded through Vite's SSR loader,
+rasterized in Chromium) — a route for art that should ship as files.
+
+### UI theme
+
+The built-in interface (verb band, inventory, speech, menus) takes an optional
+`theme` in `GameContent`; anything omitted keeps the engine's default look:
+
+```ts
+import '@fontsource/fredoka/500.css'; // bundle the web font (boot waits for it)
+
+theme: {
+  font: "'Fredoka', Verdana, sans-serif", // all engine text
+  panel: 'ui-panel',   // 960×150 texture behind verbs + inventory
+  slot: 'ui-slot',     // 104×58 texture behind each inventory slot
+  verb: '#e2c98e', verbHover: '#fff27a', verbSelected: '#9cf07a',
+  sentence: '#f4ead0',
+},
+```
+
+The demo draws its panel and slots as `svgImages` in `src/game/art/ui.ts`.
 
 ### A hotspot
 
@@ -738,7 +847,7 @@ Every handler and cutscene receives a `ctx`. The essentials:
 | `ctx.flag(key)` / `ctx.setFlag(key, val?)` | Read / write world state |
 | `ctx.once(key, script?)` | Run something only the first time (persisted); returns whether it ran |
 | `ctx.hasItem(id)` / `ctx.addItem(id)` / `ctx.removeItem(id)` | Inventory |
-| `ctx.repaint()` | Redraw paint layers, re-check layer visibility, rebuild walk area |
+| `ctx.repaint()` | Redraw paint/svg layers, re-check layer visibility, rebuild walk area (await it to wait for new SVG variants) |
 | `ctx.layerObj(id)` | Live Phaser object of a layer (transient cutscene tweens only) |
 | `ctx.tween(obj, props, ms?)` | Tween any game object and await completion |
 | `ctx.sfx(name)` | Play a sound effect (loaded key, or a built-in bleep: `pickup`/`open`/`zap`/`deny`/`win`/`step`) |
@@ -749,10 +858,10 @@ Every handler and cutscene receives a `ctx`. The essentials:
 
 ## Using PNG assets
 
-The engine draws the demo procedurally so it needs no files, but it fully
-supports real **PNG** art — image backgrounds, inventory icons, and
-spritesheet-animated characters. You mix and match freely; the Gallery room in
-the demo is entirely PNG-driven while the other rooms stay procedural.
+The demo's art is mostly SVG drawn in code, but the engine fully supports real
+**PNG** art — image backgrounds, inventory icons, and spritesheet-animated
+characters. You mix and match freely; the Gallery room in the demo is entirely
+PNG-driven while the other rooms are vector art.
 
 ### 1. Drop files in `public/img/`
 
@@ -931,8 +1040,9 @@ Bring Ned the Tentacle something *warm, fuzzy, and radioactive*:
 
 ## Testing
 
-The engine ships with an end-to-end Playwright harness (~130 checks across 15
-suites in `tests/`): the full demo puzzle, layers/occlusion, scrolling +
+The engine ships with an end-to-end Playwright harness (24 suites in
+`tests/`): the full demo puzzle, layers/occlusion, SVG layers and their
+texture cache, renderer transparency, scrolling +
 world-coordinate input, ambients/scale-map/zoom, regions + cutscene skip,
 NPC-bound hotspots, ink dialogs (including save/load persistence), audio
 (verified through a WebAudio analyser — mute really silences output), the
@@ -952,15 +1062,15 @@ The runner starts its own Vite dev server (suites need the dev-only
 (`.github/workflows/test.yml`). To smoke-test a deployed build:
 `BASE_URL=https://your-site/ node tests/smoke.mjs`.
 
-`tools/gen-assets.mjs` regenerates the placeholder PNGs
-(`OUT=public/img node tools/gen-assets.mjs`).
+`tools/gen-assets.mjs` regenerates the PNGs in `public/img` from their SVG
+sources in `src/game/art/pngSources.ts` (`OUT=public/img node tools/gen-assets.mjs`).
 
 ## Notes on scaling this up
 
 - **Real assets:** see [Using PNG assets](#using-png-assets). Declare them
   per-room (`RoomDef.assets`) so they [load lazily](#lazy-per-room-asset-loading)
-  as the player explores instead of all at boot. To go fully asset-based, drop
-  the procedural generators in `BootScene` once every actor/icon has a PNG.
+  as the player explores instead of all at boot. To go fully file-based, swap
+  the manifest's `svgActors`/`svgImages` for spritesheets and images.
 - **More save slots:** bump `SAVE_SLOTS` (and `SLOT_LABELS`) in
   `engine/Engine.ts` — storage, the options menu, and the title screen's
   Continue all follow it.

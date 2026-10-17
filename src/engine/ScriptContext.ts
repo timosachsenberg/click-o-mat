@@ -220,7 +220,7 @@ export class ScriptContext {
   showTitle(text: string): void {
     const t = this.eng.roomScene.add
       .text(GAME_W / 2, ROOM_H / 2, text, {
-        fontFamily: 'Verdana, Arial, sans-serif',
+        fontFamily: this.eng.theme.font,
         fontSize: '52px',
         fontStyle: 'bold',
         color: '#ffe066',

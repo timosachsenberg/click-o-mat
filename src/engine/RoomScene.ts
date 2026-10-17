@@ -135,7 +135,7 @@ export class RoomScene extends Phaser.Scene {
       overlay.add(
         this.add
           .text(GAME_W / 2, ROOM_H / 2, 'Loading…', {
-            fontFamily: 'Verdana, Arial, sans-serif',
+            fontFamily: engine.theme.font,
             fontSize: '22px',
             color: '#c9f0ff',
           })
@@ -679,7 +679,7 @@ export class RoomScene extends Phaser.Scene {
       container.add(
         this.add
           .text(cx, cy, hs.name, {
-            fontFamily: 'Verdana, Arial, sans-serif',
+            fontFamily: engine.theme.font,
             fontSize: '13px',
             color: '#ffe066',
             stroke: '#000000',

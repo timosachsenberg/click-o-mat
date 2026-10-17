@@ -22,6 +22,20 @@ export class BootScene extends Phaser.Scene {
   create(): void {
     // Animations built from the global manifest's spritesheets.
     registerManifestAnims(this, engine.assets);
-    void prepareSvgAssets(this, engine.assets).then(() => this.scene.start('title'));
+    void Promise.all([prepareSvgAssets(this, engine.assets), loadThemeFont()]).then(() =>
+      this.scene.start('title')
+    );
+  }
+}
+
+/** Make sure the theme's web font (if any) is loaded before any Text object
+ *  measures itself with fallback metrics. Never blocks boot on failure. */
+async function loadThemeFont(): Promise<void> {
+  if (!document.fonts) return;
+  const font = engine.theme.font;
+  try {
+    await Promise.all([document.fonts.load(`17px ${font}`), document.fonts.load(`bold 17px ${font}`)]);
+  } catch {
+    /* unknown/unavailable font: Phaser falls back to the next family */
   }
 }
