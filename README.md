@@ -16,7 +16,7 @@ sources), the whole thing is code.
 
 ### ▶ [Play the demo in your browser](https://timosachsenberg.github.io/click-o-mat/)
 
-[![the lab room](docs/screenshot.png)](https://timosachsenberg.github.io/click-o-mat/)
+[![the lab room](docs/screenshot.jpg)](https://timosachsenberg.github.io/click-o-mat/)
 
 ---
 
