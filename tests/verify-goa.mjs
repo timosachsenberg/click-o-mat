@@ -65,6 +65,12 @@ const pick = async (prefix) => {
   if (!c) throw new Error(`no choice "${prefix}" in: ${list.map((l) => l.text).join(' | ')}`);
   await click(c.x, c.y);
   await page.waitForTimeout(200);
+  if (await ev(() => window.__engine.choicesShowing)) {
+    // The click landed while the choices were still settling: once more.
+    const again = (await choices()).find((l) => l.text.startsWith(prefix));
+    if (again) await click(again.x, again.y);
+    await page.waitForTimeout(200);
+  }
   await settle();
 };
 const flag = (k) => ev((k) => window.__engine.state.getFlag(k), k);
@@ -72,6 +78,17 @@ const inv = () => ev(() => [...window.__engine.state.inventory]);
 const hotspotAt = (x, y) => ev(({ x, y }) => window.__engine.roomScene.hotspotAt({ x, y })?.id ?? null, { x, y });
 const copAnim = () => ev(() => window.__engine.roomScene.actors.get('cop').sprite.anims.currentAnim?.key ?? null);
 const aliAnim = () => ev(() => window.__engine.roomScene.actors.get('ali').sprite.anims.currentAnim?.key ?? null);
+/** Pick a verb from the grid once the UI accepts input again. */
+const verb = async (id, x) => {
+  await settle();
+  for (let i = 0; i < 20; i++) {
+    await click(x, 486);
+    await page.waitForTimeout(150);
+    if ((await ev(() => window.__engine.selectedVerb)) === id) return;
+    await page.waitForTimeout(250);
+  }
+  throw new Error(`could not select verb ${id}`);
+};
 const useItemOn = async (x, y) => {
   await click(522, 505); // the (only) item, in hand
   await click(x, y);
@@ -122,7 +139,7 @@ await settle();
 check('paid the last two euros, got a Magic Woman', JSON.stringify(await inv()) === '["magicwoman"]', JSON.stringify(await inv()));
 
 // --- giving it back full: "Zwinker, zwinker" — and a wink
-await click(46, 486); // "Gib"
+await verb('give', 46); // "Gib"
 await click(522, 505);
 check('sentence line reads German', await ev(() => window.__engine.uiScene.sentenceText.text.startsWith('Gib Magic Woman an')));
 await click(720, 280);
@@ -132,11 +149,11 @@ check('Ali winks very conspicuously', aliSeen.has('ali-wink-front'), [...aliSeen
 check('and keeps out of a full can', JSON.stringify(await inv()) === '["magicwoman"]');
 
 // --- drink it (Benutze + can), return the empty can for 25 cents
-await click(304, 486); // "Benutze"
+await verb('use', 304); // "Benutze"
 await click(522, 505);
 await settle();
 check('drank the can', JSON.stringify(await inv()) === '["dose"]', JSON.stringify(await inv()));
-await click(46, 486);
+await verb('give', 46);
 await click(522, 505);
 await click(720, 280);
 await settle();
@@ -147,7 +164,7 @@ await useItemOn(376, 240);
 check('the coin is stuck, the credit stays', (await flag('jukeboxCredit')) === true && (await inv()).length === 0);
 await pick('„Polonaise');
 check('a wrong song plays (costs nothing)', (await flag('song')) === 'polonaise');
-await click(304, 486); // Benutze
+await verb('use', 304); // Benutze
 await click(376, 240); // jukebox
 await settle();
 await pick('„Noch einen auf die Gemütlichkeit');
