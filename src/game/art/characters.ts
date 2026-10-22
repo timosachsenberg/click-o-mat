@@ -6,30 +6,34 @@ import { INK, blob, circle, curve, ellipse, group, path, type Pt } from './toon'
  * joint angles (hips, knees, shoulders, elbows) and drawn with fat inked
  * strokes, so walk cycles stay smooth and every character shares one style —
  * big heads, bigger noses, Day-of-the-Tentacle proportions.
+ *
+ * The human rig is shared: other casts (see src/goa/art/cast.ts) supply
+ * their own heads and shirt details through HumanLook's `head`/`torso`
+ * hooks, and draw hand-posed frames (sitting, dancing) with drawHumanFront.
  */
 
-const OUT = 2.2; // outline width at 1:1 scale
+export const OUT = 2.2; // outline width at 1:1 scale
 const GROUND = 117; // feet line inside the frame (headroom above for the hair)
-const ANKLE_Y = GROUND - 5;
+export const ANKLE_Y = GROUND - 5;
 
-const POSES = {
+export const POSES = {
   idle: { frames: 8, frameRate: 4 }, // breathing, a blink on frame 6
   walk: { frames: 8, frameRate: 12 },
   talk: { frames: 4, frameRate: 8 },
 };
 
-type Mouth = 'shut' | 'a' | 'o';
+export type Mouth = 'shut' | 'a' | 'o';
 
 const deg = (r: number): number => (r * 180) / Math.PI;
 /** Step from p by len along an angle measured from straight down, positive
  *  towards +x (the facing direction in side views). */
-const step = (p: Pt, len: number, ang: number): Pt => [p[0] + Math.sin(ang) * len, p[1] + Math.cos(ang) * len];
+export const step = (p: Pt, len: number, ang: number): Pt => [p[0] + Math.sin(ang) * len, p[1] + Math.cos(ang) * len];
 const pts = (list: Pt[], dx: number, dy: number): Pt[] => list.map(([x, y]) => [x + dx, y + dy]);
 const d = (list: Pt[]): string => list.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`).join('');
 
 /** A jointed limb as fat round strokes: one ink pass under per-segment colour
  *  passes, so joints and colour changes (sleeve → arm) merge seamlessly. */
-function limb(joints: Pt[], width: number, colors: string[]): string {
+export function limb(joints: Pt[], width: number, colors: string[]): string {
   let s = path(d(joints), { stroke: INK, sw: width + OUT * 2 });
   for (let i = 0; i < joints.length - 1; i++) {
     s += path(d([joints[i], joints[i + 1]]), { stroke: colors[Math.min(i, colors.length - 1)], sw: width });
@@ -39,7 +43,7 @@ function limb(joints: Pt[], width: number, colors: string[]): string {
 
 // ---- humanoids ------------------------------------------------------------------
 
-interface HumanLook {
+export interface HumanLook {
   skin: string;
   skinShade: string;
   hair: string;
@@ -53,7 +57,13 @@ interface HumanLook {
   shins?: string;
   shoes: string;
   shoeTrim: string;
-  style: 'norb' | 'pia';
+  style: 'norb' | 'pia' | 'custom';
+  /** Style 'custom': the head, in head-local coords ((0,0) = head centre,
+   *  drawn a size up by the rig). */
+  head?: { front: (r: Rig, back: boolean) => string; side: (r: Rig) => string };
+  /** Style 'custom': details over the shirt (`top` = shirt top y, `clip` =
+   *  the id of the shirt's clipPath). */
+  torso?: { front?: (top: number, back: boolean, clip: string) => string; side?: (top: number, clip: string) => string };
 }
 
 const NORB_LOOK: HumanLook = {
@@ -87,7 +97,7 @@ const PIA_LOOK: HumanLook = {
 
 /** Joint positions for one frame. Legs/arms are [far, near] in side view and
  *  [left, right] (screen) in front/back views. */
-interface Rig {
+export interface Rig {
   hipY: number;
   legs: Array<{ hip: Pt; knee: Pt; ankle: Pt; footRot: number; lift: number }>;
   arms: Array<{ shoulder: Pt; elbow: Pt; hand: Pt }>;
@@ -107,7 +117,7 @@ const SHIN = 15;
 const UPPER_ARM = 13;
 const FOREARM = 12;
 
-function sideRig(pose: ActorPose, f: number): Rig {
+export function sideRig(pose: ActorPose, f: number): Rig {
   const phase = (f / POSES.walk.frames) * Math.PI * 2;
   const leg = (ph: number) => {
     if (pose !== 'walk') return { th: 0.04, k: 0.05 };
@@ -162,7 +172,7 @@ function sideRig(pose: ActorPose, f: number): Rig {
   };
 }
 
-function frontRig(pose: ActorPose, f: number): Rig {
+export function frontRig(pose: ActorPose, f: number): Rig {
   const phase = (f / POSES.walk.frames) * Math.PI * 2;
   const walking = pose === 'walk';
   const hipY = ANKLE_Y - 30 - (walking ? 1.6 * Math.abs(Math.sin(phase)) : 0);
@@ -249,7 +259,7 @@ export function mix(a: string, b: string, t: number): string {
 
 // -- heads (drawn in head-local coords, (0,0) = head centre)
 
-function mouthFront(m: Mouth, y: number, wide: number): string {
+export function mouthFront(m: Mouth, y: number, wide: number): string {
   if (m === 'a') {
     return (
       ellipse(0, y + 1, wide * 0.95, 3, { fill: '#5a1a28', stroke: INK, sw: 1.6 }) +
@@ -260,13 +270,13 @@ function mouthFront(m: Mouth, y: number, wide: number): string {
   return path(`M${-wide} ${y}Q0 ${y + 2.4} ${wide} ${y - 0.4}`, { stroke: INK, sw: 1.6 });
 }
 
-function mouthSide(m: Mouth, x: number, y: number): string {
+export function mouthSide(m: Mouth, x: number, y: number): string {
   if (m === 'a') return ellipse(x, y + 1, 2.4, 2.8, { fill: '#5a1a28', stroke: INK, sw: 1.5 });
   if (m === 'o') return ellipse(x + 0.6, y + 1, 1.6, 2.2, { fill: '#5a1a28', stroke: INK, sw: 1.5 });
   return path(`M${x - 3} ${y}Q${x} ${y + 1.6} ${x + 2.5} ${y - 0.2}`, { stroke: INK, sw: 1.5 });
 }
 
-const FACE_FRONT: Pt[] = [
+export const FACE_FRONT: Pt[] = [
   [0, -17],
   [10, -14.5],
   [14, -4],
@@ -279,7 +289,7 @@ const FACE_FRONT: Pt[] = [
   [-10, -14.5],
 ];
 
-const SKULL_SIDE: Pt[] = [
+export const SKULL_SIDE: Pt[] = [
   [-13, -2],
   [-11, -12],
   [-2, -17.5],
@@ -294,7 +304,7 @@ const SKULL_SIDE: Pt[] = [
 ];
 
 /** Face fill with a cel-shaded crescent on the side away from the light. */
-function shadedHead(L: HumanLook, shape: Pt[], id: string, shadeDx: number): string {
+export function shadedHead(L: HumanLook, shape: Pt[], id: string, shadeDx: number): string {
   const dShape = blob(shape);
   return (
     `<defs><clipPath id="${id}"><path d="${dShape}"/></clipPath></defs>` +
@@ -305,6 +315,7 @@ function shadedHead(L: HumanLook, shape: Pt[], id: string, shadeDx: number): str
 }
 
 function headFront(L: HumanLook, r: Rig, back: boolean): string {
+  if (L.head) return L.head.front(r, back);
   const s: string[] = [];
   const ear = (x: number) =>
     ellipse(x, 1, 3.2, 4.6, { fill: L.skin, stroke: INK, sw: OUT }) +
@@ -393,6 +404,7 @@ function headFront(L: HumanLook, r: Rig, back: boolean): string {
 }
 
 function headSide(L: HumanLook, r: Rig): string {
+  if (L.head) return L.head.side(r);
   const s: string[] = [];
   if (L.style === 'pia') {
     // Ponytail streaming back, swinging with the stride.
@@ -454,6 +466,7 @@ function torsoFront(L: HumanLook, r: Rig, back: boolean): string {
   s.push(path(blob(shirt), { fill: L.top }));
   s.push(group(ellipse(32 + 13, top + 14, 7, 16, { fill: L.topShade }), undefined, `clip-path="url(#${id})"`));
   s.push(path(blob(shirt), { stroke: INK, sw: OUT }));
+  if (L.torso?.front) s.push(L.torso.front(top, back, id));
   if (!back) {
     if (L.style === 'norb') {
       // Collar, buttons, and a fully-stocked pocket protector.
@@ -462,7 +475,7 @@ function torsoFront(L: HumanLook, r: Rig, back: boolean): string {
       s.push(path(`M${32 + 4} ${top + 3}L${32 + 4} ${top + 7}`, { stroke: '#d94a3a', sw: 1.6 }));
       s.push(path(`M${32 + 6.5} ${top + 2.5}L${32 + 6.5} ${top + 7}`, { stroke: '#2e2e3a', sw: 1.6 }));
       s.push(path(`M${32 + 2.5} ${top + 6}h6v5h-6z`, { fill: '#f4f4f0', stroke: INK, sw: 1.3 }));
-    } else {
+    } else if (L.style === 'pia') {
       // Stripe across the chest, backpack straps.
       s.push(group(path(`M10 ${top + 10}L54 ${top + 8}L54 ${top + 13}L10 ${top + 15}Z`, { fill: '#fbe9c8' }), undefined, `clip-path="url(#${id})"`));
       s.push(path(`M${32 - 7} ${top}L${32 - 6} ${top + 16}M${32 + 7} ${top}L${32 + 6} ${top + 16}`, { stroke: '#3b5e38', sw: 2.6 }));
@@ -480,7 +493,11 @@ function torsoFront(L: HumanLook, r: Rig, back: boolean): string {
 }
 
 function humanFront(L: HumanLook, pose: ActorPose, f: number, back: boolean): string {
-  const r = frontRig(pose, f);
+  return drawHumanFront(L, frontRig(pose, f), back);
+}
+
+/** A front (or back) view from explicit joints — for hand-built poses. */
+export function drawHumanFront(L: HumanLook, r: Rig, back = false): string {
   const s: string[] = [];
   const shinColor = L.shins ?? L.legs;
   for (const l of r.legs) s.push(limb([l.hip, l.knee, l.ankle], 8, [L.legs, shinColor]));
@@ -532,10 +549,11 @@ function humanSide(L: HumanLook, pose: ActorPose, f: number): string {
   s.push(path(blob(shirt), { fill: L.top }));
   s.push(group(ellipse(32 - 10, top + 15, 6, 16, { fill: L.topShade }), undefined, 'clip-path="url(#torsoS)"'));
   s.push(path(blob(shirt), { stroke: INK, sw: OUT }));
+  if (L.torso?.side) s.push(L.torso.side(top, 'torsoS'));
   if (L.style === 'norb') {
     s.push(path(`M${32 + 3} ${top + 6}h4.5v5h-4.5z`, { fill: '#f4f4f0', stroke: INK, sw: 1.2 }));
     s.push(path(`M${32 + 4.5} ${top + 3.5}L${32 + 4.5} ${top + 6.5}`, { stroke: '#d94a3a', sw: 1.5 }));
-  } else {
+  } else if (L.style === 'pia') {
     s.push(group(path(`M10 ${top + 10}L54 ${top + 9}L54 ${top + 14}L10 ${top + 15}Z`, { fill: '#fbe9c8' }), undefined, 'clip-path="url(#torsoS)"'));
     s.push(path(`M${32 - 4} ${top + 1}Q${32 + 2} ${top + 8} ${32 - 3} ${top + 16}`, { stroke: '#3b5e38', sw: 2.6 }));
   }
@@ -550,7 +568,7 @@ function humanSide(L: HumanLook, pose: ActorPose, f: number): string {
   return s.join('');
 }
 
-function humanDraw(L: HumanLook) {
+export function humanDraw(L: HumanLook) {
   return (variant: ActorVariant, pose: ActorPose, f: number): string =>
     variant === 'side' ? humanSide(L, pose, f) : humanFront(L, pose, f, variant === 'back');
 }

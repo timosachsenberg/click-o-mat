@@ -23,6 +23,7 @@ const BASE = `http://localhost:${PORT}`;
 const ALL_SUITES = [
   'verify-title.mjs',
   'smoke.mjs',
+  'verify-goa.mjs',
   'verify-renderer.mjs',
   'verify-continue.mjs',
   'verify-slotmgmt.mjs',
@@ -90,7 +91,8 @@ for (const suite of suites) {
   const code = await new Promise((resolve) => {
     const child = spawn(process.execPath, [path.join(here, suite)], {
       stdio: 'inherit',
-      env: { ...process.env, BASE_URL: BASE, SHOT_DIR: shots },
+      // Suites target the engine demo; verify-goa switches to the adventure.
+      env: { ...process.env, BASE_URL: `${BASE}/?game=demo`, SHOT_DIR: shots },
     });
     child.on('close', resolve);
   });

@@ -27,13 +27,6 @@ export type VerbId =
   | 'talkto'
   | 'pull';
 
-export interface VerbDef {
-  id: VerbId;
-  label: string;
-  /** Connecting word for two-object sentences: "Use X *with* Y", "Give X *to* Y". */
-  prep?: string;
-}
-
 /**
  * A script is any async function driving the game through the ScriptContext
  * API (walk, talk, flags, room changes, ...). Where a script is accepted, a
@@ -89,6 +82,11 @@ export interface ActorDef {
   baseScale?: number;
   /** Walk speed in px/sec at scale 1. */
   speed?: number;
+  /** State-driven stance: while this returns a pose name, that pose's
+   *  animation (`<textureSet>-<pose>-<variant>`, e.g. a custom 'sleep' pose
+   *  of an SvgActorAsset) replaces idle — someone dozing off, sitting down,
+   *  holding something. Re-evaluated on ctx.repaint(). */
+  stance?: (state: GameState) => string | undefined;
 }
 
 export interface RoomActorPlacement {
@@ -338,14 +336,19 @@ export type ActorPose = 'idle' | 'walk' | 'talk';
  * left). Every frame is rasterized once into its own width×height texture
  * (`<key>-<variant>-<pose>-<frame>`), and the looping actor animations
  * `<key>-<pose>-<variant>` are registered — so an ActorDef just names `key`
- * as its textureSet. Feet belong at the bottom-centre of the frame.
+ * as its textureSet. Feet belong at the bottom-centre of the frame. Custom
+ * poses beyond idle/walk/talk work the same way (see ActorDef.stance and
+ * ctx.animate()).
  */
 export interface SvgActorAsset {
   key: string;
   width: number;
   height: number;
-  poses: Record<ActorPose, { frames: number; frameRate: number }>;
-  draw: (variant: ActorVariant, pose: ActorPose, frame: number) => string;
+  /** idle/walk/talk, plus any custom poses (a dance, sleeping, sitting)
+   *  for ActorDef.stance and ctx.animate(). */
+  poses: Record<ActorPose, { frames: number; frameRate: number }> &
+    Record<string, { frames: number; frameRate: number }>;
+  draw(variant: ActorVariant, pose: ActorPose | string, frame: number): string;
 }
 
 /** Everything the engine should preload before the game starts. All fields

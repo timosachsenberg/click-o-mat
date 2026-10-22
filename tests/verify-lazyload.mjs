@@ -1,6 +1,7 @@
 import { chromium } from 'playwright';
 
-const BASE = process.env.BASE_URL ?? 'http://localhost:5173';
+// The engine-demo suites run the demo (the page's other game is the adventure).
+const BASE = process.env.BASE_URL ?? 'http://localhost:5173/?game=demo';
 const browser = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] });
 const page = await browser.newPage({ viewport: { width: 1000, height: 640 } });
 const errors = [];

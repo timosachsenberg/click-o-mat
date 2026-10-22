@@ -27,6 +27,8 @@ export class Actor {
   sprint = false;
 
   private pose: Pose = 'idle';
+  /** A custom pose forced by a script (ctx.animate), over everything else. */
+  private override: string | null = null;
   private path: Vec2[] | null = null;
   private pathIndex = 0;
   private walkResolve: ((result: WalkResult) => void) | null = null;
@@ -88,13 +90,27 @@ export class Actor {
   private applyPose(): void {
     const { name, flip } = this.variant();
     this.sprite.setFlipX(flip);
-    const animKey = `${this.def.textureSet}-${this.pose}-${name}`;
+    // A scripted pose beats everything; a state-driven stance replaces idle.
+    const pose =
+      this.override ?? (this.pose === 'idle' ? (this.def.stance?.(engine.state) ?? 'idle') : this.pose);
+    const animKey = `${this.def.textureSet}-${pose}-${name}`;
     if (this.scene.anims.exists(animKey)) {
       this.sprite.play(animKey, true);
     } else {
       this.sprite.stop();
-      this.sprite.setTexture(`${this.def.textureSet}-${name}-${this.pose}-0`);
+      this.sprite.setTexture(`${this.def.textureSet}-${name}-${pose}-0`);
     }
+  }
+
+  /** Force a custom pose (null returns to normal posing). */
+  setOverride(pose: string | null): void {
+    this.override = pose;
+    this.applyPose();
+  }
+
+  /** Re-derive the displayed pose (the stance may depend on state). */
+  refreshPose(): void {
+    this.applyPose();
   }
 
   setPose(pose: Pose): void {
