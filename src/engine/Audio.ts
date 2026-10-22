@@ -28,7 +28,9 @@ const SFX_PATTERNS: Record<SfxName, Array<[freq: number, dur: number]>> = {
   thunder: [[70, 0.35], [55, 0.5], [90, 0.25], [48, 0.45], [64, 0.6]],
 };
 
-interface Track {
+/** A procedural chiptune loop (games can add their own via
+ *  GameContent.music). */
+export interface MusicTrack {
   bpm: number;
   /** Semitone offsets from A4 (440 Hz), or null for a rest. One per 8th note. */
   bass: (number | null)[];
@@ -37,7 +39,10 @@ interface Track {
   bassType?: OscillatorType;
 }
 
-/** Built-in procedural music tracks, keyed by name. */
+type Track = MusicTrack;
+
+/** Procedural music tracks, keyed by name: the built-ins plus any a game
+ *  registers (registerTracks). */
 const TRACKS: Record<string, Track> = {
   // Moody A-minor loop for the lab.
   'lab-theme': {
@@ -298,6 +303,11 @@ export class AudioManager {
   stopMusic(): void {
     this.pendingMusic = null;
     this.startMusic(null);
+  }
+
+  /** Add (or replace) procedural tracks, playable by key like the built-ins. */
+  registerTracks(tracks: Record<string, MusicTrack>): void {
+    Object.assign(TRACKS, tracks);
   }
 
   private hasLoaded(key: string): boolean {

@@ -12,11 +12,16 @@ import type {
   VerbId,
 } from './types';
 import { runDialog } from './DialogRunner';
+import { audio, type MusicTrack } from './Audio';
+import { DEFAULT_STRINGS, type UIStrings } from './strings';
 import { ScriptContext } from './ScriptContext';
 import type { RoomScene } from './RoomScene';
 import type { UIScene } from './UIScene';
 
 export interface GameContent {
+  /** Namespaces this game's save slots in localStorage, so several games
+   *  can share one origin (omit for the legacy un-namespaced slots). */
+  id?: string;
   rooms: Record<string, RoomDef>;
   items: Record<string, ItemDef>;
   actors: Record<string, ActorDef>;
@@ -33,8 +38,24 @@ export interface GameContent {
   charStarts?: Record<string, { room: string; entry: string }>;
   startRoom: string;
   startEntry: string;
+  /** Items the starting character carries from the very beginning. */
+  startItems?: string[];
   /** Optional look for the built-in UI (font, panel art, colours). */
   theme?: Partial<UITheme>;
+  /** Optional procedural music tracks, played by key (RoomDef.music,
+   *  ctx.playMusic) like the built-in ones. */
+  music?: Record<string, MusicTrack>;
+  /** Optional translations of the engine's own UI text (verbs, sentence
+   *  line, fallback lines, menus). Omitted fields stay English. */
+  strings?: Partial<UIStrings>;
+}
+
+/** Several games built into one page: the title screen shows a picker, and
+ *  picking another game calls `select` (e.g. reload with `?game=<id>`). */
+export interface GameLauncher {
+  current: string;
+  games: Array<{ id: string; label: string }>;
+  select: (id: string) => void;
 }
 
 /** The engine's own UI look, used for anything a game's theme leaves out. */
@@ -48,9 +69,9 @@ export const DEFAULT_THEME: UITheme = {
 
 const LEGACY_SAVE_KEY = 'pnc-adventure-save';
 const SAVE_PREFIX = 'pnc-save-';
-/** Slot 0 is the quick slot (F5/F9); the last is the autosave. */
+/** Slot 0 is the quick slot (F5/F9); the last is the autosave (labels:
+ *  UIStrings.slotLabels). */
 export const SAVE_SLOTS = 5;
-export const SLOT_LABELS = ['QUICK', 'SLOT 1', 'SLOT 2', 'SLOT 3', 'AUTO'];
 export const AUTO_SLOT = 4;
 const TEXT_SPEED_KEY = 'pnc-text-speed';
 const COMMENTARY_KEY = 'pnc-commentary';
@@ -76,6 +97,11 @@ export class Engine {
   dialogs: Record<string, DialogDef> = {};
   assets: AssetManifest = {};
   theme: UITheme = { ...DEFAULT_THEME };
+  strings: UIStrings = { ...DEFAULT_STRINGS };
+  /** Set when the page bundles several games (see GameLauncher). */
+  launcher: GameLauncher | null = null;
+  /** Save-slot key prefix (namespaced by GameContent.id). */
+  private savePrefix = SAVE_PREFIX;
   /** Rooms whose lazy asset bundle has finished loading this session. */
   loadedRooms = new Set<string>();
   playerId = 'player';
@@ -178,19 +204,24 @@ export class Engine {
     this.dialogs = content.dialogs;
     this.assets = content.assets ?? {};
     this.theme = { ...DEFAULT_THEME, ...content.theme };
+    this.strings = { ...DEFAULT_STRINGS, ...content.strings };
+    if (content.music) audio.registerTracks(content.music);
+    this.savePrefix = content.id ? `${SAVE_PREFIX}${content.id}-` : SAVE_PREFIX;
     this.playerId = content.playerId;
     this.charStarts = content.charStarts ?? {};
     this.startRoom = content.startRoom;
     this.startEntry = content.startEntry;
-    this.initParty(content.party ?? [content.playerId]);
-    this.migrateLegacySave();
+    this.initParty(content.party ?? [content.playerId], content.startItems ?? []);
+    // The legacy single-save key predates namespacing: it can only belong to
+    // an un-namespaced game.
+    if (!content.id) this.migrateLegacySave();
     this.loadPrefs();
   }
 
   /** Seed the live state's party at their start locations. The starting
    *  character (playerId) begins at startRoom/startEntry; others at their
    *  charStarts entry. Positions get filled in when their room first loads. */
-  private initParty(party: string[]): void {
+  private initParty(party: string[], startItems: string[]): void {
     const members = party.includes(this.playerId) ? party : [this.playerId, ...party];
     this.state.activeChar = this.playerId;
     this.state.party = [];
@@ -199,7 +230,7 @@ export class Engine {
         // The starting character's room/position are filled in when the first
         // room loads — keep currentRoom '' until then (the title screen relies
         // on that to know the game hasn't started).
-        this.state.ensureChar(id, { room: '', pos: null, facing: 'down', inventory: [] });
+        this.state.ensureChar(id, { room: '', pos: null, facing: 'down', inventory: [...startItems] });
       } else {
         const start = this.charStarts[id];
         const room = start?.room ?? '';
@@ -370,7 +401,7 @@ export class Engine {
   // Slot 0 is the quick slot (F5/F9); slots 1..SAVE_SLOTS-1 are manual.
 
   private slotKey(slot: number): string {
-    return `${SAVE_PREFIX}${slot}`;
+    return `${this.savePrefix}${slot}`;
   }
 
   private readSlot(slot: number): SaveFile | null {

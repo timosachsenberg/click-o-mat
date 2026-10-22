@@ -1,4 +1,4 @@
-import type { ActorPose, ActorVariant, AssetManifest } from './types';
+import type { ActorVariant, AssetManifest } from './types';
 import { makeSvgTex } from './svgTex';
 
 /**
@@ -61,7 +61,7 @@ export async function prepareSvgAssets(scene: Phaser.Scene, m: AssetManifest | u
   }
   for (const a of m.svgActors ?? []) {
     for (const variant of VARIANTS) {
-      for (const pose of Object.keys(a.poses) as ActorPose[]) {
+      for (const pose of Object.keys(a.poses)) {
         for (let f = 0; f < a.poses[pose].frames; f++) {
           const key = `${a.key}-${variant}-${pose}-${f}`;
           if (!scene.textures.exists(key)) {
@@ -74,7 +74,7 @@ export async function prepareSvgAssets(scene: Phaser.Scene, m: AssetManifest | u
   await Promise.all(jobs);
   for (const a of m.svgActors ?? []) {
     for (const variant of VARIANTS) {
-      for (const pose of Object.keys(a.poses) as ActorPose[]) {
+      for (const pose of Object.keys(a.poses)) {
         const animKey = `${a.key}-${pose}-${variant}`;
         if (scene.anims.exists(animKey)) continue;
         const { frames, frameRate } = a.poses[pose];

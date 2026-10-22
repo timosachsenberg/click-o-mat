@@ -7,7 +7,6 @@ import { makeCanvasTex, redrawCanvasTex } from './canvasTex';
 import { makeSvgTex } from './svgTex';
 import { audio } from './Audio';
 import { prepareSvgAssets, queueManifest, registerManifestAnims, runLoader } from './assetLoader';
-import { DEFAULT_RESPONSES } from './verbs';
 import { GAME_W, ROOM_H } from './constants';
 import type {
   AmbientDef,
@@ -134,7 +133,7 @@ export class RoomScene extends Phaser.Scene {
       overlay.add(this.add.rectangle(0, 0, GAME_W, ROOM_H, 0x000000, 0.85).setOrigin(0));
       overlay.add(
         this.add
-          .text(GAME_W / 2, ROOM_H / 2, 'Loading…', {
+          .text(GAME_W / 2, ROOM_H / 2, engine.strings.loading, {
             fontFamily: engine.theme.font,
             fontSize: '22px',
             color: '#c9f0ff',
@@ -276,9 +275,7 @@ export class RoomScene extends Phaser.Scene {
    *  demonstrates, in one skippable speech bubble. */
   async narrateFeatures(def: RoomDef): Promise<void> {
     if (!def.features?.length) return;
-    await engine.makeContext().playerSay(
-      `(Commentary — this room shows off: ${def.features.join('; ')}.)`
-    );
+    await engine.makeContext().playerSay(engine.strings.commentary(def.features));
   }
 
   /** Run an ambient on a randomized interval. Ambients never touch the busy
@@ -388,6 +385,7 @@ export class RoomScene extends Phaser.Scene {
       }
       obj.setVisible(layer.visible ? !!layer.visible(engine.state) : true);
     }
+    for (const actor of this.actors.values()) actor.refreshPose();
     this.rebuildWalkArea();
     if (this.debugGfx) this.drawDebug();
     return Promise.all(pending).then(() => undefined);
@@ -740,7 +738,7 @@ export class RoomScene extends Phaser.Scene {
       engine.events.emit('ui');
       const itemName = engine.items[item]?.name ?? item;
       const charName = engine.actors[charId]?.name ?? charId;
-      engine.uiScene.toast(`Gave ${itemName} to ${charName}.`);
+      engine.uiScene.toast(engine.strings.gaveTo(itemName, charName));
     } finally {
       engine.endBusy();
       if (seq === this.interactionSeq) {
@@ -794,7 +792,7 @@ export class RoomScene extends Phaser.Scene {
         engine.interruptible = false;
         if (result === 'cancelled') return;
         if (result === 'blocked') {
-          await player.say("I can't get over there.");
+          await player.say(engine.strings.cantReach);
           return;
         }
         if (hotspot.facing) player.setFacing(hotspot.facing);
@@ -830,10 +828,10 @@ export class RoomScene extends Phaser.Scene {
       const kind = verb === 'give' ? 'give' : 'use';
       return (
         hotspot.onItem?.[kind]?.[itemId] ??
-        (kind === 'give' ? "I don't think that's wanted here." : "That doesn't seem to work.")
+        (kind === 'give' ? engine.strings.notWanted : engine.strings.noEffect)
       );
     }
-    return hotspot.on?.[verb] ?? DEFAULT_RESPONSES[verb];
+    return hotspot.on?.[verb] ?? engine.strings.defaultResponses[verb];
   }
 
   private faceToward(player: Actor, hotspot: HotspotDef): Facing {

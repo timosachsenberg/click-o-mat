@@ -57,7 +57,7 @@ export class ScriptContext {
     if (!opts.silent) {
       audio.playSfx('pickup');
       const name = this.eng.items[id]?.name ?? id;
-      this.eng.uiScene.toast(`Picked up: ${name}`);
+      this.eng.uiScene.toast(this.eng.strings.pickedUp(name));
     }
     this.eng.events.emit('ui');
   }
@@ -109,6 +109,19 @@ export class ScriptContext {
 
   face(actorId: string, facing: Facing): void {
     this.actor(actorId).setFacing(facing);
+  }
+
+  /** Play a custom pose (`<textureSet>-<pose>-<variant>`, e.g. a dance) on an
+   *  actor, overriding idle/walk/talk. With `ms`, holds it that long (skip-
+   *  aware) and then returns to normal posing; without, it holds until
+   *  `animate(actorId, null)` or the room reloads. Transient staging — for a
+   *  pose that must last, use ActorDef.stance + flags. */
+  async animate(actorId: string, pose: string | null, ms?: number): Promise<void> {
+    const a = this.actor(actorId);
+    a.setOverride(pose);
+    if (pose === null || ms === undefined) return;
+    await this.wait(ms);
+    a.setOverride(null);
   }
 
   wait(ms: number): Promise<void> {
@@ -214,6 +227,12 @@ export class ScriptContext {
 
   shake(duration = 300, intensity = 0.01): void {
     this.eng.roomScene.cameras.main.shake(duration, intensity);
+  }
+
+  /** A short notice above the UI band that fades by itself ("Passwort
+   *  erhalten: …") — the same toast item pickups use. */
+  toast(text: string): void {
+    this.eng.uiScene.toast(text);
   }
 
   /** Big centered title card (e.g. "THE END"). Cleared on room change. */

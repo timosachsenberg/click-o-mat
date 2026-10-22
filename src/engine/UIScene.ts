@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { engine, SAVE_SLOTS, SLOT_LABELS } from './Engine';
+import { engine, SAVE_SLOTS } from './Engine';
 import { audio } from './Audio';
 import { VERBS, verbLabel } from './verbs';
 import { GAME_W, GAME_H, ROOM_H, UI_H } from './constants';
@@ -86,14 +86,14 @@ export class UIScene extends Phaser.Scene {
     engine.events.on('ui', () => this.refresh());
 
     this.input.keyboard?.on('keydown-F5', () => {
-      this.toast(engine.save() ? 'Quick-saved.' : 'Save failed.');
+      this.toast(engine.save() ? engine.strings.quickSaved : engine.strings.saveFailed);
     });
     this.input.keyboard?.on('keydown-F9', () => {
       if (!engine.canLoad()) {
-        this.toast('No quick save.');
+        this.toast(engine.strings.noQuickSave);
         return;
       }
-      void engine.load().then(() => this.toast('Quick save loaded.'));
+      void engine.load().then(() => this.toast(engine.strings.quickLoaded));
     });
 
     this.buildAudioButton();
@@ -106,7 +106,7 @@ export class UIScene extends Phaser.Scene {
     VERB_KEYS.forEach((key, i) => {
       this.input.keyboard?.on(`keydown-${key}`, () => {
         if (engine.busy || engine.dialogMode || engine.menuOpen) return;
-        const id = VERBS[i].id;
+        const id = VERBS[i];
         engine.setVerb(engine.selectedVerb === id ? null : id);
       });
     });
@@ -263,7 +263,7 @@ export class UIScene extends Phaser.Scene {
     // Swallow clicks so the room never sees them through the panel.
     bg.setInteractive();
     const title = this.add
-      .text(GAME_W / 2, 62, 'OPTIONS', {
+      .text(GAME_W / 2, 62, engine.strings.options, {
         fontFamily: engine.theme.font,
         fontSize: '20px',
         fontStyle: 'bold',
@@ -273,10 +273,11 @@ export class UIScene extends Phaser.Scene {
     this.optionsPanel.add(bg);
     this.optionsPanel.add(title);
 
-    this.makeSlider('Master', 100, () => audio.settings.master, (v) => audio.setMasterVolume(v));
-    this.makeSlider('Music', 134, () => audio.settings.music, (v) => audio.setMusicVolume(v));
-    this.makeSlider('Sound FX', 168, () => audio.settings.sfx, (v) => audio.setSfxVolume(v));
-    this.makeSlider('Text speed', 202, () => engine.textSpeed, (v) => engine.setTextSpeed(v));
+    const str = engine.strings;
+    this.makeSlider(str.master, 100, () => audio.settings.master, (v) => audio.setMasterVolume(v));
+    this.makeSlider(str.music, 134, () => audio.settings.music, (v) => audio.setMusicVolume(v));
+    this.makeSlider(str.soundFx, 168, () => audio.settings.sfx, (v) => audio.setSfxVolume(v));
+    this.makeSlider(str.textSpeed, 202, () => engine.textSpeed, (v) => engine.setTextSpeed(v));
 
     this.muteToggle = this.add
       .text(GAME_W / 2, 232, '', {
@@ -303,7 +304,7 @@ export class UIScene extends Phaser.Scene {
     // Save slots
     this.optionsPanel.add(
       this.add
-        .text(GAME_W / 2, 284, '— SAVES —', {
+        .text(GAME_W / 2, 284, str.saves, {
           fontFamily: engine.theme.font,
           fontSize: '14px',
           color: '#8f7fd4',
@@ -313,7 +314,7 @@ export class UIScene extends Phaser.Scene {
     for (let slot = 0; slot < SAVE_SLOTS; slot++) this.buildSlotRow(slot, 308 + slot * 34);
 
     const close = this.add
-      .text(GAME_W / 2, 500, 'Close', {
+      .text(GAME_W / 2, 500, str.close, {
         fontFamily: engine.theme.font,
         fontSize: '17px',
         fontStyle: 'bold',
@@ -345,7 +346,8 @@ export class UIScene extends Phaser.Scene {
   /** One save-slot row: label · room+time info · Save · Load · ✕, where
    *  overwriting or deleting flips the row into an inline Yes/No confirm. */
   private buildSlotRow(slot: number, y: number): void {
-    const name = SLOT_LABELS[slot] ?? `slot ${slot}`;
+    const str = engine.strings;
+    const name = str.slotLabels[slot] ?? `${slot}`;
     const small = (x: number, text: string, color: string, bold = false) =>
       this.add
         .text(x, y, text, {
@@ -356,8 +358,8 @@ export class UIScene extends Phaser.Scene {
         })
         .setOrigin(0, 0.5);
 
-    const label = small(300, SLOT_LABELS[slot] ?? `SLOT ${slot}`, '#c9f0ff', true);
-    const info = small(370, '— empty —', '#6a6a8a');
+    const label = small(300, name, '#c9f0ff', true);
+    const info = small(370, str.emptySlot, '#6a6a8a');
 
     const btn = (x: number, text: string, color: string, onClick: () => void) => {
       const t = this.add
@@ -376,24 +378,24 @@ export class UIScene extends Phaser.Scene {
     };
 
     const doSave = () => {
-      this.toast(engine.save(slot) ? `Saved to ${name}.` : 'Save failed.');
+      this.toast(engine.save(slot) ? str.savedTo(name) : str.saveFailed);
       this.refreshOptions();
     };
 
-    const save = btn(578, 'Save', '#8f7fd4', () => {
+    const save = btn(578, str.save, '#8f7fd4', () => {
       this.pendingConfirm = engine.hasSave(slot) ? { slot, action: 'save' } : null;
       if (this.pendingConfirm) this.refreshOptions();
       else doSave();
     });
-    const load = btn(628, 'Load', '#8f7fd4', () => {
+    const load = btn(628, str.load, '#8f7fd4', () => {
       this.pendingConfirm = null;
       if (!engine.hasSave(slot)) {
-        this.toast('That slot is empty.');
+        this.toast(str.slotEmpty);
         this.refreshOptions();
         return;
       }
       void engine.load(slot).then((ok) => {
-        this.toast(ok ? `Loaded ${name}.` : 'Load failed.');
+        this.toast(ok ? str.loaded(name) : str.loadFailed);
         if (ok) this.toggleOptions(false);
       });
     });
@@ -402,7 +404,7 @@ export class UIScene extends Phaser.Scene {
       this.pendingConfirm = { slot, action: 'delete' };
       this.refreshOptions();
     });
-    const yes = btn(590, 'Yes', '#9be89b', () => {
+    const yes = btn(590, str.yes, '#9be89b', () => {
       const pc = this.pendingConfirm;
       this.pendingConfirm = null;
       if (!pc || pc.slot !== slot) {
@@ -413,11 +415,11 @@ export class UIScene extends Phaser.Scene {
         doSave();
       } else {
         engine.deleteSave(slot);
-        this.toast(`Deleted ${name}.`);
+        this.toast(str.deleted(name));
         this.refreshOptions();
       }
     });
-    const no = btn(640, 'No', '#ff8a7a', () => {
+    const no = btn(640, str.no, '#ff8a7a', () => {
       this.pendingConfirm = null;
       this.refreshOptions();
     });
@@ -470,10 +472,9 @@ export class UIScene extends Phaser.Scene {
 
   private refreshOptions(): void {
     for (const s of this.sliderFills) s.fill.width = 180 * s.get();
-    this.muteToggle.setText(audio.muted ? 'Sound: OFF  (click to unmute)' : 'Sound: ON  (click to mute)');
-    this.commentaryToggle.setText(
-      engine.commentary ? "Director's commentary: ON  (F2)" : "Director's commentary: OFF  (F2)"
-    );
+    const str = engine.strings;
+    this.muteToggle.setText(str.soundState(audio.muted));
+    this.commentaryToggle.setText(str.commentaryState(engine.commentary));
     this.commentaryToggle.setColor(engine.commentary ? '#c9b8ff' : '#6b6488');
     this.updateMuteButton();
     // Slot listings (a row in confirm mode shows the inline Yes/No instead)
@@ -489,12 +490,12 @@ export class UIScene extends Phaser.Scene {
       row.no.setVisible(confirming);
       if (confirming) {
         row.info
-          .setText(pc!.action === 'save' ? 'Overwrite this save?' : 'Delete this save?')
+          .setText(pc!.action === 'save' ? str.confirmOverwrite : str.confirmDelete)
           .setColor(pc!.action === 'save' ? '#ffe066' : '#ff8a7a');
         return;
       }
       if (entry) {
-        const when = new Date(entry.when).toLocaleString([], {
+        const when = new Date(entry.when).toLocaleString(str.locale ?? [], {
           month: 'short',
           day: 'numeric',
           hour: '2-digit',
@@ -505,7 +506,7 @@ export class UIScene extends Phaser.Scene {
         row.load.setAlpha(1);
         row.del.setAlpha(1);
       } else {
-        row.info.setText('— empty —').setColor('#6a6a8a');
+        row.info.setText(str.emptySlot).setColor('#6a6a8a');
         row.load.setAlpha(0.35);
         row.del.setAlpha(0.35);
       }
@@ -539,13 +540,13 @@ export class UIScene extends Phaser.Scene {
     const muted = audio.toggleMute();
     this.updateMuteButton();
     if (engine.menuOpen) this.refreshOptions();
-    this.toast(muted ? 'Sound off' : 'Sound on');
+    this.toast(engine.strings.soundToast(muted));
   }
 
   private toggleCommentary(): void {
     engine.setCommentary(!engine.commentary);
     if (engine.menuOpen) this.refreshOptions();
-    this.toast(engine.commentary ? "Director's commentary on" : "Director's commentary off");
+    this.toast(engine.strings.commentaryToast(engine.commentary));
     // Turning it on narrates the current room right away (and lets you re-hear
     // a room you've already visited this session).
     if (engine.commentary && !engine.busy && !engine.dialogMode) {
@@ -576,7 +577,7 @@ export class UIScene extends Phaser.Scene {
       const col = i % 3;
       const row = Math.floor(i / 3);
       const t = this.add
-        .text(originX + col * colW, originY + row * rowH, verb.label, {
+        .text(originX + col * colW, originY + row * rowH, verbLabel(verb), {
           fontFamily: engine.theme.font,
           fontSize: '19px',
           fontStyle: 'bold',
@@ -584,13 +585,13 @@ export class UIScene extends Phaser.Scene {
         })
         .setOrigin(0, 0.5)
         .setInteractive({ useHandCursor: true });
-      t.on('pointerover', () => this.styleVerb(verb.id, true));
-      t.on('pointerout', () => this.styleVerb(verb.id, false));
+      t.on('pointerover', () => this.styleVerb(verb, true));
+      t.on('pointerout', () => this.styleVerb(verb, false));
       t.on('pointerdown', () => {
         if (engine.busy || engine.dialogMode || engine.menuOpen) return;
-        engine.setVerb(engine.selectedVerb === verb.id ? null : verb.id);
+        engine.setVerb(engine.selectedVerb === verb ? null : verb);
       });
-      this.verbTexts.set(verb.id, t);
+      this.verbTexts.set(verb, t);
       this.gameplayUI.add(t);
     });
   }
@@ -679,7 +680,7 @@ export class UIScene extends Phaser.Scene {
 
     // Right-click an item: look at it, no verb needed.
     if (pointer?.rightButtonDown()) {
-      void engine.runScript(item.lookAt, `It's ${item.name}.`);
+      void engine.runScript(item.lookAt, engine.strings.itemLook(item.name));
       return;
     }
 
@@ -687,11 +688,11 @@ export class UIScene extends Phaser.Scene {
       // Item-on-item combination; look up both directions.
       const other = engine.items[engine.pendingItem];
       const script = other.combine?.[itemId] ?? item.combine?.[engine.pendingItem];
-      void engine.runScript(script, "Those don't go together.");
+      void engine.runScript(script, engine.strings.noCombine);
       return;
     }
     if (engine.selectedVerb === 'lookat') {
-      void engine.runScript(item.lookAt, `It's ${item.name}.`);
+      void engine.runScript(item.lookAt, engine.strings.itemLook(item.name));
       return;
     }
     if (engine.selectedVerb === 'give') {
@@ -810,7 +811,7 @@ export class UIScene extends Phaser.Scene {
           it.t.setPosition(30, y).setVisible(true);
           y += it.h + GAP;
         }
-        nav.setVisible(multi).setText(`▾ More choices  (${page + 1}/${pages.length})`);
+        nav.setVisible(multi).setText(engine.strings.moreChoices(page + 1, pages.length));
       };
       const changePage = (dir: number) => {
         if (!multi) return;
@@ -827,7 +828,7 @@ export class UIScene extends Phaser.Scene {
 
   refresh(): void {
     // Verb colors.
-    for (const verb of VERBS) this.styleVerb(verb.id, false);
+    for (const verb of VERBS) this.styleVerb(verb, false);
     // Inventory page.
     const pageSize = INV_SLOTS_X * INV_SLOTS_Y;
     const inv = engine.state.inventory;
@@ -857,11 +858,13 @@ export class UIScene extends Phaser.Scene {
     if (engine.pendingItem && engine.pendingItemVerb) {
       const itemName = engine.items[engine.pendingItem].name;
       head =
-        engine.pendingItemVerb === 'give' ? `Give ${itemName} to` : `Use ${itemName} with`;
+        engine.pendingItemVerb === 'give'
+          ? engine.strings.giveTo(itemName)
+          : engine.strings.useWith(itemName);
     } else if (engine.selectedVerb) {
       head = verbLabel(engine.selectedVerb);
     } else {
-      head = 'Walk to';
+      head = engine.strings.walkTo;
     }
     this.sentenceText.setText(this.hoverName ? `${head} ${this.hoverName}` : head);
   }

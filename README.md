@@ -14,6 +14,12 @@ rasterized in the browser at runtime, and its sound is synthesized. Apart from
 a few PNGs that exercise the image pipeline (themselves rendered from SVG
 sources), the whole thing is code.
 
+Next to the demo lives the start of an actual adventure, **„Folge dem Bass“**
+(German, `src/goa/`): you begin in Ali's corner pub with nothing but a
+two-euro coin and need the password for tonight's Goa party in the forest. The
+**title screen picks between the two** (SPIEL · DEMO); `?game=goa` /
+`?game=demo` select one directly, and the last pick is remembered.
+
 ### ▶ [Play the demo in your browser](https://timosachsenberg.github.io/click-o-mat/)
 
 [![the lab room](docs/screenshot.jpg)](https://timosachsenberg.github.io/click-o-mat/)
@@ -95,6 +101,24 @@ Phaser's own WebGL-first detection.
 | Options menu | **⚙ button** (top-right): volume sliders, mute, save slots — **Esc** closes |
 | Mute / unmute audio | **M**, or the 🔊 button (top-right) |
 | Debug overlay | **F1** (draws walk area, obstacles, hotspots) |
+
+### Playing the adventure („Folge dem Bass“)
+
+You're in **Alis Eck**, a corner pub, with a two-euro coin in your pocket.
+Ali knows where tonight's Goa party in the forest is — but the only other
+guest, a retired cop known as *der Partykiller*, is listening, and Ali won't
+talk while he does.
+
+<details><summary>Solution</summary>
+
+1. Talk to **Ali** about the Goa — he points at the Partykiller.
+2. Order a drink: Red Cow? *Aus.* Flying Pony? *Auch aus.* **Magic Woman**?
+   *Die haben wir* — two euros, deposit included.
+3. **Give the Magic Woman** to the Partykiller. He dances (traffic duty first,
+   then the disco finger), sits down, and falls asleep.
+4. Ask Ali again: the password is **Chakabunga**. Leave through the door.
+
+</details>
 
 ### Playing the demo
 
@@ -358,6 +382,9 @@ hotspots and items, and script reactions.** Everything else in the engine
 | Left-click walk / right-click default verb | `engine/RoomScene.ts` |
 | Walkable-area pathfinding around obstacles (visibility graph + Dijkstra) | `engine/Pathfinder.ts` |
 | Directional walk / idle / talk character animations | `engine/Actor.ts`, `engine/assetLoader.ts` |
+| **Custom poses** — extra actor animations (dancing, sleeping): state-driven `stance` or scripted `ctx.animate` | `engine/Actor.ts`, `engine/ScriptContext.ts` |
+| **Translatable UI** — every engine string (verbs, sentence line, menus) overridable per game | `engine/strings.ts`, `goa/strings.ts` |
+| **Several games per page** — title-screen picker, per-game save slots, start inventory | `engine/TitleScene.ts`, `engine/Engine.ts`, `main.ts` |
 | **SVG vector art** — room layers from SVG markup (static or state-driven, cached per variant), procedural SVG characters and icons | `engine/svgTex.ts`, `engine/RoomScene.ts`, `game/art/` |
 | **UI theme** — font, panel/slot art and verb colours for the built-in interface | `engine/types.ts`, `engine/UIScene.ts`, `game/art/ui.ts` |
 | Perspective scaling (actors shrink toward the back wall) | `engine/Actor.ts` |
@@ -382,7 +409,7 @@ hotspots and items, and script reactions.** Everything else in the engine
 | **Music & SFX** — per-room tracks with crossfade, volume/mute, procedural *or* loaded audio | `engine/Audio.ts` |
 | **Options menu** — volume sliders, mute, save/load (⚙ top-right) | `engine/UIScene.ts` |
 | **Director's commentary** (opt-in) — the player narrates each room's demonstrated engine features on first entry; toggle in options or press `F2` | `engine/RoomScene.ts`, `engine/UIScene.ts` |
-| **Retro title screen** — pixel-upscaled lettering, New Game / Continue menu (Continue restores the save); the start click doubles as the audio-unlock gesture | `engine/TitleScene.ts` |
+| **Retro title screen** — pixel-upscaled lettering, New Game / Continue menu (Continue restores the save), game picker; the start click doubles as the audio-unlock gesture | `engine/TitleScene.ts` |
 | Debug overlay (walk area, holes, hotspots) — press `F1` | `engine/RoomScene.ts` |
 | **QoL**: smart left-click, double-click run, Tab hotspot reveal, verb hotkeys, autosave, text-speed slider | `engine/RoomScene.ts`, `engine/UIScene.ts` |
 | **PNG assets** — image backgrounds + spritesheet-animated actors | `engine/assetLoader.ts`, `game/assets.ts` |
@@ -413,15 +440,20 @@ src/
     GameState.ts       Flags, inventory, location + save/load serialization
     Audio.ts           Music + SFX (procedural synth and/or loaded files)
     types.ts           All content-definition types (RoomDef, HotspotDef, …)
+    strings.ts         The engine's own UI text (verbs, menus) — translatable
     svgTex.ts          SVG markup → canvas texture rasterizer
     ...                geometry, verbs, asset loader, canvas helpers, constants
-  game/                YOUR game content
+  game/                The engine demo ("Ned the Tentacle")
     index.ts           Registers all rooms/items/actors/dialogs/assets
     assets.ts          Per-room PNG/spritesheet bundles (loaded lazily)
     art/               SVG art: toon.ts toolkit, characters, icons, UI panel,
                        pngSources.ts (source art of the PNGs in public/img)
     rooms/*.ts         One file per room (logic + its SVG art)
     items.ts  actors.ts  dialogs.ts
+  goa/                 The adventure ("Folge dem Bass", German) — same layout:
+    index.ts           its GameContent (German UI strings, start inventory)
+    art/cast.ts        Player, Ali, the Partykiller (on the demo's puppet rig)
+    rooms/kneipe.ts    Alis Eck, the corner pub
 public/
   img/                 PNG assets (served verbatim, copied into dist/)
 tools/
@@ -454,9 +486,34 @@ async open(ctx) {
 
 ## Content reference
 
-All game content lives under `src/game/` and is registered in
-`src/game/index.ts`. Nothing in `src/engine/` needs to change to build a new
+A game's content lives in its own folder and is registered as one
+`GameContent` — the demo's in `src/game/index.ts`, the adventure's in
+`src/goa/index.ts`. Nothing in `src/engine/` needs to change to build a new
 game.
+
+### Games, start inventory, UI language
+
+```ts
+export const CONTENT: GameContent = {
+  id: 'goa',              // namespaces the save slots (pnc-save-goa-*)
+  rooms, items, actors, dialogs, assets, theme,
+  playerId: 'player', startRoom: 'kneipe', startEntry: 'start',
+  startItems: ['euro'],   // carried from the very beginning
+  strings: DE_STRINGS,    // the engine's UI text, translated (see below)
+  music: GOA_MUSIC,       // extra procedural tracks, played by key
+};
+```
+
+- **Several games in one page.** `main.ts` registers one `GameContent` per
+  page load and sets `engine.launcher` (`{ current, games, select }`); the
+  title screen then shows a picker, and picking another game reloads with
+  `?game=<id>`. Give each game an `id` so their saves don't collide.
+- **UI strings.** Everything the engine itself writes — verb labels, the
+  sentence line (`useWith`/`giveTo`/`walkTo`), the fallback responses for
+  unhandled verbs, toasts, the title menu, the options panel and save slots —
+  is a `UIStrings` field (`engine/strings.ts`, English defaults).
+  `GameContent.strings` overrides any subset; `src/goa/strings.ts` is the
+  complete German set (Gib · Nimm · Benutze · Öffne · Schau an · …).
 
 ### A room (`src/game/rooms/*.ts`)
 
@@ -693,7 +750,26 @@ assets: {
 Each frame becomes a texture and the `<key>-<pose>-<variant>` animations are
 registered, so an actor just uses `textureSet: 'guy'`. The demo's cast
 (`src/game/art/characters.ts`) are puppets posed from joint angles — walk
-cycles are a few lines of trigonometry, not hand-drawn frames.
+cycles are a few lines of trigonometry, not hand-drawn frames. The rig is
+reusable: `HumanLook`'s `head`/`torso` hooks dress it differently, and
+`drawHumanFront(look, rig)` draws hand-built poses (the adventure's cast in
+`src/goa/art/cast.ts`).
+
+**Custom poses.** `poses` may hold more than idle/walk/talk — a dance, a
+seated or sleeping pose — registered the same way. Two ways to use them:
+
+```ts
+// Durable, state-driven: replaces idle while it returns a pose name
+// (re-evaluated on ctx.repaint(), so it survives save/load).
+cop: { id: 'cop', name: 'Partykiller', textureSet: 'cop', talkColor: '#9be89b',
+       stance: (state) => (state.getFlag('copAsleep') ? 'sleep' : undefined) },
+
+// Transient staging in a cutscene: hold a pose for a while (Esc-skippable).
+await ctx.animate('cop', 'traffic', 3200);
+const disco = ctx.animate('cop', 'disco', 3600); // runs while others talk
+await ctx.playerSay('Und ein überraschend ehrgeiziger Discofinger.');
+await disco;
+```
 
 **The demo's toolkit.** `src/game/art/toon.ts` is a small, game-side helper
 library for the house style: `wobble()` (hand-drawn, slightly bowed edges),
@@ -749,7 +825,8 @@ The demo draws its panel and slots as `svgImages` in `src/game/art/ui.ts`.
 
 Any handler is either a **string** (spoken by the player) or an **async
 function** receiving the `ScriptContext`. Missing verbs fall back to sensible
-default responses (`engine/verbs.ts`).
+default responses (`UIStrings.defaultResponses` in `engine/strings.ts`,
+translatable per game).
 
 **NPC hotspots** bind to a live actor instead of fixed geometry — essential
 for characters that move:
@@ -769,7 +846,8 @@ gallery's Blobbo does exactly this.
 
 - **Items** (`items.ts`): id, name, icon texture, `lookAt`, and `combine` map
   for item-on-item.
-- **Actors** (`actors.ts`): id, name, speech color, texture set, speed.
+- **Actors** (`actors.ts`): id, name, speech color, texture set, speed, and
+  an optional `stance` (see [custom poses](#vector-art-svg)).
 
 ### Multiple playable characters (optional)
 
@@ -841,6 +919,7 @@ Every handler and cutscene receives a `ctx`. The essentials:
 | `ctx.playerSay(text)` / `ctx.say(actorId, text)` | Show a speech line (await to block until dismissed) |
 | `ctx.walkTo(actorId, x, y)` | Walk an actor along the floor to a point |
 | `ctx.face(actorId, dir)` | Turn an actor (`'up'`/`'down'`/`'left'`/`'right'`) |
+| `ctx.animate(actorId, pose, ms?)` | Play a custom pose (a dance, …); with `ms`, hold it that long, then back to normal |
 | `ctx.wait(ms)` | Pause |
 | `ctx.goToRoom(id, entry?)` | Fade to another room at a named entry |
 | `ctx.dialog(id)` | Run a dialog tree |
@@ -854,6 +933,7 @@ Every handler and cutscene receives a `ctx`. The essentials:
 | `ctx.playMusic(key)` / `ctx.stopMusic()` | Start/switch or fade out background music |
 | `ctx.flash(color?, ms?)` / `ctx.shake(ms?, intensity?)` | Camera effects |
 | `ctx.zoomCamera(zoom, ms?)` | Tween camera zoom (cutscene-scoped; rooms reset to 1) |
+| `ctx.toast(text)` | Short notice above the UI band that fades by itself |
 | `ctx.showTitle(text)` | Big centered title card |
 
 ## Using PNG assets
@@ -995,9 +1075,10 @@ export const labRoom: RoomDef = {
 };
 ```
 
-The demo ships three procedural tracks — `lab-theme`, `hall-theme`,
-`gallery-theme` — defined in `engine/Audio.ts`. Add your own by extending that
-`TRACKS` table (each is a bpm plus bass/lead note rows).
+The engine has built-in procedural tracks (`lab-theme`, `hall-theme`,
+`gallery-theme`, … in `engine/Audio.ts`). A game adds its own through
+`GameContent.music` — a map of `MusicTrack`s (a bpm plus bass/lead note rows),
+playable by key like the built-ins; see `src/goa/music.ts`.
 
 ### Sound effects from scripts
 
@@ -1040,8 +1121,8 @@ Bring Ned the Tentacle something *warm, fuzzy, and radioactive*:
 
 ## Testing
 
-The engine ships with an end-to-end Playwright harness (24 suites in
-`tests/`): the full demo puzzle, layers/occlusion, SVG layers and their
+The engine ships with an end-to-end Playwright harness (25 suites in
+`tests/`): the full demo puzzle, the adventure's pub riddle and game picker, layers/occlusion, SVG layers and their
 texture cache, renderer transparency, scrolling +
 world-coordinate input, ambients/scale-map/zoom, regions + cutscene skip,
 NPC-bound hotspots, ink dialogs (including save/load persistence), audio
@@ -1059,8 +1140,9 @@ node tests/run-all.mjs ink title       # just the suites matching those names
 The runner starts its own Vite dev server (suites need the dev-only
 `window.__engine` debug hook) and writes failure screenshots to
 `tests/screenshots/` (git-ignored). The same suite runs in CI on every push
-(`.github/workflows/test.yml`). To smoke-test a deployed build:
-`BASE_URL=https://your-site/ node tests/smoke.mjs`.
+(`.github/workflows/test.yml`). The suites drive the demo, so their URL
+carries `?game=demo` (`verify-goa` switches to the adventure itself). To
+smoke-test a deployed build: `BASE_URL='https://your-site/?game=demo' node tests/smoke.mjs`.
 
 `tools/gen-assets.mjs` regenerates the PNGs in `public/img` from their SVG
 sources in `src/game/art/pngSources.ts` (`OUT=public/img node tools/gen-assets.mjs`).
@@ -1071,8 +1153,8 @@ sources in `src/game/art/pngSources.ts` (`OUT=public/img node tools/gen-assets.m
   per-room (`RoomDef.assets`) so they [load lazily](#lazy-per-room-asset-loading)
   as the player explores instead of all at boot. To go fully file-based, swap
   the manifest's `svgActors`/`svgImages` for spritesheets and images.
-- **More save slots:** bump `SAVE_SLOTS` (and `SLOT_LABELS`) in
-  `engine/Engine.ts` — storage, the options menu, and the title screen's
+- **More save slots:** bump `SAVE_SLOTS` in `engine/Engine.ts` (and the
+  `slotLabels` in the UI strings) — storage, the options menu, and the title screen's
   Continue all follow it.
 - **Diagonal occlusion without slicing:** if a scene ever truly needs it,
   extend `LayerDef.depth` to accept `(actorX) => number` — the slice approach

@@ -7,9 +7,43 @@ import { RoomScene } from './engine/RoomScene';
 import { UIScene } from './engine/UIScene';
 import { GAME_W, GAME_H } from './engine/constants';
 import { chooseRendererType, installCanvasTextureUploadFix } from './engine/renderCompat';
-import { CONTENT } from './game';
+import { CONTENT as DEMO } from './game';
+import { CONTENT as GOA } from './goa';
 
-engine.registerContent(CONTENT);
+// Two games ship in one page: the adventure ("Folge dem Bass") and the
+// engine demo. The title screen picks between them; a pick reloads the page
+// with ?game=<id> and is remembered for the next visit.
+const GAMES = { goa: GOA, demo: DEMO };
+type GameId = keyof typeof GAMES;
+const GAME_KEY = 'click-o-mat-game';
+const isGame = (id: string | null): id is GameId => !!id && Object.hasOwn(GAMES, id);
+const fromUrl = new URLSearchParams(location.search).get('game');
+let stored: string | null = null;
+try {
+  stored = localStorage.getItem(GAME_KEY);
+} catch {
+  /* storage blocked: no memory of the last pick */
+}
+const current: GameId = isGame(fromUrl) ? fromUrl : isGame(stored) ? stored : 'goa';
+try {
+  localStorage.setItem(GAME_KEY, current);
+} catch {
+  /* ignore */
+}
+
+engine.registerContent(GAMES[current]);
+engine.launcher = {
+  current,
+  games: [
+    { id: 'goa', label: 'SPIEL' },
+    { id: 'demo', label: 'DEMO' },
+  ],
+  select: (id) => {
+    const url = new URL(location.href);
+    url.searchParams.set('game', id);
+    location.assign(url.toString());
+  },
+};
 
 // Debugging aid: inspect engine/audio state from the browser console (dev only).
 if (import.meta.env.DEV) {

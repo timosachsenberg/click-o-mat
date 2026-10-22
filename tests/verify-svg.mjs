@@ -6,7 +6,8 @@
  */
 import { chromium } from 'playwright';
 
-const BASE = process.env.BASE_URL ?? 'http://localhost:5173';
+// The engine-demo suites run the demo (the page's other game is the adventure).
+const BASE = process.env.BASE_URL ?? 'http://localhost:5173/?game=demo';
 const SHOT = process.env.SHOT_DIR ?? '.';
 
 const browser = await chromium.launch();

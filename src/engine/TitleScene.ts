@@ -15,6 +15,8 @@ export class TitleScene extends Phaser.Scene {
   private started = false;
   private hasSave = false;
   private continueImg!: Phaser.GameObjects.Image;
+  /** Game-picker entries (only when the page bundles several games). */
+  private pickerImgs: Array<{ id: string; img: Phaser.GameObjects.Image }> = [];
 
   constructor() {
     super('title');
@@ -52,7 +54,9 @@ export class TitleScene extends Phaser.Scene {
     this.started = false;
     this.hasSave = engine.hasSave();
 
-    pixelText(this, 'title-new', '> NEW GAME <', 9, 3, ['#9be89b', '#57a04e']);
+    this.buildGamePicker();
+
+    pixelText(this, 'title-new', engine.strings.newGame, 9, 3, ['#9be89b', '#57a04e']);
     const newImg = this.add.image(centerX, 442, 'title-new').setOrigin(0.5);
     this.tweens.add({
       targets: newImg,
@@ -66,7 +70,7 @@ export class TitleScene extends Phaser.Scene {
     pixelText(
       this,
       'title-continue',
-      'CONTINUE',
+      engine.strings.continueGame,
       9,
       3,
       this.hasSave ? ['#b0f0ff', '#4fc3e8'] : ['#45455a', '#2e2e3e']
@@ -75,7 +79,7 @@ export class TitleScene extends Phaser.Scene {
     if (!this.hasSave) this.continueImg.setAlpha(0.55);
 
     this.add
-      .text(centerX, 560, 'a Phaser 4 point-and-click adventure engine', {
+      .text(centerX, 560, engine.strings.tagline, {
         fontFamily: 'Verdana, Arial, sans-serif',
         fontSize: '13px',
         color: '#5a6a8a',
@@ -91,6 +95,14 @@ export class TitleScene extends Phaser.Scene {
 
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
       if (this.started) return;
+      const picked = this.pickerImgs.find((p) => p.img.getBounds().contains(pointer.x, pointer.y));
+      if (picked) {
+        if (picked.id !== engine.launcher?.current) {
+          this.started = true;
+          engine.launcher?.select(picked.id);
+        }
+        return;
+      }
       const overContinue =
         this.hasSave && this.continueImg.getBounds().contains(pointer.x, pointer.y);
       if (overContinue) this.continueGame();
@@ -101,6 +113,40 @@ export class TitleScene extends Phaser.Scene {
       if (event.key.toLowerCase() === 'c' && this.hasSave) this.continueGame();
       else this.startGame();
     });
+  }
+
+  /** "SPIEL · DEMO"-style picker along the top when the page bundles several
+   *  games: the current one lit, the others dimmed and clickable. */
+  private buildGamePicker(): void {
+    this.pickerImgs = [];
+    const launcher = engine.launcher;
+    if (!launcher || launcher.games.length < 2) return;
+    const gap = 48;
+    const entries = launcher.games.map((g) => {
+      const current = g.id === launcher.current;
+      const key = `title-game-${g.id}`;
+      const size = pixelText(
+        this,
+        key,
+        current ? `[${g.label}]` : g.label,
+        8,
+        3,
+        current ? ['#fff3b0', '#ff9c2a'] : ['#6a6a8a', '#45455a']
+      );
+      return { id: g.id, key, w: size.w, current };
+    });
+    const total = entries.reduce((sum, e) => sum + e.w, 0) + gap * (entries.length - 1);
+    let x = GAME_W / 2 - total / 2;
+    for (const e of entries) {
+      const img = this.add.image(x, 62, e.key).setOrigin(0, 0.5).setDepth(11);
+      if (!e.current) {
+        img.setInteractive({ useHandCursor: true });
+        img.on('pointerover', () => img.setAlpha(0.7));
+        img.on('pointerout', () => img.setAlpha(1));
+      }
+      this.pickerImgs.push({ id: e.id, img });
+      x += e.w + gap;
+    }
   }
 
   private startGame(): void {

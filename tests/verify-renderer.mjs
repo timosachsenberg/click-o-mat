@@ -9,7 +9,8 @@
  */
 import { chromium } from 'playwright';
 
-const BASE = process.env.BASE_URL ?? 'http://localhost:5173';
+// The engine-demo suites run the demo (the page's other game is the adventure).
+const BASE = process.env.BASE_URL ?? 'http://localhost:5173/?game=demo';
 const SHOT = process.env.SHOT_DIR ?? '.';
 
 const check = (label, ok, extra = '') => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}${extra ? '  ' + extra : ''}`); if (!ok) process.exitCode = 1; };
@@ -81,7 +82,9 @@ const browser = await chromium.launch({ args: ['--autoplay-policy=no-user-gestur
 // Opt-in WebGL: must boot and render with transparency intact (the ImageData
 // upload hardening is active on this path).
 {
-  const r = await bootAndSample(browser, `${BASE}?renderer=webgl`, 'webgl');
+  const url = new URL(BASE);
+  url.searchParams.set('renderer', 'webgl');
+  const r = await bootAndSample(browser, url.toString(), 'webgl');
   check('?renderer=webgl boots the WebGL renderer', r.rendererType === 2, `(type=${r.rendererType})`);
   check('webgl: transparent layer margin shows wall', near(r.inLayer, r.wall, 3), `(in-layer ${fmt(r.inLayer)} vs without layer ${fmt(r.wall)})`);
   check('webgl: lamp shade still drawn', !near(r.shade, r.behindShade), `${fmt(r.shade)} vs without layer ${fmt(r.behindShade)}`);
