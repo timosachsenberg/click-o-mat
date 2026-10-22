@@ -1,8 +1,8 @@
 import { chromium } from 'playwright';
 
 // "Folge dem Bass" — the adventure next to the demo: the title-screen game
-// picker, the German UI, the start inventory (the two-euro coin), and the
-// corner-pub riddle played through the real UI: order the only drink in
+// picker, the German UI, the start inventory (the two-euro coin), the toilet
+// steps, and the Picasso riddle played through the real UI: order the only drink in
 // stock, hand it to the Partykiller (he dances, then sleeps), get the
 // password from Ali, leave.
 
@@ -71,15 +71,25 @@ const hotspotAt = (x, y) => ev(({ x, y }) => window.__engine.roomScene.hotspotAt
 const copAnim = () => ev(() => window.__engine.roomScene.actors.get('cop').sprite.anims.currentAnim?.key ?? null);
 
 await settle(); // intro lines
-check('starts in the pub', await ev(() => window.__engine.state.currentRoom === 'kneipe'));
+check('starts in the Picasso', await ev(() => window.__engine.state.currentRoom === 'picasso'));
 check('the two-euro coin is in the inventory from the start', JSON.stringify(await inv()) === '["euro"]', JSON.stringify(await inv()));
-check('Ali hotspot sits on Ali', (await hotspotAt(560, 244)) === 'ali');
-check('Partykiller hotspot sits on him', (await hotspotAt(781, 300)) === 'cop');
+check('Ali hotspot sits on Ali', (await hotspotAt(720, 280)) === 'ali');
+check('Partykiller hotspot sits on him', (await hotspotAt(640, 330)) === 'cop');
+check('the DJ booth and the toilet door are there', (await hotspotAt(216, 250)) === 'dj' && (await hotspotAt(58, 200)) === 'wc');
 check('Ali polishes a glass when idle (stance)', await ev(() => window.__engine.roomScene.actors.get('ali').sprite.anims.currentAnim?.key === 'ali-polish-front'));
 await page.screenshot({ path: `${SHOT}/goa-02-pub.png` });
 
+// --- up the two steps to the toilet: the player climbs, keeping their size
+const scaleAt = (y) => 0.9 + 0.32 * Math.max(0, Math.min(1, (y - 300) / 145));
+await click(58, 200, { button: 'right' }); // open the toilet door
+await settle();
+const up = await ev(() => { const a = window.__engine.roomScene.actors.get('player'); return { x: a.x, y: a.y, s: a.sprite.scale }; });
+check('climbed the steps to the toilet door', Math.abs(up.x - 58) < 3 && Math.abs(up.y - 282) < 3, JSON.stringify(up));
+check('no shrinking on the steps', Math.abs(up.s - scaleAt(330)) < 0.01, `(scale ${up.s.toFixed(3)})`);
+await page.screenshot({ path: `${SHOT}/goa-02b-wc.png` });
+
 // --- Ali won't talk about the party while the Partykiller listens
-await click(560, 244, { button: 'right' }); // talk to Ali
+await click(720, 280, { button: 'right' }); // talk to Ali
 await settle();
 await pick('Ich suche die Goa');
 check('learned about the Partykiller', (await flag('knowsPartykiller')) === true);
@@ -98,7 +108,7 @@ check('paid two euros, got a Magic Woman', JSON.stringify(await inv()) === '["ma
 await click(46, 486); // "Gib"
 await click(522, 505); // first inventory slot
 check('sentence line reads German', await ev(() => window.__engine.uiScene.sentenceText?.text?.startsWith('Gib Magic Woman an') ?? true));
-await click(781, 300);
+await click(640, 330);
 const seen = new Set();
 await settle(async () => {
   const k = await copAnim();
@@ -111,7 +121,7 @@ check('the can is gone', (await inv()).length === 0);
 await page.screenshot({ path: `${SHOT}/goa-03-asleep.png` });
 
 // --- now Ali talks
-await click(560, 244, { button: 'right' });
+await click(720, 280, { button: 'right' });
 await settle();
 await pick('Also. Die Party im Wald');
 check('password: Chakabunga', (await flag('password')) === 'Chakabunga');
@@ -123,7 +133,7 @@ await page.waitForTimeout(300);
 check('quick save lands in the game\'s own slot', await ev(() => !!localStorage.getItem('pnc-save-goa-0') && !localStorage.getItem('pnc-save-0')));
 
 // --- leave
-await click(86, 200, { button: 'right' }); // open the door
+await click(362, 220, { button: 'right' }); // open the door
 await settle();
 check('chapter done', (await flag('chapterDone')) === true);
 await page.screenshot({ path: `${SHOT}/goa-04-end.png` });

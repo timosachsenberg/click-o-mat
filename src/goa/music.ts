@@ -2,7 +2,7 @@ import type { MusicTrack } from '../engine/Audio';
 
 /** Procedural chiptune loops (semitones from A4; one entry per 8th note). */
 export const GOA_MUSIC: Record<string, MusicTrack> = {
-  // Ali's Eck: a lazy, slightly wistful Kneipen-Schlager shuffle in F.
+  // The Picasso: a lazy, slightly wistful Kneipen-Schlager shuffle in F.
   'pub-theme': {
     bpm: 84,
     bassType: 'triangle',

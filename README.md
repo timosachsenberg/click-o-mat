@@ -15,7 +15,7 @@ a few PNGs that exercise the image pipeline (themselves rendered from SVG
 sources), the whole thing is code.
 
 Next to the demo lives the start of an actual adventure, **„Folge dem Bass“**
-(German, `src/goa/`): you begin in Ali's corner pub with nothing but a
+(German, `src/goa/`): you begin in the **Picasso**, Ali's basement bar, with nothing but a
 two-euro coin and need the password for tonight's Goa party in the forest. The
 **title screen picks between the two** (SPIEL · DEMO); `?game=goa` /
 `?game=demo` select one directly, and the last pick is remembered.
@@ -104,7 +104,7 @@ Phaser's own WebGL-first detection.
 
 ### Playing the adventure („Folge dem Bass“)
 
-You're in **Alis Eck**, a corner pub, with a two-euro coin in your pocket.
+You're in the **Picasso**, Ali's basement bar, with a two-euro coin in your pocket.
 Ali knows where tonight's Goa party in the forest is — but the only other
 guest, a retired cop known as *der Partykiller*, is listening, and Ali won't
 talk while he does.
@@ -453,7 +453,8 @@ src/
   goa/                 The adventure ("Folge dem Bass", German) — same layout:
     index.ts           its GameContent (German UI strings, start inventory)
     art/cast.ts        Player, Ali, the Partykiller (on the demo's puppet rig)
-    rooms/kneipe.ts    Alis Eck, the corner pub
+    art/props.ts       The bar's props (columns, slot machines, DJ booth, …)
+    rooms/picasso.ts   The Picasso, Ali's basement bar
 public/
   img/                 PNG assets (served verbatim, copied into dist/)
 tools/
@@ -497,7 +498,7 @@ game.
 export const CONTENT: GameContent = {
   id: 'goa',              // namespaces the save slots (pnc-save-goa-*)
   rooms, items, actors, dialogs, assets, theme,
-  playerId: 'player', startRoom: 'kneipe', startEntry: 'start',
+  playerId: 'player', startRoom: 'picasso', startEntry: 'start',
   startItems: ['euro'],   // carried from the very beginning
   strings: DE_STRINGS,    // the engine's UI text, translated (see below)
   music: GOA_MUSIC,       // extra procedural tracks, played by key

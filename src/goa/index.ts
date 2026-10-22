@@ -4,7 +4,7 @@ import { ITEMS } from './items';
 import { DIALOGS } from './dialogs';
 import { DE_STRINGS } from './strings';
 import { GOA_MUSIC } from './music';
-import { kneipeRoom } from './rooms/kneipe';
+import { picassoRoom } from './rooms/picasso';
 import { GOA_CAST } from './art/cast';
 import { GOA_ICONS } from './art/icons';
 import { UI_IMAGES, UI_THEME } from '../game/art/ui';
@@ -13,15 +13,15 @@ import '@fontsource/fredoka/500.css';
 import '@fontsource/fredoka/700.css';
 
 /**
- * "Folge dem Bass" — the adventure proper (in German). It starts in Ali's
- * corner pub with nothing but a two-euro coin; the goal is the password for
- * tonight's Goa party in the forest. The engine demo ships alongside it
+ * "Folge dem Bass" — the adventure proper (in German). It starts in the
+ * Picasso, Ali's basement bar, with nothing but a two-euro coin; the goal is
+ * the password for tonight's Goa party in the forest. The engine demo ships alongside it
  * (src/game); the title screen picks between the two.
  */
 export const CONTENT: GameContent = {
   id: 'goa',
   rooms: {
-    kneipe: kneipeRoom,
+    picasso: picassoRoom,
   },
   items: ITEMS,
   actors: ACTORS,
@@ -31,7 +31,7 @@ export const CONTENT: GameContent = {
   strings: DE_STRINGS,
   music: GOA_MUSIC,
   playerId: 'player',
-  startRoom: 'kneipe',
+  startRoom: 'picasso',
   startEntry: 'start',
   startItems: ['euro'],
 };

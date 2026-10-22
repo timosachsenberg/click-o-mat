@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A SCUMM-style point-and-click adventure engine in TypeScript on Phaser 4, plus a fully playable demo game ("Ned the Tentacle") that exercises every engine feature. The demo's art is SVG written in code (a DOTT / Return-to-Monkey-Island cartoon style: wobbly inked shapes, cel shading, paper grain), rasterized at runtime; its audio is procedural. The PNGs in `public/img/` (gallery, Blobbo, pillar, sconce, bird, rain) exercise the file pipeline and are rendered from SVG sources in `src/game/art/pngSources.ts` by `tools/gen-assets.mjs`.
 
-Next to the demo lives the actual adventure, **„Folge dem Bass“** (`src/goa/`, German UI and dialog): it starts in Ali's corner pub (`rooms/kneipe.ts`) with a two-euro coin in the inventory. `main.ts` registers one of the two games per page load — `?game=goa|demo`, else the last pick (localStorage), else the adventure — and the title screen's picker (SPIEL · DEMO) switches by reloading with `?game=`.
+Next to the demo lives the actual adventure, **„Folge dem Bass“** (`src/goa/`, German UI and dialog): it starts in the Picasso, Ali's basement bar (`rooms/picasso.ts`, after the concept art in issue #5), with a two-euro coin in the inventory. `main.ts` registers one of the two games per page load — `?game=goa|demo`, else the last pick (localStorage), else the adventure — and the title screen's picker (SPIEL · DEMO) switches by reloading with `?game=`.
 
 ## Commands
 

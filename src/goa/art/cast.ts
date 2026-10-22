@@ -20,7 +20,7 @@ import {
  * The cast of "Folge dem Bass", built on the demo's puppet rig (same joints,
  * same DOTT proportions) with their own heads and clothes:
  *  - der Spieler: beanie, hoodie, cargo pants — on his way to a forest rave;
- *  - Ali: the landlord, polishing a glass behind his counter;
+ *  - Ali: the landlord of the Picasso, polishing a glass behind his counter;
  *  - der Partykiller: a retired cop on a bar stool, in his old green uniform.
  *    He sits (idle/talk), and has the custom poses 'traffic' and 'disco' (his
  *    dance), 'stand', and 'sleep' (arms crossed, snoring).
@@ -211,9 +211,7 @@ function aliHeadFront(r: Rig, back: boolean): string {
   s.push(path('M-10 -7.8Q-6 -10.6 -2 -8.2M2 -8.2Q6 -10.6 10 -7.8', { stroke: L.hair, sw: 2.8 }));
   s.push(ellipse(0, 4.6, 4.4, 4.8, { fill: L.skin, stroke: INK, sw: 1.8 }));
   s.push(circle(-1.5, 3, 1.1, { fill: '#ffffff', opacity: 0.6 }));
-  s.push(mouthFront(r.mouth, 12.6, 3.2));
-  // The moustache: the pride of the house.
-  s.push(path(blob([[-9.5, 10.5], [-5, 8], [0, 9], [5, 8], [9.5, 10.5], [5.5, 12], [0, 11], [-5.5, 12]]), { fill: L.hair, stroke: INK, sw: 1.5 }));
+  s.push(mouthFront(r.mouth, 11.6, 3.4));
   // Hair: short, neat, a proud widow's peak.
   s.push(path(blob([[-15, -1], [-15.5, -11], [-9, -19], [0, -21], [9, -19], [15.5, -11], [15, -1], [12.5, -9], [6, -11], [0, -8.5], [-6, -11], [-12.5, -9]]), { fill: L.hair, stroke: INK, sw: OUT }));
   s.push(path(curve([[-8, -15], [0, -17.5], [8, -15]]), { stroke: L.hairShade, sw: 1.3 }));
@@ -228,8 +226,7 @@ function aliHeadSide(r: Rig): string {
   s.push(eyeSide(r, 8.2, -2));
   s.push(path('M4.5 -8.8Q8.5 -11 12 -8.6', { stroke: L.hair, sw: 2.6 }));
   s.push(path(blob([[11.5, -2], [17, -0.5], [19.5, 4], [16.5, 8], [12, 7.5], [10.5, 3]]), { fill: L.skin, stroke: INK, sw: 1.8 }));
-  s.push(mouthSide(r.mouth, 10, 12.8));
-  s.push(path(blob([[6.5, 9.5], [12, 8.5], [16.5, 10.5], [12.5, 12.4], [7, 12]]), { fill: L.hair, stroke: INK, sw: 1.4 }));
+  s.push(mouthSide(r.mouth, 10, 11.8));
   s.push(path(blob([[-14, 6], [-15.5, -6], [-10, -16.5], [0, -21], [9, -19], [13.5, -12.5], [10, -9.5], [3, -10], [-3, -6], [-7, 1], [-10, 8]]), { fill: L.hair, stroke: INK, sw: OUT }));
   return s.join('');
 }
@@ -395,7 +392,8 @@ const COP_DY = COP_H - 120;
 /** Seated on the bar stool: hips at seat height, feet on the foot rest. */
 function seatedRig(f: number, mouth: Mouth = 'shut'): Rig {
   const base = frontRig('idle', f % 8);
-  const hipY = 89;
+  // Perched on a bar stool: hips up at seat height, feet on the foot rest.
+  const hipY = 80;
   const sy = hipY - 26 - base.breath * 0.7;
   return {
     ...base,
