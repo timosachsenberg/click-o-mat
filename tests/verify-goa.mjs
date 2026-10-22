@@ -2,9 +2,11 @@ import { chromium } from 'playwright';
 
 // "Folge dem Bass" — the adventure next to the demo: the title-screen game
 // picker, the German UI, the start inventory (the two-euro coin), the toilet
-// steps, and the Picasso riddle played through the real UI: order the only drink in
-// stock, hand it to the Partykiller (he dances, then sleeps), get the
-// password from Ali, leave.
+// steps, and the Picasso riddle played through the real UI: buy the only
+// drink in stock, drink it, swap the can for 25 cents, jam the coin in the
+// jukebox, play Ali's song, and during three refrains slide Ali's ouzo in
+// front of the Partykiller — he dances himself to sleep, Ali gives up the
+// password.
 
 const BASE = process.env.BASE_URL ?? 'http://localhost:5173';
 const SHOT = process.env.SHOT_DIR ?? '.';
@@ -69,13 +71,27 @@ const flag = (k) => ev((k) => window.__engine.state.getFlag(k), k);
 const inv = () => ev(() => [...window.__engine.state.inventory]);
 const hotspotAt = (x, y) => ev(({ x, y }) => window.__engine.roomScene.hotspotAt({ x, y })?.id ?? null, { x, y });
 const copAnim = () => ev(() => window.__engine.roomScene.actors.get('cop').sprite.anims.currentAnim?.key ?? null);
+const aliAnim = () => ev(() => window.__engine.roomScene.actors.get('ali').sprite.anims.currentAnim?.key ?? null);
+const useItemOn = async (x, y) => {
+  await click(522, 505); // the (only) item, in hand
+  await click(x, y);
+  await settle();
+};
+const waitFor = async (fn, ms, label) => {
+  for (let t = 0; t < ms; t += 200) {
+    if (await fn()) return true;
+    await page.waitForTimeout(200);
+  }
+  console.log(`  (timed out waiting for ${label})`);
+  return false;
+};
 
 await settle(); // intro lines
 check('starts in the Picasso', await ev(() => window.__engine.state.currentRoom === 'picasso'));
 check('the two-euro coin is in the inventory from the start', JSON.stringify(await inv()) === '["euro"]', JSON.stringify(await inv()));
 check('Ali hotspot sits on Ali', (await hotspotAt(720, 280)) === 'ali');
 check('Partykiller hotspot sits on him', (await hotspotAt(640, 330)) === 'cop');
-check('the DJ booth and the toilet door are there', (await hotspotAt(216, 250)) === 'dj' && (await hotspotAt(58, 200)) === 'wc');
+check('DJ booth, toilet door and jukebox are there', (await hotspotAt(194, 250)) === 'dj' && (await hotspotAt(58, 200)) === 'wc' && (await hotspotAt(376, 240)) === 'jukebox');
 check('Ali polishes a glass when idle (stance)', await ev(() => window.__engine.roomScene.actors.get('ali').sprite.anims.currentAnim?.key === 'ali-polish-front'));
 await page.screenshot({ path: `${SHOT}/goa-02-pub.png` });
 
@@ -100,25 +116,81 @@ check('no password while he listens', !texts.some((t) => t.startsWith('Also. Die
 await pick('Was gibt');
 await pick('Eine Red Cow');
 await pick('Ein Flying Pony');
+await pick('Eine Magic Woman');
 await pick('Dann eine Magic Woman');
 await settle();
-check('paid two euros, got a Magic Woman', JSON.stringify(await inv()) === '["magicwoman"]', JSON.stringify(await inv()));
+check('paid the last two euros, got a Magic Woman', JSON.stringify(await inv()) === '["magicwoman"]', JSON.stringify(await inv()));
 
-// --- give it to the Partykiller: Gib (verb grid, top left) → item → him
+// --- giving it back full: "Zwinker, zwinker" — and a wink
 await click(46, 486); // "Gib"
-await click(522, 505); // first inventory slot
-check('sentence line reads German', await ev(() => window.__engine.uiScene.sentenceText?.text?.startsWith('Gib Magic Woman an') ?? true));
-await click(640, 330);
+await click(522, 505);
+check('sentence line reads German', await ev(() => window.__engine.uiScene.sentenceText.text.startsWith('Gib Magic Woman an')));
+await click(720, 280);
+const aliSeen = new Set();
+await settle(async () => aliSeen.add(await aliAnim()));
+check('Ali winks very conspicuously', aliSeen.has('ali-wink-front'), [...aliSeen].join(','));
+check('and keeps out of a full can', JSON.stringify(await inv()) === '["magicwoman"]');
+
+// --- drink it (Benutze + can), return the empty can for 25 cents
+await click(304, 486); // "Benutze"
+await click(522, 505);
+await settle();
+check('drank the can', JSON.stringify(await inv()) === '["dose"]', JSON.stringify(await inv()));
+await click(46, 486);
+await click(522, 505);
+await click(720, 280);
+await settle();
+check('deposit: a 25-cent coin', JSON.stringify(await inv()) === '["cent25"]', JSON.stringify(await inv()));
+
+// --- the jukebox eats the coin, but the credit stays
+await useItemOn(376, 240);
+check('the coin is stuck, the credit stays', (await flag('jukeboxCredit')) === true && (await inv()).length === 0);
+await pick('„Polonaise');
+check('a wrong song plays (costs nothing)', (await flag('song')) === 'polonaise');
+await click(304, 486); // Benutze
+await click(376, 240); // jukebox
+await settle();
+await pick('„Noch einen auf die Gemütlichkeit');
+check('Ali\'s song is on', (await flag('song')) === 'gemuetlichkeit');
+
+// --- outside the refrain, hands off the ouzo
+await click(772, 330, { button: 'right' }); // pick up
+await settle();
+check('grabbing the ouzo outside the refrain gets caught', (await inv()).length === 0 && ((await flag('ouzoAt')) ?? 'coaster') === 'coaster');
+
+// --- three refrains, three ouzos
+for (let n = 1; n <= 3; n++) {
+  const inRefrain = await waitFor(() => flag('refrain'), 30000, `refrain ${n}`);
+  if (n === 1) {
+    check('refrain: Ali sings with his eyes shut, the guest gropes for a glass', inRefrain && (await aliAnim())?.startsWith('ali-sing') && (await copAnim()) === 'cop-reach-back', `${await aliAnim()} / ${await copAnim()}`);
+    await page.screenshot({ path: `${SHOT}/goa-03-refrain.png` });
+  }
+  await click(772, 330, { button: 'right' }); // take the ouzo
+  await settle();
+  await useItemOn(684, 330); // onto the counter in front of him
+  check(`ouzo ${n} served during the refrain`, (await flag('ouzoAt')) === 'cop' || ((await flag('ouzoCount')) ?? 0) >= n);
+  const drunk = await waitFor(async () => ((await flag('ouzoCount')) ?? 0) >= n, 16000, `ouzo ${n}`);
+  check(`he downs ouzo ${n} on "Trink!"`, drunk, `(count ${await flag('ouzoCount')})`);
+  if (n < 3) {
+    await waitFor(async () => !(await flag('refrain')), 16000, `end of refrain ${n}`);
+    await settle();
+    check(`Ali refills out of habit (${n})`, (await waitFor(async () => !(await flag('ouzoEmpty')), 6000, 'refill')) && (await flag('ouzoAt')) === 'coaster');
+  }
+}
 const seen = new Set();
 await settle(async () => {
   const k = await copAnim();
   if (k) seen.add(k);
 });
-check('he directs traffic', seen.has('cop-traffic-front'), [...seen].join(','));
+await waitFor(() => flag('copAsleep'), 20000, 'sleep');
+await settle(async () => {
+  const k = await copAnim();
+  if (k) seen.add(k);
+});
+check('"Und jetzt tanzt!": he directs traffic', seen.has('cop-traffic-front'), [...seen].join(','));
 check('then the disco finger', seen.has('cop-disco-front'));
-check('and falls asleep', (await flag('copAsleep')) === true && (await copAnim()) === 'cop-sleep-front', String(await copAnim()));
-check('the can is gone', (await inv()).length === 0);
-await page.screenshot({ path: `${SHOT}/goa-03-asleep.png` });
+check('and falls asleep on his stool', (await flag('copAsleep')) === true && (await copAnim())?.startsWith('cop-sleep'), String(await copAnim()));
+await page.screenshot({ path: `${SHOT}/goa-04-asleep.png` });
 
 // --- now Ali talks
 await click(720, 280, { button: 'right' });
@@ -133,10 +205,10 @@ await page.waitForTimeout(300);
 check('quick save lands in the game\'s own slot', await ev(() => !!localStorage.getItem('pnc-save-goa-0') && !localStorage.getItem('pnc-save-0')));
 
 // --- leave
-await click(362, 220, { button: 'right' }); // open the door
+await click(311, 220, { button: 'right' }); // open the door
 await settle();
 check('chapter done', (await flag('chapterDone')) === true);
-await page.screenshot({ path: `${SHOT}/goa-04-end.png` });
+await page.screenshot({ path: `${SHOT}/goa-05-end.png` });
 
 // --- the picker switches to the demo (reload with ?game=demo)
 await page.goto(withGame('goa'));

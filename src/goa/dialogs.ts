@@ -1,11 +1,12 @@
 import type { DialogChoice, DialogDef } from '../engine/types';
+import { SONGS, playSong, type SongId } from './jukebox';
 
 /** Ordering at the bar: the free choice of drinks. Shared by talking to Ali
  *  and by handing him the coin. */
 function drinkChoices(back: Partial<DialogChoice>): DialogChoice[] {
   return [
     {
-      text: 'Eine Red Cow, bitte.',
+      text: 'Eine Red Cow?',
       script: async (ctx) => {
         await ctx.say('ali', 'Aus.');
       },
@@ -17,16 +18,23 @@ function drinkChoices(back: Partial<DialogChoice>): DialogChoice[] {
       },
     },
     {
+      text: 'Eine Magic Woman?',
+      script: async (ctx) => {
+        await ctx.say('ali', 'Die haben wir.');
+      },
+    },
+    {
       text: 'Dann eine Magic Woman.',
       end: true,
       script: async (ctx) => {
-        await ctx.say('ali', 'Die haben wir.');
+        await ctx.say('ali', 'Gute Wahl, mein Lieber.');
+        await ctx.playerSay('Ich hatte eine Wahl?');
+        await ctx.say('ali', 'Du durftest alle drei vorlesen.');
         if (!ctx.hasItem('euro')) {
           await ctx.say('ali', 'Zwei Euro.');
           await ctx.playerSay('Hab ich nicht mehr.');
           return;
         }
-        await ctx.say('ali', 'Zwei Euro, inklusive Pfand.');
         ctx.removeItem('euro');
         ctx.face('ali', 'up');
         await ctx.wait(800);
@@ -34,11 +42,34 @@ function drinkChoices(back: Partial<DialogChoice>): DialogChoice[] {
         ctx.face('ali', 'down');
         ctx.setFlag('boughtDrink');
         ctx.addItem('magicwoman');
-        await ctx.say('ali', 'Bitte schön, mein Lieber.');
+        await ctx.playerSay('Meine letzten zwei Euro. Gut angelegt. Hoffentlich.');
       },
     },
     { text: 'Doch nichts.', ...back },
   ];
+}
+
+/** What the guests make of each song. Only one of them has the refrain. */
+const SONG_REACTIONS: Record<SongId, Array<['ali' | 'cop', string]>> = {
+  pfand: [['cop', 'Pfandbetrug ist auch Betrug. Selbst im Schlager.']],
+  baggersee: [['ali', 'Barfuß. Im Keller. Mutig.']],
+  polonaise: [['cop', 'Polonaise ohne Anmeldung ist eine Versammlung.']],
+  gemuetlichkeit: [['ali', 'Oh! Mein Lied.']],
+};
+
+function songChoice(id: SongId): DialogChoice {
+  return {
+    text: `„${SONGS[id].title}“`,
+    say: false,
+    end: true,
+    script: async (ctx) => {
+      await playSong(ctx, id);
+      for (const [who, line] of SONG_REACTIONS[id]) {
+        if (who === 'cop' && ctx.flag('copAsleep')) continue;
+        await ctx.say(who, line);
+      }
+    },
+  };
 }
 
 export const DIALOGS: Record<string, DialogDef> = {
@@ -87,6 +118,15 @@ export const DIALOGS: Record<string, DialogDef> = {
             },
           },
           {
+            text: 'Was ist das für ein Glas neben dir?',
+            once: true,
+            script: async (ctx) => {
+              await ctx.say('ali', 'Mein Feierabend-Ouzo. Finger weg, mein Lieber.');
+              await ctx.say('cop', 'Ich hab ein Auge drauf.');
+              await ctx.say('ali', 'Außer bei meinem Lied. Da singen wir alle mit. Mit geschlossenen Augen.');
+            },
+          },
+          {
             text: 'Was gibt’s zu trinken?',
             if: (s) => !s.getFlag('boughtDrink'),
             next: 'drinks',
@@ -104,6 +144,23 @@ export const DIALOGS: Record<string, DialogDef> = {
         ],
       },
       drinks: { choices: drinkChoices({ next: 'root' }) },
+    },
+  },
+
+  // The jukebox, once the coin is stuck in it: the credit never runs out.
+  jukebox: {
+    id: 'jukebox',
+    start: 'songs',
+    nodes: {
+      songs: {
+        choices: [
+          songChoice('pfand'),
+          songChoice('baggersee'),
+          songChoice('polonaise'),
+          songChoice('gemuetlichkeit'),
+          { text: 'Lieber nichts.', say: false, end: true },
+        ],
+      },
     },
   },
 
@@ -144,9 +201,9 @@ export const DIALOGS: Record<string, DialogDef> = {
             text: 'Sie sehen müde aus.',
             script: async (ctx) => {
               await ctx.say('cop', 'Müde? Ich? Ich schlafe nicht. Ich lauere.');
-              await ctx.playerSay('Auch nicht mit einem Energydrink? Geht aufs Haus.');
-              await ctx.say('cop', 'Rühr ich nicht an. Letztes Mal hab ich getanzt.');
-              await ctx.say('cop', 'Danach hab ich vierzehn Stunden geschlafen.');
+              await ctx.playerSay('Und mal einen trinken?');
+              await ctx.say('cop', 'Nie. Außer die Musik verlangt es. Dann muss man. Das ist quasi Vorschrift.');
+              await ctx.say('cop', 'Drei Stück, und ich tanz auf dem Tresen. Hat man mir erzählt.');
               await ctx.playerSay('...Interessant.');
             },
           },

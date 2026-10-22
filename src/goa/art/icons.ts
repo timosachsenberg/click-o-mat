@@ -52,7 +52,62 @@ function magicWoman(): string {
   ].join('');
 }
 
+/** The empty can, a little crumpled. */
+function emptyCan(): string {
+  return [
+    shadow(32, 13),
+    group(
+      [
+        path('M-10 -17L10 -19L11 -4L7 2L11 8L10 17L-10 18L-11 6L-7 0L-11 -6Z', { fill: '#6a3a90', stroke: INK, sw: 2.4 }),
+        path('M3 -18L9 -19L10 -4L6 2L10 8L9 17L4 17Z', { fill: '#4a2468' }),
+        path('M-10 -14H10M-10 14H10', { stroke: '#a8acb4', sw: 2.6 }),
+        path('M-7 -1L7 1', { stroke: INK, sw: 1.4 }),
+        text(0, -4, 'MAGIC', { size: 5, fill: '#ffe6f4' }),
+        ellipse(0, -19, 9, 2.5, { fill: '#a8acb4', stroke: INK, sw: 1.4 }),
+      ],
+      'translate(32 23) rotate(-14)'
+    ),
+  ].join('');
+}
+
+/** The 25-cent coin (which doesn't exist — and yet, here it is). */
+function cent25(): string {
+  return [
+    shadow(32, 13),
+    group(
+      [
+        circle(0, 0, 13, { fill: '#d8a040', stroke: INK, sw: 2.4 }),
+        circle(0, 0, 10.5, { stroke: '#a87420', sw: 1.2 }),
+        path('M-6 -5A7 7 0 0 1 2 -8', { stroke: '#fff1b8', sw: 1.6 }),
+        text(0, 4.5, '25', { size: 11, fill: '#6a4410' }),
+        text(0, 10.5, 'CENT', { size: 4, fill: '#6a4410', weight: 700 }),
+      ],
+      'translate(32 24) rotate(10)'
+    ),
+  ].join('');
+}
+
+/** Ali's ouzo, in its little glass. */
+function ouzo(): string {
+  return [
+    shadow(32, 10),
+    group(
+      [
+        path('M-8 -16H8L6 16H-6Z', { fill: '#e8f4f8', stroke: INK, sw: 2.2, opacity: 0.95 }),
+        path('M-7 -6H7L5.6 14H-5.6Z', { fill: '#f8f6ea' }),
+        path('M-5 -13L-4 12', { stroke: '#ffffff', sw: 1.6 }),
+        rect(-6.5, -3, 13, 6, { fill: '#2a6ac0', opacity: 0.85 }),
+        text(0, 2, 'ALI', { size: 5, fill: '#ffffff' }),
+      ],
+      'translate(32 24)'
+    ),
+  ].join('');
+}
+
 export const GOA_ICONS: SvgImageAsset[] = [
+  { key: 'icon-dose', width: 64, height: 48, svg: emptyCan() },
+  { key: 'icon-cent25', width: 64, height: 48, svg: cent25() },
+  { key: 'icon-ouzo', width: 64, height: 48, svg: ouzo() },
   { key: 'icon-euro', width: 64, height: 48, svg: euro() },
   { key: 'icon-magicwoman', width: 64, height: 48, svg: magicWoman() },
 ];
