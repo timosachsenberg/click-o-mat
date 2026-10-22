@@ -4,6 +4,7 @@ import { INK, defs, ellipse, glow, grainDefs, grainOverlay, group, inked, line, 
 import {
   PAL,
   acUnit,
+  aliCoaster,
   column,
   discoBall,
   djBooth,
@@ -12,23 +13,28 @@ import {
   flyer,
   heartStool,
   highTable,
+  jukebox,
   metalShelf,
   navyStool,
   neonSign,
+  ouzoGlass,
   picassoPainting,
+  refrainBanner,
   slotMachine,
   tileFloor,
   wallClock,
   wcDoor,
   whiteboard,
 } from '../art/props';
+import { resetJukebox } from '../jukebox';
 
 // ---- layout ----------------------------------------------------------------------
 // The Picasso, a basement bar (after the concept art in issue #5). Left: the
-// toilet door up two steps, the DJ booth under a disco ball, the stairs out.
-// Centre: a row of slot machines. Right: the counter runs diagonally from
-// the back left into the room, with Ali behind it in front of the lit back
-// bar, and the Partykiller on a bar stool in front of it.
+// toilet door up two steps, the DJ booth under a disco ball, the stairs out,
+// the jukebox. Centre: a row of slot machines. Right: the counter runs
+// diagonally from the back left into the room, with Ali behind it in front
+// of the lit back bar (his ouzo on its coaster at his side), and the
+// Partykiller on a bar stool in front of it, his back to us.
 //
 // Depth: the counter is one occluder (baseline 375) — Ali stands behind it
 // at y=362, everybody else stays in front of its diagonal face (the walk
@@ -77,14 +83,15 @@ function picassoBg(): string {
   s.push(rect(0, 294, 960, 10, { fill: '#3a1e3a', stroke: INK, sw: 2 }));
 
   // Left: clock, toilet up two steps, DJ booth under the disco ball, flyer.
-  s.push(wallClock(158, 96, 17));
+  s.push(wallClock(150, 96, 17));
   s.push(wcDoor(26, 68, 134, WC.sill, WC.floor));
-  s.push(flyer(192, 128, 48, 60));
-  s.push(djBooth(150, 132, 300));
-  s.push(discoBall(216, 52, 82, 14));
-  // Back column, the stairs out, the air conditioner, the drinks board.
-  s.push(column(306, 46, 302, 22));
-  s.push(exitDoor(332, 148, 58, 152));
+  s.push(flyer(170, 128, 48, 60));
+  s.push(djBooth(138, 112, 300));
+  s.push(discoBall(194, 52, 82, 14));
+  // Back column, the stairs out (the jukebox is its own layer), the air
+  // conditioner, the drinks board.
+  s.push(column(264, 46, 302, 20));
+  s.push(exitDoor(284, 148, 54, 152));
   s.push(acUnit(402, 54, 98, 26));
   s.push(whiteboard(398, 150, 116, 70));
   // The genuine Picasso, the neon sign, a row of slot machines.
@@ -101,7 +108,7 @@ function picassoBg(): string {
   s.push(duct([418, 104], [990, 20], 17));
 
   s.push(glow('pcFloorPool', 560, 380, 300, '#ffc070', 0.22, 60));
-  s.push(glow('pcDjPool', 216, 310, 120, '#4ae8ff', 0.18, 30));
+  s.push(glow('pcDjPool', 194, 310, 110, '#4ae8ff', 0.18, 30));
   s.push(vignette('pcVig', 960, 450, 0.5, '#1e1040'));
   s.push(grainOverlay(960, 450));
   return s.join('');
@@ -132,48 +139,56 @@ function picassoCounter(): string {
   s.push(rect(927, 330, 18, 8, { fill: '#f4f0e6', stroke: INK, sw: 1 }));
   s.push(ellipse(560, 328, 13, 4, { fill: '#e8dcc0', stroke: INK, sw: 1.4 }));
   s.push(ellipse(560, 325, 9, 2.5, { fill: '#c89a5a' }));
+  s.push(aliCoaster(OUZO.coaster.x, OUZO.coaster.y));
   return s.join('');
 }
 
+/** Where Ali's ouzo stands: on his coaster, or in front of the Partykiller. */
+const OUZO = { coaster: { x: 772, y: 338 }, cop: { x: 684, y: 332 } };
+
 // ---- scripts ---------------------------------------------------------------------
 
-/** "Ich zeig das an": the Partykiller reacts to petty offences — while awake. */
+/** "Ich zeig das an": the Partykiller turns round to object — while awake. */
 async function anzeige(ctx: ScriptContext, line: string): Promise<boolean> {
   if (ctx.flag('copAsleep')) return false;
+  ctx.face('cop', 'down');
   await ctx.say('cop', line);
+  ctx.face('cop', 'up');
   return true;
 }
 
-/** The Partykiller drinks the Magic Woman, dances, and sleeps. */
-async function giveMagicWoman(ctx: ScriptContext): Promise<void> {
-  await ctx.playerSay('Eine kleine Aufmerksamkeit. Von einem dankbaren Bürger.');
-  await ctx.say('cop', 'Ein Geschenk? Das ist Vorteilsannahme.');
-  await ctx.wait(500);
-  await ctx.say('cop', '...Aber ich bin ja außer Dienst.');
-  ctx.removeItem('magicwoman');
-  ctx.sfx('open');
-  await ctx.wait(700);
-  await ctx.say('cop', 'Hm. Schmeckt nach Gummibärchen und Ordnungswidrigkeit.');
-  await ctx.wait(400);
-  ctx.playMusic('disco-theme');
-  await ctx.animate('cop', 'stand', 500);
-  const traffic = ctx.animate('cop', 'traffic', 3200);
-  await ctx.wait(500);
-  await ctx.playerSay('Sieht aus, als würde er eine Kreuzung regeln.');
-  await traffic;
-  const disco = ctx.animate('cop', 'disco', 3600);
-  await ctx.wait(400);
-  await ctx.playerSay('Oh. Jetzt kommt die Hüfte dazu.');
-  await ctx.playerSay('Und ein überraschend ehrgeiziger Discofinger.');
-  await disco;
-  await ctx.animate('cop', 'stand', 300);
-  ctx.sfx('step');
-  ctx.shake(150, 0.004);
-  ctx.setFlag('copAsleep');
+/** Hands off Ali's ouzo — unless the refrain has everybody's eyes shut. */
+async function takeOuzo(ctx: ScriptContext): Promise<void> {
+  if (ctx.flag('ouzoEmpty')) {
+    await ctx.playerSay('Leer. Ali füllt den bestimmt gleich wieder auf.');
+    return;
+  }
+  if (!ctx.flag('refrain')) {
+    if (await anzeige(ctx, 'Zugriff auf fremdes Anisgetränk. Hab ich gesehen.')) {
+      await ctx.say('ali', 'Der bleibt hier.');
+    } else {
+      await ctx.say('ali', 'Der bleibt hier, mein Lieber.');
+    }
+    return;
+  }
+  ctx.setFlag('ouzoAt', 'player');
+  ctx.addItem('ouzo');
   await ctx.repaint();
-  ctx.playMusic('pub-theme');
-  await ctx.wait(900);
-  await ctx.say('ali', 'Früher hat er wenigstens noch gewartet, bis die Party vorbei war.');
+}
+
+/** Put the ouzo down on the counter right in front of the Partykiller. */
+async function serveOuzo(ctx: ScriptContext): Promise<void> {
+  ctx.removeItem('ouzo');
+  if (!ctx.flag('refrain')) {
+    ctx.setFlag('ouzoAt', 'coaster');
+    await ctx.repaint();
+    await ctx.say('ali', 'Der bleibt hier.');
+    return;
+  }
+  ctx.setFlag('ouzoAt', 'cop');
+  ctx.sfx('open');
+  await ctx.repaint();
+  await ctx.playerSay('Direkt vor die Nase.');
 }
 
 async function leave(ctx: ScriptContext): Promise<void> {
@@ -220,10 +235,10 @@ const HOTSPOTS: HotspotDef[] = [
   at('steps', 'Stufen', R(8, 276, 108, 54), P(60, 338), 'up', {
     on: { lookat: 'Zwei Stufen. Der Höhepunkt jeder Nacht im Picasso.' },
   }),
-  at('clock', 'Uhr', R(138, 76, 40, 40), P(170, 330), 'up', {
+  at('clock', 'Uhr', R(130, 76, 40, 40), P(150, 330), 'up', {
     on: { lookat: 'Kurz vor zwölf. Im Wald geht’s jetzt los.' },
   }),
-  at('flyer', 'Flyer', R(188, 124, 56, 68), P(216, 326), 'up', {
+  at('flyer', 'Flyer', R(166, 124, 56, 68), P(194, 326), 'up', {
     on: {
       lookat: async (ctx) => {
         await ctx.playerSay('„GOA IM WALD – Vollmond“. Ort: drei Fragezeichen.');
@@ -236,10 +251,10 @@ const HOTSPOTS: HotspotDef[] = [
       },
     },
   }),
-  at('discoball', 'Discokugel', R(198, 54, 36, 44), P(216, 326), 'up', {
+  at('discoball', 'Discokugel', R(176, 54, 36, 44), P(194, 326), 'up', {
     on: { lookat: 'Eine Discokugel. Dreht sich nur, wenn jemand tanzt. Also nie.' },
   }),
-  at('dj', 'DJ-Pult', R(148, 200, 136, 100), P(216, 326), 'up', {
+  at('dj', 'DJ-Pult', R(136, 200, 116, 100), P(194, 326), 'up', {
     on: {
       lookat: 'Zwei Plattenspieler, ein Mischpult, Kopfhörer. Hier legte DJ Ali auf. 1994.',
       use: async (ctx) => {
@@ -259,13 +274,44 @@ const HOTSPOTS: HotspotDef[] = [
   at('table', 'Stehtisch', R(0, 330, 96, 118), P(170, 436), 'left', {
     on: { lookat: 'Ein Stehtisch. Für die, die nicht am Tresen sitzen wollen. Also für niemanden.' },
   }),
-  at('door', 'Ausgang', R(328, 142, 66, 158), P(362, 322), 'up', {
+  at('door', 'Ausgang', R(280, 142, 62, 158), P(311, 322), 'up', {
     defaultVerb: 'open',
     on: {
       lookat: 'Die Treppe rauf, raus in die Nacht. Irgendwo da draußen ist ein Wald.',
       open: leave,
       use: leave,
       close: 'Sie ist zu. Noch.',
+    },
+  }),
+  at('jukebox', 'Jukebox', R(348, 180, 60, 120), P(376, 324), 'up', {
+    on: {
+      lookat: async (ctx) => {
+        await ctx.playerSay('Eine Jukebox. Draufgeklebt: „Ein Lied: 25 Cent.“');
+        if (ctx.flag('jukeboxCredit')) await ctx.playerSay('Meine Münze steckt immer noch drin. Die Musik gehört mir.');
+      },
+      use: async (ctx) => {
+        if (ctx.flag('jukeboxCredit')) {
+          await ctx.dialog('jukebox');
+        } else if (ctx.hasItem('cent25')) {
+          await ctx.playerSay('Ein Lied kostet 25 Cent. Die hätte ich ja.');
+        } else {
+          await ctx.playerSay('Ein Lied: 25 Cent. Hab ich nicht.');
+        }
+      },
+      push: 'Ein Schlag aufs Gehäuse. Keine Musik. Nur Schmerz.',
+    },
+    onItem: {
+      use: {
+        cent25: async (ctx) => {
+          ctx.removeItem('cent25');
+          ctx.setFlag('jukeboxCredit');
+          ctx.sfx('deny');
+          await ctx.playerSay('Die Münze steckt fest.');
+          await ctx.say('ali', 'Dann gehört dir jetzt die Musik.');
+          await ctx.dialog('jukebox');
+        },
+        euro: 'Die nimmt nur 25 Cent. Und die zwei Euro sind eh verplant.',
+      },
     },
   }),
   at('ac', 'Klimaanlage', R(400, 52, 102, 72), P(402, 396), 'up', {
@@ -342,6 +388,28 @@ const HOTSPOTS: HotspotDef[] = [
       use: 'Ich setz mich lieber nicht neben ihn. Er nimmt bestimmt Fingerabdrücke.',
     },
   }),
+  at('ouzo', 'Alis Ouzo', R(758, 314, 28, 30), P(770, 436), 'up', {
+    defaultVerb: 'pickup',
+    visible: (state) => (state.getFlag<string>('ouzoAt') ?? 'coaster') === 'coaster',
+    on: {
+      lookat: async (ctx) => {
+        await ctx.playerSay('Alis persönlicher Ouzo. Der Untersetzer sagt: „ALI. FINGER WEG.“');
+        if (ctx.flag('ouzoEmpty')) await ctx.playerSay('Gerade leer. Nicht mehr lange.');
+      },
+      pickup: takeOuzo,
+      use: 'Anis? Nein danke. Außerdem gehört er Ali.',
+    },
+  }),
+  at('copspot', 'Tresen vor dem Partykiller', R(668, 316, 34, 28), P(690, 430), 'up', {
+    visible: (state) => !state.getFlag('copAsleep'),
+    on: {
+      lookat: async (ctx) => {
+        if (ctx.flag('ouzoAt') === 'cop') await ctx.playerSay('Da steht Alis Ouzo. Direkt vor seiner Nase.');
+        else await ctx.playerSay('Ein Stück Tresen direkt vor dem Partykiller. Leer.');
+      },
+    },
+    onItem: { use: { ouzo: serveOuzo } },
+  }),
   at('ali', 'Ali', R(696, 236, 50, 84), P(705, 428), 'up', {
     defaultVerb: 'talkto',
     on: {
@@ -358,7 +426,20 @@ const HOTSPOTS: HotspotDef[] = [
           await ctx.dialog('ali-order');
         },
         magicwoman: async (ctx) => {
-          await ctx.say('ali', 'Hab ich dir gerade verkauft. Pfand gibt’s erst, wenn sie leer ist.');
+          await ctx.say('ali', 'Ja, mein Lieber, trink aus, die Energie brauchst du später noch. Zwinker, zwinker.');
+          ctx.face('ali', 'down');
+          await ctx.animate('ali', 'wink', 1800);
+        },
+        dose: async (ctx) => {
+          ctx.removeItem('dose');
+          await ctx.say('ali', 'Leer? Sehr gut. Pfand, wie versprochen.');
+          ctx.addItem('cent25');
+        },
+        ouzo: async (ctx) => {
+          ctx.removeItem('ouzo');
+          ctx.setFlag('ouzoAt', 'coaster');
+          await ctx.repaint();
+          await ctx.say('ali', 'Na also. Der bleibt hier.');
         },
       },
     },
@@ -371,6 +452,10 @@ const HOTSPOTS: HotspotDef[] = [
           await ctx.playerSay('Er schläft. Arme verschränkt, Mütze auf. Schnarcht im Dienstton.');
           return;
         }
+        if (ctx.flag('refrain')) {
+          await ctx.playerSay('Augen zu, Hand ausgestreckt. Er wartet auf ein Glas.');
+          return;
+        }
         await ctx.playerSay('Der einzige andere Gast. Ein Polizist im Ruhestand, noch in Uniform.');
         if (ctx.flag('knowsPartykiller')) await ctx.playerSay('Der Partykiller. Er zeigt immer noch alles an.');
       },
@@ -379,7 +464,9 @@ const HOTSPOTS: HotspotDef[] = [
           await ctx.playerSay('Den weck ich bestimmt nicht.');
           return;
         }
+        ctx.face('cop', 'down');
         await ctx.dialog('cop');
+        ctx.face('cop', 'up');
       },
       push: async (ctx) => {
         if (!(await anzeige(ctx, 'Körperverletzung! Versuchte! Ich zeig das an!'))) {
@@ -403,13 +490,13 @@ const HOTSPOTS: HotspotDef[] = [
           }
         },
         magicwoman: async (ctx) => {
-          if (ctx.flag('copAsleep')) {
-            await ctx.playerSay('Der hatte genug.');
-            return;
+          if (!(await anzeige(ctx, 'Energydrinks? Im Dienst? Ich bin nie außer Dienst.'))) {
+            await ctx.playerSay('Der schläft. Die Energie brauch ich selbst.');
           }
-          await giveMagicWoman(ctx);
         },
+        ouzo: serveOuzo,
       },
+      use: { ouzo: serveOuzo },
     },
   }),
 ];
@@ -423,9 +510,42 @@ export const picassoRoom: RoomDef = {
   layers: [
     { id: 'bg', depth: Layer.BEHIND, svg: picassoBg() },
     roomLayer('counter', 375, 396, 296, 566, 154, picassoCounter()),
+    // Ali's ouzo: on its coaster (full or empty), or in front of the guest.
+    {
+      id: 'ouzoCoaster',
+      depth: 375,
+      x: OUZO.coaster.x - 10,
+      y: OUZO.coaster.y - 20,
+      w: 20,
+      h: 22,
+      svg: (state) => ouzoGlass(10, 18, !state.getFlag('ouzoEmpty')),
+      visible: (state) => (state.getFlag<string>('ouzoAt') ?? 'coaster') === 'coaster',
+    },
+    {
+      id: 'ouzoCop',
+      depth: 375,
+      x: OUZO.cop.x - 10,
+      y: OUZO.cop.y - 20,
+      w: 20,
+      h: 22,
+      svg: ouzoGlass(10, 18, true),
+      visible: (state) => state.getFlag('ouzoAt') === 'cop',
+    },
+    // The jukebox (lit while a song plays) and the refrain's lyrics.
+    { id: 'jukebox', depth: Layer.BEHIND, x: 340, y: 176, w: 76, h: 130, svg: (state) => group(jukebox(352, 52, 300, !!state.getFlag('song')), 'translate(-340 -176)') },
+    {
+      id: 'refrain',
+      depth: Layer.FRONT,
+      x: 220,
+      y: 8,
+      w: 520,
+      h: 74,
+      svg: group(refrainBanner(480, 14), 'translate(-220 -8)'),
+      visible: (state) => !!state.getFlag('refrain'),
+    },
     roomLayer('stool', 399, 486, 300, 72, 104, heartStool(522, 398, stoolScale(398), true)),
-    // His stool is turned round: he sits facing the room, the backrest behind him.
-    roomLayer('copStool', 412, 600, 300, 82, 118, heartStool(640, 413, stoolScale(413), false)),
+    // He sits facing the counter, so his stool's backrest is in front of him.
+    roomLayer('copStool', 414, 600, 300, 82, 118, heartStool(640, 413, stoolScale(413), true)),
     roomLayer('stool3', 441, 766, 326, 86, 120, heartStool(808, 440, stoolScale(440), true)),
     roomLayer('stool4', 450, 886, 330, 74, 120, heartStool(930, 449, stoolScale(449), true)),
     roomLayer('frontColumn', 428, 66, -6, 116, 438, column(122, -4, 428, 40)),
@@ -462,10 +582,11 @@ export const picassoRoom: RoomDef = {
 
   actors: [
     { id: 'ali', x: 720, y: 362, facing: 'down' },
-    { id: 'cop', x: 640, y: 413, facing: 'down' },
+    { id: 'cop', x: 640, y: 413, facing: 'up' },
   ],
 
   async onEnter(ctx) {
+    await resetJukebox(ctx);
     if (ctx.flag('introDone')) return;
     ctx.setFlag('introDone');
     await ctx.wait(400);
@@ -478,7 +599,7 @@ export const picassoRoom: RoomDef = {
       // The Partykiller keeps a running commentary on everybody's misdeeds.
       every: [9000, 16000],
       run: async (ctx) => {
-        if (ctx.busy || ctx.flag('copAsleep')) return;
+        if (ctx.busy || ctx.flag('copAsleep') || ctx.flag('song')) return;
         const lines = [
           'Ruhestörung ab 22 Uhr. Ich notier mir das.',
           'Die Automaten da hängen nicht ordnungsgemäß.',

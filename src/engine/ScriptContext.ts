@@ -111,6 +111,15 @@ export class ScriptContext {
     this.actor(actorId).setFacing(facing);
   }
 
+  /** Put an actor somewhere instantly (cutscene staging: someone hops off
+   *  their stool). NPCs return to their room placement on the next load. */
+  place(actorId: string, x: number, y: number, facing?: Facing): void {
+    const a = this.actor(actorId);
+    a.stop();
+    a.setPosition(x, y);
+    if (facing) a.setFacing(facing);
+  }
+
   /** Play a custom pose (`<textureSet>-<pose>-<variant>`, e.g. a dance) on an
    *  actor, overriding idle/walk/talk. With `ms`, holds it that long (skip-
    *  aware) and then returns to normal posing; without, it holds until
@@ -137,6 +146,18 @@ export class ScriptContext {
       this.scene.time.delayedCall(ms, finish);
       this.eng.events.on('skipCutscene', finish); // Esc releases in-flight waits
     });
+  }
+
+  /** Run a cutscene from a context that doesn't lock input itself — an
+   *  ambient, or a timer loop started by a script: input stays blocked (and
+   *  Esc can fast-forward) until it finishes. */
+  async cutscene(script: Script): Promise<void> {
+    this.eng.beginBusy();
+    try {
+      await script(this);
+    } finally {
+      this.eng.endBusy();
+    }
   }
 
   /** Run `script` only the first time this key is seen (persisted as flag

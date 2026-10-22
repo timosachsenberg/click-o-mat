@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A SCUMM-style point-and-click adventure engine in TypeScript on Phaser 4, plus a fully playable demo game ("Ned the Tentacle") that exercises every engine feature. The demo's art is SVG written in code (a DOTT / Return-to-Monkey-Island cartoon style: wobbly inked shapes, cel shading, paper grain), rasterized at runtime; its audio is procedural. The PNGs in `public/img/` (gallery, Blobbo, pillar, sconce, bird, rain) exercise the file pipeline and are rendered from SVG sources in `src/game/art/pngSources.ts` by `tools/gen-assets.mjs`.
 
-Next to the demo lives the actual adventure, **„Folge dem Bass“** (`src/goa/`, German UI and dialog): it starts in the Picasso, Ali's basement bar (`rooms/picasso.ts`, after the concept art in issue #5), with a two-euro coin in the inventory. `main.ts` registers one of the two games per page load — `?game=goa|demo`, else the last pick (localStorage), else the adventure — and the title screen's picker (SPIEL · DEMO) switches by reloading with `?game=`.
+Next to the demo lives the actual adventure, **„Folge dem Bass“** (`src/goa/`, German UI and dialog): it starts in the Picasso, Ali's basement bar (`rooms/picasso.ts`, after the concept art in issue #5), with a two-euro coin in the inventory; the riddle chain (drink → deposit → jukebox → three ouzos during the refrain) is spelled out in the README, and its real-time part — the song loop with verse/refrain and "Trink!" beats running while the player keeps control — lives in `src/goa/jukebox.ts`. `main.ts` registers one of the two games per page load — `?game=goa|demo`, else the last pick (localStorage), else the adventure — and the title screen's picker (SPIEL · DEMO) switches by reloading with `?game=`.
 
 ## Commands
 
@@ -64,7 +64,7 @@ Art lives in `src/game/art/`: `toon.ts` is the style toolkit (`wobble`, `crooked
 
 One file per room in `rooms/`. Assets are declared per-room (`RoomDef.assets`, lazily loaded on first entry) rather than in a global manifest — keep new PNGs on the room that uses them. PNG files live in `public/img/` and URLs must be prefixed with `import.meta.env.BASE_URL` (the site deploys under a GitHub Pages subpath; `vite.config.ts` sets `base: './'`).
 
-The adventure (`src/goa/`) has the same layout, reuses the demo's `toon.ts` toolkit, UI panel art and puppet rig (`characters.ts` exports `humanDraw`, `drawHumanFront`, `HumanLook` with `head`/`torso` hooks), and adds `strings.ts` (German UI), `music.ts` (procedural tracks via `GameContent.music`) and `startItems`. Its text is German — keep new content for it in German.
+The adventure (`src/goa/`) has the same layout, reuses the demo's `toon.ts` toolkit, UI panel art and puppet rig (`characters.ts` exports `humanDraw`, `drawHumanFront`, `drawHumanSide`, `HumanLook` with `head`/`torso` hooks), and adds `strings.ts` (German UI), `music.ts` (procedural tracks via `GameContent.music`) and `startItems`. Its text is German — keep new content for it in German.
 
 Spritesheet actors follow the animation key convention `<textureSet>-<pose>-<variant>` (pose: `idle|walk|talk`; variant: `front|back|side`) — that naming is the entire actor/engine contract.
 

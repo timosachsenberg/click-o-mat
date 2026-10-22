@@ -699,6 +699,12 @@ export class UIScene extends Phaser.Scene {
       engine.setPendingItem(itemId, 'give');
       return;
     }
+    // An item usable on its own: Use + item, or a second click on it in hand.
+    const inHand = engine.pendingItem === itemId && engine.pendingItemVerb === 'use';
+    if (item.use && (engine.selectedVerb === 'use' || inHand)) {
+      void engine.runScript(item.use, engine.strings.defaultResponses.use);
+      return;
+    }
     // 'use' or bare click both arm the item for "use X with ...".
     engine.setPendingItem(itemId, 'use');
   }

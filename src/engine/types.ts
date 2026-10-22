@@ -68,6 +68,10 @@ export interface ItemDef {
   /** Texture key for the inventory icon. */
   icon: string;
   lookAt?: ScriptOrLine;
+  /** "Use <item>" on its own (drink it, read it, switch it on): runs when the
+   *  item is clicked with the Use verb selected, or clicked again while it
+   *  is in hand. Items without it are armed for "Use <item> with …". */
+  use?: ScriptOrLine;
   /** Item-on-item combinations, keyed by the other item's id. */
   combine?: Record<string, ScriptOrLine>;
 }

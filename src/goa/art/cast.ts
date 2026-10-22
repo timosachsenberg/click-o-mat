@@ -6,7 +6,9 @@ import {
   POSES,
   SKULL_SIDE,
   drawHumanFront,
+  drawHumanSide,
   frontRig,
+  sideRig,
   humanDraw,
   mouthFront,
   mouthSide,
@@ -21,9 +23,13 @@ import {
  * same DOTT proportions) with their own heads and clothes:
  *  - der Spieler: beanie, hoodie, cargo pants — on his way to a forest rave;
  *  - Ali: the landlord of the Picasso, polishing a glass behind his counter;
- *  - der Partykiller: a retired cop on a bar stool, in his old green uniform.
- *    He sits (idle/talk), and has the custom poses 'traffic' and 'disco' (his
- *    dance), 'stand', and 'sleep' (arms crossed, snoring).
+ *    Custom poses: 'sing' (eyes shut, hand on heart — the jukebox refrain)
+ *    and 'wink' (the conspicuous one).
+ *  - der Partykiller: a retired cop on a bar stool, in his old green uniform,
+ *    seated with his back to us at the counter (back view) — he turns round
+ *    (front view) to talk. Custom poses: 'reach' and 'drink' (the refrain:
+ *    eyes shut, grabbing for a glass), 'sleep', 'stand', and his dance,
+ *    'traffic' then 'disco'.
  */
 
 const ear = (L: HumanLook, x: number): string =>
@@ -201,14 +207,23 @@ function aliHeadFront(r: Rig, back: boolean): string {
   s.push(shadedHead(L, FACE_FRONT, 'faceF', 3));
   // Five-o'clock shadow along the jaw.
   s.push(path(blob([[-12.5, 5], [-7, 14], [0, 17], [7, 14], [12.5, 5], [7, 9], [0, 10.5], [-7, 9]]), { fill: '#5a4038', opacity: 0.22 }));
-  s.push(eyesFront(r, [-5.6, 5.6], 0.3));
+  // r.swing === 1 marks the wink ('wink' pose): left eye squeezed shut,
+  // right eye wide, right brow way up.
+  const wink = r.swing === 1;
+  if (wink) {
+    s.push(path('M-9.4 -1Q-5.6 2.2 -1.8 -1', { stroke: INK, sw: 2 }));
+    s.push(path('M-9.6 1.6L-8 0M-9 -3.4L-7.4 -2', { stroke: INK, sw: 1 }));
+    s.push(eyesFront({ ...r, blink: false }, [5.6], 0.3, -2));
+  } else {
+    s.push(eyesFront(r, [-5.6, 5.6], 0.3));
+  }
   // Kind, heavy-lidded eyes and serious brows.
-  if (!r.blink) {
+  if (!r.blink && !wink) {
     for (const x of [-5.6, 5.6]) {
       s.push(path(`M${x - 3.5} -2.4Q${x} -6.4 ${x + 3.5} -2.4Q${x} -4.2 ${x - 3.5} -2.4Z`, { fill: L.skinShade, stroke: INK, sw: 1.2 }));
     }
   }
-  s.push(path('M-10 -7.8Q-6 -10.6 -2 -8.2M2 -8.2Q6 -10.6 10 -7.8', { stroke: L.hair, sw: 2.8 }));
+  s.push(path(wink ? 'M-10 -6.4Q-6 -7.8 -2 -6M2 -10.8Q6 -14.2 10 -11.4' : 'M-10 -7.8Q-6 -10.6 -2 -8.2M2 -8.2Q6 -10.6 10 -7.8', { stroke: L.hair, sw: 2.8 }));
   s.push(ellipse(0, 4.6, 4.4, 4.8, { fill: L.skin, stroke: INK, sw: 1.8 }));
   s.push(circle(-1.5, 3, 1.1, { fill: '#ffffff', opacity: 0.6 }));
   s.push(mouthFront(r.mouth, 11.6, 3.4));
@@ -279,6 +294,35 @@ function aliPolish(variant: ActorVariant, f: number): string {
     .map((arm) => circle(arm.hand[0], arm.hand[1], 3.3, { fill: ALI.skin, stroke: INK, sw: OUT }))
     .join('');
   return body + glass + hands;
+}
+
+/** Ali sings along to the refrain: eyes shut, hand on his heart, swaying. */
+function aliSing(variant: ActorVariant, f: number): string {
+  const mouth = (['o', 'a', 'o', 'shut'] as Mouth[])[f];
+  if (variant === 'side') {
+    const r = sideRig('talk', f);
+    r.blink = true;
+    r.mouth = mouth;
+    r.tilt = [-6, -3, -6, -2][f];
+    return drawHumanSide(ALI, r);
+  }
+  const r = frontRig('idle', 2);
+  const sy = r.hipY - 26 - r.breath * 0.7;
+  r.blink = true;
+  r.mouth = mouth;
+  r.tilt = [-5, 0, 5, 0][f];
+  r.arms[1] = { shoulder: [43, sy], elbow: [44, sy + 12], hand: [35, sy + 8] };
+  return drawHumanFront(ALI, r, variant === 'back');
+}
+
+/** "Zwinker, zwinker": a wink you could see from the street. */
+function aliWink(f: number): string {
+  const r = frontRig('idle', 0);
+  r.swing = 1;
+  r.mouth = 'a';
+  r.tilt = [6, 8][f];
+  r.headDy = -f;
+  return drawHumanFront(ALI, r);
 }
 
 // ---- der Partykiller ------------------------------------------------------------
@@ -460,6 +504,70 @@ function copSleep(f: number): string {
     { shoulder: [21, sy], elbow: [18.5, sy + 12], hand: [40, sy + 9] },
     { shoulder: [43, sy], elbow: [46, sy + 13], hand: [24, sy + 12] },
   ];
+  return copFrame(drawHumanFront(COP, r) + zzz(f));
+}
+
+// Back view: seated at the counter, facing it (as in the concept art).
+
+function copSeatedBack(f: number): string {
+  const r = seatedRig(f);
+  const sy = r.hipY - 26 - r.breath * 0.7;
+  // Elbows out, hands on the counter in front of him.
+  r.arms = [-1, 1].map((side) => ({ shoulder: [32 + side * 11, sy] as Pt, elbow: [32 + side * 16, sy + 9] as Pt, hand: [32 + side * 7, sy + 6] as Pt }));
+  r.tilt = [0, 0, 3, 3, 3, 0, -3, -3][f];
+  return copFrame(drawHumanFront(COP, r, true));
+}
+
+function copTalkBack(f: number): string {
+  const r = seatedRig(0);
+  const sy = r.hipY - 26;
+  r.arms = [-1, 1].map((side) => ({ shoulder: [32 + side * 11, sy] as Pt, elbow: [32 + side * 16, sy + 9] as Pt, hand: [32 + side * 7, sy + 6] as Pt }));
+  r.headDy = -(f % 2);
+  r.tilt = [4, 0, 6, 2][f];
+  return copFrame(drawHumanFront(COP, r, true));
+}
+
+/** The refrain: eyes shut, swaying, one hand groping for a glass. */
+function copReach(f: number): string {
+  const r = seatedRig(0);
+  const sy = r.hipY - 26;
+  r.arms = [
+    { shoulder: [21, sy], elbow: [16, sy + 9], hand: [24, sy + 6] },
+    { shoulder: [43, sy], elbow: [52, sy - 6 + (f % 2) * 2], hand: [56 + (f % 2) * 2, sy - 17 + (f % 2) * 3] },
+  ];
+  r.tilt = [-4, 4, -4, 4][f];
+  const hand = r.arms[1].hand;
+  // Fingers curled round an imaginary glass.
+  const grab = path(`M${hand[0] - 3} ${hand[1] - 3}q3 -4 6 0`, { stroke: INK, sw: 1.6 });
+  return copFrame(drawHumanFront(COP, r, true) + grab);
+}
+
+/** Down in one: glass to the mouth, head back. */
+function copDrink(f: number): string {
+  const r = seatedRig(0);
+  const sy = r.hipY - 26;
+  r.arms = [
+    { shoulder: [21, sy], elbow: [16, sy + 9], hand: [24, sy + 6] },
+    { shoulder: [43, sy], elbow: [53, sy + 1], hand: [41, sy - 15] },
+  ];
+  r.headDy = -2;
+  r.tilt = [-8, -12][f];
+  const [hx, hy] = r.arms[1].hand;
+  const glass = path(`M${hx - 3} ${hy - 9}h6l-1 9h-4z`, { fill: '#e8f4f8', stroke: INK, sw: 1.2 }) + path(`M${hx - 2.2} ${hy - 7}h4.4`, { stroke: '#ffffff', sw: 1 });
+  return copFrame(drawHumanFront(COP, r, true) + glass);
+}
+
+function copSleepBack(f: number): string {
+  const r = seatedRig(0);
+  const sy = r.hipY - 26;
+  r.arms = [-1, 1].map((side) => ({ shoulder: [32 + side * 11, sy] as Pt, elbow: [32 + side * 15, sy + 11] as Pt, hand: [32 + side * 5, sy + 9] as Pt }));
+  r.headDy = 4 + (f % 2) * 0.6;
+  r.tilt = 4;
+  return copFrame(drawHumanFront(COP, r, true) + zzz(f));
+}
+
+/** Snoring z's rising beside the head. */
+function zzz(f: number): string {
   const z = (i: number) => {
     const t = (f + i * 1.3) % 4;
     return text(53 + i * 6 + t * 1.5, 22 - t * 3 - i * 5, 'z', {
@@ -471,7 +579,7 @@ function copSleep(f: number): string {
       weight: 700,
     });
   };
-  return copFrame(drawHumanFront(COP, r) + z(0) + z(1) + z(2));
+  return z(0) + z(1) + z(2);
 }
 
 /** Standing straight (between stool and dance floor). */
@@ -531,6 +639,8 @@ function copDisco(f: number): string {
 
 const COP_POSES = {
   ...POSES,
+  reach: { frames: 4, frameRate: 4 },
+  drink: { frames: 2, frameRate: 3 },
   traffic: { frames: 4, frameRate: 3 },
   disco: { frames: 4, frameRate: 4 },
   stand: { frames: 1, frameRate: 1 },
@@ -540,13 +650,18 @@ const COP_POSES = {
 const COP_WALK = humanDraw(COP);
 
 function copDraw(variant: ActorVariant, pose: ActorPose | string, f: number): string {
+  const back = variant === 'back';
   switch (pose) {
     case 'idle':
-      return copSeated(f);
+      return back ? copSeatedBack(f) : copSeated(f);
     case 'talk':
-      return copTalk(f);
+      return back ? copTalkBack(f) : copTalk(f);
     case 'sleep':
-      return copSleep(f);
+      return back ? copSleepBack(f) : copSleep(f);
+    case 'reach':
+      return copReach(f);
+    case 'drink':
+      return copDrink(f);
     case 'stand':
       return copStand();
     case 'traffic':
@@ -566,8 +681,13 @@ export const GOA_CAST: SvgActorAsset[] = [
     key: 'ali',
     width: 64,
     height: 120,
-    poses: { ...POSES, polish: { frames: 4, frameRate: 5 } },
-    draw: (variant, pose, f) => (pose === 'polish' ? aliPolish(variant, f) : ALI_DRAW(variant, pose as ActorPose, f)),
+    poses: { ...POSES, polish: { frames: 4, frameRate: 5 }, sing: { frames: 4, frameRate: 4 }, wink: { frames: 2, frameRate: 4 } },
+    draw: (variant, pose, f) => {
+      if (pose === 'polish') return aliPolish(variant, f);
+      if (pose === 'sing') return aliSing(variant, f);
+      if (pose === 'wink') return aliWink(f);
+      return ALI_DRAW(variant, pose as ActorPose, f);
+    },
   },
   { key: 'cop', width: COP_W, height: COP_H, poses: COP_POSES, draw: copDraw },
 ];

@@ -518,7 +518,11 @@ export function drawHumanFront(L: HumanLook, r: Rig, back = false): string {
 }
 
 function humanSide(L: HumanLook, pose: ActorPose, f: number): string {
-  const r = sideRig(pose, f);
+  return drawHumanSide(L, sideRig(pose, f));
+}
+
+/** A side view (facing right) from explicit joints — for hand-built poses. */
+export function drawHumanSide(L: HumanLook, r: Rig): string {
   const s: string[] = [];
   const [farArm, nearArm] = r.arms;
   const [farLeg, nearLeg] = r.legs;

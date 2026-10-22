@@ -113,10 +113,22 @@ talk while he does.
 
 1. Talk to **Ali** about the Goa — he points at the Partykiller.
 2. Order a drink: Red Cow? *Aus.* Flying Pony? *Auch aus.* **Magic Woman**?
-   *Die haben wir* — two euros, deposit included.
-3. **Give the Magic Woman** to the Partykiller. He dances (traffic duty first,
-   then the disco finger), sits down, and falls asleep.
-4. Ask Ali again: the password is **Chakabunga**. Leave through the door.
+   *Die haben wir* — your last two euros, deposit included. (Hand it back
+   full and Ali winks: *trink aus, die Energie brauchst du später noch*.)
+3. **Use the Magic Woman** to drink it, then **give the empty can** to Ali:
+   he pays the deposit with a 25-cent coin.
+4. **Use the coin with the jukebox**. It gets stuck — the credit stays for
+   good. Pick **„Noch einen auf die Gemütlichkeit“** (the other three songs
+   are harmless).
+5. During the refrain (the lyrics show across the top of the screen) Ali
+   turns to the jukebox and sings, the Partykiller shuts his eyes and gropes
+   for a glass: **pick up Ali's ouzo** and **use it with the counter in front
+   of the Partykiller**. On the next *Trink!* he downs it and pushes the glass
+   back; Ali refills it after the refrain. Outside the refrain you get caught
+   (no harm done).
+6. Three refrains, three ouzos: *Trink!* — *Trinkytrinky* — *Und jetzt
+   tanzt!* He dances (traffic duty, then the disco finger) and falls asleep.
+7. Ask Ali again: the password is **Chakabunga**. Leave through the door.
 
 </details>
 
@@ -753,7 +765,7 @@ registered, so an actor just uses `textureSet: 'guy'`. The demo's cast
 (`src/game/art/characters.ts`) are puppets posed from joint angles — walk
 cycles are a few lines of trigonometry, not hand-drawn frames. The rig is
 reusable: `HumanLook`'s `head`/`torso` hooks dress it differently, and
-`drawHumanFront(look, rig)` draws hand-built poses (the adventure's cast in
+`drawHumanFront(look, rig)` / `drawHumanSide(look, rig)` draw hand-built poses (the adventure's cast in
 `src/goa/art/cast.ts`).
 
 **Custom poses.** `poses` may hold more than idle/walk/talk — a dance, a
@@ -845,8 +857,10 @@ gallery's Blobbo does exactly this.
 
 ### Items, actors, dialogs
 
-- **Items** (`items.ts`): id, name, icon texture, `lookAt`, and `combine` map
-  for item-on-item.
+- **Items** (`items.ts`): id, name, icon texture, `lookAt`, `combine` map
+  for item-on-item, and optional `use` for an item that works on its own
+  (drink it, read it): it runs on *Use + item*, or on a second click on the
+  item in hand; items without it are armed for "Use X with …".
 - **Actors** (`actors.ts`): id, name, speech color, texture set, speed, and
   an optional `stance` (see [custom poses](#vector-art-svg)).
 
@@ -921,6 +935,8 @@ Every handler and cutscene receives a `ctx`. The essentials:
 | `ctx.walkTo(actorId, x, y)` | Walk an actor along the floor to a point |
 | `ctx.face(actorId, dir)` | Turn an actor (`'up'`/`'down'`/`'left'`/`'right'`) |
 | `ctx.animate(actorId, pose, ms?)` | Play a custom pose (a dance, …); with `ms`, hold it that long, then back to normal |
+| `ctx.place(actorId, x, y, facing?)` | Put an actor somewhere instantly (cutscene staging) |
+| `ctx.cutscene(script)` | Run a script with input locked — for timers/ambients that need a real cutscene |
 | `ctx.wait(ms)` | Pause |
 | `ctx.goToRoom(id, entry?)` | Fade to another room at a named entry |
 | `ctx.dialog(id)` | Run a dialog tree |

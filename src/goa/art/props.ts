@@ -408,3 +408,60 @@ export function discoBall(cx: number, ceiling: number, cy: number, r: number): s
   s.push(glow(`disco${cx}`, cx, cy, r * 3, '#c8e0ff', 0.35));
   return s.join('');
 }
+
+/** The jukebox: arched cabinet, bubble tubes, a record window and the
+ *  price tag. `lit`: a song is playing (lights on, record spinning). */
+export function jukebox(x: number, w: number, floor: number, lit: boolean): string {
+  const s: string[] = [];
+  const top = floor - 118;
+  const cx = x + w / 2;
+  if (lit) s.push(glow(`jbGlow${x}`, cx, top + 50, w * 1.3, '#ff9ae0', 0.45, 80));
+  s.push(ellipse(cx, floor, w * 0.6, 5, { fill: '#000000', opacity: 0.35 }));
+  // Cabinet with an arched top.
+  s.push(inked(`M${x} ${floor}V${top + w / 2}A${w / 2} ${w / 2} 0 0 1 ${x + w} ${top + w / 2}V${floor}Z`, '#8a3a1e', 3));
+  s.push(path(`M${x + 6} ${floor - 4}V${top + w / 2}A${w / 2 - 6} ${w / 2 - 6} 0 0 1 ${x + w - 6} ${top + w / 2}V${floor - 4}`, { stroke: lit ? '#ffd34a' : '#c8902a', sw: 4 }));
+  const tube = lit ? ['#ff5ab4', '#ffd34a', '#5ae0ff'] : ['#8a4a6a', '#8a7a3a', '#3a6a7a'];
+  s.push(path(`M${x + 6} ${floor - 4}V${top + w / 2}A${w / 2 - 6} ${w / 2 - 6} 0 0 1 ${x + w - 6} ${top + w / 2}V${floor - 4}`, { stroke: tube[0], sw: 2, extra: 'stroke-dasharray="6 6"' }));
+  // Record window.
+  s.push(inked(`M${x + 12} ${top + 52}H${x + w - 12}V${top + 36}A${w / 2 - 12} ${w / 2 - 12} 0 0 0 ${x + 12} ${top + 36}Z`, lit ? '#3a2a6a' : '#22183a', 2));
+  s.push(ellipse(cx, top + 44, w * 0.26, 4, { fill: '#141414', stroke: INK, sw: 1.2 }));
+  s.push(ellipse(cx, top + 44, w * 0.08, 1.4, { fill: lit ? '#ff5ab4' : '#6a3a4a' }));
+  // Song buttons and the speaker grille.
+  for (let i = 0; i < 4; i++) s.push(rect(x + 10 + i * ((w - 20) / 4), top + 58, (w - 20) / 4 - 3, 7, { fill: lit ? tube[i % 3] : '#e8dcc0', stroke: INK, sw: 1 }, 1.5));
+  s.push(inked(`M${x + 10} ${top + 72}H${x + w - 10}V${floor - 10}H${x + 10}Z`, '#5a2412', 2));
+  for (let y = top + 77; y < floor - 12; y += 5) s.push(line([x + 13, y], [x + w - 13, y], '#c8902a', 1.4));
+  // The price tag.
+  s.push(rect(cx - 22, top + 86, 44, 16, { fill: '#f4f0e6', stroke: INK, sw: 1.4 }, 2));
+  s.push(text(cx, top + 93, 'Ein Lied:', { size: 6, fill: '#3a2a10', weight: 700 }));
+  s.push(text(cx, top + 100.5, '25 Cent', { size: 7, fill: '#c43a3a' }));
+  return s.join('');
+}
+
+/** A small ouzo glass standing on the counter (base at cx, baseY). */
+export function ouzoGlass(cx: number, baseY: number, full: boolean): string {
+  return [
+    path(`M${cx - 4.5} ${baseY - 15}h9l-1.2 15h-6.6z`, { fill: '#e8f4f8', stroke: INK, sw: 1.4, opacity: 0.9 }),
+    full ? path(`M${cx - 4} ${baseY - 11}h8l-0.9 10.4h-6.2z`, { fill: '#f8f6ea' }) : '',
+    path(`M${cx - 2.8} ${baseY - 13}L${cx - 2.2} ${baseY - 2}`, { stroke: '#ffffff', sw: 1.2 }),
+  ].join('');
+}
+
+/** Ali's coaster: "ALI. FINGER WEG." */
+export function aliCoaster(cx: number, y: number): string {
+  return [
+    ellipse(cx, y, 13, 3.6, { fill: '#c43a3a', stroke: INK, sw: 1.4 }),
+    text(cx, y + 1.4, 'ALI. FINGER WEG.', { size: 3.4, fill: '#f4f0e6', weight: 700 }),
+  ].join('');
+}
+
+/** The refrain, as big lyrics across the top of the screen — the window
+ *  in which nobody is watching. */
+export function refrainBanner(cx: number, y: number): string {
+  const opts = { size: 21, fill: '#ffe066', stroke: INK, sw: 5, family: CHALK, weight: 700 };
+  return [
+    rect(cx - 250, y - 4, 500, 62, { fill: '#1e1040', stroke: '#ff5ab4', sw: 3, opacity: 0.85 }, 14),
+    glow('refrainGlow', cx, y + 27, 280, '#ff5ab4', 0.25, 50),
+    text(cx, y + 22, '♫  Trink, trink, trink!  ♫', opts),
+    text(cx, y + 48, 'Bis der ganze Tresen singt!', { ...opts, size: 17, fill: '#9ae8ff' }),
+  ].join('');
+}
