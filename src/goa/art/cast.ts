@@ -1,5 +1,5 @@
 import type { ActorPose, ActorVariant, SvgActorAsset } from '../../engine/types';
-import { INK, blob, circle, curve, ellipse, group, path, poly, rect, text, type Pt } from '../../game/art/toon';
+import { INK, blob, circle, curve, ellipse, group, path, poly, puff, rect, text, type Pt } from '../../game/art/toon';
 import {
   FACE_FRONT,
   OUT,
@@ -25,6 +25,8 @@ import {
  *  - Ali: the landlord of the Picasso, polishing a glass behind his counter;
  *    Custom poses: 'sing' (eyes shut, hand on heart — the jukebox refrain)
  *    and 'wink' (the conspicuous one).
+ *  - Hilde: a regular who dances in front of the DJ booth and grabs at
+ *    anyone who comes too close ('dance', 'grab');
  *  - der Partykiller: a retired cop on a bar stool, in his old green uniform,
  *    seated with his back to us at the counter (back view) — he turns round
  *    (front view) to talk. Custom poses: 'reach' and 'drink' (the refrain:
@@ -673,6 +675,127 @@ function copDraw(variant: ActorVariant, pose: ActorPose | string, f: number): st
   }
 }
 
+// ---- Hilde ---------------------------------------------------------------------
+// A regular: silver-lilac perm, red glasses, pearls, fuchsia blouse and a
+// pleated skirt. She dances (stance 'dance') and grabs at anyone who comes
+// too close ('grab').
+
+const HILDE: HumanLook = {
+  skin: '#f0c4a4',
+  skinShade: '#cc9a7c',
+  hair: '#d8d0e8',
+  hairShade: '#a89ac0',
+  top: '#c8407a',
+  topShade: '#9a2a5c',
+  // Thighs vanish under the skirt; stockinged shins below it.
+  legs: '#34346e',
+  legsShade: '#24244e',
+  shins: '#e2b494',
+  shoes: '#6a2a3a',
+  shoeTrim: '#3a1420',
+  style: 'custom',
+  head: { front: hildeHeadFront, side: hildeHeadSide },
+  torso: { front: hildeBlouseFront, side: hildeBlouseSide },
+};
+
+function hildeHeadFront(r: Rig, back: boolean): string {
+  const L = HILDE;
+  const perm = path(puff(0, -9, 17, 13, 9, 4, 0.18), { fill: L.hair, stroke: INK, sw: OUT });
+  if (back) return perm + path(puff(0, 2, 15, 9, 7, 5, 0.2), { fill: L.hair, stroke: INK, sw: OUT });
+  const s: string[] = [ear(L, -14), ear(L, 14)];
+  s.push(circle(-14, 6, 1.8, { fill: '#f4f0f8', stroke: INK, sw: 0.8 }), circle(14, 6, 1.8, { fill: '#f4f0f8', stroke: INK, sw: 0.8 }));
+  s.push(shadedHead(L, FACE_FRONT, 'faceF', 3));
+  s.push(eyesFront(r, [-5.6, 5.6], 0.4, -1));
+  // Big red glasses.
+  for (const x of [-5.6, 5.6]) s.push(circle(x, -1, 5.4, { stroke: '#c43a3a', sw: 1.8 }));
+  s.push(path('M-0.4 -1.5Q0 -2.6 0.4 -1.5', { stroke: '#c43a3a', sw: 1.6 }));
+  s.push(path('M-10 -7.4Q-5.6 -9.6 -2 -7.6M2 -7.6Q5.6 -9.6 10 -7.4', { stroke: L.hairShade, sw: 1.5 }));
+  s.push(ellipse(0, 5, 3, 3.4, { fill: L.skin, stroke: INK, sw: 1.6 }));
+  s.push(ellipse(-9, 6.5, 2.8, 1.8, { fill: '#e8607a', opacity: 0.45 }), ellipse(9, 6.5, 2.8, 1.8, { fill: '#e8607a', opacity: 0.45 }));
+  s.push(mouthFront(r.mouth, 11.2, 3.4));
+  s.push(path(r.mouth === 'shut' ? 'M-3.6 11Q0 12.8 3.6 10.6' : 'M-3.2 10.6Q0 9.6 3.2 10.6', { stroke: '#c43a5a', sw: 1.6 }));
+  s.push(path(puff(0, -12, 17, 10, 9, 4, 0.18), { fill: L.hair, stroke: INK, sw: OUT }));
+  s.push(path(curve([[-9, -15], [-2, -18], [6, -16]]), { stroke: L.hairShade, sw: 1.3 }));
+  return s.join('');
+}
+
+function hildeHeadSide(r: Rig): string {
+  const L = HILDE;
+  const s: string[] = [path(puff(-3, -6, 16, 14, 8, 6, 0.18), { fill: L.hair, stroke: INK, sw: OUT })];
+  s.push(shadedHead(L, SKULL_SIDE, 'faceS', -3));
+  s.push(eyeSide(r, 8.4, -1.6));
+  s.push(circle(8.4, -1.6, 5, { stroke: '#c43a3a', sw: 1.6 }));
+  s.push(path('M3.4 -1.4L-2 -1', { stroke: '#c43a3a', sw: 1.4 }));
+  s.push(path(blob([[12, -0.5], [15.5, 2], [15, 5.6], [11.6, 5.4]]), { fill: L.skin, stroke: INK, sw: 1.5 }));
+  s.push(mouthSide(r.mouth, 10, 11));
+  s.push(path(puff(-2, -12, 15, 9, 8, 7, 0.18), { fill: L.hair, stroke: INK, sw: OUT }));
+  return s.join('');
+}
+
+/** Blouse print, pearls — and the pleated skirt, drawn over the thighs. */
+function hildeBlouseFront(top: number, back: boolean, clip: string): string {
+  const s: string[] = [];
+  if (!back) {
+    s.push(group([[24, 9], [38, 6], [29, 17], [41, 18], [25, 23]].map(([x, y]) => circle(x, top + y, 1.5, { fill: '#ffd0e4' })).join(''), undefined, `clip-path="url(#${clip})"`));
+    for (let i = 0; i <= 8; i++) {
+      const a = Math.PI * (0.15 + (i / 8) * 0.7);
+      s.push(circle(32 - Math.cos(a) * 7.5, top + 1 + Math.sin(a) * 5.5, 1.3, { fill: '#f8f4ee', stroke: INK, sw: 0.5 }));
+    }
+  }
+  const w = top + 21;
+  const hem = top + 46;
+  s.push(path(`M${32 - 11.5} ${w}L${32 + 11.5} ${w}L${32 + 17} ${hem}Q32 ${hem + 3} ${32 - 17} ${hem}Z`, { fill: HILDE.legs, stroke: INK, sw: OUT }));
+  for (const dx of [-9, -3, 3, 9]) s.push(path(`M${32 + dx * 0.7} ${w + 3}L${32 + dx} ${hem}`, { stroke: HILDE.legsShade, sw: 1.2 }));
+  return s.join('');
+}
+
+function hildeBlouseSide(top: number): string {
+  const w = top + 21;
+  const hem = top + 46;
+  return path(`M23 ${w}L41 ${w}L45 ${hem}Q32 ${hem + 3} 20 ${hem}Z`, { fill: HILDE.legs, stroke: INK, sw: OUT });
+}
+
+/** Dancing: hips swaying, one arm up and waving, the other on her hip. */
+function hildeDance(f: number): string {
+  const r = frontRig('idle', 0);
+  const hx = [-5, -2, 3, 5, 2, -3][f];
+  const sy = r.hipY - 26;
+  r.legs = r.legs.map((l) => ({ ...l, ankle: [l.ankle[0] - hx, l.ankle[1]] as Pt, knee: [l.knee[0] - hx / 2, l.knee[1]] as Pt }));
+  const up = (side: number, wave: number): Rig['arms'][number] => ({
+    shoulder: [32 + side * 11, sy],
+    elbow: [32 + side * 18, sy - 9],
+    hand: [32 + side * (16 + wave), sy - 24],
+  });
+  const onHip = (side: number): Rig['arms'][number] => ({
+    shoulder: [32 + side * 11, sy],
+    elbow: [32 + side * 21, sy + 9],
+    hand: [32 + side * 10, r.hipY - 3],
+  });
+  const right = f < 3;
+  const wave = [0, 4, -2][f % 3];
+  r.arms = right ? [onHip(-1), up(1, wave)] : [up(-1, wave), onHip(1)];
+  r.tilt = hx * 1.4;
+  r.mouth = f % 3 === 1 ? 'o' : 'shut';
+  return group(drawHumanFront(HILDE, r), `translate(${hx} 0)`);
+}
+
+/** Grabbing at whoever came too close: both arms out, eyes wide. */
+function hildeGrab(f: number): string {
+  const r = frontRig('idle', 0);
+  const sy = r.hipY - 26;
+  const reach = f === 0 ? 30 : 24;
+  r.arms = [-1, 1].map((side) => ({
+    shoulder: [32 + side * 11, sy] as Pt,
+    elbow: [32 + side * (reach - 8), sy + 1] as Pt,
+    hand: [32 + side * reach, sy - 2 + f * 2] as Pt,
+  }));
+  r.mouth = 'a';
+  r.tilt = f ? 4 : -2;
+  return drawHumanFront(HILDE, r);
+}
+
+const HILDE_DRAW = humanDraw(HILDE);
+
 const ALI_DRAW = humanDraw(ALI);
 
 export const GOA_CAST: SvgActorAsset[] = [
@@ -690,4 +813,15 @@ export const GOA_CAST: SvgActorAsset[] = [
     },
   },
   { key: 'cop', width: COP_W, height: COP_H, poses: COP_POSES, draw: copDraw },
+  {
+    key: 'hilde',
+    width: 64,
+    height: 120,
+    poses: { ...POSES, dance: { frames: 6, frameRate: 6 }, grab: { frames: 2, frameRate: 5 } },
+    draw: (variant, pose, f) => {
+      if (pose === 'dance') return hildeDance(f);
+      if (pose === 'grab') return hildeGrab(f);
+      return HILDE_DRAW(variant, pose as ActorPose, f);
+    },
+  },
 ];

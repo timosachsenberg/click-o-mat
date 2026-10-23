@@ -34,13 +34,16 @@ export function queueManifest(scene: Phaser.Scene, m: AssetManifest | undefined)
 }
 
 /** Create a manifest's animations (idempotent). Call after the spritesheets
- *  they reference are loaded. */
+ *  and SVG images they reference are loaded/rasterized. */
 export function registerManifestAnims(scene: Phaser.Scene, m: AssetManifest | undefined): void {
   for (const a of m?.anims ?? []) {
     if (scene.anims.exists(a.key)) continue;
     scene.anims.create({
       key: a.key,
-      frames: scene.anims.generateFrameNumbers(a.texture, { frames: a.frames }),
+      frames:
+        'textures' in a
+          ? a.textures.map((key) => ({ key }))
+          : scene.anims.generateFrameNumbers(a.texture, { frames: a.frames }),
       frameRate: a.frameRate,
       repeat: a.repeat ?? -1,
     });

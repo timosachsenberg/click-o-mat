@@ -20,11 +20,11 @@ export class BootScene extends Phaser.Scene {
   }
 
   create(): void {
-    // Animations built from the global manifest's spritesheets.
-    registerManifestAnims(this, engine.assets);
-    void Promise.all([prepareSvgAssets(this, engine.assets), loadThemeFont()]).then(() =>
-      this.scene.start('title')
-    );
+    // Rasterize the SVG art first: animations may use SVG images as frames.
+    void Promise.all([prepareSvgAssets(this, engine.assets), loadThemeFont()]).then(() => {
+      registerManifestAnims(this, engine.assets);
+      this.scene.start('title');
+    });
   }
 }
 

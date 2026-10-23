@@ -111,6 +111,8 @@ talk while he does.
 
 <details><summary>Solution</summary>
 
+(Mind Hilde, dancing in front of the DJ booth: get too close and she grabs.)
+
 1. Talk to **Ali** about the Goa — he points at the Partykiller.
 2. Order a drink: Red Cow? *Aus.* Flying Pony? *Auch aus.* **Magic Woman**?
    *Die haben wir* — your last two euros, deposit included. (Hand it back
@@ -990,6 +992,11 @@ export const ASSETS: AssetManifest = {
   ],
 };
 ```
+
+An animation can also take whole textures as its frames — e.g. a few
+`svgImages` drawn as states of a blinking sign — with `textures` instead of
+`texture` + `frames`; an `anim` layer then plays it (the Picasso's slot
+machines: `{ key: 'picasso-slots', textures: [...], frameRate: 4 }`).
 
 A manifest can be **global** (registered in `src/game/index.ts` as
 `assets: ASSETS`, loaded at boot — use for shared assets like a player
