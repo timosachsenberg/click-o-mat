@@ -105,7 +105,9 @@ function picassoBg(): string {
   ];
   slots.forEach(([body, trim], i) => s.push(slotMachine(520 + i * 58, 186, 54, 114, body, trim, 3 + i * 2)));
   s.push(metalShelf(764, 70, 192, 228, 7));
-  s.push(duct([418, 104], [990, 20], 17));
+  // The duct leaves the back wall right of the vanishing point and runs
+  // forward under the ceiling, out of the top right of the picture.
+  s.push(duct([622, 62], [930, -60], 12, 38));
 
   s.push(glow('pcFloorPool', 560, 380, 300, '#ffc070', 0.22, 60));
   s.push(glow('pcDjPool', 194, 310, 110, '#4ae8ff', 0.18, 30));

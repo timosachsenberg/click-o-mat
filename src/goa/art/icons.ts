@@ -96,8 +96,6 @@ function ouzo(): string {
         path('M-8 -16H8L6 16H-6Z', { fill: '#e8f4f8', stroke: INK, sw: 2.2, opacity: 0.95 }),
         path('M-7 -6H7L5.6 14H-5.6Z', { fill: '#f8f6ea' }),
         path('M-5 -13L-4 12', { stroke: '#ffffff', sw: 1.6 }),
-        rect(-6.5, -3, 13, 6, { fill: '#2a6ac0', opacity: 0.85 }),
-        text(0, 2, 'ALI', { size: 5, fill: '#ffffff' }),
       ],
       'translate(32 24)'
     ),

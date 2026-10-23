@@ -290,8 +290,9 @@ export class Engine {
 
   // ---- player preferences --------------------------------------------------
 
-  /** Text speed in [0, 1]; 0.5 is the classic timing. */
-  textSpeed = 0.5;
+  /** Text speed in [0, 1]; 0.5 is the classic timing. The default sits a
+   *  little slower, so lines stay up long enough to read comfortably. */
+  textSpeed = 0.35;
 
   /** Multiplier applied to speech-line durations (fast → short). */
   get textDurationScale(): number {

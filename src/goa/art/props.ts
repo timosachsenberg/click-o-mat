@@ -43,25 +43,33 @@ export const PAL = {
 
 const CHALK = "'Comic Sans MS', 'Trebuchet MS', sans-serif";
 
-/** A fat ventilation duct between two points (radius r), ribbed. */
-export function duct(a: Pt, b: Pt, r: number): string {
+/** A fat ventilation duct coming out of the back wall at `a` (radius r0)
+ *  and running towards the viewer under the ceiling to `b` (radius r1 —
+ *  bigger, as it's closer), ribbed. */
+export function duct(a: Pt, b: Pt, r0: number, r1: number): string {
   const dx = b[0] - a[0];
   const dy = b[1] - a[1];
   const len = Math.hypot(dx, dy);
-  const nx = (-dy / len) * r;
-  const ny = (dx / len) * r;
+  const ux = -dy / len;
+  const uy = dx / len;
+  const at = (t: number, k: number): Pt => {
+    const r = r0 + (r1 - r0) * t;
+    return [a[0] + dx * t + ux * r * k, a[1] + dy * t + uy * r * k];
+  };
   const s: string[] = [];
-  s.push(inked(poly([[a[0] + nx, a[1] + ny], [b[0] + nx, b[1] + ny], [b[0] - nx, b[1] - ny], [a[0] - nx, a[1] - ny]]), '#c9a36e', 3));
-  s.push(path(poly([[a[0] + nx, a[1] + ny], [b[0] + nx, b[1] + ny], [b[0] + nx * 0.35, b[1] + ny * 0.35], [a[0] + nx * 0.35, a[1] + ny * 0.35]]), { fill: '#8a6440' }));
-  s.push(path(`M${a[0] - nx * 0.55} ${a[1] - ny * 0.55}L${b[0] - nx * 0.55} ${b[1] - ny * 0.55}`, { stroke: '#f6e2b4', sw: r * 0.3, opacity: 0.8 }));
-  const rings = Math.floor(len / 34);
-  for (let i = 1; i < rings; i++) {
-    const t = i / rings;
-    const cx = a[0] + dx * t;
-    const cy = a[1] + dy * t;
-    s.push(path(`M${cx + nx} ${cy + ny}Q${cx + dx / len * 4} ${cy + dy / len * 4} ${cx - nx} ${cy - ny}`, { stroke: '#6a4a30', sw: 2 }));
+  // The wall flange, seen face-on where the duct leaves the wall.
+  s.push(ellipse(a[0], a[1], r0 * 1.35, r0 * 1.35, { fill: '#8a6440', stroke: INK, sw: 2.5 }));
+  s.push(inked(poly([at(0, 1), at(1, 1), at(1, -1), at(0, -1)]), '#c9a36e', 3));
+  s.push(path(poly([at(0, 1), at(1, 1), at(1, 0.35), at(0, 0.35)]), { fill: '#8a6440' }));
+  s.push(path(poly([at(0, -0.4), at(1, -0.4), at(1, -0.7), at(0, -0.7)]), { fill: '#f6e2b4', opacity: 0.8 }));
+  // Ribs: rings that grow (and spread out) towards the viewer.
+  for (let i = 1; i < 9; i++) {
+    const t = (i / 9) ** 1.35;
+    const p1 = at(t, 1);
+    const p2 = at(t, -1);
+    const bulge = (r0 + (r1 - r0) * t) * 0.35;
+    s.push(path(`M${p1[0]} ${p1[1]}Q${(p1[0] + p2[0]) / 2 + (dx / len) * bulge} ${(p1[1] + p2[1]) / 2 + (dy / len) * bulge} ${p2[0]} ${p2[1]}`, { stroke: '#6a4a30', sw: 2 }));
   }
-  s.push(ellipse(a[0], a[1], r * 0.45, r, { fill: '#5a3e28', stroke: INK, sw: 2.5, extra: `transform="rotate(${(Math.atan2(dy, dx) * 180) / Math.PI} ${a[0]} ${a[1]})"` }));
   return s.join('');
 }
 
@@ -430,10 +438,9 @@ export function jukebox(x: number, w: number, floor: number, lit: boolean): stri
   for (let i = 0; i < 4; i++) s.push(rect(x + 10 + i * ((w - 20) / 4), top + 58, (w - 20) / 4 - 3, 7, { fill: lit ? tube[i % 3] : '#e8dcc0', stroke: INK, sw: 1 }, 1.5));
   s.push(inked(`M${x + 10} ${top + 72}H${x + w - 10}V${floor - 10}H${x + 10}Z`, '#5a2412', 2));
   for (let y = top + 77; y < floor - 12; y += 5) s.push(line([x + 13, y], [x + w - 13, y], '#c8902a', 1.4));
-  // The price tag.
-  s.push(rect(cx - 22, top + 86, 44, 16, { fill: '#f4f0e6', stroke: INK, sw: 1.4 }, 2));
-  s.push(text(cx, top + 93, 'Ein Lied:', { size: 6, fill: '#3a2a10', weight: 700 }));
-  s.push(text(cx, top + 100.5, '25 Cent', { size: 7, fill: '#c43a3a' }));
+  // The price tag (what it says, the player reads out on a closer look).
+  s.push(rect(cx - 14, top + 88, 28, 12, { fill: '#f4f0e6', stroke: INK, sw: 1.4 }, 2));
+  s.push(path(`M${cx - 9} ${top + 92}h18M${cx - 9} ${top + 96}h12`, { stroke: '#a89a80', sw: 1.2 }));
   return s.join('');
 }
 
@@ -446,11 +453,12 @@ export function ouzoGlass(cx: number, baseY: number, full: boolean): string {
   ].join('');
 }
 
-/** Ali's coaster: "ALI. FINGER WEG." */
+/** Ali's coaster (it says "ALI. FINGER WEG." — too small to read from
+ *  here; the player reads it out on a closer look). */
 export function aliCoaster(cx: number, y: number): string {
   return [
     ellipse(cx, y, 13, 3.6, { fill: '#c43a3a', stroke: INK, sw: 1.4 }),
-    text(cx, y + 1.4, 'ALI. FINGER WEG.', { size: 3.4, fill: '#f4f0e6', weight: 700 }),
+    ellipse(cx, y, 9, 2.2, { stroke: '#f4f0e6', sw: 0.8, opacity: 0.7 }),
   ].join('');
 }
 
