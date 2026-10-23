@@ -17,6 +17,7 @@ import {
   metalShelf,
   navyStool,
   ouzoGlass,
+  neonSign,
   overheadRack,
   picassoPainting,
   refrainBanner,
@@ -92,6 +93,8 @@ function picassoBg(): string {
   // conditioner, the drinks board.
   s.push(column(264, 46, 302, 20));
   s.push(exitDoor(284, 148, 54, 152));
+  // The neon over the way out.
+  s.push(neonSign(324, 104, 20));
   s.push(acUnit(402, 54, 98, 26));
   s.push(whiteboard(398, 150, 116, 70));
   // The genuine Picasso, the neon sign, a row of slot machines.
@@ -105,9 +108,9 @@ function picassoBg(): string {
   ];
   slots.forEach(([body, trim], i) => s.push(slotMachine(520 + i * 58, 186, 54, 114, body, trim, 3 + i * 2)));
   s.push(metalShelf(764, 70, 192, 228, 7));
-  // The overhead rack above the counter, with the neon hanging from it.
+  // The overhead rack above the counter.
   const ceil = (x: number) => 54 - ((x + 10) * 18) / 980;
-  s.push(overheadRack(572, 980, ceil, 680));
+  s.push(overheadRack(572, 980, ceil));
   // The duct leaves the back wall right of the vanishing point and runs
   // forward under the ceiling, out of the top right of the picture.
   s.push(duct([622, 62], [930, -60], 12, 38));
@@ -353,7 +356,7 @@ const HOTSPOTS: HotspotDef[] = [
       },
     },
   }),
-  at('neon', 'Leuchtschrift', R(626, 156, 110, 28), P(600, 412), 'up', {
+  at('neon', 'Leuchtschrift', R(280, 82, 88, 32), P(311, 322), 'up', {
     on: { lookat: '„Picasso“. Das zweite S flackert seit Jahren. Niemand traut sich, es zu reparieren.' },
   }),
   at('slots', 'Spielautomaten', R(518, 184, 234, 116), P(600, 412), 'up', {

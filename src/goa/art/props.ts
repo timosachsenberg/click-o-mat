@@ -476,16 +476,14 @@ export function refrainBanner(cx: number, y: number): string {
 
 /** The overhead bar rack ("Thekenüberbau") hanging above the counter:
  *  black pipes like the back bar, beer steins on top, stemware hanging
- *  upside down below, an LED strip — and the "Picasso" neon hanging from it
- *  on two little chains. It follows the counter in perspective, growing
- *  towards the viewer on the right. */
-export function overheadRack(x0: number, x1: number, ceil: (x: number) => number, neonX: number): string {
+ *  upside down below, and an LED strip. It follows the counter in
+ *  perspective, growing towards the viewer on the right. */
+export function overheadRack(x0: number, x1: number, ceil: (x: number) => number): string {
   const s: string[] = [];
   const t = (x: number) => (x - x0) / (x1 - x0);
   const top = (x: number) => 132 - t(x) * 36;
   const bot = (x: number) => 158 - t(x) * 16;
   const k = (x: number) => 1 + t(x) * 0.6;
-  const neonGap = 66;
   // Hanging rods up to the ceiling.
   for (const rx of [x0 + 40, (x0 + x1) / 2, x1 - 60]) {
     s.push(line([rx, ceil(rx)], [rx, top(rx) + 2], INK, 4 * k(rx)));
@@ -498,9 +496,8 @@ export function overheadRack(x0: number, x1: number, ceil: (x: number) => number
     s.push(rect(bx - 6 * kk, top(bx) - 16 * kk, 12 * kk, 4 * kk, { fill: '#f8f4ec', stroke: INK, sw: 1 }, 1.5));
     s.push(path(`M${bx + 6 * kk} ${top(bx) - 10 * kk}q${5 * kk} 0 ${5 * kk} ${4 * kk}q0 ${3 * kk} ${-5 * kk} ${3 * kk}`, { stroke: INK, sw: 1.6 }));
   }
-  // Stemware upside down on the rails (with a gap for the neon).
+  // Stemware upside down on the rails.
   for (let gx = x0 + 14; gx < x1 - 8; gx += 20 * k(gx)) {
-    if (Math.abs(gx - neonX) < neonGap) continue;
     const kk = k(gx);
     const y = bot(gx) + 1;
     s.push(path(`M${gx - 4 * kk} ${y}h${8 * kk}M${gx} ${y}v${7 * kk}`, { stroke: '#e8f4f8', sw: 1.6 * kk }));
@@ -515,11 +512,5 @@ export function overheadRack(x0: number, x1: number, ceil: (x: number) => number
   for (let sx = x0 + 6; sx < x1; sx += 60) s.push(line([sx, top(sx)], [sx, bot(sx)], '#3a3a48', 3));
   s.push(path(`M${x0} ${bot(x0) + 4}L${x1} ${bot(x1) + 5}`, { stroke: '#4ae8ff', sw: 2.4 }));
   s.push(glow('rackLed', (x0 + x1) / 2, bot((x0 + x1) / 2) + 40, (x1 - x0) * 0.55, '#4ae8ff', 0.18, 50));
-  // The neon, hanging from the lower pipe on two chains.
-  const ny = bot(neonX) + 34;
-  for (const cx of [neonX - 44, neonX + 44]) {
-    s.push(path(`M${cx} ${bot(cx) + 3}L${cx} ${ny - 18}`, { stroke: '#8a8aa0', sw: 1.4, extra: 'stroke-dasharray="2 2"' }));
-  }
-  s.push(neonSign(neonX, ny, 24));
   return s.join('');
 }
