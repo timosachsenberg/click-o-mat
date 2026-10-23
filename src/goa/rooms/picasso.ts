@@ -319,9 +319,6 @@ const HOTSPOTS: HotspotDef[] = [
         await ctx.say('hilde', 'Komm her, Jungchen, ich zeig dir den Discofox!');
         await ctx.playerSay('Ich such eigentlich nur die Goa im Wald.');
         await ctx.say('hilde', 'Goa? Früher hieß das Dorfdisco.');
-        if (!ctx.flag('copAsleep')) {
-          await ctx.say('hilde', 'Und der Polizist da? Den kriegst du nur mit Musik klein. Und Schnaps.');
-        }
       },
       pickup: 'Sie würde es mögen. Genau deshalb nicht.',
       push: 'Die schubst zurück. Ich hab’s gesehen.',
