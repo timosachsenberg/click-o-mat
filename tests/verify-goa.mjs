@@ -121,6 +121,19 @@ check('climbed the steps to the toilet door', Math.abs(up.x - 58) < 3 && Math.ab
 check('no shrinking on the steps', Math.abs(up.s - scaleAt(330)) < 0.01, `(scale ${up.s.toFixed(3)})`);
 await page.screenshot({ path: `${SHOT}/goa-02b-wc.png` });
 
+// --- the slot machines blink; Hilde dances, and grabs when you pass too close
+const slotFrames = new Set();
+for (let i = 0; i < 8; i++) {
+  slotFrames.add(await ev(() => window.__engine.roomScene.layerObj('slots').frame.texture.key));
+  await page.waitForTimeout(120);
+}
+check('the slot machines are animated', slotFrames.size >= 3, [...slotFrames].join(','));
+check('Hilde dances', await ev(() => window.__engine.roomScene.actors.get('hilde').sprite.anims.currentAnim?.key.startsWith('hilde-dance')));
+await click(136, 445); // walk past her, right through her reach
+const hildeSeen = new Set();
+await settle(async () => hildeSeen.add(await ev(() => window.__engine.roomScene.actors.get('hilde').sprite.anims.currentAnim?.key)));
+check('too close: Hilde grabs', hildeSeen.has('hilde-grab-front'), [...hildeSeen].join(','));
+
 // --- Ali won't talk about the party while the Partykiller listens
 await click(720, 280, { button: 'right' }); // talk to Ali
 await settle();

@@ -145,8 +145,8 @@ export class RoomScene extends Phaser.Scene {
       timer.remove();
       overlay.destroy();
     }
-    registerManifestAnims(this, def?.assets);
     await prepareSvgAssets(this, def?.assets);
+    registerManifestAnims(this, def?.assets);
     engine.loadedRooms.add(roomId);
   }
 

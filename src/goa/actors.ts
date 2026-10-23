@@ -16,6 +16,14 @@ export const ACTORS: Record<string, ActorDef> = {
     // Polishing a glass whenever he isn't talking.
     stance: () => 'polish',
   },
+  hilde: {
+    id: 'hilde',
+    name: 'Hilde',
+    talkColor: '#ffb0d8',
+    textureSet: 'hilde',
+    // Always dancing, music or not.
+    stance: () => 'dance',
+  },
   cop: {
     id: 'cop',
     name: 'Partykiller',

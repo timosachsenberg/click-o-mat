@@ -96,16 +96,18 @@ export function column(cx: number, top: number, base: number, w: number): string
   return s.join('');
 }
 
-/** A slot machine: cabinet, glowing reel window with coloured squares. */
-export function slotMachine(x: number, y: number, w: number, h: number, body: string, trim: string, seed: number): string {
-  const r = rng(seed);
+/** A slot machine: cabinet, glowing reel window with coloured squares.
+ *  `frame` animates it: the squares shuffle, the bulbs and buttons blink. */
+export function slotMachine(x: number, y: number, w: number, h: number, body: string, trim: string, seed: number, frame = 0): string {
+  const r = rng(seed + frame * 97);
+  const lit = (i: number) => (i + frame + seed) % 2 === 0;
   const s: string[] = [];
-  s.push(glow(`slotGlow${seed}`, x + w / 2, y + h * 0.35, w * 0.9, trim, 0.35));
+  s.push(glow(`slotGlow${seed}f${frame}`, x + w / 2, y + h * 0.35, w * (0.8 + (frame % 2) * 0.2), trim, 0.35));
   s.push(inked(wobble([[x + 4, y], [x + w - 4, y], [x + w, y + h], [x, y + h]], { seed, wobble: 0.8 }), body, 3));
   s.push(path(poly([[x + w * 0.78, y + 2], [x + w - 4, y], [x + w, y + h], [x + w * 0.8, y + h]]), { fill: INK, opacity: 0.25 }));
   s.push(inked(`M${x + 8} ${y + 6}H${x + w - 8}V${y + 18}H${x + 8}Z`, trim, 2));
-  s.push(circle(x + 16, y + 12, 3.5, { fill: '#ffe066', stroke: INK, sw: 1 }));
-  s.push(circle(x + w - 16, y + 12, 3.5, { fill: '#ffe066', stroke: INK, sw: 1 }));
+  s.push(circle(x + 16, y + 12, 3.5, { fill: lit(0) ? '#ffe066' : '#8a7a3a', stroke: INK, sw: 1 }));
+  s.push(circle(x + w - 16, y + 12, 3.5, { fill: lit(1) ? '#ffe066' : '#8a7a3a', stroke: INK, sw: 1 }));
   // Screen
   const sx = x + 8;
   const sy = y + 24;
@@ -121,7 +123,9 @@ export function slotMachine(x: number, y: number, w: number, h: number, body: st
   // Button deck
   const by = sy + sh + 8;
   s.push(inked(`M${x + 4} ${by}H${x + w - 4}L${x + w} ${by + 14}H${x}Z`, '#3a2a5a', 2));
-  for (let i = 0; i < 4; i++) s.push(rect(x + 9 + i * ((w - 18) / 4), by + 3, (w - 18) / 4 - 4, 6, { fill: cols[(i + seed) % cols.length], stroke: INK, sw: 1 }, 2));
+  for (let i = 0; i < 4; i++) {
+    s.push(rect(x + 9 + i * ((w - 18) / 4), by + 3, (w - 18) / 4 - 4, 6, { fill: lit(i) ? cols[(i + seed) % cols.length] : '#4a3a6a', stroke: INK, sw: 1 }, 2));
+  }
   s.push(rect(x + w / 2 - 9, by + 24, 18, 4, { fill: '#c8ccd4', stroke: INK, sw: 1 }, 1));
   return s.join('');
 }

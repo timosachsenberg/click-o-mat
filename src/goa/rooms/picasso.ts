@@ -1,4 +1,4 @@
-import { Layer, type Facing, type HotspotDef, type LayerDef, type Rect, type RoomDef, type Vec2 } from '../../engine/types';
+import { Layer, type Facing, type HotspotDef, type LayerDef, type Rect, type RoomDef, type SvgImageAsset, type Vec2 } from '../../engine/types';
 import type { ScriptContext } from '../../engine/ScriptContext';
 import { INK, defs, ellipse, glow, grainDefs, grainOverlay, group, inked, line, linear, path, poly, rect, vignette } from '../../game/art/toon';
 import {
@@ -97,16 +97,8 @@ function picassoBg(): string {
   s.push(neonSign(324, 104, 20));
   s.push(acUnit(402, 54, 98, 26));
   s.push(whiteboard(398, 150, 116, 70));
-  // The genuine Picasso, the neon sign, a row of slot machines.
+  // The genuine Picasso. (The slot machines are their own animated layer.)
   s.push(picassoPainting(528, 108, 44, 50));
-
-  const slots: Array<[string, string]> = [
-    ['#5a2a9a', '#ff5ab4'],
-    ['#d8602a', '#ffd34a'],
-    ['#1e7a6a', '#5ae0a0'],
-    ['#a82a3a', '#5ab4ff'],
-  ];
-  slots.forEach(([body, trim], i) => s.push(slotMachine(520 + i * 58, 186, 54, 114, body, trim, 3 + i * 2)));
   s.push(metalShelf(764, 70, 192, 228, 7));
   // The overhead rack above the counter.
   const ceil = (x: number) => 54 - ((x + 10) * 18) / 980;
@@ -120,6 +112,46 @@ function picassoBg(): string {
   s.push(vignette('pcVig', 960, 450, 0.5, '#1e1040'));
   s.push(grainOverlay(960, 450));
   return s.join('');
+}
+
+/** The row of slot machines, as animation frames: screens shuffling,
+ *  bulbs and buttons blinking. Rasterized with the room's assets. */
+const SLOTS = { x: 490, y: 170, w: 290, h: 134 };
+const SLOT_FRAMES: SvgImageAsset[] = [0, 1, 2, 3].map((f) => ({
+  key: `picasso-slots-${f}`,
+  width: SLOTS.w,
+  height: SLOTS.h,
+  svg: group(
+    (
+      [
+        ['#5a2a9a', '#ff5ab4'],
+        ['#d8602a', '#ffd34a'],
+        ['#1e7a6a', '#5ae0a0'],
+        ['#a82a3a', '#5ab4ff'],
+      ] as Array<[string, string]>
+    )
+      .map(([body, trim], i) => slotMachine(520 + i * 58, 186, 54, 114, body, trim, 3 + i * 2, f))
+      .join(''),
+    `translate(${-SLOTS.x} ${-SLOTS.y})`
+  ),
+}));
+
+/** Hilde dances in front of the DJ booth; come too close and she grabs. */
+const HILDE = { x: 190, y: 440 };
+let lastGrab = -Infinity;
+
+async function hildeGrabs(ctx: ScriptContext): Promise<void> {
+  // A grab every so often is funny; every time would be a wall.
+  if (Date.now() - lastGrab < 25000) return;
+  lastGrab = Date.now();
+  const pick = <T,>(list: T[]) => list[Math.floor(Math.random() * list.length)];
+  ctx.sfx('deny');
+  void ctx.animate('hilde', 'grab', 1600);
+  await ctx.say('hilde', pick(['Na, Jungchen! Ein Tänzchen?', 'Hiergeblieben, Schnuckelchen!', 'So jung kommen wir nicht mehr zusammen!', 'Ich beiß nicht. Meistens.']));
+  await ctx.playerSay(pick(['Huch! Finger weg!', 'Ich … muss weiter!', 'Später vielleicht! Viel später!']));
+  // Back out of reach.
+  const p = ctx.player;
+  await ctx.walkTo(ctx.activeCharId, p.x < HILDE.x ? 120 : 270, 392);
 }
 
 /** The counter, running from the back left to the front right. */
@@ -273,6 +305,35 @@ const HOTSPOTS: HotspotDef[] = [
       pickup: 'Die Kopfhörer kleben fest. Ich frag lieber nicht, womit.',
     },
   }),
+  {
+    id: 'hilde',
+    name: 'Hilde',
+    actor: 'hilde',
+    walkTo: P(262, 430),
+    facing: 'left',
+    defaultVerb: 'talkto',
+    on: {
+      lookat: 'Hilde. Tanzt seit 1979 ununterbrochen. Die Musik ist dabei optional.',
+      talkto: async (ctx) => {
+        await ctx.playerSay('Guten Abend!');
+        await ctx.say('hilde', 'Komm her, Jungchen, ich zeig dir den Discofox!');
+        await ctx.playerSay('Ich such eigentlich nur die Goa im Wald.');
+        await ctx.say('hilde', 'Goa? Früher hieß das Dorfdisco.');
+        if (!ctx.flag('copAsleep')) {
+          await ctx.say('hilde', 'Und der Polizist da? Den kriegst du nur mit Musik klein. Und Schnaps.');
+        }
+      },
+      pickup: 'Sie würde es mögen. Genau deshalb nicht.',
+      push: 'Die schubst zurück. Ich hab’s gesehen.',
+    },
+    onItem: {
+      give: {
+        euro: async (ctx) => {
+          await ctx.say('hilde', 'Für mich? Behalt dein Geld, Schnuckelchen. Ein Tanz reicht.');
+        },
+      },
+    },
+  },
   at('column', 'Säule', R(100, 0, 46, 410), P(170, 420), 'left', {
     on: {
       lookat: 'Eine Säule. Antik, sagt Ali. Baumarkt, sagt die Säule.',
@@ -523,6 +584,7 @@ export const picassoRoom: RoomDef = {
 
   layers: [
     { id: 'bg', depth: Layer.BEHIND, svg: picassoBg() },
+    { id: 'slots', depth: Layer.BEHIND, x: SLOTS.x, y: SLOTS.y, anim: 'picasso-slots' },
     roomLayer('counter', 375, 396, 296, 566, 154, picassoCounter()),
     // Ali's ouzo: on its coaster (full or empty), or in front of the guest.
     {
@@ -582,12 +644,35 @@ export const picassoRoom: RoomDef = {
     box(504, 390, 540, 404), // stools at the counter
     box(618, 402, 662, 420),
     box(788, 428, 828, 446),
+    box(HILDE.x - 20, HILDE.y - 8, HILDE.x + 20, HILDE.y + 6), // Hilde
   ],
   // Perspective, except on the toilet steps: there the player climbs rather
   // than walks away from us, so they keep their size.
   scaling: (x, y) => scaleAt(onSteps(x, y) ? WC.floor : y),
 
   music: 'pub-theme',
+
+  // The slot machines' animation frames.
+  assets: {
+    svgImages: SLOT_FRAMES,
+    anims: [{ key: 'picasso-slots', textures: SLOT_FRAMES.map((f) => f.key), frameRate: 4 }],
+  },
+
+  // Too close to Hilde and she grabs.
+  regions: [
+    {
+      id: 'hilde',
+      polygon: [
+        P(HILDE.x - 46, HILDE.y - 4),
+        P(HILDE.x - 30, HILDE.y - 20),
+        P(HILDE.x + 30, HILDE.y - 20),
+        P(HILDE.x + 46, HILDE.y - 4),
+        P(HILDE.x + 46, HILDE.y + 10),
+        P(HILDE.x - 46, HILDE.y + 10),
+      ],
+      onEnter: hildeGrabs,
+    },
+  ],
 
   entries: {
     start: { x: 300, y: 420, facing: 'right' },
@@ -597,6 +682,7 @@ export const picassoRoom: RoomDef = {
   actors: [
     { id: 'ali', x: 720, y: 362, facing: 'down' },
     { id: 'cop', x: 640, y: 413, facing: 'up' },
+    { id: 'hilde', x: HILDE.x, y: HILDE.y, facing: 'down' },
   ],
 
   async onEnter(ctx) {
@@ -621,6 +707,15 @@ export const picassoRoom: RoomDef = {
           'Ich hab mehr Partys beendet als ihr besucht habt.',
         ];
         await ctx.say('cop', lines[Math.floor(Math.random() * lines.length)]);
+      },
+    },
+    {
+      // Hilde, mid-dance.
+      every: [14000, 26000],
+      run: async (ctx) => {
+        if (ctx.busy) return;
+        const lines = ['Hossa!', 'Und eins, und zwei, und Cha-Cha-Cha!', 'Früher war hier jeden Abend Disco!', 'Ali! Mach mal was Flottes!'];
+        await ctx.say('hilde', lines[Math.floor(Math.random() * lines.length)]);
       },
     },
   ],

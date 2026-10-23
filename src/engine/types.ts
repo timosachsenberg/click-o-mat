@@ -289,16 +289,24 @@ export interface SpritesheetAsset {
  * `<textureSet>-<pose>-<variant>` (pose: idle|walk|talk, variant:
  * front|back|side) so actors pick it up automatically.
  */
-export interface AnimAsset {
+export type AnimAsset = {
   key: string;
-  /** Texture key of the spritesheet the frames come from. */
-  texture: string;
-  /** Frame indices, in play order. */
-  frames: number[];
   frameRate: number;
   /** -1 = loop forever (the default). */
   repeat?: number;
-}
+} & (
+  | {
+      /** Texture key of the spritesheet the frames come from… */
+      texture: string;
+      /** …and its frame indices, in play order. */
+      frames: number[];
+    }
+  | {
+      /** …or whole textures, one per frame (e.g. `svgImages` drawn as an
+       *  animation's frames — a blinking sign, a flickering screen). */
+      textures: string[];
+    }
+);
 
 /** An audio file (SFX or music). `url` may be an array of formats (e.g. an
  *  .ogg and an .mp3) for cross-browser fallback, as Phaser's loader accepts. */
