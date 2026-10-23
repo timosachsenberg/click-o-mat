@@ -217,7 +217,9 @@ export class Actor {
     const minX = view.x + margin + halfW;
     const maxX = view.right - margin - halfW;
     const x = minX <= maxX ? Phaser.Math.Clamp(this.x, minX, maxX) : view.centerX;
-    const y = Math.max(view.y + 30 + this.speech.height, this.y - this.sprite.displayHeight - 12);
+    // Just above the head: the frame's top, less any empty headroom in it.
+    const top = this.sprite.displayHeight - (this.def.headroom ?? 0) * this.sprite.scaleY;
+    const y = Math.max(view.y + 30 + this.speech.height, this.y - top - 4);
     this.speech.setPosition(x, y);
   }
 

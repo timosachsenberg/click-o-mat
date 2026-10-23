@@ -21,6 +21,8 @@ export const ACTORS: Record<string, ActorDef> = {
     name: 'Partykiller',
     talkColor: '#9be89b',
     textureSet: 'cop',
+    // His frames carry extra room above the cap (snoring z's).
+    headroom: 12,
     // Seated and watchful (idle), until the Magic Woman knocks him out.
     stance: (state) => (state.getFlag('copAsleep') ? 'sleep' : undefined),
   },

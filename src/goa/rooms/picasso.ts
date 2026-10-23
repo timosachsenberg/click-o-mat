@@ -16,8 +16,9 @@ import {
   jukebox,
   metalShelf,
   navyStool,
-  neonSign,
   ouzoGlass,
+  neonSign,
+  overheadRack,
   picassoPainting,
   refrainBanner,
   slotMachine,
@@ -92,11 +93,13 @@ function picassoBg(): string {
   // conditioner, the drinks board.
   s.push(column(264, 46, 302, 20));
   s.push(exitDoor(284, 148, 54, 152));
+  // The neon over the way out.
+  s.push(neonSign(324, 104, 20));
   s.push(acUnit(402, 54, 98, 26));
   s.push(whiteboard(398, 150, 116, 70));
   // The genuine Picasso, the neon sign, a row of slot machines.
   s.push(picassoPainting(528, 108, 44, 50));
-  s.push(neonSign(668, 158, 22));
+
   const slots: Array<[string, string]> = [
     ['#5a2a9a', '#ff5ab4'],
     ['#d8602a', '#ffd34a'],
@@ -105,7 +108,12 @@ function picassoBg(): string {
   ];
   slots.forEach(([body, trim], i) => s.push(slotMachine(520 + i * 58, 186, 54, 114, body, trim, 3 + i * 2)));
   s.push(metalShelf(764, 70, 192, 228, 7));
-  s.push(duct([418, 104], [990, 20], 17));
+  // The overhead rack above the counter.
+  const ceil = (x: number) => 54 - ((x + 10) * 18) / 980;
+  s.push(overheadRack(572, 980, ceil));
+  // The duct leaves the back wall right of the vanishing point and runs
+  // forward under the ceiling, out of the top right of the picture.
+  s.push(duct([622, 62], [930, -60], 12, 38));
 
   s.push(glow('pcFloorPool', 560, 380, 300, '#ffc070', 0.22, 60));
   s.push(glow('pcDjPool', 194, 310, 110, '#4ae8ff', 0.18, 30));
@@ -348,7 +356,7 @@ const HOTSPOTS: HotspotDef[] = [
       },
     },
   }),
-  at('neon', 'Leuchtschrift', R(604, 136, 128, 36), P(600, 412), 'up', {
+  at('neon', 'Leuchtschrift', R(280, 82, 88, 32), P(311, 322), 'up', {
     on: { lookat: '„Picasso“. Das zweite S flackert seit Jahren. Niemand traut sich, es zu reparieren.' },
   }),
   at('slots', 'Spielautomaten', R(518, 184, 234, 116), P(600, 412), 'up', {
@@ -377,6 +385,12 @@ const HOTSPOTS: HotspotDef[] = [
     on: {
       lookat: 'Flaschen, Gläser, Einmachgläser mit Unbekanntem. Und kein Energydrink außer Magic Woman.',
       pickup: 'Da komme ich nicht ran. Und das ist auch besser so.',
+    },
+  }),
+  at('rack', 'Thekenüberbau', R(572, 92, 388, 66), P(700, 430), 'up', {
+    on: {
+      lookat: 'Ein Überbau voller Gläser. Und Bierkrüge, die seit der WM 2006 keiner mehr runtergeholt hat.',
+      pickup: 'Zu hoch. Und Ali zählt die Gläser jeden Abend.',
     },
   }),
   at('counter', 'Tresen', R(408, 304, 552, 56), P(500, 404), 'up', {

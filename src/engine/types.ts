@@ -86,6 +86,9 @@ export interface ActorDef {
   baseScale?: number;
   /** Walk speed in px/sec at scale 1. */
   speed?: number;
+  /** Empty frame rows above the head (frame px): speech sits that much
+   *  lower, right above the actual head. */
+  headroom?: number;
   /** State-driven stance: while this returns a pose name, that pose's
    *  animation (`<textureSet>-<pose>-<variant>`, e.g. a custom 'sleep' pose
    *  of an SvgActorAsset) replaces idle — someone dozing off, sitting down,

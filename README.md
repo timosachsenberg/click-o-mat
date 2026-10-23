@@ -861,8 +861,9 @@ gallery's Blobbo does exactly this.
   for item-on-item, and optional `use` for an item that works on its own
   (drink it, read it): it runs on *Use + item*, or on a second click on the
   item in hand; items without it are armed for "Use X with …".
-- **Actors** (`actors.ts`): id, name, speech color, texture set, speed, and
-  an optional `stance` (see [custom poses](#vector-art-svg)).
+- **Actors** (`actors.ts`): id, name, speech color, texture set, speed, an
+  optional `stance` (see [custom poses](#vector-art-svg)), and `headroom` —
+  empty frame rows above the head, so speech sits right above the head.
 
 ### Multiple playable characters (optional)
 
