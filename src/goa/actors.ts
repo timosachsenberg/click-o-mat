@@ -18,7 +18,7 @@ export const ACTORS: Record<string, ActorDef> = {
   },
   hilde: {
     id: 'hilde',
-    name: 'Hilde',
+    name: 'Wilde Hilde',
     talkColor: '#ffb0d8',
     textureSet: 'hilde',
     // Always dancing, music or not.

@@ -656,6 +656,7 @@ export class RoomScene extends Phaser.Scene {
   private showHotspotLabels(): void {
     if (this.hotspotLabels || engine.dialogMode || engine.menuOpen || !this.roomDef) return;
     const container = this.add.container(0, 0).setDepth(45000);
+    const placed: Phaser.Geom.Rectangle[] = [];
     for (const hs of this.roomDef.hotspots) {
       if (hs.visible && !hs.visible(engine.state)) continue;
       let cx: number | null = null;
@@ -674,17 +675,23 @@ export class RoomScene extends Phaser.Scene {
         cy = hs.polygon.reduce((s, p) => s + p.y, 0) / hs.polygon.length;
       }
       if (cx === null || cy === null) continue;
-      container.add(
-        this.add
-          .text(cx, cy, hs.name, {
-            fontFamily: engine.theme.font,
-            fontSize: '13px',
-            color: '#ffe066',
-            stroke: '#000000',
-            strokeThickness: 4,
-          })
-          .setOrigin(0.5)
-      );
+      const label = this.add
+        .text(cx, cy, hs.name, {
+          fontFamily: engine.theme.font,
+          fontSize: '13px',
+          color: '#ffe066',
+          stroke: '#000000',
+          strokeThickness: 4,
+        })
+        .setOrigin(0.5);
+      // Hotspots that share a centre (a counter and something on it) would
+      // stack their labels: step this one down/up to the nearest free row.
+      const step = label.height - 4;
+      for (let i = 1; i <= 8 && placed.some((b) => Phaser.Geom.Rectangle.Overlaps(b, label.getBounds())); i++) {
+        label.y = cy + Math.ceil(i / 2) * step * (i % 2 ? 1 : -1);
+      }
+      placed.push(label.getBounds());
+      container.add(label);
     }
     this.hotspotLabels = container;
   }

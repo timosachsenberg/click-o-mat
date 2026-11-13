@@ -27,7 +27,7 @@ import {
   wcDoor,
   whiteboard,
 } from '../art/props';
-import { resetJukebox } from '../jukebox';
+import { resetJukebox, turnCop } from '../jukebox';
 
 // ---- layout ----------------------------------------------------------------------
 // The Picasso, a basement bar (after the concept art in issue #5). Left: the
@@ -84,7 +84,7 @@ function picassoBg(): string {
   s.push(rect(0, 294, 960, 10, { fill: '#3a1e3a', stroke: INK, sw: 2 }));
 
   // Left: clock, toilet up two steps, DJ booth under the disco ball, flyer.
-  s.push(wallClock(150, 96, 17));
+  s.push(wallClock(60, 90, 17));
   s.push(wcDoor(26, 68, 134, WC.sill, WC.floor));
   s.push(flyer(170, 128, 48, 60));
   s.push(djBooth(138, 112, 300));
@@ -102,7 +102,7 @@ function picassoBg(): string {
   s.push(metalShelf(764, 70, 192, 228, 7));
   // The overhead rack above the counter.
   const ceil = (x: number) => 54 - ((x + 10) * 18) / 980;
-  s.push(overheadRack(572, 980, ceil));
+  s.push(overheadRack(586, 980, ceil));
   // The duct leaves the back wall right of the vanishing point and runs
   // forward under the ceiling, out of the top right of the picture.
   s.push(duct([622, 62], [930, -60], 12, 38));
@@ -136,7 +136,7 @@ const SLOT_FRAMES: SvgImageAsset[] = [0, 1, 2, 3].map((f) => ({
   ),
 }));
 
-/** Hilde dances in front of the DJ booth; come too close and she grabs. */
+/** The Wilde Hilde dances in front of the DJ booth; come too close and she grabs. */
 const HILDE = { x: 190, y: 440 };
 let lastGrab = -Infinity;
 
@@ -148,7 +148,7 @@ async function hildeGrabs(ctx: ScriptContext): Promise<void> {
   ctx.sfx('deny');
   void ctx.animate('hilde', 'grab', 1600);
   await ctx.say('hilde', pick(['Na, Jungchen! Ein Tänzchen?', 'Hiergeblieben, Schnuckelchen!', 'So jung kommen wir nicht mehr zusammen!', 'Ich beiß nicht. Meistens.']));
-  await ctx.playerSay(pick(['Huch! Finger weg!', 'Ich … muss weiter!', 'Später vielleicht! Viel später!']));
+  await ctx.playerSay('Hey, nicht angrapschen!');
   // Back out of reach.
   const p = ctx.player;
   await ctx.walkTo(ctx.activeCharId, p.x < HILDE.x ? 120 : 270, 392);
@@ -191,9 +191,9 @@ const OUZO = { coaster: { x: 772, y: 338 }, cop: { x: 684, y: 332 } };
 /** "Ich zeig das an": the Partykiller turns round to object — while awake. */
 async function anzeige(ctx: ScriptContext, line: string): Promise<boolean> {
   if (ctx.flag('copAsleep')) return false;
-  ctx.face('cop', 'down');
+  turnCop(ctx, true);
   await ctx.say('cop', line);
-  ctx.face('cop', 'up');
+  turnCop(ctx, false);
   return true;
 }
 
@@ -275,7 +275,7 @@ const HOTSPOTS: HotspotDef[] = [
   at('steps', 'Stufen', R(8, 276, 108, 54), P(60, 338), 'up', {
     on: { lookat: 'Zwei Stufen. Der Höhepunkt jeder Nacht im Picasso.' },
   }),
-  at('clock', 'Uhr', R(130, 76, 40, 40), P(150, 330), 'up', {
+  at('clock', 'Uhr', R(40, 70, 40, 40), P(60, 338), 'up', {
     on: { lookat: 'Kurz vor zwölf. Im Wald geht’s jetzt los.' },
   }),
   at('flyer', 'Flyer', R(166, 124, 56, 68), P(194, 326), 'up', {
@@ -307,13 +307,13 @@ const HOTSPOTS: HotspotDef[] = [
   }),
   {
     id: 'hilde',
-    name: 'Hilde',
+    name: 'Wilde Hilde',
     actor: 'hilde',
     walkTo: P(262, 430),
     facing: 'left',
     defaultVerb: 'talkto',
     on: {
-      lookat: 'Hilde. Tanzt seit 1979 ununterbrochen. Die Musik ist dabei optional.',
+      lookat: 'Die Wilde Hilde. Tanzt seit 1979 ununterbrochen. Die Musik ist dabei optional.',
       talkto: async (ctx) => {
         await ctx.playerSay('Guten Abend!');
         await ctx.say('hilde', 'Komm her, Jungchen, ich zeig dir den Discofox!');
@@ -445,7 +445,7 @@ const HOTSPOTS: HotspotDef[] = [
       pickup: 'Da komme ich nicht ran. Und das ist auch besser so.',
     },
   }),
-  at('rack', 'Thekenüberbau', R(572, 92, 388, 66), P(700, 430), 'up', {
+  at('rack', 'Thekenüberbau', R(586, 92, 374, 66), P(700, 430), 'up', {
     on: {
       lookat: 'Ein Überbau voller Gläser. Und Bierkrüge, die seit der WM 2006 keiner mehr runtergeholt hat.',
       pickup: 'Zu hoch. Und Ali zählt die Gläser jeden Abend.',
@@ -536,9 +536,9 @@ const HOTSPOTS: HotspotDef[] = [
           await ctx.playerSay('Den weck ich bestimmt nicht.');
           return;
         }
-        ctx.face('cop', 'down');
+        turnCop(ctx, true);
         await ctx.dialog('cop');
-        ctx.face('cop', 'up');
+        turnCop(ctx, false);
       },
       push: async (ctx) => {
         if (!(await anzeige(ctx, 'Körperverletzung! Versuchte! Ich zeig das an!'))) {
@@ -630,7 +630,10 @@ export const picassoRoom: RoomDef = {
     { x: 18, y: WC.sill + 2 },
     { x: 98, y: WC.sill + 2 },
     { x: 108, y: 316 },
-    { x: 386, y: 316 },
+    // Clear of the counter's end: it is one occluder (baseline 375), so
+    // nobody may overlap it from the side until they are in front of it.
+    { x: 380, y: 316 },
+    { x: 380, y: 378 },
     { x: 396, y: 386 },
     { x: 940, y: 446 },
     { x: 14, y: 446 },

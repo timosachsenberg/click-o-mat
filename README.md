@@ -111,7 +111,7 @@ talk while he does.
 
 <details><summary>Solution</summary>
 
-(Mind Hilde, dancing in front of the DJ booth: get too close and she grabs.)
+(Mind the Wilde Hilde, dancing in front of the DJ booth: get too close and she grabs.)
 
 1. Talk to **Ali** about the Goa — he points at the Partykiller.
 2. Order a drink: Red Cow? *Aus.* Flying Pony? *Auch aus.* **Magic Woman**?
