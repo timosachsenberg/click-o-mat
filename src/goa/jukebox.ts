@@ -36,6 +36,13 @@ let generation = 0;
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
+/** The Partykiller's seat. His stool is an occluder at y=414: seen from
+ *  behind he sits behind its backrest (y=413); turned round to face us he
+ *  sits in front of it (y=415), or the backrest would cover his chest. */
+export function turnCop(ctx: ScriptContext, toUs: boolean): void {
+  ctx.place('cop', 640, toUs ? 415 : 413, toUs ? 'down' : 'up');
+}
+
 /** Room entry: no song is playing, nobody is mid-refrain, and Ali's ouzo is
  *  back on its coaster (a save made mid-trick must not strand it). */
 export async function resetJukebox(ctx: ScriptContext): Promise<void> {
@@ -143,9 +150,9 @@ async function copDrinks(ctx: ScriptContext): Promise<void> {
     await ctx.say('cop', 'Trink!');
   } else if (count === 2) {
     // Raised index finger, ever softer consonants.
-    ctx.face('cop', 'down');
+    turnCop(ctx, true);
     await ctx.say('cop', 'Trinkytrinky.');
-    ctx.face('cop', 'up');
+    turnCop(ctx, false);
   } else {
     await ctx.cutscene(danceToSleep);
     return;
@@ -162,7 +169,7 @@ async function danceToSleep(ctx: ScriptContext): Promise<void> {
   void ctx.animate('ali', null);
   ctx.face('ali', 'down');
   await ctx.repaint();
-  ctx.face('cop', 'down');
+  turnCop(ctx, true);
   await ctx.say('cop', 'Und jetzt tanzt!');
   ctx.playMusic('disco-theme');
   // He jumps off his stool (in front of it, so it doesn't hide him).
