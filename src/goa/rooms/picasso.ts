@@ -238,10 +238,29 @@ async function leave(ctx: ScriptContext): Promise<void> {
     return;
   }
   ctx.sfx('open');
-  await ctx.playerSay('Folge dem Bass. Chakabunga. Los geht’s!');
-  ctx.setFlag('chapterDone');
-  ctx.sfx('win');
-  ctx.showTitle('FORTSETZUNG FOLGT …');
+  await ctx.once('leftPicasso', async () => {
+    await ctx.playerSay('Folge dem Bass. Chakabunga. Los geht’s!');
+  });
+  await ctx.goToRoom('neckar', 'picasso');
+}
+
+/** The free bar stool's worm-eaten leg: Ali doesn't mind, the Partykiller
+ *  would (Sachbeschädigung) — while he's awake. */
+async function takeLeg(ctx: ScriptContext): Promise<void> {
+  if (ctx.flag('legTaken')) {
+    await ctx.playerSay('Ein Bein reicht. Drei braucht der Hocker noch zum Stehen.');
+    return;
+  }
+  if (await anzeige(ctx, 'Sachbeschädigung! Am Mobiliar! Ich zeig das an!')) {
+    await ctx.playerSay('Nicht, solange der hinguckt.');
+    return;
+  }
+  ctx.sfx('deny');
+  ctx.setFlag('legTaken');
+  ctx.addItem('stuhlbein');
+  await ctx.repaint();
+  await ctx.playerSay('*Knack.* Das Bein hing eh nur noch aus Gewohnheit dran.');
+  await ctx.say('ali', 'Nimm ruhig mit, mein Lieber. Der Hocker kommt sowieso auf den Sperrmüll.');
 }
 
 // ---- hotspots --------------------------------------------------------------------
@@ -456,8 +475,17 @@ const HOTSPOTS: HotspotDef[] = [
   }),
   at('stool', 'Barhocker', R(504, 334, 38, 66), P(492, 414), 'up', {
     on: {
-      lookat: 'Ein Hocker mit Herz in der Lehne. Direkt neben dem Partykiller. Kein Zufall.',
+      lookat: async (ctx) => {
+        if (ctx.flag('legTaken')) {
+          await ctx.playerSay('Steht jetzt auf drei Beinen. Wie die meisten Gäste um diese Uhrzeit.');
+          return;
+        }
+        await ctx.playerSay('Ein Hocker mit Herz in der Lehne. Direkt neben dem Partykiller. Kein Zufall.');
+        await ctx.playerSay('Ein Bein ist ganz durchlöchert. Und da drin knuspert was. Holzwürmer!');
+      },
       use: 'Ich setz mich lieber nicht neben ihn. Er nimmt bestimmt Fingerabdrücke.',
+      pickup: takeLeg,
+      pull: takeLeg,
     },
   }),
   at('ouzo', 'Alis Ouzo', R(758, 314, 28, 30), P(770, 436), 'up', {
@@ -616,7 +644,16 @@ export const picassoRoom: RoomDef = {
       svg: group(refrainBanner(480, 14), 'translate(-220 -8)'),
       visible: (state) => !!state.getFlag('refrain'),
     },
-    roomLayer('stool', 399, 486, 300, 72, 104, heartStool(522, 398, stoolScale(398), true)),
+    // The free stool, with its worm-eaten leg (until the player takes it).
+    {
+      id: 'stool',
+      depth: 399,
+      x: 486,
+      y: 300,
+      w: 72,
+      h: 104,
+      svg: (state) => group(heartStool(522, 398, stoolScale(398), true, state.getFlag('legTaken') ? 'gone' : 'worms'), 'translate(-486 -300)'),
+    },
     // He sits facing the counter, so his stool's backrest is in front of him.
     roomLayer('copStool', 414, 600, 300, 82, 118, heartStool(640, 413, stoolScale(413), true)),
     roomLayer('stool3', 441, 766, 326, 86, 120, heartStool(808, 440, stoolScale(440), true)),

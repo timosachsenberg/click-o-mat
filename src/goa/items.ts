@@ -51,4 +51,24 @@ export const ITEMS: Record<string, ItemDef> = {
     lookAt: 'Alis Feierabend-Ouzo. Schnell weg damit, bevor der Refrain vorbei ist.',
     use: 'Anis? Nein danke. Der ist für jemand anderen.',
   },
+  stuhlbein: {
+    id: 'stuhlbein',
+    name: 'wurmstichiges Stuhlbein',
+    icon: 'icon-stuhlbein',
+    lookAt: async (ctx) => {
+      await ctx.playerSay('Ein Stuhlbein, löchrig wie ein Emmentaler. Drinnen knuspert es.');
+      await ctx.playerSay('Holzwürmer. Und so wie die mampfen, haben sie seit Wochen nichts Frisches gehabt.');
+    },
+    use: 'Ich bin doch kein Holzwurm. Die Würmer brauchen was Größeres.',
+  },
+  muetze: {
+    id: 'muetze',
+    name: 'Burschenschaftsmütze',
+    icon: 'icon-muetze',
+    lookAt: async (ctx) => {
+      await ctx.playerSay('Eine grüne Couleurmütze, grün-weiß-rot. Noch ein bisschen nass.');
+      await ctx.playerSay('Innen eingestickt: „Eigentum der Verbindung. Finder bitte Bier zurückbringen.“');
+    },
+    use: 'Aufsetzen? Über meine Mütze? Später vielleicht. Im richtigen Moment.',
+  },
 };

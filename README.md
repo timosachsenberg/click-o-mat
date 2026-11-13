@@ -16,7 +16,8 @@ sources), the whole thing is code.
 
 Next to the demo lives the start of an actual adventure, **„Folge dem Bass“**
 (German, `src/goa/`): you begin in the **Picasso**, Ali's basement bar, with nothing but a
-two-euro coin and need the password for tonight's Goa party in the forest. The
+two-euro coin and need the password for tonight's Goa party in the forest — then
+out onto the **Neckarbrücke** in Tübingen, where the Stocherkähne pass by. The
 **title screen picks between the two** (SPIEL · DEMO); `?game=goa` /
 `?game=demo` select one directly, and the last pick is remembered.
 
@@ -130,7 +131,16 @@ talk while he does.
    (no harm done).
 6. Three refrains, three ouzos: *Trink!* — *Trinkytrinky* — *Und jetzt
    tanzt!* He dances (traffic duty, then the disco finger) and falls asleep.
-7. Ask Ali again: the password is **Chakabunga**. Leave through the door.
+7. Ask Ali again: the password is **Chakabunga**.
+8. Now that nobody reports you for *Sachbeschädigung*: **pick up the bar stool**
+   next to the sleeping Partykiller — its worm-eaten leg comes right off. Leave
+   through the door.
+9. Out on the **Neckarbrücke** a Stocherkahn full of Burschenschaftler comes down
+   the river every few seconds. When one is close enough, **use the chair leg
+   with the punt**: the woodworms eat through it in no time and the crew goes
+   down with it (the Neckar is only waist-deep). Only a **cap** floats ashore —
+   take it from the jetty (down the steps on the left), then head right,
+   **towards the forest**.
 
 </details>
 
@@ -468,7 +478,9 @@ src/
     index.ts           its GameContent (German UI strings, start inventory)
     art/cast.ts        Player, Ali, the Partykiller (on the demo's puppet rig)
     art/props.ts       The bar's props (columns, slot machines, DJ booth, …)
+    art/neckar.ts      The Neckar from the bridge, and the punt with its crew
     rooms/picasso.ts   The Picasso, Ali's basement bar
+    rooms/neckar.ts    The Neckarbrücke (a punt passes regularly; sink it)
 public/
   img/                 PNG assets (served verbatim, copied into dist/)
 tools/

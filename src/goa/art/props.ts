@@ -133,14 +133,29 @@ export function slotMachine(x: number, y: number, w: number, h: number, body: st
 /** Wooden bar stool with a heart cut out of its backrest.
  *  `back`: we see the backrest from behind (stool faces away from us); else
  *  the stool faces us and the backrest is behind the seat. s = scale. */
-export function heartStool(cx: number, floor: number, s: number, back: boolean): string {
+export function heartStool(cx: number, floor: number, s: number, back: boolean, wormLeg?: 'worms' | 'gone'): string {
   const seatY = floor - 62 * s;
   const out: string[] = [];
   const legs = () => {
     const l: string[] = [];
     l.push(ellipse(cx, floor + 1, 26 * s, 5 * s, { fill: '#000000', opacity: 0.3 }));
     for (const [x0, x1, shade] of [[-14, -20, false], [14, 20, true], [-7, -9, true], [7, 9, false]] as Array<[number, number, boolean]>) {
+      // The outer left leg may be worm-eaten (holes, a worm) or gone (a stump).
+      const worm = x0 === -14 ? wormLeg : undefined;
+      if (worm === 'gone') {
+        l.push(inked(poly([[cx + x0 * s - 3 * s, seatY + 4 * s], [cx + x0 * s + 3 * s, seatY + 4 * s], [cx + x0 * s + 2.6 * s, seatY + 10 * s], [cx + x0 * s - 3.2 * s, seatY + 9 * s]]), PAL.woodLight, 2));
+        continue;
+      }
       l.push(inked(poly([[cx + x0 * s - 3 * s, seatY + 4 * s], [cx + x0 * s + 3 * s, seatY + 4 * s], [cx + x1 * s + 3 * s, floor], [cx + x1 * s - 3 * s, floor]]), shade ? PAL.wood : PAL.woodLight, 2));
+      if (worm === 'worms') {
+        for (const t of [0.22, 0.4, 0.55, 0.72, 0.86]) {
+          const x = cx + (x0 + (x1 - x0) * t) * s + (t * 7 % 2 - 1) * s;
+          l.push(circle(x, seatY + 4 * s + (floor - seatY - 4 * s) * t, 0.9 * s + 0.4, { fill: '#2a140a' }));
+        }
+        const wy = seatY + 4 * s + (floor - seatY - 4 * s) * 0.4;
+        const wx = cx + (x0 + (x1 - x0) * 0.4) * s;
+        l.push(path(`M${wx} ${wy}q${-3 * s} ${-2 * s} ${-4 * s} ${-5 * s}`, { stroke: '#f0a0b8', sw: 1.6 * s + 0.4 }));
+      }
     }
     l.push(path(`M${cx - 18 * s} ${floor - 18 * s}H${cx + 18 * s}`, { stroke: INK, sw: 5 * s }));
     l.push(path(`M${cx - 18 * s} ${floor - 18 * s}H${cx + 18 * s}`, { stroke: PAL.woodLight, sw: 2.6 * s }));

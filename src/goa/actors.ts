@@ -34,4 +34,15 @@ export const ACTORS: Record<string, ActorDef> = {
     // Seated and watchful (idle), until the Magic Woman knocks him out.
     stance: (state) => (state.getFlag('copAsleep') ? 'sleep' : undefined),
   },
+  kahn: {
+    id: 'kahn',
+    name: 'Stocherkahn',
+    talkColor: '#c8f09a',
+    textureSet: 'punt',
+    // Drawn small for crisp downscaling into the distance; big up close.
+    baseScale: 1.3,
+    // The poler's cap sits a little below the frame top.
+    headroom: 14,
+    stance: (state) => (state.getFlag('puntSunk') ? 'gone' : undefined),
+  },
 };
