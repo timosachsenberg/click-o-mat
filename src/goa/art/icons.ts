@@ -174,9 +174,23 @@ function taschenattraktor(): string {
   ].join('');
 }
 
+/** The wormhole: a black hole with the pocket attractor circling it, glowing. */
+function wurmloch(): string {
+  return [
+    shadow(32, 20),
+    ellipse(32, 24, 22, 14, { fill: '#b06aff', opacity: 0.35 }),
+    ellipse(32, 24, 17, 10, { fill: '#120a24', stroke: INK, sw: 2.4 }),
+    ellipse(32, 24, 11, 6, { fill: '#000000' }),
+    path('M14 24Q20 10 34 13Q50 16 48 26Q46 36 30 35Q18 34 22 26Q26 19 36 21Q44 23 40 28', { stroke: '#4ae8ff', sw: 2.2 }),
+    path('M16 22Q22 12 34 15', { stroke: '#ff5ab4', sw: 1.6 }),
+    circle(40, 28, 1.8, { fill: '#ffd34a', stroke: INK, sw: 0.8 }),
+  ].join('');
+}
+
 export const GOA_ICONS: SvgImageAsset[] = [
   { key: 'icon-loch', width: 64, height: 48, svg: loch() },
   { key: 'icon-taschenattraktor', width: 64, height: 48, svg: taschenattraktor() },
+  { key: 'icon-wurmloch', width: 64, height: 48, svg: wurmloch() },
   { key: 'icon-dose', width: 64, height: 48, svg: emptyCan() },
   { key: 'icon-cent25', width: 64, height: 48, svg: cent25() },
   { key: 'icon-ouzo', width: 64, height: 48, svg: ouzo() },

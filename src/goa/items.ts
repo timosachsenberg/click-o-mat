@@ -1,3 +1,4 @@
+import type { ScriptContext } from '../engine/ScriptContext';
 import type { ItemDef } from '../engine/types';
 
 export const ITEMS: Record<string, ItemDef> = {
@@ -80,6 +81,8 @@ export const ITEMS: Record<string, ItemDef> = {
       await ctx.playerSay('In der modernen Zeitebene gelten offenbar Zeichentrick-Gesetze. Ich frag lieber nicht, wie.');
     },
     use: 'Auf den Boden legen und reinspringen? Nein. Ich weiß nicht, wo das rauskommt.',
+    // A black hole plus a strange attractor: a wormhole that knows where the chaos is.
+    combine: { taschenattraktor: makeWormhole },
   },
   taschenattraktor: {
     id: 'taschenattraktor',
@@ -93,7 +96,53 @@ export const ITEMS: Record<string, ItemDef> = {
       await ctx.playerSay('Ich dreh an der Spirale ...');
       ctx.sfx('zap');
       await ctx.playerSay('Nichts. Otto meinte, hier draußen braucht es dafür mehr Chaos.');
-      await ctx.playerSay('Im Wald, auf der Goa, gibt’s genug davon.');
+      await ctx.playerSay('Oder irgendwas Dunkles, Rundes, um das sie kreisen kann.');
     },
   },
+  wurmloch: {
+    id: 'wurmloch',
+    name: 'Wurmloch',
+    icon: 'icon-wurmloch',
+    lookAt: async (ctx) => {
+      await ctx.playerSay('Ein schwarzes Loch, um das der Taschen-Attraktor kreist. Es wummert.');
+      await ctx.playerSay('Wenn ich reinhorche: Bass. Viel Bass. Es zeigt direkt auf die Goa.');
+    },
+    use: useWormhole,
+  },
 };
+
+/** Black hole + Otto's pocket attractor = a wormhole to where the chaos is. */
+async function makeWormhole(ctx: ScriptContext): Promise<void> {
+  ctx.removeItem('loch');
+  ctx.removeItem('taschenattraktor');
+  ctx.sfx('zap');
+  ctx.flash(0xb06aff, 260);
+  ctx.addItem('wurmloch', { silent: true });
+  await ctx.playerSay('Ich leg den Taschen-Attraktor aufs Loch ...');
+  await ctx.playerSay('Die Spirale fängt an zu kreisen, schneller und schneller, und das Loch kreist mit.');
+  await ctx.playerSay('Ein Wurmloch! Und es wummert. Im Takt.');
+}
+
+/** Through the wormhole, straight to the Goa in the forest. */
+async function useWormhole(ctx: ScriptContext): Promise<void> {
+  if (!ctx.flag('password')) {
+    await ctx.playerSay('Da drüben wartet die Goa. Aber am Eingang wollen sie ein Passwort.');
+    await ctx.playerSay('Erst Ali fragen. Sonst steh ich im Wald und komm nicht rein.');
+    return;
+  }
+  await ctx.playerSay('Wurmloch auf, Augen zu, und: Chakabunga!');
+  ctx.removeItem('wurmloch');
+  ctx.sfx('zap');
+  ctx.shake(700, 0.02);
+  ctx.flash(0xff5ab4, 400);
+  await ctx.wait(500);
+  // ... and gone, sucked through (staging: the title card ends the chapter).
+  const me = ctx.player;
+  ctx.place(ctx.activeCharId, -400, me.y);
+  ctx.flash(0x4ae8ff, 400);
+  await ctx.wait(500);
+  ctx.setFlag('wormholeUsed');
+  ctx.setFlag('chapterDone');
+  ctx.sfx('win');
+  ctx.showTitle('FORTSETZUNG FOLGT …');
+}

@@ -215,13 +215,30 @@ check('the hole in the wall is a hotspot now', (await hotspotAt(671, 340)) === '
 await camSettle();
 await page.screenshot({ path: `${SHOT}/hoel-05-free.png` });
 
-// --- round the cycle back to the house style; the hole in the wall stays
+// --- the hole stays in the wall in 1987; in the modern layer it peels off again
+await doVerb('pickup', 671, 340);
+check('in 1987 the hole is stuck in the wall', (await flag('wallHoleTaken')) !== true && (await hotspotAt(671, 340)) === 'mauerloch');
 await clickW(382, 164);
 await settle();
+check('on to the modern layer', (await era()) === 2);
+await doVerb('pickup', 671, 340);
+check('took the hole off the wall again', (await flag('wallHoleTaken')) === true && (await inv()).includes('loch') && (await hotspotAt(671, 340)) !== 'mauerloch', JSON.stringify(await inv()));
+
+// --- black hole + pocket attractor = wormhole
+{
+  await settle();
+  const items = await inv();
+  await click(522 + items.indexOf('loch') * 112, 505);
+  await page.waitForTimeout(150);
+  await click(522 + items.indexOf('taschenattraktor') * 112, 505);
+  await settle();
+}
+check('combining hole and pocket attractor makes a wormhole', (await inv()).includes('wurmloch') && !(await inv()).includes('loch') && !(await inv()).includes('taschenattraktor'), JSON.stringify(await inv()));
+
+// --- round the cycle back to the house style
 await clickW(382, 164);
 await settle();
 check('back in the house-style layer', (await era()) === 0 && (await bgKey()) === keyToon);
-check('the hole in the wall is still there', (await hotspotAt(671, 340)) === 'mauerloch');
 await camSettle();
 await page.screenshot({ path: `${SHOT}/hoel-06-toon-after.png` });
 
@@ -233,12 +250,20 @@ await settle();
 const out = await ev(() => { const a = window.__engine.roomScene.actors.get('player'); return { x: a.x, y: a.y }; });
 check('out of the door: back at the tower on the promenade', (await room()) === 'neckar' && Math.abs(out.x - 478) < 12 && Math.abs(out.y - 304) < 12, JSON.stringify(out));
 
-// --- the chapter's end still works (password and cap given directly here)
-await ev(() => { window.__engine.state.setFlag('password'); window.__engine.makeContext().addItem('muetze', { silent: true }); });
-await click(15, 432);
-await waitFor(async () => (await flag('chapterDone')) === true, 30000, 'chapter end');
+// --- through the wormhole: not without the password, then straight to the Goa
+const useWormhole = async () => {
+  await verb('use');
+  await click(522 + (await inv()).indexOf('wurmloch') * 112, 505);
+  await settle();
+};
+await useWormhole();
+check('no wormhole trip without the password', (await inv()).includes('wurmloch') && !(await flag('chapterDone')));
+await ev(() => window.__engine.state.setFlag('password', 'Chakabunga'));
+await useWormhole();
+await waitFor(async () => (await flag('chapterDone')) === true, 15000, 'wormhole');
 await settle();
-check('towards the forest: chapter done', (await flag('chapterDone')) === true);
+check('through the wormhole to the Goa: chapter done', (await flag('wormholeUsed')) === true && (await flag('chapterDone')) === true && !(await inv()).includes('wurmloch'));
+await page.screenshot({ path: `${SHOT}/hoel-07-wormhole.png` });
 
 console.log('ERRORS:', errors.length ? '\n' + errors.slice(0, 8).join('\n') : 'none');
 if (errors.length) process.exitCode = 1;

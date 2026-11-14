@@ -23,7 +23,7 @@ import { FLOORS, OTTO_ACTOR, TM, blackHoleArt, rugArt, spiralGlow, turmBg, wallH
 // he walks out through it, leaving his pocket attractor behind.
 //
 // State: `turmEra` (0|1|2), `rugMoved`, `holeTaken`, `ottoMet`, `wallHole`,
-// `ottoFree` (+ the items `loch` and `taschenattraktor`). Everything visual
+// `ottoFree`, `wallHoleTaken` (+ the items `loch`, `taschenattraktor`, `wurmloch`). Everything visual
 // is re-derived from those on repaint.
 
 const P = (x: number, y: number): Vec2 => ({ x, y });
@@ -174,6 +174,27 @@ async function putHole(ctx: ScriptContext): Promise<void> {
   await ctx.playerSay('Ich schreib das nicht in meinen Lebenslauf.');
 }
 
+/** After Otto has gone: in the modern layer the hole comes off the wall
+ *  again, as portable as it was on the floor. */
+async function takeWallHole(ctx: ScriptContext): Promise<void> {
+  const e = era(ctx.state);
+  if (e === 0) {
+    await ctx.playerSay('Ein Loch in Hölderlins Wand nimmt man nicht einfach mit. Hier ist es ein ganz normales Loch.');
+    return;
+  }
+  if (e === 1) {
+    await ctx.playerSay('> NIMM LOCH');
+    await ctx.playerSay('„Das Loch ist fest in der Wand.“ 1987 verzeiht nichts.');
+    return;
+  }
+  ctx.sfx('pickup');
+  ctx.setFlag('wallHoleTaken');
+  ctx.addItem('loch');
+  await ctx.repaint();
+  await ctx.playerSay('Ich zupf an der Kante ... und es löst sich von der Wand wie ein Aufkleber.');
+  await ctx.playerSay('Otto ist ja schon durch. Das Loch hat jetzt Feierabend.');
+}
+
 async function toNeckar(ctx: ScriptContext): Promise<void> {
   if (era(ctx.state) === 1) await ctx.playerSay('In 1987 ist die Tür nur gemalt. Aber für mich geht sie auf: Vorteile der Auflösung.');
   ctx.sfx('open');
@@ -279,10 +300,15 @@ const HOTSPOTS: HotspotDef[] = [
     rect: R(TM.arch.x, TM.arch.top - 10, TM.arch.w, TM.arch.foot - TM.arch.top + 10),
     walkTo: WALL_SPOT,
     facing: 'up',
-    visible: (state) => !!state.getFlag('wallHole'),
+    visible: (state) => !!state.getFlag('wallHole') && !state.getFlag('wallHoleTaken'),
     on: {
-      lookat: 'Das Loch, durch das Otto verschwunden ist. Dahinter: Abendhimmel und eine Ahnung von sehr viel mehr Farben.',
+      lookat: async (ctx) => {
+        await ctx.playerSay('Das Loch, durch das Otto verschwunden ist. Dahinter: Abendhimmel und eine Ahnung von sehr viel mehr Farben.');
+        if (era(ctx.state) === 2) await ctx.playerSay('In dieser Ebene sieht es aus, als könnte man es einfach wieder abziehen.');
+      },
       use: 'Da durch? Dafür bin ich zu hochauflösend. Ich nehm die Tür.',
+      pickup: takeWallHole,
+      pull: takeWallHole,
     },
   },
   at('attraktor', 'Rössler-Attraktor', R(TM.spiral.cx - TM.spiral.w / 2 - 6, TM.spiral.cy - TM.spiral.h / 2 - 8, TM.spiral.w + 12, TM.pedestal.foot - TM.spiral.cy + TM.spiral.h / 2 + 8), ATTRACTOR_SPOT, 'up', {
@@ -398,7 +424,7 @@ export const hoelderlinturmRoom: RoomDef = {
   layers: [
     { id: 'bg', depth: Layer.BEHIND, svg: (state) => turmBg(era(state)) },
     { id: 'glow', depth: Layer.BEHIND, svg: (state) => spiralGlow(era(state)) },
-    { id: 'wallhole', depth: Layer.BEHIND, svg: (state) => wallHoleArt(era(state)), visible: (state) => !!state.getFlag('wallHole') },
+    { id: 'wallhole', depth: Layer.BEHIND, svg: (state) => wallHoleArt(era(state)), visible: (state) => !!state.getFlag('wallHole') && !state.getFlag('wallHoleTaken') },
     {
       id: 'hole',
       depth: Layer.BEHIND,
