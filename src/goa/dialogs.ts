@@ -329,7 +329,7 @@ export const DIALOGS: Record<string, DialogDef> = {
             text: 'Wo krieg ich ein Loch her?',
             if: (s) => !!s.getFlag('ottoExplained') && !s.getFlag('holeTaken'),
             script: async (ctx) => {
-              await ctx.say('otto', 'Oben in der Stube, unterm Teppich, liegt eins. Ein kleines schwarzes Loch, ich hab’s da versteckt, als es noch ganz jung war.');
+              await ctx.say('otto', 'Oben in der Turmstube, unterm Teppich, liegt eins. Ein kleines schwarzes Loch, ich hab’s da versteckt, als es noch ganz jung war.');
               await ctx.say('otto', 'Hier in 1987 ist es Teil vom Boden, das kriegst du nicht hoch.');
               await ctx.say('otto', 'Aber in der modernen Ebene ... da gelten Zeichentrick-Gesetze. Da sind Löcher tragbar.');
             },

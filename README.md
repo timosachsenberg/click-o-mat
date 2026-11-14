@@ -18,7 +18,7 @@ Next to the demo lives the start of an actual adventure, **„Folge dem Bass“*
 (German, `src/goa/`): you begin in the **Picasso**, Ali's basement bar, with nothing but a
 two-euro coin and need the password for tonight's Goa party in the forest — then
 out onto the **Neckarbrücke** in Tübingen, where the Stocherkähne pass by, and up
-into the **Hölderlinturm** — a cut-open doll's house of three floors — where a
+into the **Hölderlinturm** — a cut-open doll's house — where a
 Rössler attractor throws the picture between three time layers (hand-painted,
 1987 pixels, modern cartoon collage). The
 **title screen picks between the two** (SPIEL · DEMO); `?game=goa` /
@@ -153,9 +153,9 @@ talk while he does.
 
 **Optional: the Hölderlinturm.** Open the tower's door at the end of the
 promenade. The tower is shown as a doll's house, its front wall cut away:
-the Turmstube with Hölderlin's desk and bed at the top, the parlour in the
-middle (the door opens onto it), the vaulted cellar below, joined by stairs.
-In the parlour stands Otto R.'s **Rössler attractor**. *Use* (or *push*) it
+upstairs the Turmstube with Hölderlin's desk, a sofa and his bed (the door
+opens onto it), downstairs the vaulted cellar at the river's level, joined
+by stairs. In the Turmstube stands Otto R.'s **Rössler attractor**. *Use* (or *push*) it
 to throw the whole picture into the next time layer, *pull* it to go back:
 hand-painted → **1987** (sixteen colours, chunky pixels) → **today** (cartoon
 collage with photo textures) → hand-painted.
@@ -166,7 +166,7 @@ collage with photo textures) → hand-painted.
    the cellar wall says **PUT PUT** (in the pixel layer it reads like a
    text-parser prompt, and an arrow points at a dashed arch). There's a black
    hole under the rug upstairs, he says.
-2. **Pull the parlour rug** (any layer): it rolls up off a black hole.
+2. **Pull the rug** in front of the sofa (any layer): it rolls up off a black hole.
 3. In 1987 the hole is part of the floor; in the hand-painted layer it would
    take *you*. Turn on to **today**: cartoon physics — its edge curls up like a
    pancake. **Pick up the portable hole**.
@@ -520,8 +520,8 @@ src/
                        time layers (toon, an EGA pixel grid, a photo-textured
                        cartoon collage), the Rössler attractor (integrated,
                        not drawn), Otto R.
-    rooms/hoelderlinturm.ts  Three floors joined by stairs (a vertically
-                       scrolling side view): switch time layers, free Otto R.
+    rooms/hoelderlinturm.ts  Turmstube and cellar joined by stairs (a side
+                       view): switch time layers, free Otto R.
 public/
   img/                 PNG assets (served verbatim, copied into dist/)
 tools/

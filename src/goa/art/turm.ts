@@ -44,48 +44,48 @@ import {
 
 export type Era = 0 | 1 | 2;
 
-/** The room scrolls vertically: three floors don't fit one screen. */
-export const ROOM = { w: 960, h: 620 };
+/** One screen: the whole doll's house at a glance. */
+export const ROOM = { w: 960, h: 450 };
 
 /** Floors, top to bottom: ceiling (underside of the slab above), the back
  *  edge of the floor (where the furniture stands) and its front edge (the
- *  cut). Everyone walks in the band between back and front. */
+ *  cut). Everyone walks in the band between back and front. Upstairs the
+ *  Turmstube, on the promenade's level; downstairs the vaulted cellar, on
+ *  the river's. */
 export const FLOORS = [
-  { ceil: 152, back: 254, front: 274 },
-  { ceil: 284, back: 390, front: 414 },
-  { ceil: 424, back: 528, front: 550 },
+  { ceil: 122, back: 236, front: 258 },
+  { ceil: 268, back: 372, front: 394 },
 ] as const;
+const [TOP, CELLAR] = FLOORS;
 const SLAB = 10;
-const WATER = 576;
+/** The facades end on the foundation, the foundation in the water. */
+const BASE = CELLAR.front;
+const WATER = 418;
 
 /** The house's inner span, the wall between tower and house, the facades. */
-export const HOUSE = { x0: 150, x1: 850, split: 485, eave: 140, facadeL: 98, facadeR: 902 };
+export const HOUSE = { x0: 150, x1: 850, split: 485, eave: 112, facadeL: 98, facadeR: 902 };
 
 export const TM = {
-  /** The door from the promenade, in the tower's side wall (middle floor). */
-  door: { x: 106, w: 34, top: 322, foot: 414 },
-  pedestal: { x: 236, top: 352, foot: 394, w: 32 },
-  spiral: { cx: 236, cy: 318, w: 100, h: 58 },
-  rug: { cx: 610, cy: 403, rx: 82, ry: 8 },
-  hole: { cx: 620, cy: 404, rx: 30, ry: 5 },
-  desk: { x: 196, w: 96, top: 218, foot: 256 },
-  shelf: { x: 316, y: 170, w: 64, h: 86 },
-  bed: { x: 528, w: 136, foot: 258 },
-  sofa: { x: 530, w: 150, foot: 392 },
-  barrels: { x: 166, w: 134, foot: 530 },
-  graffiti: { x: 548, y: 432, w: 210, h: 42 },
-  arch: { x: 642, w: 58, top: 460, foot: 530 },
-  sacks: { x: 790, w: 52, foot: 532 },
-  /** Stairs: up from the parlour (its back edge) to the Turmstube (its front
-   *  edge), and down from the parlour's front edge into the cellar. */
-  stairUp: { bottom: [800, 830] as Pt, top: [680, 710] as Pt },
+  /** The door from the promenade, in the tower's side wall (upstairs). */
+  door: { x: 106, w: 34, top: 168, foot: TOP.front },
+  pedestal: { x: 382, top: 196, foot: 238, w: 32 },
+  spiral: { cx: 382, cy: 164, w: 100, h: 54 },
+  rug: { cx: 596, cy: 247, rx: 80, ry: 8 },
+  hole: { cx: 606, cy: 248, rx: 30, ry: 5 },
+  desk: { x: 196, w: 96, top: 200, foot: 238 },
+  bed: { x: 714, w: 124, foot: 240 },
+  sofa: { x: 520, w: 140, foot: 236 },
+  barrels: { x: 166, w: 134, foot: CELLAR.back + 2 },
+  graffiti: { x: 548, y: 280, w: 210, h: 42 },
+  arch: { x: 642, w: 58, top: 304, foot: CELLAR.back + 2 },
+  sacks: { x: 790, w: 52, foot: CELLAR.back + 4 },
+  /** The stairs down from the Turmstube's front edge into the cellar. */
   stairDown: { top: [440, 466] as Pt, bottom: [320, 346] as Pt },
   windows: [
-    { x: 420, y: 174, w: 40, h: 50 },
-    { x: 772, y: 174, w: 40, h: 50 },
-    { x: 340, y: 304, w: 40, h: 48 },
-    { x: 586, y: 298, w: 46, h: 40 },
-    { x: 790, y: 446, w: 34, h: 26 },
+    { x: 224, y: 140, w: 40, h: 44 },
+    { x: 570, y: 136, w: 44, h: 40 },
+    { x: 756, y: 136, w: 40, h: 42 },
+    { x: 790, y: 290, w: 34, h: 26 },
   ],
 };
 
@@ -224,17 +224,19 @@ function pixelSpiral(g: PixGrid, c: Ega): void {
 }
 
 const { x0: HX0, x1: HX1, split: SPLIT, eave: EAVE, facadeL: FL, facadeR: FR } = HOUSE;
+/** The tower's cone: apex and eave. */
+const CONE = { x: 300, apex: 4, base: EAVE + 12, half: 212 };
 
 /** Altstadt houses behind the tower: x, width, eave y, roof height, wall, roof. */
 const TOWN: Array<[number, number, number, number, string, string, Ega, Ega]> = [
-  [-40, 130, 150, 70, '#e8b8a8', '#c8603a', 'R', 'r'],
-  [70, 120, 104, 62, '#d8a8c8', '#b8503a', 'M', 'r'],
-  [170, 110, 66, 56, '#f0d8b8', '#c86a40', 'w', 'n'],
-  [400, 110, 50, 58, '#e8c8a0', '#b85a3a', 'Y', 'r'],
-  [520, 120, 34, 70, '#f4f0e8', '#8a5a7a', 'w', 'm'],
-  [650, 130, 52, 60, '#d8b0c0', '#c8603a', 'M', 'r'],
-  [780, 120, 40, 66, '#f0c8a8', '#b8503a', 'R', 'r'],
-  [880, 120, 70, 62, '#e8d0b0', '#c86a40', 'Y', 'n'],
+  [-40, 130, 112, 62, '#e8b8a8', '#c8603a', 'R', 'r'],
+  [70, 120, 76, 56, '#d8a8c8', '#b8503a', 'M', 'r'],
+  [170, 110, 48, 50, '#f0d8b8', '#c86a40', 'w', 'n'],
+  [400, 110, 36, 50, '#e8c8a0', '#b85a3a', 'Y', 'r'],
+  [520, 120, 24, 56, '#f4f0e8', '#8a5a7a', 'w', 'm'],
+  [650, 130, 38, 52, '#d8b0c0', '#c8603a', 'M', 'r'],
+  [780, 120, 30, 56, '#f0c8a8', '#b8503a', 'R', 'r'],
+  [880, 120, 56, 54, '#e8d0b0', '#c86a40', 'Y', 'n'],
 ];
 
 // ---- the pixel layer ---------------------------------------------------------------------
@@ -243,43 +245,46 @@ function pixelRoom(): string {
   const g = new PixGrid();
   // Sky in bands, a couple of blocky clouds.
   const sky: Ega[] = ['b', 'b', 'B', 'm', 'M', 'R'];
-  sky.forEach((c, i) => g.rect(0, i * 60, ROOM.w, 60, c));
-  for (const [x, y, w] of [[600, 30, 90], [80, 70, 70], [760, 110, 60]] as Pt[] | number[][]) {
+  sky.forEach((c, i) => g.rect(0, i * 50, ROOM.w, i === sky.length - 1 ? ROOM.h : 50, c));
+  for (const [x, y, w] of [[600, 30, 90], [80, 60, 70], [760, 90, 60]]) {
     g.rect(x, y, w, 10, 'w');
     g.rect(x + 15, y - 10, w - 40, 10, 'w');
   }
   // The town behind.
   for (const [x, w, eave, rh, , , wall, roof] of TOWN) {
-    g.rect(x, eave, w, 420 - eave, wall);
+    g.rect(x, eave, w, WATER - eave, wall);
     for (let k = 0; k < rh; k += CELL) g.rect(x + (k * w) / (2 * rh), eave - k, w - (k * w) / rh, CELL, roof);
-    for (let wy = eave + 16; wy < 400; wy += 34) for (let wx = x + 14; wx < x + w - 20; wx += 30) g.rect(wx, wy, 10, 14, wy % 3 ? 'Y' : 'b');
+    for (let wy = eave + 16; wy < WATER - 20; wy += 34) for (let wx = x + 14; wx < x + w - 20; wx += 30) g.rect(wx, wy, 10, 14, wy % 3 ? 'Y' : 'b');
   }
   // The big tree and the willow.
-  g.ellipse(80, 40, 160, 70, 'g', 'G');
-  g.ellipse(230, 16, 100, 40, 'g');
-  g.rect(40, 150, 20, 410, 'n');
-  for (let x = -20; x < 110; x += 10) g.rect(x, 170 + ((x * 7) % 30), 6, 340 - ((x * 13) % 60), x % 20 ? 'G' : 'g');
+  g.ellipse(80, 20, 160, 64, 'g', 'G');
+  g.ellipse(230, 0, 100, 36, 'g');
+  g.rect(40, 130, 20, WATER - 130, 'n');
+  g.ellipse(36, 140, 96, 36, 'G', 'g');
+  for (let x = -20; x < 120; x += 10) g.rect(x, 150 + ((x * 7) % 30), 6, 230 - ((x * 13) % 60), x % 20 ? 'G' : 'g');
   // The promenade and its railing on the left.
-  g.rect(0, 414, FL, 160, 'd');
-  for (let x = 0; x < FL; x += 15) g.rect(x, 384, 5, 30, 'k');
-  g.rect(0, 380, FL, 5, 'k');
+  g.rect(0, TOP.front, FL, WATER - TOP.front, 'd');
+  for (let x = 0; x < FL; x += 15) g.rect(x, TOP.front - 30, 5, 30, 'k');
+  g.rect(0, TOP.front - 34, FL, 5, 'k');
   // The house next door on the right.
-  g.rect(FR, 40, 80, 540, 'G');
-  for (let y = 80; y < 540; y += 90) g.rect(FR + 20, y, 24, 36, 'w');
+  g.rect(FR, 20, 80, WATER - 20, 'G');
+  for (let y = 50; y < WATER - 40; y += 90) g.rect(FR + 20, y, 24, 36, 'w');
   // Inside: walls (yellow-brown), cellar stone, floors, slabs.
   FLOORS.forEach((f, i) => {
-    g.rect(HX0, f.ceil, HX1 - HX0, f.back - f.ceil, i === 2 ? 'd' : 'n');
-    if (i < 2) g.dither(HX0, f.ceil, HX1 - HX0, f.back - f.ceil, 'n', 'Y');
+    const cellar = i === FLOORS.length - 1;
+    g.rect(HX0, f.ceil, HX1 - HX0, f.back - f.ceil, cellar ? 'd' : 'n');
+    if (!cellar) g.dither(HX0, f.ceil, HX1 - HX0, f.back - f.ceil, 'n', 'Y');
     for (let x = HX0; x < HX1; x += 40) g.rect(x, f.ceil, 10, 8, 'k');
-    g.rect(HX0, f.back, HX1 - HX0, f.front - f.back, i === 2 ? 'l' : 'n');
+    g.rect(HX0, f.back, HX1 - HX0, f.front - f.back, cellar ? 'l' : 'n');
     for (let x = HX0; x < HX1; x += 30) g.set(Math.floor(x / CELL), Math.floor((f.back + 10) / CELL), 'k');
-    g.rect(HX0 - 10, f.front, HX1 - HX0 + 20, SLAB, 'k');
+    if (!cellar) g.rect(HX0 - 10, f.front, HX1 - HX0 + 20, SLAB, 'k');
     // The wall between tower and house, with its doorway.
     g.rect(SPLIT - 7, f.ceil, 14, f.back - f.ceil, 'l');
     g.rect(SPLIT - 5, f.back - 88, 10, 88, 'k');
   });
   // The cellar vault on the left.
-  g.poly([[160, 528], [160, 470], [220, 440], [315, 430], [410, 440], [470, 470], [470, 528]], 'k');
+  const vb = CELLAR.back;
+  g.poly([[160, vb], [160, vb - 58], [220, vb - 88], [315, vb - 98], [410, vb - 88], [470, vb - 58], [470, vb]], 'k');
   for (const w of TM.windows) {
     g.rect(w.x - 4, w.y - 4, w.w + 8, w.h + 8, 'w');
     g.rect(w.x, w.y, w.w, w.h, 'c');
@@ -293,9 +298,6 @@ function pixelRoom(): string {
   g.rect(d.x + 30, d.top - 6, 30, 6, 'w');
   g.rect(d.x + 74, d.top - 18, 5, 18, 'w');
   g.rect(d.x + 74, d.top - 24, 5, 6, 'Y');
-  const sh = TM.shelf;
-  g.rect(sh.x, sh.y, sh.w, sh.h, 'n');
-  for (let y = sh.y + 6; y < sh.y + sh.h - 10; y += 22) for (let x = sh.x + 5; x < sh.x + sh.w - 6; x += 8) g.rect(x, y, 6, 16, (['r', 'b', 'g', 'Y'] as Ega[])[(x + y) % 4]);
   const b = TM.bed;
   g.rect(b.x, b.foot - 50, 10, 50, 'n');
   g.rect(b.x + b.w - 10, b.foot - 34, 10, 34, 'n');
@@ -312,8 +314,7 @@ function pixelRoom(): string {
   }
   for (let k = 0; k < 2; k++) g.ellipse(TM.sacks.x + 12 + k * 26, TM.sacks.foot - 16, 13, 17, 'Y');
   // Stairs.
-  stairPix(g, TM.stairUp.bottom, FLOORS[1].back, TM.stairUp.top, FLOORS[0].front);
-  stairPix(g, TM.stairDown.top, FLOORS[1].front, TM.stairDown.bottom, FLOORS[2].back);
+  stairPix(g, TM.stairDown.top, TOP.front, TM.stairDown.bottom, CELLAR.back);
   // The graffiti, as a text parser prompt.
   g.text(TM.graffiti.x + 10, TM.graffiti.y + 4, '>PUT PUT_', 'M', 1);
   const a = TM.arch;
@@ -331,26 +332,29 @@ function pixelRoom(): string {
   g.rect(p.x - 5, p.top + 14, 10, 8, 'R');
   pixelSpiral(g, 'Y');
   // Facades, door, roofs.
-  g.poly([[FL, 150], [HX0, EAVE], [HX0, 552], [FL, 558]], 'Y');
-  g.poly([[HX1, EAVE], [FR, 150], [FR, 558], [HX1, 552]], 'Y');
+  g.poly([[FL, EAVE + 10], [HX0, EAVE], [HX0, BASE + 2], [FL, BASE + 6]], 'Y');
+  g.poly([[HX1, EAVE], [FR, EAVE + 10], [FR, BASE + 6], [HX1, BASE + 2]], 'Y');
   g.rect(TM.door.x, TM.door.top, TM.door.w, TM.door.foot - TM.door.top, 'r');
-  g.rect(TM.door.x + TM.door.w - 10, 370, 5, 5, 'Y');
-  for (const y of [190, 460]) g.rect(FL + 12, y, 24, 34, 'c');
-  for (const y of [190, 320, 460]) g.rect(HX1 + 14, y, 24, 34, 'c');
-  g.poly([[460, 148], [920, 152], [870, 62], [520, 58]], 'd');
-  for (let y = 66; y < 150; y += 12) g.line([480, y], [910, y], 'k');
-  g.rect(716, 26, 24, 40, 'r');
-  g.poly([[84, 150], [520, 150], [300, 4]], 'd');
-  for (let y = 30; y < 150; y += 14) g.line([300 - (y - 4) * 1.48, y], [300 + (y - 4) * 1.5, y], 'k');
-  g.rect(298, 0, 5, 8, 'Y');
+  g.rect(TM.door.x + TM.door.w - 10, TM.door.top + 50, 5, 5, 'Y');
+  for (const y of [146, 300]) g.rect(FL + 12, y, 24, 34, 'c');
+  for (const y of [146, 300]) g.rect(HX1 + 14, y, 24, 34, 'c');
+  g.poly([[460, EAVE + 8], [920, EAVE + 12], [870, EAVE - 80], [520, EAVE - 84]], 'd');
+  for (let y = EAVE - 76; y < EAVE + 8; y += 12) g.line([480, y], [910, y], 'k');
+  g.rect(716, 0, 24, 34, 'r');
+  g.poly([[CONE.x - CONE.half, CONE.base], [CONE.x + CONE.half, CONE.base], [CONE.x, CONE.apex]], 'd');
+  for (let y = CONE.apex + 20; y < CONE.base; y += 14) {
+    const hw = ((y - CONE.apex) / (CONE.base - CONE.apex)) * CONE.half;
+    g.line([CONE.x - hw, y], [CONE.x + hw, y], 'k');
+  }
+  g.rect(CONE.x - 2, 0, 5, 6, 'Y');
   g.rect(FL - 6, EAVE - 4, FR - FL + 12, 12, 'n');
   // Foundation, water, punts.
-  g.rect(FL - 6, 550, FR - FL + 12, WATER - 550, 'l');
-  for (let x = FL; x < FR; x += 30) g.rect(x, 560, 2, 10, 'd');
+  g.rect(FL - 6, BASE, FR - FL + 12, WATER - BASE, 'l');
+  for (let x = FL; x < FR; x += 30) g.rect(x, BASE + 8, 2, 10, 'd');
   g.rect(0, WATER, ROOM.w, ROOM.h - WATER, 'b');
   g.dither(0, WATER, ROOM.w, 10, 'b', 'c');
-  for (let x = 20; x < ROOM.w; x += 70) g.rect(x, WATER + 20 + (x % 3) * 6, 30, 5, 'c');
-  for (const [x, y] of [[560, 590], [700, 604]]) {
+  for (let x = 20; x < ROOM.w; x += 70) g.rect(x, WATER + 12 + (x % 3) * 5, 30, 5, 'c');
+  for (const [x, y] of [[560, WATER + 12], [700, WATER + 24]]) {
     g.rect(x, y, 300, 10, 'n');
     g.rect(x + 10, y + 10, 280, 5, 'k');
   }
@@ -396,13 +400,13 @@ function pal(L: Look) {
 function skyAndTown(L: Look): string {
   const c = pal(L);
   const s: string[] = [rect(0, 0, ROOM.w, ROOM.h, { fill: c.sky })];
-  if (L.modern) s.push(rect(0, 0, ROOM.w, 300, { fill: 'url(#mdClouds)' }));
-  else for (const [x, y, rx, ry, seed] of [[640, 40, 70, 20, 1], [120, 80, 60, 16, 2], [820, 120, 54, 14, 3], [400, 20, 40, 12, 4]]) s.push(path(puff(x, y, rx, ry, 6, seed, 0.25), { fill: '#f8c8e0', stroke: INK, sw: 1.4, opacity: 0.9 }));
+  if (L.modern) s.push(rect(0, 0, ROOM.w, 260, { fill: 'url(#mdClouds)' }));
+  else for (const [x, y, rx, ry, seed] of [[640, 34, 70, 18, 1], [120, 70, 60, 16, 2], [820, 96, 54, 14, 3], [420, 18, 40, 12, 4]]) s.push(path(puff(x, y, rx, ry, 6, seed, 0.25), { fill: '#f8c8e0', stroke: INK, sw: 1.4, opacity: 0.9 }));
   TOWN.forEach(([x, w, eave, rh, wall, roof], i) => {
-    s.push(box(L, x, eave, w, 430 - eave, wall, 80 + i));
+    s.push(box(L, x, eave, w, WATER - eave, wall, 80 + i));
     s.push(shape(L, [[x - 8, eave + 2], [x + w / 2, eave - rh], [x + w + 8, eave + 2]], L.modern ? 'url(#mdTiles)' : roof, 90 + i));
     const r = rng(100 + i);
-    for (let wy = eave + 14; wy < 410; wy += 36)
+    for (let wy = eave + 14; wy < WATER - 24; wy += 36)
       for (let wx = x + 14; wx < x + w - 22; wx += 32) {
         const lit = r() > 0.55;
         s.push(rect(wx, wy, 12, 17, { fill: lit ? '#ffd870' : '#4a3e6a', stroke: L.ink, sw: L.sw * 0.6 }));
@@ -417,9 +421,9 @@ function trees(L: Look): string {
   const c = pal(L);
   const s: string[] = [];
   // The big tree on the left, its crown over the houses.
-  s.push(path('M-30 330Q20 230 30 150Q40 90 110 50L130 70Q70 110 62 170Q54 260 20 340Z', { fill: L.modern ? 'url(#mdBark)' : '#6a4228', stroke: L.ink, sw: L.sw }));
+  s.push(path('M-30 262Q16 190 26 120Q36 70 104 34L124 52Q66 88 58 136Q50 200 18 270Z', { fill: L.modern ? 'url(#mdBark)' : '#6a4228', stroke: L.ink, sw: L.sw }));
   const crown: Array<[number, number, number, number, string]> = [
-    [40, 30, 150, 64, c.leaf], [230, 10, 100, 40, L.modern ? '#2a8a4a' : '#347a50'], [-20, 110, 80, 56, c.leaf], [150, 70, 70, 34, L.modern ? '#36a058' : '#3e8a5a'],
+    [40, 18, 150, 58, c.leaf], [230, 0, 100, 34, L.modern ? '#2a8a4a' : '#347a50'], [-20, 92, 80, 50, c.leaf], [150, 56, 70, 30, L.modern ? '#36a058' : '#3e8a5a'],
   ];
   crown.forEach(([x, y, rx, ry, col], i) => s.push(path(puff(x, y, rx, ry, 8, 40 + i, 0.18), { fill: col, stroke: L.ink, sw: L.sw })));
   return s.join('');
@@ -429,7 +433,7 @@ function trees(L: Look): string {
 function willow(L: Look): string {
   const c = pal(L);
   const s: string[] = [];
-  s.push(path('M40 570Q56 400 50 260Q48 210 70 180', { stroke: L.ink, sw: 14 }) + path('M40 570Q56 400 50 260Q48 210 70 180', { stroke: L.modern ? '#5a3a20' : '#7a5a3a', sw: 9 }));
+  s.push(path('M40 430Q56 320 50 200Q48 160 70 136', { stroke: L.ink, sw: 14 }) + path('M40 430Q56 320 50 200Q48 160 70 136', { stroke: L.modern ? '#5a3a20' : '#7a5a3a', sw: 9 }));
   const r = rng(61);
   const frond = (x: number, top: number, len: number, w: number, sway: number, fill: string) => {
     const pts: Pt[] = [];
@@ -447,15 +451,14 @@ function willow(L: Look): string {
   const front = c.willow;
   for (let i = 0; i < 9; i++) {
     const x = -40 + i * 18 + r() * 8;
-    s.push(frond(x, 190 + r() * 20, 260 + r() * 110, 8 + r() * 3, (x - 36) * 0.35, back));
+    s.push(frond(x, 128 + r() * 16, 220 + r() * 70, 9 + r() * 3, (x - 36) * 0.5, back));
   }
-  s.push(path(puff(36, 180, 96, 44, 10, 62, 0.22), { fill: front, stroke: L.ink, sw: L.sw }));
-  s.push(path(puff(20, 166, 50, 22, 6, 63, 0.2), { fill: L.modern ? '#c0f040' : '#c0d860', stroke: L.ink, sw: L.sw * 0.8 }));
+  s.push(path(puff(36, 136, 100, 34, 10, 62, 0.22), { fill: front, stroke: L.ink, sw: L.sw }));
+  s.push(path(puff(20, 124, 50, 20, 6, 63, 0.2), { fill: L.modern ? '#c0f040' : '#c0d860', stroke: L.ink, sw: L.sw * 0.8 }));
   for (let i = 0; i < 8; i++) {
     const x = -30 + i * 19 + r() * 8;
-    s.push(frond(x, 200 + r() * 16, 200 + r() * 120, 7 + r() * 3, (x - 36) * 0.4, i % 2 ? front : L.modern ? '#c0f040' : '#c0d860'));
+    s.push(frond(x, 140 + r() * 12, 170 + r() * 100, 8 + r() * 3, (x - 36) * 0.4, i % 2 ? front : L.modern ? '#c0f040' : '#c0d860'));
   }
-  return s.join('');
   return s.join('');
 }
 
@@ -463,18 +466,19 @@ function willow(L: Look): string {
 function surroundings(L: Look): string {
   const c = pal(L);
   const s: string[] = [];
-  s.push(box(L, -6, 414, FL + 6, WATER - 414, c.stone, 120));
-  for (let y = 430; y < WATER; y += 22) s.push(line([0, y], [FL, y], L.modern ? '#3a3a3a' : '#7a6a5e', 1.4));
-  s.push(path(`M0 384H${FL}`, { stroke: L.ink, sw: 5 }) + path(`M0 384H${FL}`, { stroke: '#4a4a5a', sw: 2.4 }));
-  for (let x = 6; x < FL; x += 14) s.push(line([x, 386], [x, 414], L.ink, 2));
+  const py = TOP.front;
+  s.push(box(L, -6, py, FL + 6, WATER - py, c.stone, 120));
+  for (let y = py + 16; y < WATER; y += 22) s.push(line([0, y], [FL, y], L.modern ? '#3a3a3a' : '#7a6a5e', 1.4));
+  s.push(path(`M0 ${py - 30}H${FL}`, { stroke: L.ink, sw: 5 }) + path(`M0 ${py - 30}H${FL}`, { stroke: '#4a4a5a', sw: 2.4 }));
+  for (let x = 6; x < FL; x += 14) s.push(line([x, py - 28], [x, py], L.ink, 2));
   // The neighbour: green plaster, shutters.
-  s.push(box(L, FR, 40, 80, WATER - 40, L.modern ? 'url(#mdGreen)' : '#9ac8a0', 121));
-  for (let y = 80; y < 540; y += 92) {
+  s.push(box(L, FR, 20, 80, WATER - 20, L.modern ? 'url(#mdGreen)' : '#9ac8a0', 121));
+  for (let y = 50; y < WATER - 40; y += 92) {
     s.push(rect(FR + 22, y, 24, 36, { fill: '#f4f0e8', stroke: L.ink, sw: L.sw * 0.7 }));
     s.push(rect(FR + 12, y, 9, 36, { fill: '#2a5a4a', stroke: L.ink, sw: L.sw * 0.6 }) + rect(FR + 47, y, 9, 36, { fill: '#2a5a4a', stroke: L.ink, sw: L.sw * 0.6 }));
   }
   // Bushes at the water's edge, left and right.
-  for (const [x, y, rx, ry, col] of [[30, 560, 60, 22, '#3a7a3a'], [930, 556, 50, 26, '#3a7a3a'], [90, 568, 40, 14, '#4a8a3a']] as Array<[number, number, number, number, string]>)
+  for (const [x, y, rx, ry, col] of [[30, WATER - 12, 60, 20, '#3a7a3a'], [930, WATER - 16, 50, 24, '#3a7a3a'], [90, WATER - 4, 40, 12, '#4a8a3a']] as Array<[number, number, number, number, string]>)
     s.push(path(puff(x, y, rx, ry, 7, x, 0.2), { fill: L.modern ? '#2a9a3a' : col, stroke: L.ink, sw: L.sw }));
   return s.join('');
 }
@@ -493,7 +497,7 @@ function floorsArt(L: Look): string {
   const c = pal(L);
   const s: string[] = [];
   FLOORS.forEach((f, i) => {
-    const cellar = i === 2;
+    const cellar = i === FLOORS.length - 1;
     s.push(rect(HX0, f.ceil, HX1 - HX0, f.back - f.ceil, { fill: cellar ? c.stone : c.inner }));
     if (cellar) {
       const r = rng(9);
@@ -502,8 +506,9 @@ function floorsArt(L: Look): string {
         for (let x = HX0 + ((y / 18) % 2) * 20 + r() * 8; x < HX1; x += 40) s.push(line([x, y], [x, y + 18], L.modern ? '#2a2a2a' : '#6a5a50', 1.2, 0.8));
       }
       // The vault in the tower's cellar: a dark recess for the barrels.
-      s.push(path(`M160 ${f.back}V470Q315 404 470 470V${f.back}Z`, { fill: L.modern ? '#2a1a1a' : '#4a3438', stroke: L.ink, sw: L.sw }));
-      s.push(path('M160 470Q315 404 470 470', { stroke: L.modern ? '#c8b8a0' : '#c8b49a', sw: 6 }) + path('M160 470Q315 404 470 470', { stroke: L.ink, sw: 1.4 }));
+      const arc = `M160 ${f.back - 58}Q315 ${f.back - 124} 470 ${f.back - 58}`;
+      s.push(path(`M160 ${f.back}V${f.back - 58}Q315 ${f.back - 124} 470 ${f.back - 58}V${f.back}Z`, { fill: L.modern ? '#2a1a1a' : '#4a3438', stroke: L.ink, sw: L.sw }));
+      s.push(path(arc, { stroke: L.modern ? '#c8b8a0' : '#c8b49a', sw: 6 }) + path(arc, { stroke: L.ink, sw: 1.4 }));
     } else {
       // The tower is round: shade its back wall towards the sides.
       s.push(rect(HX0, f.ceil, SPLIT - HX0, f.back - f.ceil, { fill: 'url(#roundShade)' }));
@@ -571,14 +576,7 @@ function furniture(L: Look): string {
   s.push(path(`M${d.x + 84.5} ${d.top - 24}q-3 -5 0 -10q3 5 0 10z`, { fill: '#ffcf4a', stroke: '#d86a2a', sw: 0.8 }));
   if (!L.modern) s.push(glow('gCandle1', d.x + 85, d.top - 30, 34, '#ffd07a', 0.5));
   s.push(box(L, d.x + d.w + 8, d.foot - 50, 6, 50, c.wood, 56) + box(L, d.x + d.w + 8, d.foot - 26, 22, 5, c.wood, 57) + box(L, d.x + d.w + 26, d.foot - 26, 4, 26, c.wood, 58));
-  const sh = TM.shelf;
-  s.push(box(L, sh.x, sh.y, sh.w, sh.h, c.dark, 60));
-  const r = rng(12);
-  for (let y = sh.y + 6; y < sh.y + sh.h - 6; y += 26) {
-    s.push(line([sh.x + 3, y + 20], [sh.x + sh.w - 3, y + 20], c.wood, 3));
-    for (let x = sh.x + 5; x < sh.x + sh.w - 7; x += 7 + r() * 3) s.push(rect(x, y + 4 - r() * 4, 6, 16 + r() * 4, { fill: ['#a8323a', '#2a4a8a', '#3a7a4a', '#c8963a'][Math.floor(r() * 4)], stroke: L.ink, sw: 0.8 }));
-  }
-  // ... and the bed, a side table, a picture.
+  // ... and the bed, with a side table.
   const b = TM.bed;
   s.push(box(L, b.x, b.foot - 54, 12, 54, c.wood, 61));
   s.push(box(L, b.x + b.w - 12, b.foot - 36, 12, 36, c.wood, 62));
@@ -586,11 +584,9 @@ function furniture(L: Look): string {
   s.push(shape(L, [[b.x + 44, b.foot - 30], [b.x + b.w - 14, b.foot - 30], [b.x + b.w - 14, b.foot - 10], [b.x + 50, b.foot - 10]], L.modern ? 'url(#mdQuilt)' : '#4a5a9a', 64));
   s.push(ellipse(b.x + 26, b.foot - 32, 14, 7, { fill: '#ffffff', stroke: L.ink, sw: L.sw * 0.7 }));
   s.push(box(L, b.x - 34, b.foot - 34, 26, 34, c.wood, 65) + box(L, b.x - 26, b.foot - 50, 5, 14, '#f4ead0', 66, 1));
-  s.push(box(L, 560, 180, 60, 34, '#c8963a', 67) + rect(566, 186, 48, 22, { fill: L.modern ? 'url(#mdView)' : '#d8a07a' }));
-  // Parlour: an armchair by the door, a table with flowers, the sofa.
-  s.push(box(L, 300, 362, 54, 6, c.wood, 70) + box(L, 306, 368, 5, 24, c.wood, 71) + box(L, 344, 368, 5, 24, c.wood, 72));
-  s.push(ellipse(327, 352, 8, 10, { fill: '#5a6a9a', stroke: L.ink, sw: L.sw * 0.6 }));
-  for (const [fx, fy, col] of [[320, 336, '#ffd34a'], [330, 330, '#ff8a3a'], [336, 340, '#ffd34a'], [324, 344, '#ffffff']] as Array<[number, number, string]>) s.push(circle(fx, fy, 4, { fill: col, stroke: L.ink, sw: 0.8 }));
+  // A pile of books by the desk, and the sofa with its rug.
+  const r = rng(12);
+  for (let k = 0; k < 5; k++) s.push(rect(d.x + 2 + r() * 6, d.top - 6 - k * 5, 22 + r() * 6, 5, { fill: ['#a8323a', '#2a4a8a', '#3a7a4a', '#c8963a'][k % 4], stroke: L.ink, sw: 0.8 }));
   const so = TM.sofa;
   s.push(shape(L, [[so.x, so.foot - 46], [so.x + so.w, so.foot - 46], [so.x + so.w, so.foot - 20], [so.x, so.foot - 20]], L.modern ? 'url(#mdStripes)' : '#c8a8a0', 73));
   s.push(box(L, so.x - 10, so.foot - 30, 20, 26, c.wood, 74) + box(L, so.x + so.w - 10, so.foot - 30, 20, 26, c.wood, 75));
@@ -603,10 +599,11 @@ function furniture(L: Look): string {
     s.push(path(`M${x - 18} ${ba.foot}Q${x - 24} ${ba.foot - 25} ${x - 18} ${ba.foot - 50}H${x + 18}Q${x + 24} ${ba.foot - 25} ${x + 18} ${ba.foot}Z`, { fill: c.wood, stroke: L.ink, sw: L.sw }));
     for (const y of [ba.foot - 40, ba.foot - 12]) s.push(path(`M${x - 20} ${y}H${x + 20}`, { stroke: '#3a3a4a', sw: 3 }));
   }
-  s.push(box(L, 192, 452, 130, 6, c.wood, 80));
+  const jy = CELLAR.ceil + 34;
+  s.push(box(L, 192, jy, 130, 6, c.wood, 80));
   for (let k = 0; k < 3; k++) {
     const x = 214 + k * 40;
-    s.push(path(`M${x - 9} 452Q${x - 13} 440 ${x - 5} 432V426H${x + 5}V432Q${x + 13} 440 ${x + 9} 452Z`, { fill: k % 2 ? '#a8643a' : '#c88a4a', stroke: L.ink, sw: L.sw * 0.7 }));
+    s.push(path(`M${x - 9} ${jy}Q${x - 13} ${jy - 12} ${x - 5} ${jy - 20}V${jy - 26}H${x + 5}V${jy - 20}Q${x + 13} ${jy - 12} ${x + 9} ${jy}Z`, { fill: k % 2 ? '#a8643a' : '#c88a4a', stroke: L.ink, sw: L.sw * 0.7 }));
   }
   for (let k = 0; k < 2; k++) {
     const x = TM.sacks.x + 12 + k * 26;
@@ -662,49 +659,52 @@ function shellArt(L: Look): string {
   const c = pal(L);
   const s: string[] = [];
   // Side facades: the tower's bulges, the house's is straight.
-  s.push(path(`M${HX0} ${EAVE}L${FL} 152Q${FL - 16} 350 ${FL} 558L${HX0} 552Z`, { fill: c.plaster, stroke: L.ink, sw: L.sw }));
-  s.push(path(`M${HX1} ${EAVE}L${FR} 152L${FR} 558L${HX1} 552Z`, { fill: c.plaster, stroke: L.ink, sw: L.sw }));
+  const mid = (EAVE + BASE) / 2;
+  s.push(path(`M${HX0} ${EAVE}L${FL} ${EAVE + 12}Q${FL - 16} ${mid} ${FL} ${BASE + 6}L${HX0} ${BASE + 2}Z`, { fill: c.plaster, stroke: L.ink, sw: L.sw }));
+  s.push(path(`M${HX1} ${EAVE}L${FR} ${EAVE + 12}L${FR} ${BASE + 6}L${HX1} ${BASE + 2}Z`, { fill: c.plaster, stroke: L.ink, sw: L.sw }));
   if (!L.modern) {
-    s.push(path(`M${FL + 10} 156Q${FL - 4} 350 ${FL + 10} 556L${FL + 22} 556Q${FL + 8} 350 ${FL + 22} 156Z`, { fill: '#c8902a', opacity: 0.4 }));
-    s.push(path(`M${FR - 14} 154V556H${FR}V154Z`, { fill: '#c8902a', opacity: 0.4 }));
+    s.push(path(`M${FL + 10} ${EAVE + 16}Q${FL - 4} ${mid} ${FL + 10} ${BASE + 4}L${FL + 22} ${BASE + 4}Q${FL + 8} ${mid} ${FL + 22} ${EAVE + 16}Z`, { fill: '#c8902a', opacity: 0.4 }));
+    s.push(path(`M${FR - 14} ${EAVE + 14}V${BASE + 4}H${FR}V${EAVE + 14}Z`, { fill: '#c8902a', opacity: 0.4 }));
   }
   // The cut edge of the walls.
-  s.push(rect(HX0 - 6, EAVE, 8, 412, { fill: L.modern ? '#fff6e0' : '#f8dc90', stroke: L.ink, sw: L.sw * 0.6 }));
-  s.push(rect(HX1 - 2, EAVE, 8, 412, { fill: L.modern ? '#fff6e0' : '#f8dc90', stroke: L.ink, sw: L.sw * 0.6 }));
+  s.push(rect(HX0 - 6, EAVE, 8, BASE - EAVE, { fill: L.modern ? '#fff6e0' : '#f8dc90', stroke: L.ink, sw: L.sw * 0.6 }));
+  s.push(rect(HX1 - 2, EAVE, 8, BASE - EAVE, { fill: L.modern ? '#fff6e0' : '#f8dc90', stroke: L.ink, sw: L.sw * 0.6 }));
   // Windows with shutters on the side walls.
   const sideWin = (x: number, y: number, k: number) =>
     rect(x, y, 22, 32, { fill: '#ffd870', stroke: L.ink, sw: L.sw * 0.7 }) +
     path(`M${x + 11} ${y}V${y + 32}M${x} ${y + 15}H${x + 22}`, { stroke: '#8a5a2a', sw: 1.4 }) +
     rect(x - 9, y - 1, 8, 34, { fill: k % 2 ? '#5a6a9a' : '#4a6a8a', stroke: L.ink, sw: L.sw * 0.6 }) +
     rect(x + 23, y - 1, 8, 34, { fill: k % 2 ? '#5a6a9a' : '#4a6a8a', stroke: L.ink, sw: L.sw * 0.6 });
-  s.push(sideWin(FL + 14, 194, 0) + sideWin(FL + 14, 466, 1));
-  s.push(sideWin(HX1 + 15, 194, 2) + sideWin(HX1 + 15, 324, 3) + sideWin(HX1 + 15, 466, 4));
+  s.push(sideWin(FL + 14, 300, 1));
+  s.push(sideWin(HX1 + 15, 150, 2) + sideWin(HX1 + 15, 300, 3));
   // The door from the promenade.
   const dr = TM.door;
   s.push(path(`M${dr.x} ${dr.foot}V${dr.top + 12}Q${dr.x + dr.w / 2} ${dr.top - 6} ${dr.x + dr.w} ${dr.top + 12}V${dr.foot}Z`, { fill: L.modern ? 'url(#mdWood)' : '#7a3a2a', stroke: L.ink, sw: L.sw }));
   s.push(path(`M${dr.x + dr.w / 2} ${dr.top + 4}V${dr.foot}`, { stroke: L.modern ? '#000000' : '#4a2018', sw: 1.6 }));
-  s.push(circle(dr.x + dr.w - 7, 372, 2.6, { fill: '#ffd34a', stroke: L.ink, sw: 1.2 }));
+  s.push(circle(dr.x + dr.w - 7, dr.top + 52, 2.6, { fill: '#ffd34a', stroke: L.ink, sw: 1.2 }));
   // Roofs: the house's hipped roof, then the tower's cone in front of it.
-  s.push(shape(L, [[466, 150], [924, 154], [872, 62], [520, 58]], c.slate, 300));
-  for (let y = 70; y < 150; y += 11) s.push(line([520 - (y - 58) * 0.6, y], [872 + (y - 62) * 0.56, y], L.modern ? '#1a1a2a' : '#3e3a5e', 1.2));
-  s.push(box(L, 716, 22, 24, 44, '#b85a3a', 301) + box(L, 712, 18, 32, 7, '#8a4a3a', 302));
-  s.push(path(`M84 152Q300 176 516 152L300 4Z`, { fill: c.slate, stroke: L.ink, sw: L.sw }));
-  for (let k = 1; k < 9; k++) {
-    const t = k / 9;
-    const y = 4 + (152 - 4) * t;
-    s.push(path(`M${300 - 216 * t} ${y}Q300 ${y + 24 * t} ${300 + 216 * t} ${y}`, { stroke: L.modern ? '#1a1a2a' : '#3e3a5e', sw: 1.2 }));
+  const hip: Pt[] = [[466, EAVE + 10], [924, EAVE + 14], [872, EAVE - 78], [520, EAVE - 82]];
+  s.push(shape(L, hip, c.slate, 300));
+  for (let y = EAVE - 70; y < EAVE + 10; y += 11) s.push(line([520 - (y - hip[3][1]) * 0.6, y], [872 + (y - hip[2][1]) * 0.56, y], L.modern ? '#1a1a2a' : '#3e3a5e', 1.2));
+  s.push(box(L, 716, 0, 24, 36, '#b85a3a', 301) + box(L, 712, -4, 32, 7, '#8a4a3a', 302));
+  const { x: cx, apex, base, half } = CONE;
+  s.push(path(`M${cx - half} ${base}Q${cx} ${base + 22} ${cx + half} ${base}L${cx} ${apex}Z`, { fill: c.slate, stroke: L.ink, sw: L.sw }));
+  for (let k = 1; k < 8; k++) {
+    const t = k / 8;
+    const y = apex + (base - apex) * t;
+    s.push(path(`M${cx - half * t} ${y}Q${cx} ${y + 22 * t} ${cx + half * t} ${y}`, { stroke: L.modern ? '#1a1a2a' : '#3e3a5e', sw: 1.2 }));
   }
-  s.push(path('M300 4L250 150', { stroke: L.modern ? '#ffffff' : '#9a96c0', sw: 2, opacity: 0.6 }));
-  s.push(line([300, 4], [300, -6], L.ink, 2.4) + circle(300, -4, 4, { fill: '#ffd34a', stroke: L.ink, sw: 1.4 }));
+  s.push(path(`M${cx} ${apex}L${cx - 46} ${base}`, { stroke: L.modern ? '#ffffff' : '#9a96c0', sw: 2, opacity: 0.6 }));
+  s.push(circle(cx, apex, 3.4, { fill: '#ffd34a', stroke: L.ink, sw: 1.2 }));
   // The eaves: rafter ends under the roofs, all round.
   s.push(box(L, FL - 8, EAVE - 2, FR - FL + 16, 14, c.dark, 303));
   for (let x = FL; x < FR; x += 22) s.push(rect(x, EAVE + 2, 8, 6, { fill: c.wood, stroke: L.ink, sw: 0.8 }));
   // The foundation on the riverbank, flowers.
-  s.push(box(L, FL - 10, 550, FR - FL + 20, WATER - 548, c.stone, 304));
-  for (let x = FL + 10; x < FR; x += 34) s.push(line([x, 552], [x + 4, WATER - 2], L.modern ? '#2a2a2a' : '#6a5a50', 1.2) + line([x - 17, 563], [x + 17, 563], L.modern ? '#2a2a2a' : '#6a5a50', 1.2));
+  s.push(box(L, FL - 10, BASE, FR - FL + 20, WATER - BASE + 2, c.stone, 304));
+  for (let x = FL + 10; x < FR; x += 34) s.push(line([x, BASE + 2], [x + 4, WATER - 2], L.modern ? '#2a2a2a' : '#6a5a50', 1.2) + line([x - 17, BASE + 12], [x + 17, BASE + 12], L.modern ? '#2a2a2a' : '#6a5a50', 1.2));
   for (const fx of [250, 460, 700]) {
-    s.push(box(L, fx - 22, 556, 44, 12, c.wood, 305 + fx));
-    for (let k = 0; k < 6; k++) s.push(circle(fx - 16 + k * 6.4, 553 - (k % 2) * 3, 3.4, { fill: ['#ff4a8a', '#ffd34a', '#ff7a2a'][k % 3], stroke: L.ink, sw: 0.7 }));
+    s.push(box(L, fx - 22, BASE + 6, 44, 11, c.wood, 305 + fx));
+    for (let k = 0; k < 6; k++) s.push(circle(fx - 16 + k * 6.4, BASE + 4 - (k % 2) * 3, 3.4, { fill: ['#ff4a8a', '#ffd34a', '#ff7a2a'][k % 3], stroke: L.ink, sw: 0.7 }));
   }
   return s.join('');
 }
@@ -719,7 +719,7 @@ function waterArt(L: Look): string {
     s.push(path(`M${x} ${y}h${12 + r() * 26}`, { stroke: ['#ffd870', '#ff9a6a', '#c8f0ff'][i % 3], sw: 2, opacity: 0.7 }));
   }
   // Two punts moored at the bank.
-  for (const [x, y] of [[560, 590], [690, 604]] as Pt[]) {
+  for (const [x, y] of [[560, WATER + 10], [690, WATER + 22]] as Pt[]) {
     s.push(shape(L, [[x, y], [x + 320, y - 4], [x + 300, y + 16], [x + 14, y + 18]], L.modern ? 'url(#mdWood)' : '#7a4a2a', 310 + x));
     for (let k = 1; k < 7; k++) s.push(line([x + k * 44, y - 1], [x + k * 44 - 2, y + 14], L.ink, 1.6));
   }
@@ -737,8 +737,7 @@ function vectorRoom(L: Look): string {
     graffitiArt(L),
     pedestalArt(L),
     spiralArt(L),
-    stairArt(L, TM.stairUp.bottom, FLOORS[1].back, TM.stairUp.top, FLOORS[0].front, 320),
-    stairArt(L, TM.stairDown.top, FLOORS[1].front, TM.stairDown.bottom, FLOORS[2].back, 321),
+    stairArt(L, TM.stairDown.top, TOP.front, TM.stairDown.bottom, CELLAR.back, 321),
     shellArt(L),
     waterArt(L),
   ].join('');
@@ -761,14 +760,14 @@ function toonDefs(): string {
   return defs(
     grainDefs(71),
     SHADES(),
-    linear('tmSky', 0, 0, 0, 440, [
+    linear('tmSky', 0, 0, 0, 330, [
       [0, '#3a3a8a'],
       [0.35, '#7a4aa0'],
       [0.65, '#e2607a'],
       [0.85, '#ff9a52'],
       [1, '#ffd08a'],
     ]),
-    linear('tmInner', 0, 150, 0, 400, [
+    linear('tmInner', 0, TOP.ceil, 0, TOP.back, [
       [0, '#f0c070'],
       [1, '#d89a5a'],
     ]),
@@ -815,7 +814,7 @@ function modernDefs(): string {
     `<filter id="mdNeon" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="3"/></filter>`,
     `<pattern id="mdStripes" width="12" height="12" patternUnits="userSpaceOnUse"><rect width="12" height="12" fill="#f0e0d0"/><rect width="5" height="12" fill="#5a7ac8"/></pattern>`,
     `<pattern id="mdQuilt" width="14" height="14" patternUnits="userSpaceOnUse"><rect width="14" height="14" fill="#3a4ac8"/><rect width="7" height="7" fill="#5a6ae8"/><rect x="7" y="7" width="7" height="7" fill="#5a6ae8"/></pattern>`,
-    linear('mdSky', 0, 0, 0, 440, [
+    linear('mdSky', 0, 0, 0, 330, [
       [0, '#2a2aa0'],
       [0.4, '#8a3ad0'],
       [0.7, '#ff4a8a'],
@@ -826,7 +825,7 @@ function modernDefs(): string {
       [0.6, '#ff5a8a'],
       [1, '#ffd04a'],
     ]).replace('gradientUnits="userSpaceOnUse"', 'gradientUnits="objectBoundingBox"'),
-    linear('mdChrome', 0, 350, 0, 395, [
+    linear('mdChrome', 0, TM.pedestal.top, 0, TM.pedestal.foot, [
       [0, '#ffffff'],
       [0.3, '#b8c0d0'],
       [0.55, '#5a6070'],
