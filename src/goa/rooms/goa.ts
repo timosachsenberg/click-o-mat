@@ -96,18 +96,28 @@ async function landing(ctx: ScriptContext): Promise<void> {
     await ctx.playerSay('Moment. Meine Taschen. Leer! Alles weg.');
     await ctx.playerSay('Das Wurmloch hat Zoll kassiert. Egal. Hier brauch ich nur noch Beine.');
   }
-  // The bouncer has seen it. He comes over from the gate.
-  ctx.place('tuersteher', 20, 420, 'right');
-  await ctx.walkTo('tuersteher', LANDING.x - 70, LANDING.y + 14);
+}
+
+/** Whoever falls out of the hole without having been let in meets the
+ *  Goazwerg: he walks over from the gate and wants the password. */
+async function bouncerCheck(ctx: ScriptContext): Promise<void> {
+  // He stops in front of the dancers, so he isn't hidden behind one.
+  ctx.place('tuersteher', 20, 442, 'right');
+  await ctx.walkTo('tuersteher', LANDING.x - 84, 442);
   ctx.face(ctx.activeCharId, 'left');
-  await ctx.say('tuersteher', 'Halt! Stopp! Musik ... nein, Musik bleibt an.');
-  await ctx.playerSay('Und wer bist du? Ein ... Gartenzwerg?');
-  await ctx.say('tuersteher', 'Goazwerg. Türsteher. Und das ist eine Saunamütze, bevor du fragst.');
-  await ctx.say('tuersteher', 'Du bist nicht durchs Tor gekommen. Du bist aus einem Loch im Boden gefallen. Respekt. Trotzdem: Parole?');
+  if (ctx.flag('bouncerMetFloor')) {
+    await ctx.say('tuersteher', 'Du schon wieder. Aus dem Loch. Parole?');
+  } else {
+    ctx.setFlag('bouncerMetFloor');
+    await ctx.say('tuersteher', 'Halt! Stopp! Musik ... nein, Musik bleibt an.');
+    await ctx.playerSay('Und wer bist du? Ein ... Gartenzwerg?');
+    await ctx.say('tuersteher', 'Goazwerg. Türsteher. Und das ist eine Saunamütze, bevor du fragst.');
+    await ctx.say('tuersteher', 'Du bist nicht durchs Tor gekommen. Du bist aus einem Loch im Boden gefallen. Respekt. Trotzdem: Parole?');
+  }
   await ctx.dialog('tuersteher');
   if (ctx.flag('goaEntered')) {
     await ctx.say('tuersteher', 'Dann tanz. Ich muss zurück ans Tor. Und nächstes Mal vorne rum.');
-    await ctx.walkTo('tuersteher', 34, 420);
+    await ctx.walkTo('tuersteher', 34, 442);
     ctx.place('tuersteher', -300, 420);
     return;
   }
@@ -137,7 +147,7 @@ const HOTSPOTS: HotspotDef[] = [
     on: {
       lookat: 'Riesige Pilze, die von innen leuchten. Pink, Türkis, Grün. Echt? Deko? Hier fragt das keiner.',
       pickup: 'Der kleinste ist größer als ich. Und der Goazwerg zählt bestimmt nach.',
-      use: 'Anknabbern? Der Goazwerg sagt, Zwerge essen nur Pilze. Ich lass sie den Zwergen.',
+      use: 'Anknabbern? Bei Pilzen, die von innen leuchten? Ich lass sie lieber den Zwergen.',
       talkto: 'Hallo, Pilz. ... Er hat nicht geantwortet. Noch nicht.',
     },
   }),
@@ -145,7 +155,7 @@ const HOTSPOTS: HotspotDef[] = [
     on: {
       lookat: 'Noch mehr Zauberpilze. Der große grüne pulsiert im Takt. Oder ich.',
       pickup: 'Der kleinste ist größer als ich. Und der Goazwerg zählt bestimmt nach.',
-      use: 'Anknabbern? Der Goazwerg sagt, Zwerge essen nur Pilze. Ich lass sie den Zwergen.',
+      use: 'Anknabbern? Bei Pilzen, die von innen leuchten? Ich lass sie lieber den Zwergen.',
     },
   }),
   at('chai', 'Chai-Stand', R(48, 230, 116, 96), P(150, 350), 'left', {
@@ -155,7 +165,7 @@ const HOTSPOTS: HotspotDef[] = [
       talkto: async (ctx) => {
         await ctx.playerSay('EINEN CHAI, BITTE! WAS KOSTET DER?');
         await ctx.playerSay('Die Chai-Frau zeigt auf ein Schild: „Ein Lächeln. Oder zwei Euro. Lächeln bevorzugt.“');
-        await ctx.playerSay(ctx.hasItem('euro') ? 'Ich lächle. Die zwei Euro behalte ich. Der Chai ist heiß, süß und perfekt.' : 'Ich lächle. Der Chai ist heiß, süß und perfekt.');
+        await ctx.playerSay('Ich lächle. Der Chai ist heiß, süß und perfekt.');
       },
       use: 'Selber einschenken? Die Chai-Frau hat alles im Griff. Und im Blick.',
     },
@@ -224,8 +234,10 @@ const HOTSPOTS: HotspotDef[] = [
     },
   },
   at('portal', 'Wurmloch', R(PORTAL.x - PORTAL.rx, PORTAL.y - PORTAL.ry - 4, PORTAL.rx * 2, PORTAL.ry * 2 + 8), P(PORTAL.x + 50, PORTAL.y + 6), 'left', {
+    defaultVerb: 'use',
     on: {
       lookat: 'Das andere Ende von meinem Wurmloch-Paar. Liegt flach auf der Tanzfläche. Die anderen tanzen einfach drum herum.',
+      open: backThroughPortal,
       use: backThroughPortal,
       pickup: 'Das klebt am Boden wie Kaugummi. Kosmischer Kaugummi.',
     },
@@ -289,7 +301,13 @@ export const goaRoom: RoomDef = {
   ],
 
   async onEnter(ctx) {
-    await ctx.once('goaIntro', () => landing(ctx));
+    const viaPortal = !!ctx.flag('portalLanding');
+    ctx.setFlag('portalLanding', false);
+    if (viaPortal) await ctx.once('goaIntro', () => landing(ctx));
+    else await ctx.once('goaIntro', async () => {
+      await ctx.playerSay('Leuchtende Pilze. Fäden aus Licht bis in die Baumkronen. Und alle tanzen.');
+    });
+    if (viaPortal && !ctx.flag('goaEntered')) await bouncerCheck(ctx);
   },
 
   ambients: [

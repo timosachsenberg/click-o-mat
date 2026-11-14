@@ -28,6 +28,11 @@ const PERCH = P(IC.x + 8, IC.y + IC.h + 34);
 
 /** Ring: Otto R. answers from 1987 and wants the password. */
 async function ring(ctx: ScriptContext): Promise<void> {
+  if (ctx.flag('ottoFree')) {
+    ctx.sfx('deny');
+    await ctx.playerSay('Ich drück. Es knackt, dann nur noch Rauschen. In 1987 ist keiner mehr, der rangehen könnte.');
+    return;
+  }
   if (ctx.flag('turmOpen')) {
     await ctx.say('ottoTuer', 'Ist offen! Komm rein. Und mach die Tür zu, es zieht durch drei Zeitebenen.');
     return;

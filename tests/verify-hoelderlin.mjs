@@ -344,8 +344,12 @@ await waitFor(async () => (await flag('portalOpen')) === true, 20000, 'the throw
 await settle();
 check('one end thrown over the barrier: a portal stands at the forest\'s edge', (await flag('portalOpen')) === true && !(await inv()).includes('wurmloch') && (await hotspotAt(724, 326)) === 'portal');
 await page.screenshot({ path: `${SHOT}/hoel-07-portal.png` });
+await click(724, 326); // the portal (default verb: use) — but no password yet
+await settle();
+check('without Ali\'s password the player won\'t step into the portal (no softlock)', (await room()) === 'waldrand' && !(await flag('wormholeUsed')));
+await ev(() => window.__engine.state.setFlag('password', 'Chakabunga'));
 const pocketsBefore = (await inv()).length;
-await click(724, 326); // the portal (default verb: use)
+await click(724, 326);
 await waitFor(async () => (await room()) === 'goa', 20000, 'the dance floor');
 // The landing is a cutscene that ends in the Goazwerg's question.
 await waitFor(async () => { if (await ev(() => window.__engine.choicesShowing)) return true; await page.keyboard.press('Escape'); return false; }, 40000, 'the Goazwerg');
@@ -354,11 +358,26 @@ const landed = await ev(() => { const a = window.__engine.roomScene.actors.get('
 check('the player landed on the floor, by the portal', Math.abs(landed.x - 384) < 30 && Math.abs(landed.y - 404) < 20, JSON.stringify(landed));
 check('everything in the pockets is lost on the way', pocketsBefore > 0 && (await inv()).length === 0, JSON.stringify(await inv()));
 said = (await choices()).map((c) => c.text);
-check('the Goazwerg wants the password on the dance floor — and there is no Chakabunga to say', !said.some((t) => t.startsWith('Chakabunga')), said.join(' | '));
+check('the Goazwerg wants the password on the dance floor', said.some((t) => t.startsWith('Chakabunga')), said.join(' | '));
+const zwerg = await ev(() => { const a = window.__engine.roomScene.actors.get('tuersteher'); return { y: a.y, depth: a.sprite.depth }; });
+check('the Goazwerg stands in front of the dancers while he asks', zwerg.y >= 440, JSON.stringify(zwerg));
+await page.screenshot({ path: `${SHOT}/hoel-07b-zwerg.png` });
 await pick('Ich komm gleich');
 await waitFor(async () => (await room()) === 'goaeingang', 20000, 'thrown out');
 await settle();
 check('without the password: thrown out, in front of the gate', (await room()) === 'goaeingang' && !(await flag('goaEntered')));
+const ent = await ev(() => { const a = window.__engine.roomScene.actors.get('player'); return { x: a.x, y: a.y }; });
+check('thrown out beside the bouncer, not on top of him', Math.abs(ent.x - 560) > 60, JSON.stringify(ent));
+// --- there is a way back from here: on foot to the forest's edge, and into the portal again
+check('the entrance has a path back into the woods', (await hotspotAt(30, 400)) === 'toWald');
+await goTo('waldrand', 30, 400);
+await click(724, 326);
+await waitFor(async () => (await room()) === 'goa', 20000, 'the dance floor again');
+await waitFor(async () => { if (await ev(() => window.__engine.choicesShowing)) return true; await page.keyboard.press('Escape'); return false; }, 40000, 'the Goazwerg again');
+check('landing again without having been let in: the Goazwerg asks again', (await room()) === 'goa' && (await ev(() => window.__engine.choicesShowing)) === true);
+await pick('Ich komm gleich');
+await waitFor(async () => (await room()) === 'goaeingang', 20000, 'thrown out again');
+await settle();
 check('bouncer, Flaschenfloh and the gate are there',
   (await hotspotAt(560, 334)) === 'tuersteher' && (await hotspotAt(790, 300)) === 'floh' && (await hotspotAt(560, 160)) === 'tor' && (await hotspotAt(110, 300)) !== 'wurmloch');
 await page.screenshot({ path: `${SHOT}/hoel-07-goa.png` });
@@ -368,16 +387,13 @@ await click(560, 160); // the gate (default verb: use)
 await settle();
 check('no way past the bouncer yet', (await room()) === 'goaeingang' && !(await flag('chapterDone')));
 
-// --- the bouncer wants the password; without it there's no Chakabunga to say
+// --- talking to the bouncer at the gate: other answers don't get you in
 await click(560, 334, { button: 'right' }); // talk to him
 await waitFor(() => ev(() => window.__engine.choicesShowing), 8000, 'bouncer');
-said = (await choices()).map((c) => c.text);
-check('without the password, no Chakabunga', !said.some((t) => t.startsWith('Chakabunga')), said.join(' | '));
 await pick('Put put?');
 await pick('Ich komm gleich');
 
-// --- with the password (from Ali, set directly here): in
-await ev(() => window.__engine.state.setFlag('password', 'Chakabunga'));
+// --- with the password: in through the gate
 await click(560, 334, { button: 'right' });
 await waitFor(() => ev(() => window.__engine.choicesShowing), 8000, 'bouncer');
 await pick('Chakabunga');
