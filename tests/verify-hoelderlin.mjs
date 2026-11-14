@@ -2,12 +2,14 @@ import { chromium } from 'playwright';
 
 // "Folge dem Bass" — inside the Hölderlinturm: out of the Picasso, past the
 // Epplehaus onto the Neckarbrücke, along the promenade to the tower and in
-// through its door. Otto R.'s Rössler attractor throws the room between
+// through its door. The tower is a doll's house seen from the river (three
+// floors, stairs, the room scrolls vertically, so clicks map world
+// coordinates through the camera). Otto R.'s Rössler attractor throws it between
 // three time layers (house style, 1987 pixels, modern cartoon collage); the
-// riddle runs across them: meet Otto (stuck in 1987), fold back the rug,
+// riddle runs across them: meet Otto (stuck in the cellar in 1987), roll up the parlour rug,
 // pick up the black hole underneath (only possible in the modern layer, as
 // a cartoon portable hole), and put it on the wall under his PUT PUT
-// graffiti — in 1987 — so he can walk out. He leaves his pocket attractor.
+// graffiti on the cellar wall — in 1987 — so he can walk out. He leaves his pocket attractor.
 // Back out on the bridge, the chapter's end still works.
 
 const BASE = process.env.BASE_URL ?? 'http://localhost:5173';
@@ -29,6 +31,23 @@ const gx = (x) => box.x + (x / 960) * box.width;
 const gy = (y) => box.y + (y / 600) * box.height;
 const click = (x, y, opts = {}) => page.mouse.click(gx(x), gy(y), opts);
 const ev = (fn, arg) => page.evaluate(fn, arg);
+/** Wait for the camera to settle, then click a world point (rooms may scroll). */
+const camY = () => ev(() => window.__engine.roomScene.cameras.main.scrollY);
+const camSettle = async () => {
+  let last = await camY();
+  for (let i = 0; i < 30; i++) {
+    await page.waitForTimeout(120);
+    const y = await camY();
+    if (Math.abs(y - last) < 0.5) return;
+    last = y;
+  }
+};
+const clickW = async (x, y, opts = {}) => {
+  await camSettle();
+  const sy = await camY();
+  if (y - sy < 0 || y - sy > 450) throw new Error(`world point ${x},${y} is off screen (scrollY ${sy})`);
+  await click(x, y - sy, opts);
+};
 
 await click(480, 300); // start
 await page.waitForTimeout(1500);
@@ -97,7 +116,7 @@ const verb = async (id) => {
 };
 const doVerb = async (id, x, y) => {
   await verb(id);
-  await click(x, y);
+  await clickW(x, y);
   await settle();
 };
 /** Take an item in hand (by its inventory slot) and use it on a point. */
@@ -107,7 +126,7 @@ const useItemOn = async (item, x, y) => {
   if (i < 0) throw new Error(`no ${item} in the inventory`);
   await click(522 + i * 112, 505);
   await page.waitForTimeout(150);
-  await click(x, y);
+  await clickW(x, y);
   await settle();
 };
 
@@ -126,75 +145,95 @@ await waitFor(async () => (await room()) === 'hoelderlinturm', 25000, 'the tower
 await settle();
 check('opening the Hölderlinturm leads inside', (await room()) === 'hoelderlinturm');
 const pl = await ev(() => { const a = window.__engine.roomScene.actors.get('player'); return { x: a.x, y: a.y, s: a.sprite.scale }; });
-check('the player comes in at the door, at full size', pl.x < 200 && pl.y > 380 && pl.s > 0.95, JSON.stringify(pl));
+check('the player comes in at the door, on the middle floor', pl.x < 200 && pl.y > 390 && pl.y < 414 && Math.abs(pl.s - 0.8) < 0.01, JSON.stringify(pl));
+check('a doll\'s house taller than the screen: the camera scrolls', await ev(() => window.__engine.roomScene.roomSize.h > 450));
 check('starts in the house-style layer', (await era()) === 0);
-check('attractor, rug, graffiti, desk and door are there',
-  (await hotspotAt(480, 190)) === 'attraktor' && (await hotspotAt(470, 420)) === 'teppich' && (await hotspotAt(824, 170)) === 'graffiti'
-  && (await hotspotAt(200, 260)) === 'pult' && (await hotspotAt(50, 280)) === 'tuer');
-check('Otto R. is nowhere to be seen (yet)', (await hotspotAt(724, 320)) !== 'otto');
+check('attractor, rug, graffiti, desk, bed, barrels and door are there',
+  (await hotspotAt(236, 320)) === 'attraktor' && (await hotspotAt(560, 404)) === 'teppich' && (await hotspotAt(580, 450)) === 'graffiti'
+  && (await hotspotAt(244, 236)) === 'pult' && (await hotspotAt(600, 240)) === 'bett' && (await hotspotAt(230, 505)) === 'faesser'
+  && (await hotspotAt(122, 370)) === 'tuer');
+check('Otto R. is nowhere to be seen (yet)', (await hotspotAt(760, 500)) !== 'otto');
+await camSettle();
 await page.screenshot({ path: `${SHOT}/hoel-01-toon.png` });
 const keyToon = await bgKey();
 
-// --- turn the attractor: 1987
-await click(480, 190); // default verb: use
+// --- up the stairs to the Turmstube (Hölderlin's desk), and back down
+await doVerb('lookat', 244, 236);
+const up = await ev(() => { const a = window.__engine.roomScene.actors.get('player'); return { x: a.x, y: a.y }; });
+check('up the stairs to the desk in the Turmstube', up.y < 274 && up.y > 254 && Math.abs(up.x - 244) < 12, JSON.stringify(up));
+check('the camera followed upstairs', (await camY()) < 120, String(await camY()));
+await page.screenshot({ path: `${SHOT}/hoel-01b-stube.png` });
+
+// --- turn the attractor (back down in the parlour): 1987
+await clickW(236, 320); // default verb: use
 await settle();
 check('the attractor switches to the pixel layer', (await era()) === 1);
 const keyPixel = await bgKey();
 check('the backdrop is redrawn', keyPixel !== keyToon, `${keyToon} -> ${keyPixel}`);
-check('Otto R. appears in 1987 and greets us', (await flag('ottoMet')) === true && (await hotspotAt(724, 320)) === 'otto');
+check('Otto R. appears in the cellar in 1987 and greets us', (await flag('ottoMet')) === true && (await hotspotAt(760, 500)) === 'otto');
+await camSettle();
 await page.screenshot({ path: `${SHOT}/hoel-02-pixel.png` });
 
 // --- talk to Otto: he's stuck, wants a hole in the wall, there's one under the rug
-await click(724, 320, { button: 'right' });
+await clickW(760, 500, { button: 'right' });
 await settle();
+const otto = await ev(() => { const a = window.__engine.roomScene.actors.get('player'); return { x: a.x, y: a.y }; });
+check('down the cellar stairs to talk to him', otto.y > 528, JSON.stringify(otto));
 await pick('Warum gehst du nicht');
 await pick('Was heißt PUT PUT');
 await pick('Wo krieg ich ein Loch her');
 await pick('Bis später');
 check('Otto explained his predicament', (await flag('ottoExplained')) === true);
 
-// --- the hole can't be put without having it
-await doVerb('pull', 420, 404);
-check('pulling the rug folds it back: a black hole underneath', (await flag('rugMoved')) === true && (await hotspotAt(500, 398)) === 'loch');
-await doVerb('pickup', 500, 398);
+// --- the rug in the parlour: roll it up, a black hole underneath
+await doVerb('pull', 560, 404);
+check('pulling the rug rolls it up: a black hole underneath', (await flag('rugMoved')) === true && (await hotspotAt(620, 404)) === 'loch');
+const holes = await ev(() => window.__engine.roomScene.roomDef.holes(window.__engine.state).length);
+check('the hole is a hole in the floor (walked round)', holes === 1);
+await doVerb('pickup', 620, 404);
 check('in 1987 the hole is part of the floor', !(await flag('holeTaken')));
 await page.screenshot({ path: `${SHOT}/hoel-03-hole-pixel.png` });
 
 // --- on to the modern layer: the hole is a cartoon portable hole
-await click(480, 190);
+await clickW(236, 320);
 await settle();
 check('turning on: the modern collage layer', (await era()) === 2 && (await bgKey()) !== keyPixel && (await bgKey()) !== keyToon);
-check('Otto exists only in 1987', (await hotspotAt(724, 320)) !== 'otto');
+check('Otto exists only in 1987', (await hotspotAt(760, 500)) !== 'otto');
 await page.screenshot({ path: `${SHOT}/hoel-04-modern.png` });
-await doVerb('pickup', 500, 398);
+await doVerb('pickup', 620, 404);
 check('picked up the portable hole', (await flag('holeTaken')) === true && (await inv()).includes('loch'), JSON.stringify(await inv()));
-check('the hole is gone from the floor in every layer', (await hotspotAt(500, 398)) === 'teppich' || (await hotspotAt(500, 398)) === null);
+check('the hole is gone from the floor in every layer', (await hotspotAt(620, 404)) !== 'loch');
 
 // --- the wrong layer: putting the hole here won't help Otto
-await useItemOn('loch', 824, 300);
+await useItemOn('loch', 580, 450);
 check('the hole stays in the pocket outside 1987', !(await flag('wallHole')) && (await inv()).includes('loch'));
 
 // --- back to 1987 (pull turns the attractor backwards) and PUT PUT
-await doVerb('pull', 480, 190);
+await doVerb('pull', 236, 320);
 check('pulling turns the attractor back to 1987', (await era()) === 1);
-await useItemOn('loch', 824, 300);
-check('the hole is in the wall', (await flag('wallHole')) === true && !(await inv()).includes('loch'));
-check('Otto walked out through it', (await flag('ottoFree')) === true && (await hotspotAt(724, 320)) !== 'otto');
+await useItemOn('loch', 580, 450);
+check('the hole is in the cellar wall', (await flag('wallHole')) === true && !(await inv()).includes('loch'));
+check('Otto walked out through it', (await flag('ottoFree')) === true && (await hotspotAt(760, 500)) !== 'otto');
 check('and left his pocket attractor', (await inv()).includes('taschenattraktor'), JSON.stringify(await inv()));
-check('the hole in the wall is a hotspot now', (await hotspotAt(816, 300)) === 'mauerloch');
+check('the hole in the wall is a hotspot now', (await hotspotAt(671, 500)) === 'mauerloch');
+await camSettle();
 await page.screenshot({ path: `${SHOT}/hoel-05-free.png` });
 
 // --- round the cycle back to the house style; the hole in the wall stays
-await click(480, 190);
+await clickW(236, 320);
 await settle();
-await click(480, 190);
+await clickW(236, 320);
 await settle();
 check('back in the house-style layer', (await era()) === 0 && (await bgKey()) === keyToon);
-check('the hole in the wall is still there', (await hotspotAt(816, 300)) === 'mauerloch');
+check('the hole in the wall is still there', (await hotspotAt(671, 500)) === 'mauerloch');
+await camSettle();
 await page.screenshot({ path: `${SHOT}/hoel-06-toon-after.png` });
 
 // --- out through the door, back on the promenade by the tower
-await goTo('neckar', 50, 280);
+await camSettle();
+await clickW(122, 370);
+await waitFor(async () => (await room()) === 'neckar', 15000, 'neckar');
+await settle();
 const out = await ev(() => { const a = window.__engine.roomScene.actors.get('player'); return { x: a.x, y: a.y }; });
 check('out of the door: back at the tower on the promenade', (await room()) === 'neckar' && Math.abs(out.x - 478) < 12 && Math.abs(out.y - 304) < 12, JSON.stringify(out));
 

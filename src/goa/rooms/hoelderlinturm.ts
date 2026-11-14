@@ -1,23 +1,25 @@
 import { Layer, type Facing, type HotspotDef, type Rect, type RoomDef, type Vec2 } from '../../engine/types';
 import type { ScriptContext } from '../../engine/ScriptContext';
 import type { GameState } from '../../engine/GameState';
-import { OTTO_ACTOR, TM, blackHoleArt, rugArt, spiralGlow, turmBg, wallHoleArt, type Era } from '../art/turm';
+import { FLOORS, OTTO_ACTOR, ROOM, TM, blackHoleArt, rugArt, spiralGlow, turmBg, wallHoleArt, type Era } from '../art/turm';
 
 // ---- layout ----------------------------------------------------------------------
-// Hölderlin's round room at the top of the tower, entered from the
-// promenade on the Neckarbrücke. Three deep windows onto the Neckar in the
-// sunset; in front of the middle one, Otto R.'s Rössler attractor: turn it,
-// and the room jumps between three time layers (flag `turmEra`):
+// The Hölderlinturm as a doll's house, seen from the Neckar with its front
+// wall cut away: three floors joined by stairs (a side view, so no
+// perspective scaling; the room scrolls vertically). The door from the
+// promenade opens onto the parlour in the middle, where Otto R.'s Rössler
+// attractor stands: turn it, and the whole picture jumps between three time
+// layers (flag `turmEra`):
 //
 //   0  the house style, like everywhere else
 //   1  a 1987 pixel adventure (sixteen colours) — where Otto R. is stuck
 //   2  a modern cartoon collage with photo textures — where holes are portable
 //
-// The riddle: Otto R. sits on his own strange attractor in 1987 and needs a
-// way out. Under the rug there's a black hole; only in the modern layer can
-// it be picked up (cartoon physics). Put it on the wall where his graffiti
-// says PUT PUT — in 1987, where Otto is — and he walks out through it,
-// leaving his pocket attractor behind.
+// The riddle: Otto R. sits in the cellar on his own strange attractor in
+// 1987 and needs a way out. Under the parlour rug there's a black hole; only
+// in the modern layer can it be picked up (cartoon physics). Put it on the
+// cellar wall where his graffiti says PUT PUT — in 1987, where Otto is — and
+// he walks out through it, leaving his pocket attractor behind.
 //
 // State: `turmEra` (0|1|2), `rugMoved`, `holeTaken`, `ottoMet`, `wallHole`,
 // `ottoFree` (+ the items `loch` and `taschenattraktor`). Everything visual
@@ -41,12 +43,27 @@ const byEra = (ctx: ScriptContext, lines: [string, string, string]) => ctx.playe
 const ellipsePts = (cx: number, cy: number, rx: number, ry: number, n = 14): Vec2[] =>
   Array.from({ length: n }, (_, i) => P(cx + Math.cos((i / n) * Math.PI * 2) * rx, cy + Math.sin((i / n) * Math.PI * 2) * ry));
 
-const ATTRACTOR_SPOT = P(480, 360);
-const RUG_SPOT = P(470, 438);
-const WALL_SPOT = P(800, 376);
-const OTTO_HOME = P(724, 372);
-/** Just in front of the hole in the wall. */
-const HOLE_DOOR = P(816, 364);
+const [STUBE, WOHN, KELLER] = FLOORS;
+/** Where to stand on a floor: just in front of its back edge. */
+const on = (f: (typeof FLOORS)[number], x: number) => P(x, f.back + 10);
+const ATTRACTOR_SPOT = on(WOHN, 236);
+const RUG_SPOT = on(WOHN, 512);
+const WALL_SPOT = on(KELLER, 600);
+const OTTO_HOME = on(KELLER, 760);
+/** Just in front of the hole in the cellar wall. */
+const HOLE_DOOR = P(TM.arch.x + TM.arch.w / 2, KELLER.back + 3);
+/** The floor a point on the back wall belongs to. */
+const floorAt = (y: number) => FLOORS.find((f) => y < f.back) ?? KELLER;
+
+const [UP_B, UP_T] = [TM.stairUp.bottom, TM.stairUp.top];
+const [DN_T, DN_B] = [TM.stairDown.top, TM.stairDown.bottom];
+const WALK: Vec2[] = [
+  P(170, STUBE.back), P(840, STUBE.back), P(840, STUBE.front),
+  P(UP_T[1], STUBE.front), P(UP_B[1], WOHN.back), P(840, WOHN.back), P(840, WOHN.front),
+  P(DN_T[1], WOHN.front), P(DN_B[1], KELLER.back), P(840, KELLER.back), P(840, KELLER.front),
+  P(170, KELLER.front), P(170, KELLER.back), P(DN_B[0], KELLER.back), P(DN_T[0], WOHN.front),
+  P(160, WOHN.front), P(160, WOHN.back), P(UP_B[0], WOHN.back), P(UP_T[0], STUBE.front), P(170, STUBE.front),
+];
 
 // ---- scripts ---------------------------------------------------------------------
 
@@ -153,7 +170,7 @@ async function putHole(ctx: ScriptContext): Promise<void> {
   ctx.sfx('zap');
   ctx.setFlag('ottoFree');
   await ctx.repaint();
-  await ctx.playerSay('Weg ist er. Durch ein Loch, das ich unter einem Teppich gefunden hab.');
+  await ctx.playerSay('Weg ist er. Durch ein Loch, das ich zwei Stockwerke höher unter einem Teppich gefunden hab.');
   await ctx.playerSay('Ich schreib das nicht in meinen Lebenslauf.');
 }
 
@@ -170,11 +187,11 @@ function at(id: string, name: string, r: Rect, walkTo: Vec2, facing: Facing, res
 }
 
 const sideWindow = (id: string, w: (typeof TM.windows)[number]): HotspotDef =>
-  at(id, 'Fenster', R(w.cx - w.w / 2 - 12, w.top - 6, w.w + 24, w.bottom - w.top + 20), P(w.cx, 360), 'up', {
+  at(id, 'Fenster', R(w.x - 6, w.y - 6, w.w + 12, w.h + 12), on(floorAt(w.y), w.x + w.w / 2), 'up', {
     on: {
       lookat: (ctx) =>
         byEra(ctx, [
-          'Der Neckar im Abendrot, gegenüber die Platanen. Hölderlin hat hier sechsunddreißig Jahre rausgeschaut. Ich versteh’s.',
+          'Draußen die Altstadt im Abendrot, Giebel an Giebel. Hölderlin hat hier sechsunddreißig Jahre rausgeschaut. Ich versteh’s.',
           'Fünf Farbstreifen, ein schwarzer Balken, Türkis. Sonnenuntergang in EGA. Rührend.',
           'Ein Foto vom Sonnenuntergang, ins Fenster geklebt. Die Wolken sind echt. Der Rahmen ist gemalt.',
         ]),
@@ -183,9 +200,8 @@ const sideWindow = (id: string, w: (typeof TM.windows)[number]): HotspotDef =>
   });
 
 const HOTSPOTS: HotspotDef[] = [
-  sideWindow('fensterL', TM.windows[0]),
-  sideWindow('fensterR', TM.windows[2]),
-  at('tuer', 'Tür', R(14, 140, 80, 260), P(112, 398), 'left', {
+  ...TM.windows.map((w, i) => sideWindow(`fenster${i}`, w)),
+  at('tuer', 'Tür', R(TM.door.x - 6, TM.door.top - 10, TM.door.w + 12, TM.door.foot - TM.door.top + 10), on(WOHN, 166), 'left', {
     defaultVerb: 'use',
     on: {
       lookat: (ctx) =>
@@ -198,7 +214,7 @@ const HOTSPOTS: HotspotDef[] = [
       open: toNeckar,
     },
   }),
-  at('pult', 'Schreibpult', R(TM.desk.x - 8, TM.desk.top - 44, TM.desk.w + 16, TM.desk.foot - TM.desk.top + 44), P(210, 372), 'up', {
+  at('pult', 'Schreibpult', R(TM.desk.x - 8, TM.desk.top - 36, TM.desk.w + 16, TM.desk.foot - TM.desk.top + 36), on(STUBE, 244), 'up', {
     on: {
       lookat: async (ctx) => {
         if (era(ctx.state) === 1) {
@@ -233,6 +249,40 @@ const HOTSPOTS: HotspotDef[] = [
       pickup: 'Sprühlack geht nicht ab. Das weiß jeder Hausmeister in Tübingen.',
     },
     onItem: { use: { loch: putHole } },
+  }),
+  at('regal', 'Bücherregal', R(TM.shelf.x, TM.shelf.y, TM.shelf.w, TM.shelf.h), on(STUBE, TM.shelf.x + 30), 'up', {
+    on: {
+      lookat: (ctx) =>
+        byEra(ctx, [
+          'Kant, Hegel, Schelling, Pindar. Und ganz hinten, ganz klein: „Chaos für Anfänger“ von O. R.',
+          'Vier bunte Pixelstreifen pro Brett. Bücher in 1987 hatten keine Titel, nur Farben.',
+          'Lauter Fotos von Buchrücken, aufgeklebt. Wenn ich eins rausziehe, ist es wahrscheinlich nur Pappe.',
+        ]),
+      pickup: 'Hölderlins Bücher? Ich lese doch nicht mal die Packungsbeilage von Magic Woman.',
+    },
+  }),
+  at('bett', 'Bett', R(TM.bed.x - 36, TM.bed.foot - 56, TM.bed.w + 36, 56), on(STUBE, TM.bed.x + 70), 'up', {
+    on: {
+      lookat: 'Hölderlins Bett. Schmal, hart, mit Blick auf den Neckar. Für den Schlaf eines Dichters reicht’s.',
+      use: 'Nicht jetzt. Heute Nacht wird nicht geschlafen, heute Nacht wird dem Bass gefolgt.',
+    },
+  }),
+  at('sofa', 'Sofa', R(TM.sofa.x - 10, TM.sofa.foot - 48, TM.sofa.w + 20, 46), RUG_SPOT, 'up', {
+    on: {
+      lookat: 'Ein gestreiftes Sofa. Davor ein Teppich, der sich verdächtig wölbt.',
+      use: 'Hinsetzen? Dann steh ich nie wieder auf. Das Sofa hat Gravitation.',
+    },
+  }),
+  at('faesser', 'Fässer', R(TM.barrels.x, TM.barrels.foot - 52, TM.barrels.w, 52), on(KELLER, TM.barrels.x + 66), 'up', {
+    on: {
+      lookat: (ctx) =>
+        byEra(ctx, [
+          'Fässer im Gewölbe. Ich klopfe: hohl. Hölderlin hat seinen Wein offenbar ernst genommen.',
+          'Braune Ovale mit schwarzen Streifen. Fässer, sagt der Parser.',
+          'Fotos von echten Eichenfässern. Mit Comic-Umriss. Riecht trotzdem nach Wein.',
+        ]),
+      open: 'Leer. Alle. Der letzte Schluck ist wohl schon zweihundert Jahre her.',
+    },
   }),
   {
     id: 'mauerloch',
@@ -275,7 +325,7 @@ const HOTSPOTS: HotspotDef[] = [
     name: 'Teppich',
     polygon: ellipsePts(TM.rug.cx, TM.rug.cy, TM.rug.rx, TM.rug.ry),
     walkTo: RUG_SPOT,
-    facing: 'up',
+    facing: 'right',
     on: {
       lookat: async (ctx) => {
         if (ctx.flag('rugMoved')) return ctx.playerSay('Zusammengerollt. Darunter war das Loch.');
@@ -295,8 +345,8 @@ const HOTSPOTS: HotspotDef[] = [
     id: 'loch',
     name: 'schwarzes Loch',
     polygon: ellipsePts(TM.hole.cx, TM.hole.cy, TM.hole.rx + 6, TM.hole.ry + 5),
-    walkTo: P(TM.hole.cx, 438),
-    facing: 'up',
+    walkTo: on(WOHN, TM.hole.cx - 50),
+    facing: 'right',
     visible: (state) => !!state.getFlag('rugMoved') && !state.getFlag('holeTaken'),
     on: {
       lookat: (ctx) =>
@@ -370,15 +420,22 @@ export const hoelderlinturmRoom: RoomDef = {
   ],
 
   // The floor of the round room, in front of the back wall.
-  walkArea: [P(20, 448), P(40, 404), P(96, 386), P(160, 366), P(270, 354), P(380, 346), P(580, 346), P(700, 354), P(800, 362), P(880, 380), P(936, 412), P(944, 448)],
+  size: ROOM,
+
+  // Three floor bands joined by the two flights of stairs, as one outline:
+  // the Turmstube, down the stairs to the parlour (out to the door), down
+  // the cellar stairs, the cellar, and back up the other side.
+  walkArea: WALK,
+  // The black hole is a hole in the parlour floor: the way round it is behind.
   holes: (state) =>
-    state.getFlag('rugMoved') && !state.getFlag('holeTaken') ? [ellipsePts(TM.hole.cx, TM.hole.cy, TM.hole.rx + 10, TM.hole.ry + 7, 12)] : [],
-  scaling: { yTop: 346, scaleTop: 0.96, yBottom: 446, scaleBottom: 1.18 },
+    state.getFlag('rugMoved') && !state.getFlag('holeTaken') ? [ellipsePts(TM.hole.cx, TM.hole.cy + 2, TM.hole.rx + 8, 7, 12)] : [],
+  // A side view: everyone keeps their size on every floor.
+  scaling: () => 0.8,
 
   assets: { svgActors: [OTTO_ACTOR] },
 
   entries: {
-    door: { x: 120, y: 400, facing: 'right' },
+    door: { x: 166, y: WOHN.back + 12, facing: 'right' },
   },
 
   actors: [{ id: 'otto', x: OTTO_HOME.x, y: OTTO_HOME.y, facing: 'left' }],
@@ -387,8 +444,8 @@ export const hoelderlinturmRoom: RoomDef = {
     ctx.playMusic(ERA_TRACK[era(ctx.state)]);
     await ctx.once('turmIntro', async () => {
       await ctx.wait(300);
-      await ctx.playerSay('Hölderlins Turmzimmer. Rund, warm, und durch alle drei Fenster der Neckar im Abendrot.');
-      await ctx.playerSay('Und mitten im Zimmer ... eine leuchtende Drahtspirale? Die stand bei Hölderlin bestimmt noch nicht hier.');
+      await ctx.playerSay('Der Hölderlinturm, von innen. Oben die Turmstube, unten der Gewölbekeller, und alles knarzt.');
+      await ctx.playerSay('Und mitten in der Stube ... eine leuchtende Drahtspirale? Die stand bei Hölderlin bestimmt noch nicht hier.');
     });
   },
 

@@ -18,8 +18,9 @@ Next to the demo lives the start of an actual adventure, **„Folge dem Bass“*
 (German, `src/goa/`): you begin in the **Picasso**, Ali's basement bar, with nothing but a
 two-euro coin and need the password for tonight's Goa party in the forest — then
 out onto the **Neckarbrücke** in Tübingen, where the Stocherkähne pass by, and up
-into the **Hölderlinturm**, where a Rössler attractor throws the room between three
-time layers (hand-painted, 1987 pixels, modern cartoon collage). The
+into the **Hölderlinturm** — a cut-open doll's house of three floors — where a
+Rössler attractor throws the picture between three time layers (hand-painted,
+1987 pixels, modern cartoon collage). The
 **title screen picks between the two** (SPIEL · DEMO); `?game=goa` /
 `?game=demo` select one directly, and the last pick is remembered.
 
@@ -149,6 +150,30 @@ talk while he does.
    at the right end of the bridge, then along the top of the quay wall), take
    the cap, and head left over the bridge, **towards the forest** (you need the
    password and the cap).
+
+**Optional: the Hölderlinturm.** Open the tower's door at the end of the
+promenade. The tower is shown as a doll's house, its front wall cut away:
+the Turmstube with Hölderlin's desk and bed at the top, the parlour in the
+middle (the door opens onto it), the vaulted cellar below, joined by stairs.
+In the parlour stands Otto R.'s **Rössler attractor**. *Use* (or *push*) it
+to throw the whole picture into the next time layer, *pull* it to go back:
+hand-painted → **1987** (sixteen colours, chunky pixels) → **today** (cartoon
+collage with photo textures) → hand-painted.
+
+1. Turn the attractor once: in 1987 **Otto R.**, chaos researcher, is stuck in
+   the cellar on his own strange attractor. Talk to him: the door is only
+   painted in his layer, he needs a hole in the wall — where his graffiti on
+   the cellar wall says **PUT PUT** (in the pixel layer it reads like a
+   text-parser prompt, and an arrow points at a dashed arch). There's a black
+   hole under the rug upstairs, he says.
+2. **Pull the parlour rug** (any layer): it rolls up off a black hole.
+3. In 1987 the hole is part of the floor; in the hand-painted layer it would
+   take *you*. Turn on to **today**: cartoon physics — its edge curls up like a
+   pancake. **Pick up the portable hole**.
+4. Back to **1987** (pull the attractor) and **use the hole with PUT PUT**.
+   Otto walks out through the wall and leaves you his **Taschen-Attraktor**
+   (which hums along to the bass on the way to the forest). Putting the hole
+   up in another layer doesn't help him — he's only in 1987.
 
 </details>
 
@@ -491,10 +516,12 @@ src/
     art/epplehaus.ts   The Epplehaus forecourt, and the pigeons
     rooms/epplehaus.ts The Epplehaus (Flaschenfloh, a flock of pigeon actors)
     rooms/neckar.ts    The Neckarbrücke (a punt passes regularly; sink it)
-    art/turm.ts        The Hölderlinturm inside, in three time layers (toon,
-                       an EGA pixel grid, a photo-textured cartoon collage),
-                       the Rössler attractor (integrated, not drawn), Otto R.
-    rooms/hoelderlinturm.ts  The tower room: switch time layers, free Otto R.
+    art/turm.ts        The Hölderlinturm as a cut-open doll's house, in three
+                       time layers (toon, an EGA pixel grid, a photo-textured
+                       cartoon collage), the Rössler attractor (integrated,
+                       not drawn), Otto R.
+    rooms/hoelderlinturm.ts  Three floors joined by stairs (a vertically
+                       scrolling side view): switch time layers, free Otto R.
 public/
   img/                 PNG assets (served verbatim, copied into dist/)
 tools/
