@@ -1,14 +1,18 @@
 import { Layer, type Facing, type HotspotDef, type Rect, type RoomDef, type Vec2 } from '../../engine/types';
 import type { ScriptContext } from '../../engine/ScriptContext';
-import { NK, PUNT_ACTOR, balustrade, floatingCap, flyingLeg, neckarBg } from '../art/neckar';
+import { NK, PUNT_ACTOR, balustrade, eckhausLayer, floatingCap, flyingLeg, neckarBg, promGap, quayFootY, quayTopY } from '../art/neckar';
 
 // ---- layout ----------------------------------------------------------------------
 // The Neckarbrücke in Tübingen at sunset, looking upstream along the
 // Neckarfront: the player walks along the bridge in the foreground, in
 // front of its sandstone balustrade (one occluder, baseline
 // NK.parapetBase). The Altstadt is on the right (so that's the way back to
-// the Picasso); on the left a gap in the balustrade leads down a few steps
-// onto a jetty, and the bridge goes on towards the forest.
+// the Picasso), the bridge goes on to the left towards the forest.
+//
+// From the right end of the bridge the player can walk round the back of
+// the corner house (its own occluder layer hides them on the way) onto the
+// promenade on top of the quay wall, and along the whole Neckarfront into
+// the distance, down to the jetty at the Hölderlinturm.
 //
 // Every so often a Stocherkahn full of Burschenschaftler comes down the
 // river along the quay wall, turns in front of the bridge (as they do) and
@@ -24,12 +28,19 @@ import { NK, PUNT_ACTOR, balustrade, floatingCap, flyingLeg, neckarBg } from '..
 const P = (x: number, y: number): Vec2 => ({ x, y });
 const R = (x: number, y: number, w: number, h: number): Rect => ({ x, y, w, h });
 
-/** Perspective: the river (and the jetty) recede towards the bend; on the
- *  steps and the bridge the player is close to us. */
-function scaling(_x: number, y: number): number {
+/** Perspective: on the bridge the player is close to us. The river recedes
+ *  towards the bend (size by y); on the promenade on top of the quay wall
+ *  distance goes by the wall's waterline below, not by the feet's y. */
+const riverScale = (y: number) => Math.max(0.12, 0.15 + ((y - NK.far) / 125) * 0.78);
+function scaling(x: number, y: number): number {
   if (y >= 370) return 0.93 + ((y - 370) / 78) * 0.2;
-  return Math.max(0.12, 0.15 + ((y - NK.far) / 125) * 0.78);
+  if (x >= NK.quayFoot[0][0] && y < quayFootY(x) - 2) return riverScale(quayFootY(x));
+  return riverScale(y);
 }
+
+/** The promenade: its far end at the Hölderlinturm, where the jetty is. */
+const PROM = NK.prom;
+const TOWER_SPOT = P(PROM.x0 + 4, quayTopY(PROM.x0 + 4) - 3);
 
 // ---- the punt ------------------------------------------------------------------------
 
@@ -43,7 +54,7 @@ const REACH = { t0: 0.26, t1: 0.72 };
 const OFF = P(-400, 300);
 /** Where the player throws from, and where the cap washes up. */
 const THROW_SPOT = P(680, 420);
-const CAP_SPOT = P(208, 364);
+const CAP_SPOT = P(232, 262);
 
 function course(t: number): Vec2 {
   const n = COURSE.length - 1;
@@ -167,9 +178,10 @@ async function throwLeg(ctx: ScriptContext): Promise<void> {
 
   // Only a cap comes back up, and drifts over to the jetty.
   const cap = ctx.layerObj('cap');
-  cap.setOrigin(0.5).setPosition(target.x, kahn.y - 4).setVisible(true);
+  cap.setOrigin(0.5).setPosition(target.x, kahn.y - 4).setScale(2.4).setVisible(true);
   await ctx.wait(500);
-  await ctx.tween(cap, { x: CAP_SPOT.x, y: CAP_SPOT.y, ease: 'Sine.easeInOut' }, 3200);
+  // ... upstream, of all directions, shrinking into the distance.
+  await ctx.tween(cap, { x: CAP_SPOT.x, y: CAP_SPOT.y, scale: 1, ease: 'Sine.easeInOut' }, 4200);
   ctx.setFlag('capAshore');
   await ctx.animate('kahn', null);
   kahn.setPosition(OFF.x, OFF.y);
@@ -178,7 +190,8 @@ async function throwLeg(ctx: ScriptContext): Promise<void> {
 
   await ctx.playerSay('Ups.');
   await ctx.playerSay('Keine Panik: Der Neckar ist hier nur hüfttief. Die waten schon ans andere Ufer.');
-  await ctx.playerSay('Und eine Mütze treibt rüber zum Steg. Wie nett.');
+  await ctx.playerSay('Und eine Mütze treibt ab. Flussaufwärts. Bis zum Steg am Hölderlinturm.');
+  await ctx.playerSay('Der Neckar macht, was er will.');
 }
 
 // ---- hotspots ------------------------------------------------------------------------
@@ -192,9 +205,14 @@ async function toPicasso(ctx: ScriptContext): Promise<void> {
 }
 
 async function toForest(ctx: ScriptContext): Promise<void> {
+  if (!ctx.flag('password')) {
+    await ctx.playerSay('Ohne zu wissen, wo die Goa steigt, bringt mir der Wald nichts.');
+    await ctx.playerSay('Ali im Picasso weiß es. Ali weiß alles.');
+    return;
+  }
   if (!ctx.hasItem('muetze')) {
     if (ctx.flag('capAshore')) {
-      await ctx.playerSay('Erst hol ich mir noch die Mütze da unten am Steg.');
+      await ctx.playerSay('Erst hol ich mir noch die Mütze, hinten am Steg beim Hölderlinturm.');
     } else {
       await ctx.playerSay('Moment. Die Burschen da unten haben so schicke Mützen.');
       await ctx.playerSay('Irgendwas sagt mir, so eine brauch ich noch.');
@@ -233,7 +251,7 @@ const HOTSPOTS: HotspotDef[] = [
   {
     id: 'altstadt',
     name: 'Neckarfront',
-    polygon: [P(300, 238), P(300, 176), P(430, 120), P(560, 50), P(742, 0), P(742, 282)],
+    polygon: [P(300, 232), P(300, 176), P(430, 120), P(560, 50), P(742, 0), P(742, 258)],
     walkTo: P(600, 424),
     facing: 'up',
     on: {
@@ -268,16 +286,23 @@ const HOTSPOTS: HotspotDef[] = [
       open: 'Da wohn ich nicht. Leider. Bei dem Blick.',
     },
   }),
-  at('turm', 'Hölderlinturm', R(254, 180, 32, 72), P(300, 424), 'up', {
+  {
+    // The promenade: no verb of its own, a click just walks there.
+    id: 'uferweg',
+    name: 'Uferweg',
+    polygon: [P(250, 229), P(742, 257), P(742, 281), P(250, 237)],
+    on: { lookat: 'Der Weg oben auf der Ufermauer, die ganze Neckarfront entlang bis zum Hölderlinturm.' },
+  },
+  at('turm', 'Hölderlinturm', R(254, 180, 32, 54), TOWER_SPOT, 'left', {
     on: {
       lookat: async (ctx) => {
         await ctx.playerSay('Der Hölderlinturm. Hier hat Hölderlin sechsunddreißig Jahre gewohnt.');
         await ctx.playerSay('Gedichtet, aufs Wasser geschaut, Besuch verwirrt. Klingt nach einem guten Leben.');
       },
-      open: 'Zu weit weg. Aber irgendwas sagt mir: Da komm ich noch hin.',
+      open: 'Zu. Aber irgendwas sagt mir: Da komm ich noch rein.',
     },
   }),
-  at('weide', 'Trauerweiden', R(220, 208, 34, 46), P(300, 424), 'up', {
+  at('weide', 'Trauerweiden', R(220, 208, 34, 40), TOWER_SPOT, 'left', {
     on: { lookat: 'Trauerweiden. Hängen die Zweige ins Wasser, als hätten sie die Nacht im Picasso verbracht.' },
   }),
   at('platanen', 'Neckarinsel', R(0, 0, 112, 300), P(150, 424), 'up', {
@@ -307,16 +332,13 @@ const HOTSPOTS: HotspotDef[] = [
   {
     id: 'steg',
     name: 'Steg',
-    polygon: NK.jetty.map(([x, y]) => P(x, y)),
-    walkTo: P(110, 360),
-    facing: 'right',
+    polygon: [P(200, 248), P(288, 240), P(292, 246), P(256, 260), P(200, 260)],
+    walkTo: TOWER_SPOT,
+    facing: 'left',
     on: {
-      lookat: 'Ein kleiner Bootssteg. Hier legen die Stocherkähne an, wenn die Burschen mal müssen.',
+      lookat: 'Ein kleiner Bootssteg am Hölderlinturm. Hier legen die Stocherkähne an, wenn die Burschen mal müssen.',
     },
   },
-  at('treppe', 'Treppe', R(58, 366, 60, 46), P(86, 392), 'up', {
-    on: { lookat: 'Ein paar Stufen runter zum Steg.' },
-  }),
   at('laterne', 'Laterne', R(850, 180, 44, 196), P(862, 424), 'up', {
     on: { lookat: 'Eine alte Laterne. Brennt schon. Feierabend für die Sonne, Schichtbeginn für die Laterne.' },
   }),
@@ -336,11 +358,11 @@ const HOTSPOTS: HotspotDef[] = [
       open: toForest,
     },
   }),
-  at('muetze', 'Mütze', R(CAP_SPOT.x - 20, CAP_SPOT.y - 14, 40, 26), P(166, 360), 'right', {
+  at('muetze', 'Mütze', R(CAP_SPOT.x - 16, CAP_SPOT.y - 10, 32, 20), TOWER_SPOT, 'left', {
     defaultVerb: 'pickup',
     visible: (state) => !!state.getFlag('capAshore') && !state.getFlag('capTaken'),
     on: {
-      lookat: 'Eine Couleurmütze, grün-weiß-rot. Sie dümpelt am Steg und wartet auf mich.',
+      lookat: 'Eine Couleurmütze, grün-weiß-rot. Sie dümpelt am Steg beim Hölderlinturm und wartet auf mich.',
       pickup: async (ctx) => {
         ctx.setFlag('capTaken');
         ctx.addItem('muetze');
@@ -389,15 +411,18 @@ export const neckarRoom: RoomDef = {
 
   layers: [
     { id: 'bg', depth: Layer.BEHIND, svg: neckarBg() },
+    // The corner house: whoever goes round it to the promenade is behind it.
+    { id: 'eckhaus', depth: NK.parapetBase - 1, x: NK.eckhaus.x, y: NK.eckhaus.y, w: NK.eckhaus.w, h: NK.eckhaus.h, svg: eckhausLayer() },
+    // After the corner house, so it runs on in front of it.
     { id: 'balustrade', depth: NK.parapetBase, x: 0, y: 160, w: 960, h: 260, svg: `<g transform="translate(0 -160)">${balustrade()}</g>` },
     // The cap, once it has washed up at the jetty.
     {
       id: 'cap',
       depth: 300,
-      x: CAP_SPOT.x - 20,
-      y: CAP_SPOT.y - 12,
-      w: 40,
-      h: 24,
+      x: CAP_SPOT.x - 10,
+      y: CAP_SPOT.y - 6,
+      w: 20,
+      h: 12,
       svg: floatingCap(),
       visible: (state) => !!state.getFlag('capAshore') && !state.getFlag('capTaken'),
     },
@@ -405,17 +430,17 @@ export const neckarRoom: RoomDef = {
     { id: 'leg', depth: Layer.FRONT, x: 0, y: 0, w: 36, h: 14, svg: flyingLeg(), visible: () => false },
   ],
 
+  // The bridge deck, a passage round the back of the corner house, and the
+  // promenade on top of the quay wall, out to the Hölderlinturm.
   walkArea: [
     P(0, 448),
     P(0, 414),
-    P(60, 414),
-    P(62, 372),
-    P(10, 368),
-    P(10, 352),
-    P(170, 352),
-    P(186, 366),
-    P(112, 371),
-    P(114, 414),
+    P(880, 414),
+    P(PROM.x1 + 8, quayTopY(PROM.x1 + 8) - 1),
+    P(PROM.x0, quayTopY(PROM.x0) - 1),
+    P(PROM.x0, quayTopY(PROM.x0) - promGap(PROM.x0) + 1),
+    P(PROM.x1 + 8, quayTopY(PROM.x1 + 8) - promGap(PROM.x1 + 8) + 1),
+    P(940, 414),
     P(960, 414),
     P(960, 448),
   ],

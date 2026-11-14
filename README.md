@@ -134,13 +134,16 @@ talk while he does.
 7. Ask Ali again: the password is **Chakabunga**.
 8. **Sit on the rickety bar stool** in front of the jukebox (any time): it
    collapses under you. **Take the worm-eaten leg** from the debris and leave
-   through the door.
+   through the door (it is open from the start).
 9. Out on the **Neckarbrücke**, at sunset, a Stocherkahn full of Burschenschaftler
-   comes down the river every few seconds and turns in front of the bridge. When one is close enough, **use the chair leg
-   with the punt**: the woodworms eat through it in no time and the crew goes
-   down with it (the Neckar is only waist-deep). Only a **cap** floats ashore —
-   take it from the jetty (down the steps on the left), then head on left,
-   **towards the forest**.
+   comes down the river every few seconds and turns in front of the bridge.
+   When one is close enough, **use the chair leg with the punt**: the woodworms
+   eat through it in no time and the crew goes down with it (the Neckar is only
+   waist-deep). Only a **cap** floats away — to the jetty at the
+   **Hölderlinturm**. Walk there along the Neckarfront (round the corner house
+   at the right end of the bridge, then along the top of the quay wall), take
+   the cap, and head left over the bridge, **towards the forest** (you need the
+   password and the cap).
 
 </details>
 

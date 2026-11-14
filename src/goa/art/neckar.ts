@@ -30,7 +30,8 @@ import {
  * bend — right there the sun is about to go down. Behind the roofs the
  * Stiftskirche and, on the hill, the Schloss; on the far left the dark
  * trees of the Neckarinsel. In the foreground the bridge's sandstone
- * balustrade, with a gap and steps down to a little jetty on the left.
+ * balustrade. A promenade runs along the top of the quay wall to a little
+ * jetty at the Hölderlinturm.
  *
  * All functions draw in room coordinates (960×450) and return SVG markup.
  */
@@ -50,10 +51,20 @@ export const NK = {
   /** The balustrade: coping top, baseline (occluder), and the gap with the steps. */
   parapetTop: 372,
   parapetBase: 408,
-  gap: { x0: 44, x1: 126 },
-  /** The jetty at the foot of the steps. */
-  jetty: [[0, 348], [176, 348], [196, 368], [0, 372]] as Pt[],
+  /** The promenade on top of the quay wall runs from the corner house (x1)
+   *  to the Hölderlinturm (x0); the houses stand back from the edge by promGap(x). */
+  prom: { x0: 288, x1: 742 },
+  /** The little jetty in front of the Hölderlinturm, far away. */
+  jetty: [[204, 251], [252, 252], [254, 258], [202, 258]] as Pt[],
+  /** The corner house at the bridge, as its own occluder layer. */
+  eckhaus: { x: 736, y: 0, w: 224, h: 410 },
 };
+
+/** y of the quay wall's top edge / its waterline at x, and how far the
+ *  houses stand back from the edge there (the promenade's width). */
+export const quayTopY = (x: number) => yAt(NK.quayTop, x);
+export const quayFootY = (x: number) => yAt(NK.quayFoot, x);
+export const promGap = (x: number) => 5 + Math.max(0, x - 250) * 0.032;
 
 const lerp = (a: Pt, b: Pt, t: number): Pt => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
 /** y of a straight edge at x. */
@@ -181,7 +192,7 @@ function stiftskirche(): string {
   return s.join('');
 }
 
-const houseFoot = (x: number) => yAt(NK.quayTop, x) - 2;
+const houseFoot = (x: number) => quayTopY(x) - promGap(x);
 
 /** The row of gabled houses along the quay: small at the bend, bigger and
  *  bigger towards us on the right. */
@@ -213,11 +224,11 @@ function eckhaus(): string {
     rect(x, y, w, h, { fill: lit ? LIT : DARK_PANE, stroke: INK, sw: 2 }) +
     path(`M${x + w / 2} ${y}V${y + h}M${x} ${y + h * 0.42}H${x + w}`, { stroke: lit ? '#a8742a' : '#5a5078', sw: 1.6 });
   // Main block, running off the top of the picture.
-  s.push(inked(poly([[742, 384], [748, -10], [970, -10], [970, 384]]), wall, 3));
+  s.push(inked(poly([[742, 414], [748, -10], [970, -10], [970, 414]]), wall, 3));
   s.push(path(poly([[748, -10], [776, -10], [772, 384], [742, 384]]), { fill: '#ffb45a', opacity: 0.35 }));
   s.push(win(756, 58, 30, 46, true) + win(756, 150, 30, 46, true) + win(756, 240, 30, 44, false));
   // The plinth with its dark arch, down at the water.
-  s.push(inked(poly([[742, 384], [743, 318], [970, 318], [970, 384]]), '#a58a9c', 2.6));
+  s.push(inked(poly([[742, 414], [743, 318], [970, 318], [970, 414]]), '#a58a9c', 2.6));
   s.push(inked('M754 384V350Q770 328 786 350V384Z', '#2a1e3a', 2));
   // The bay tower and its pointed roof.
   s.push(inked('M804 318V112H946V318Z', '#d6b6ba', 3));
@@ -304,6 +315,11 @@ function quay(): string {
     s.push(line(lerp(lerp(t0, f0, k / 6), lerp(t1, f1, k / 6), t), lerp(lerp(t0, f0, (k + 1) / 6), lerp(t1, f1, (k + 1) / 6), t), '#6a5a70', 1, 0.7));
   }
   s.push(path(poly([lerp(t0, f0, 0.82), lerp(t1, f1, 0.82), f1, f0]), { fill: '#3a4a40', opacity: 0.5 }));
+  // The promenade along the top, between the wall's edge and the houses.
+  const back: Pt[] = [];
+  for (let x = 250; x <= 742; x += 41) back.push([x, quayTopY(x) - promGap(x)]);
+  s.push(inked(poly([t0, [742, quayTopY(742)], ...back.reverse()]), '#b99c92', 1.6));
+  for (let x = 262; x < 742; x += 10 + (x - 250) * 0.06) s.push(line([x, quayTopY(x) - 1], [x + promGap(x) * 0.5, quayTopY(x) - promGap(x) + 1], '#8a7078', 1, 0.6));
   // The lamps are on already: pools of light down the wall.
   for (const x of LAMPS) {
     const yt = yAt(NK.quayTop, x);
@@ -318,8 +334,9 @@ function quay(): string {
   s.push(line([t0[0], t0[1] - 3], [742, yAt(NK.quayTop, 742) - 9], INK, 1.6));
   for (let x = 262; x < 742; x += 8 + (x - 250) * 0.03) s.push(line([x, yAt(NK.quayTop, x)], [x, yAt(NK.quayTop, x) - 3 - (x - 250) * 0.012], INK, 1.2));
   for (const [x, sz, seed] of [[330, 9, 3], [398, 13, 5], [476, 17, 7], [574, 23, 9], [690, 30, 13]] as Array<[number, number, number]>) {
-    const y = yAt(NK.quayTop, x) - sz * 1.3;
-    s.push(line([x, y + sz * 0.6], [x, yAt(NK.quayTop, x)], '#3a2a2a', Math.max(1.6, sz / 5)));
+    const base = quayTopY(x) - promGap(x) * 0.85;
+    const y = base - sz * 1.3;
+    s.push(line([x, y + sz * 0.6], [x, base], '#3a2a2a', Math.max(1.6, sz / 5)));
     s.push(path(puff(x, y, sz * 1.25, sz, 6, seed, 0.14), { fill: '#2e5a3c', stroke: INK, sw: 1.8 }));
     s.push(ellipse(x - sz * 0.25, y - sz * 0.2, sz * 0.75, sz * 0.58, { fill: '#4e7e40' }));
     s.push(ellipse(x - sz * 0.5, y - sz * 0.38, sz * 0.34, sz * 0.24, { fill: '#d0a850', opacity: 0.85 }));
@@ -395,28 +412,16 @@ function leftBank(): string {
 
 // ---- the jetty, the steps, the bridge deck ---------------------------------------------------
 
+/** The jetty at the Hölderlinturm, small in the distance, with steps down from the promenade. */
 function jetty(): string {
   const s: string[] = [];
   const [a, b, c, d] = NK.jetty;
-  for (const x of [20, 70, 120, 168]) s.push(inked(`M${x - 3} 360v16h6v-16z`, '#5a3a22', 1.4));
-  s.push(inked(poly([a, b, c, d]), '#b07a42', 2.4));
-  for (let k = 1; k < 4; k++) s.push(line(lerp(a, d, k / 4), lerp(b, c, k / 4), '#6a4422', 1.2));
-  s.push(inked(poly([d, c, [196, 373], [0, 377]]), '#7a5028', 2));
-  // A mooring post with a rope.
-  s.push(inked('M176 330v22h7v-22z', '#6a4422', 1.6));
-  s.push(path('M176 336q-14 10 -8 16', { stroke: '#e8d8a8', sw: 2 }));
-  return s.join('');
-}
-
-function steps(): string {
-  const { x0, x1 } = NK.gap;
-  const s: string[] = [];
-  // Treads going down away from us, onto the jetty.
-  s.push(rect(x0, 366, x1 - x0, 50, { fill: '#9a7a62' }));
-  for (let k = 0; k < 6; k++) {
-    const y = 368 + k * 8;
-    s.push(rect(x0 + 2, y, x1 - x0 - 4, 5, { fill: k % 2 ? '#c8a888' : '#d8b898', stroke: INK, sw: 1.2 }));
-  }
+  for (const x of [208, 228, 248]) s.push(inked(`M${x - 1} 256v6h2v-6z`, '#4a2e22', 0.8));
+  s.push(inked(poly([a, b, c, d]), '#b07a42', 1.4));
+  s.push(line(lerp(a, d, 0.5), lerp(b, c, 0.5), '#6a4422', 0.8));
+  s.push(inked('M252 252L286 240L290 242L254 256Z', '#9a8078', 1));
+  for (let k = 1; k < 5; k++) s.push(line([252 + k * 7, 252.5 - k * 2.4], [254 + k * 7, 255.5 - k * 2.6], '#5a4650', 0.8));
+  s.push(inked('M206 244v8h2.4v-8z', '#6a4422', 0.8));
   return s.join('');
 }
 
@@ -464,7 +469,6 @@ export function neckarBg(): string {
     river(),
     leftBank(),
     jetty(),
-    steps(),
     deck(),
     // Dusk: everything warms towards the sun and sinks into violet near us.
     rect(0, 0, 960, 450, { fill: '#ff7a3a', opacity: 0.07 }),
@@ -474,10 +478,39 @@ export function neckarBg(): string {
   ].join('');
 }
 
-/** The sandstone balustrade (an occluder) with the gap for the steps, and
- *  an old street lamp. Drawn in room coordinates. */
+/** The corner house once more, as an occluder layer (in layer coordinates,
+ *  NK.eckhaus): whoever walks from the bridge onto the promenade goes round
+ *  the back of it. Carries the backdrop's dusk and grain so it sits flush. */
+export function eckhausLayer(): string {
+  const { x, y } = NK.eckhaus;
+  return group(
+    [
+      defs(
+        grainDefs(53),
+        linear('nkDusk', 0, 250, 0, 450, [
+          [0, '#2a1a50', 0],
+          [1, '#2a1a50', 0.3],
+        ]),
+        `<clipPath id="nkEck"><path d="${poly([[741, 414], [747, -10], [970, -10], [970, 414]])}"/></clipPath>`
+      ),
+      eckhaus(),
+      group(
+        [
+          rect(0, 0, 960, 450, { fill: '#ff7a3a', opacity: 0.07 }),
+          rect(0, 250, 960, 200, { fill: 'url(#nkDusk)' }),
+          vignette('nkVig', 960, 450, 0.4, '#241040'),
+          grainOverlay(960, 450, 0.3, 0.22),
+        ],
+        undefined,
+        'clip-path="url(#nkEck)"'
+      ),
+    ],
+    `translate(${-x} ${-y})`
+  );
+}
+
+/** The sandstone balustrade (an occluder) and an old street lamp. Drawn in room coordinates. */
 export function balustrade(): string {
-  const { x0, x1 } = NK.gap;
   const top = NK.parapetTop;
   const s: string[] = [];
   const stone = '#b98274';
@@ -491,10 +524,9 @@ export function balustrade(): string {
     s.push(inked(poly([[a - 2, top], [b + 2, top], [b + 2, top + 13], [a - 2, top + 13]]), '#d89c80', 2.4));
     s.push(path(`M${a} ${top + 3}H${b}`, { stroke: '#ffc890', sw: 2, opacity: 0.9 }));
   };
-  run(-6, x0);
-  run(x1, 966);
-  // Pillars either side of the gap.
-  for (const px of [x0 - 6, x1 - 6]) {
+  run(-6, 966);
+  // A pillar every so often.
+  for (const px of [150, 470, 790]) {
     s.push(inked(poly([[px, top - 10], [px + 18, top - 10], [px + 18, NK.parapetBase], [px, NK.parapetBase]]), stone, 2.4));
     s.push(inked(poly([[px - 3, top - 16], [px + 21, top - 16], [px + 21, top - 9], [px - 3, top - 9]]), '#d89c80', 2));
   }
@@ -750,9 +782,9 @@ export const PUNT_ACTOR: SvgActorAsset = {
 
 // ---- loose props -------------------------------------------------------------------
 
-/** The cap that floats ashore (drawn around its own centre, 40×24 box). */
+/** The cap that floats ashore, small in the distance (20×12 box). */
 export function floatingCap(): string {
-  return ellipse(20, 18, 17, 4, { fill: '#fff0d0', opacity: 0.5 }) + couleurCap(20, 18, 1.6, -14);
+  return group(ellipse(20, 18, 17, 4, { fill: '#fff0d0', opacity: 0.5 }) + couleurCap(20, 18, 1.6, -14), 'scale(0.5)');
 }
 
 /** The worm-eaten chair leg, in flight (36×14, centred). */

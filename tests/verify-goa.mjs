@@ -9,7 +9,8 @@ import { chromium } from 'playwright';
 // password. Sit on the rickety stool and it collapses: its worm-eaten leg
 // comes along out onto the
 // Neckarbrücke, and into the next punt full of Burschenschaftler with it:
-// the woodworms sink it, and a cap floats ashore.
+// the woodworms sink it, and a cap floats to the jetty at the Hölderlinturm,
+// a walk along the whole Neckarfront away. The bar can be left any time.
 
 const BASE = process.env.BASE_URL ?? 'http://localhost:5173';
 const SHOT = process.env.SHOT_DIR ?? '.';
@@ -114,6 +115,19 @@ check('Partykiller hotspot sits on him', (await hotspotAt(640, 330)) === 'cop');
 check('DJ booth, toilet door and jukebox are there', (await hotspotAt(194, 250)) === 'dj' && (await hotspotAt(58, 200)) === 'wc' && (await hotspotAt(376, 240)) === 'jukebox');
 check('Ali polishes a glass when idle (stance)', await ev(() => window.__engine.roomScene.actors.get('ali').sprite.anims.currentAnim?.key === 'ali-polish-front'));
 await page.screenshot({ path: `${SHOT}/goa-02-pub.png` });
+
+// --- the door is open from the start: out onto the Neckarbrücke and back
+await click(311, 220, { button: 'right' }); // open the door
+await waitFor(async () => (await ev(() => window.__engine.state.currentRoom)) === 'neckar', 8000, 'the bridge');
+await settle();
+check('the bar can be left before the riddle is solved', (await ev(() => window.__engine.state.currentRoom)) === 'neckar' && !(await flag('password')));
+await click(15, 432); // towards the forest
+await settle();
+check('but no forest without knowing where the party is', !(await flag('chapterDone')));
+await click(945, 432); // back to the Picasso
+await waitFor(async () => (await ev(() => window.__engine.state.currentRoom)) === 'picasso', 12000, 'the bar');
+await settle();
+check('and back into the Picasso', (await ev(() => window.__engine.state.currentRoom)) === 'picasso');
 
 // --- up the two steps to the toilet: the player climbs, keeping their size
 const scaleAt = (y) => 0.9 + 0.32 * Math.max(0, Math.min(1, (y - 300) / 145));
@@ -272,12 +286,15 @@ check('its hotspot follows it', (await hotspotAt(p1.x, p1.y - p1.h * 0.4)) === '
 // --- throw the chair leg in: the woodworms eat the punt, a cap floats ashore
 await useItemOn(p1.x, p1.y - p1.h * 0.4);
 check('the punt sank', (await flag('puntSunk')) === true && (await inv()).length === 0);
-check('only a cap washed up at the jetty', (await flag('capAshore')) === true && (await hotspotAt(208, 364)) === 'muetze');
+check('only a cap washed up at the jetty by the Hölderlinturm', (await flag('capAshore')) === true && (await hotspotAt(232, 262)) === 'muetze');
 await page.screenshot({ path: `${SHOT}/goa-06-sunk.png` });
 await waitFor(async () => (await punt()).x < 0, 4000, 'punt gone');
 check('no more punts after that', (await punt()).x < 0);
-await click(208, 364); // pick up the cap (default verb)
+await click(232, 262); // pick up the cap (default verb): along the whole Neckarfront
 await settle();
+const far = await ev(() => { const a = window.__engine.roomScene.actors.get('player'); return { x: a.x, y: a.y, s: a.sprite.scale }; });
+check('walked along the Neckarfront to the Hölderlinturm, small in the distance', far.x < 320 && far.y < 250 && far.s < 0.4, JSON.stringify(far));
+await page.screenshot({ path: `${SHOT}/goa-06b-turm.png` });
 check('took the cap', JSON.stringify(await inv()) === '["muetze"]', JSON.stringify(await inv()));
 
 // --- on towards the forest
