@@ -132,7 +132,8 @@ talk while he does.
 6. Three refrains, three ouzos: *Trink!* — *Trinkytrinky* — *Und jetzt
    tanzt!* He dances (traffic duty, then the disco finger) and falls asleep.
 7. Ask Ali again: the password is **Chakabunga**.
-8. **Sit on the rickety bar stool** in front of the jukebox (any time): it
+8. **Sit on the Zocker-Hocker**, the rickety bar stool in front of the slot
+   machines (any time): it
    collapses under you. **Take the worm-eaten leg** from the debris and leave
    through the door (it is open from the start).
 9. Out on the **Neckarbrücke**, at sunset, a Stocherkahn full of Burschenschaftler
