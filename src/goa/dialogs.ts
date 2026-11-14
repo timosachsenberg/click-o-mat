@@ -310,7 +310,8 @@ export const DIALOGS: Record<string, DialogDef> = {
             once: true,
             script: async (ctx) => {
               await ctx.say('floh', 'Freunde? Kollegen. Ich füttere sie, sie lassen meine Flaschen in Ruhe. Meistens.');
-              await ctx.say('floh', 'Aber heute hab ich nix für sie. Eine alte Brezel wär schön. Die lieben die.');
+              await ctx.say('floh', 'Aber heute hab ich nix für sie. Brezelkrümel wären schön. Ali hat immer welche auf dem Tresen.');
+              await ctx.say('floh', 'Nur: Krümel trägt man nicht in der Hand. Da brauchst du was zum Reinfüllen.');
             },
           },
           {

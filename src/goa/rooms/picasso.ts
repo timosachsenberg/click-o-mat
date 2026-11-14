@@ -184,25 +184,32 @@ function picassoCounter(): string {
   return s.join('');
 }
 
-/** Yesterday's pretzels, broken up in the bowl on the counter. */
+/** Yesterday's pretzels, crumbled to bits in the bowl on the counter. */
 function pretzelBits(): string {
   const s: string[] = [];
   for (const [x, y, r] of [[553, 324, -20], [560, 322, 15], [567, 325, 40], [557, 326, 70]] as Array<[number, number, number]>) {
     s.push(`<g transform="rotate(${r} ${x} ${y})">` + path(`M${x - 4} ${y}q2 -4 4 0q2 -4 4 0`, { stroke: INK, sw: 3.4 }) + path(`M${x - 4} ${y}q2 -4 4 0q2 -4 4 0`, { stroke: '#a85a22', sw: 2 }) + `</g>`);
   }
   for (const [x, y] of [[554, 322.5], [561, 320.6], [566, 323.5]] as Array<[number, number]>) s.push(circle(x, y, 0.6, { fill: '#ffffff' }));
+  for (const [x, y] of [[550, 326], [556, 324.5], [563, 326.5], [569, 324], [552, 323.5], [565, 322]] as Array<[number, number]>) s.push(circle(x, y, 1, { fill: '#c8803a' }));
   return s.join('');
 }
 
-async function takePretzel(ctx: ScriptContext): Promise<void> {
-  if (ctx.flag('brezelTaken')) {
-    await ctx.playerSay('Leer. Den Rest hat der Holzwurm. Oder Hilde.');
-    return;
-  }
+/** By hand it's hopeless: the crumbs trickle through your fingers. */
+async function takeCrumbs(ctx: ScriptContext): Promise<void> {
+  await ctx.playerSay('Ich greif rein ... und die Krümel rieseln mir durch die Finger.');
+  await ctx.playerSay('Ich bräuchte irgendwas zum Reinfüllen.');
+  if (!ctx.hasItem('muetze')) await ctx.say('ali', 'Eine Tüte hab ich nicht, mein Lieber. Wir sind hier kein Bäcker.');
+}
+
+/** The cap makes a fine crumb bag. */
+async function fillCap(ctx: ScriptContext): Promise<void> {
+  ctx.removeItem('muetze');
+  ctx.addItem('muetzekruemel');
   ctx.setFlag('brezelTaken');
-  ctx.addItem('brezel');
   await ctx.repaint();
-  await ctx.say('ali', 'Die Brezel von gestern? Nimm mit, mein Lieber. Die ist härter als der Partykiller.');
+  await ctx.playerSay('Krümel rein in die Mütze. Passt genau. Die Burschen hätten’s nicht anders gewollt.');
+  await ctx.say('ali', 'Die Brezel von gestern? Nimm ruhig mit, mein Lieber. Die war eh härter als der Partykiller.');
 }
 
 /** Where Ali's ouzo stands: on his coaster, or in front of the Partykiller. */
@@ -505,14 +512,15 @@ const HOTSPOTS: HotspotDef[] = [
   at('counter', 'Tresen', R(408, 304, 552, 56), P(500, 404), 'up', {
     on: { lookat: 'Der Tresen. Klebt an genau den richtigen Stellen.' },
   }),
-  at('brezel', 'Brezelschale', R(544, 314, 32, 18), P(560, 412), 'up', {
+  at('brezel', 'Brezelkrümel', R(544, 314, 32, 18), P(560, 412), 'up', {
     defaultVerb: 'pickup',
     visible: (state) => !state.getFlag('brezelTaken'),
     on: {
-      lookat: 'Eine Schale mit Brezelstücken. Von gestern. Oder von 1998. Bei Ali weiß man das nie.',
-      pickup: takePretzel,
+      lookat: 'Eine Schale mit zerbröselter Brezel. Von gestern. Oder von 1998. Bei Ali weiß man das nie.',
+      pickup: takeCrumbs,
       use: 'Reinbeißen? Damit könnte man Nägel einschlagen.',
     },
+    onItem: { use: { muetze: fillCap } },
   }),
   at('rickety', 'Zocker-Hocker', R(504, 334, 38, 66), P(492, 414), 'up', {
     defaultVerb: 'use',

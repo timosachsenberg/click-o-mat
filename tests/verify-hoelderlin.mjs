@@ -132,20 +132,25 @@ const useItemOn = async (item, x, y) => {
 
 await settle(); // intro lines
 
-// --- the Picasso: yesterday's pretzels from the bowl on the counter
-check('a bowl of old pretzels on the counter', (await hotspotAt(560, 322)) === 'brezel');
+// --- the Picasso: pretzel crumbs in the bowl on the counter — by hand they trickle away
+check('a bowl of pretzel crumbs on the counter', (await hotspotAt(560, 322)) === 'brezel');
 await click(560, 322); // default verb: take
 await settle();
-check('took the old pretzel', (await inv()).includes('brezel') && (await flag('brezelTaken')) === true, JSON.stringify(await inv()));
+check('crumbs can\'t be carried by hand', !(await flag('brezelTaken')) && JSON.stringify(await inv()) === '["euro"]', JSON.stringify(await inv()));
+// The cap comes from sinking the punt (covered by verify-goa); here it's handed over directly.
+await ev(() => window.__engine.makeContext().addItem('muetze', { silent: true }));
+await useItemOn('muetze', 560, 322);
+check('the cap makes a crumb bag', (await inv()).includes('muetzekruemel') && !(await inv()).includes('muetze') && (await flag('brezelTaken')) === true, JSON.stringify(await inv()));
 
 // --- the Epplehaus: Flaschenfloh feeds the pigeons — put, put, put! — and one parrots it
 await goTo('epplehaus', 311, 220, { button: 'right' });
 await verb('give');
-await click(522 + (await inv()).indexOf('brezel') * 112, 505);
+await click(522 + (await inv()).indexOf('muetzekruemel') * 112, 505);
 await page.waitForTimeout(150);
 await click(556, 300); // Flaschenfloh
 await settle();
-check('Flaschenfloh feeds the pigeons, one starts saying "Put put"', (await flag('putTaube')) === true && (await flag('putHeard')) === true && !(await inv()).includes('brezel'));
+check('Flaschenfloh feeds the pigeons, one starts saying "Put put"', (await flag('putTaube')) === true && (await flag('putHeard')) === true && !(await inv()).includes('muetzekruemel'));
+check('and hands the cap back', (await inv()).includes('muetze'), JSON.stringify(await inv()));
 const putPos = await ev(() => { const a = window.__engine.roomScene.actors.get('taube3'); return { x: a.x, y: a.y, h: a.sprite.displayHeight }; });
 check('the parroting pigeon pecks crumbs by Flaschenfloh', Math.abs(putPos.x - 506) < 6 && Math.abs(putPos.y - 376) < 6, JSON.stringify(putPos));
 await page.waitForTimeout(2500);

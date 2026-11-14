@@ -187,16 +187,18 @@ function wurmloch(): string {
   ].join('');
 }
 
-/** A broken-up pretzel: brown, glossy, salt crystals. */
-function brezel(): string {
-  const knot = 'M32 34Q16 34 14 22Q13 11 24 11Q32 12 32 22Q32 12 40 11Q51 11 50 22Q48 34 32 34M22 32L36 18M42 32L28 18';
+/** The cap, upside down and heaped with pretzel crumbs. */
+function muetzeKruemel(): string {
+  const crumbs: Array<[number, number]> = [[22, 18], [27, 15], [33, 14], [39, 15], [44, 18], [25, 20], [31, 18], [37, 19], [42, 21], [29, 22], [35, 22]];
   return [
-    shadow(32, 20),
-    path(knot, { stroke: INK, sw: 8 }),
-    path(knot, { stroke: '#a85a22', sw: 5.4 }),
-    path('M17 20Q18 14 24 13M46 20Q45 14 40 13', { stroke: '#e0904a', sw: 1.6 }),
-    ...([[20, 16], [26, 12], [38, 12], [45, 17], [33, 26], [24, 27], [41, 28]] as Array<[number, number]>).map(([x, y]) => rect(x - 1, y - 1, 2, 2, { fill: '#ffffff' })),
-    path('M50 22L56 26', { stroke: '#f4f0e6', sw: 1.4 }),
+    shadow(32, 18),
+    path('M14 22L17 38H47L50 22Z', { fill: '#2f7a3a', stroke: INK, sw: 2.4 }),
+    path('M15.5 28H48.5', { stroke: '#ffffff', sw: 2.4 }),
+    path('M16 32H48', { stroke: '#c43a2a', sw: 2.4 }),
+    path('M38 22H49L47 38H40Z', { fill: '#000000', opacity: 0.18 }),
+    path(`M15 23Q20 10 32 11Q44 10 49 23Z`, { fill: '#c8803a', stroke: INK, sw: 2 }),
+    ...crumbs.map(([x, y], i) => (i % 3 ? circle(x, y, 2.2, { fill: '#a85a22', stroke: INK, sw: 0.8 }) : path(`M${x - 3} ${y}q1.5 -3 3 0q1.5 -3 3 0`, { stroke: '#7a3a12', sw: 1.6 }))),
+    ...([[24, 15], [35, 12], [41, 17], [30, 19]] as Array<[number, number]>).map(([x, y]) => rect(x - 0.8, y - 0.8, 1.6, 1.6, { fill: '#ffffff' })),
   ].join('');
 }
 
@@ -220,7 +222,7 @@ export const GOA_ICONS: SvgImageAsset[] = [
   { key: 'icon-loch', width: 64, height: 48, svg: loch() },
   { key: 'icon-taschenattraktor', width: 64, height: 48, svg: taschenattraktor() },
   { key: 'icon-wurmloch', width: 64, height: 48, svg: wurmloch() },
-  { key: 'icon-brezel', width: 64, height: 48, svg: brezel() },
+  { key: 'icon-muetzekruemel', width: 64, height: 48, svg: muetzeKruemel() },
   { key: 'icon-taube', width: 64, height: 48, svg: taube() },
   { key: 'icon-dose', width: 64, height: 48, svg: emptyCan() },
   { key: 'icon-cent25', width: 64, height: 48, svg: cent25() },

@@ -70,7 +70,7 @@ export const ITEMS: Record<string, ItemDef> = {
       await ctx.playerSay('Eine grüne Couleurmütze, grün-weiß-rot. Noch ein bisschen nass.');
       await ctx.playerSay('Innen eingestickt: „Eigentum der Verbindung. Finder bitte Bier zurückbringen.“');
     },
-    use: 'Aufsetzen? Über meine Mütze? Später vielleicht. Im richtigen Moment.',
+    use: 'Aufsetzen? Über meine Mütze? Nee. Aber als Beutel taugt sie bestimmt.',
   },
   loch: {
     id: 'loch',
@@ -99,15 +99,15 @@ export const ITEMS: Record<string, ItemDef> = {
       await ctx.playerSay('Oder irgendwas Dunkles, Rundes, um das sie kreisen kann.');
     },
   },
-  brezel: {
-    id: 'brezel',
-    name: 'alte Brezel',
-    icon: 'icon-brezel',
+  muetzekruemel: {
+    id: 'muetzekruemel',
+    name: 'Mütze voller Brezelkrümel',
+    icon: 'icon-muetzekruemel',
     lookAt: async (ctx) => {
-      await ctx.playerSay('Brezelstücke von gestern. Hart wie Granit, salzig wie das Meer.');
+      await ctx.playerSay('Die Burschenschaftsmütze, randvoll mit Brezelkrümeln. Hart wie Granit, salzig wie das Meer.');
       await ctx.playerSay('Für Menschen ungeeignet. Für Tauben ein Festmahl.');
     },
-    use: 'Draufbeißen? Meine Zähne brauch ich noch für den Wald.',
+    use: 'Aufsetzen? Dann rieseln mir die Krümel in den Kragen. Nein danke.',
   },
   taube: {
     id: 'taube',

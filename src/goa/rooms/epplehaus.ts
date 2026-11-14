@@ -89,10 +89,10 @@ async function pigeonLife(ctx: ScriptContext): Promise<void> {
 /** Feed the pigeons: Flaschenfloh crumbles the pretzel and calls them —
  *  "Put, put, put!" — and one of them starts saying it too. */
 async function feedPigeons(ctx: ScriptContext): Promise<void> {
-  ctx.removeItem('brezel');
+  ctx.removeItem('muetzekruemel');
   // From now on the parroting pigeon only has eyes for the crumbs (no fleeing).
   ctx.setFlag('putTaube');
-  await ctx.say('floh', 'Eine Brezel? Die ist selbst für mich zu hart. Aber nicht für meine Kollegen.');
+  await ctx.say('floh', 'Brezelkrümel? In einer Burschenmütze? Du hast Stil, Junge.');
   await ctx.say('floh', 'Pass auf, so macht man das.');
   // Crumbs on the cobbles; everybody comes running.
   // The others peck on Flaschenfloh's right; the parroting one gets its own spot on his left.
@@ -112,6 +112,8 @@ async function feedPigeons(ctx: ScriptContext): Promise<void> {
   await ctx.say('floh', 'Die da? Die plappert alles nach. Wie ein Papagei. Nur grauer.');
   await ctx.say(PUT_TAUBE, 'Put put! Put put!');
   await ctx.say('floh', 'Und jetzt ist sie so mit den Krümeln beschäftigt, die merkt nicht mal, wenn die Welt untergeht.');
+  ctx.addItem('muetze', { silent: true });
+  await ctx.say('floh', 'Hier, deine Mütze. Riecht jetzt nach Bier UND Brezel. Ein Upgrade.');
 }
 
 /** Catch the parroting pigeon — only while it's busy with the crumbs. */
@@ -171,8 +173,8 @@ const pigeonHotspot = (id: string): HotspotDef => ({
       stuhlbein: 'Die Holzwürmer wären ein Festmahl für sie. Aber die Würmer brauch ich noch.',
     },
     give: {
-      brezel: async (ctx) => {
-        await ctx.playerSay('Ich krieg die Brezel nicht klein. Flaschenfloh hat bestimmt Übung mit sowas.');
+      muetzekruemel: async (ctx) => {
+        await ctx.playerSay('Wenn ich die Mütze hinhalte, flattert der ganze Schwarm auf mich drauf. Flaschenfloh hat da mehr Übung.');
       },
       stuhlbein: 'Die Holzwürmer wären ein Festmahl für sie. Aber die Würmer brauch ich noch.',
       magicwoman: 'Energydrink für Tauben? Die sind schon nervös genug.',
@@ -335,13 +337,13 @@ const HOTSPOTS: HotspotDef[] = [
         stuhlbein: async (ctx) => {
           await ctx.say('floh', 'Holz? Da ist kein Pfand drauf. Und es knuspert. Nimm das weg.');
         },
-        brezel: feedPigeons,
+        muetzekruemel: feedPigeons,
         taube: async (ctx) => {
           await ctx.say('floh', 'Behalt sie. Die mag dich. Und sie hält mir keine Vorträge über Mehrweg.');
         },
         muetze: async (ctx) => {
           await ctx.say('floh', 'Eine Burschenmütze! Die Burschen trinken aus Krügen. Kein Pfand. Kulturlos.');
-          await ctx.say('floh', 'Behalt sie. Bei mir würde sie nur nach Bier riechen. Also wie vorher.');
+          await ctx.say('floh', 'Aber als Futtersack für die Tauben, da wär sie was. Wenn was drin wär.');
         },
       },
     },
