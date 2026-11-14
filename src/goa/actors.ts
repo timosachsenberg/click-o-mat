@@ -45,4 +45,17 @@ export const ACTORS: Record<string, ActorDef> = {
     headroom: 14,
     stance: (state) => (state.getFlag('puntSunk') ? 'gone' : undefined),
   },
+  floh: {
+    id: 'floh',
+    name: 'Flaschenfloh',
+    talkColor: '#c4ec7a',
+    textureSet: 'floh',
+  },
+  // The pigeons in front of the Epplehaus: eight of them, two plumages.
+  ...Object.fromEntries(
+    [1, 2, 3, 4, 5, 6, 7, 8].map((n): [string, ActorDef] => [
+      `taube${n}`,
+      { id: `taube${n}`, name: 'Taube', talkColor: '#d8d8ea', textureSet: n % 3 === 0 ? 'taube2' : 'taube', speed: 90, baseScale: 0.9 },
+    ])
+  ),
 };

@@ -132,9 +132,12 @@ talk while he does.
 6. Three refrains, three ouzos: *Trink!* — *Trinkytrinky* — *Und jetzt
    tanzt!* He dances (traffic duty, then the disco finger) and falls asleep.
 7. Ask Ali again: the password is **Chakabunga**.
-8. **Sit on the rickety bar stool** in front of the jukebox (any time): it
+8. **Sit on the Zocker-Hocker**, the rickety bar stool in front of the slot
+   machines (any time): it
    collapses under you. **Take the worm-eaten leg** from the debris and leave
-   through the door (it is open from the start).
+   through the door (it is open from the start). Outside is the **Epplehaus**:
+   Flaschenfloh, the bottle collector, has a few hints (and a lot of opinions
+   on deposit), pigeons stroll about; the street on the right leads to the bridge.
 9. Out on the **Neckarbrücke**, at sunset, a Stocherkahn full of Burschenschaftler
    comes down the river every few seconds and turns in front of the bridge.
    When one is close enough, **use the chair leg with the punt**: the woodworms
@@ -483,6 +486,8 @@ src/
     art/props.ts       The bar's props (columns, slot machines, DJ booth, …)
     art/neckar.ts      The Neckar from the bridge, and the punt with its crew
     rooms/picasso.ts   The Picasso, Ali's basement bar
+    art/epplehaus.ts   The Epplehaus forecourt, and the pigeons
+    rooms/epplehaus.ts The Epplehaus (Flaschenfloh, a flock of pigeon actors)
     rooms/neckar.ts    The Neckarbrücke (a punt passes regularly; sink it)
 public/
   img/                 PNG assets (served verbatim, copied into dist/)

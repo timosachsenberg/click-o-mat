@@ -27,6 +27,7 @@ import {
  *    and 'wink' (the conspicuous one).
  *  - Hilde: a regular who dances in front of the DJ booth and grabs at
  *    anyone who comes too close ('dance', 'grab');
+ *  - Flaschenfloh: the bottle collector in front of the Epplehaus;
  *  - der Partykiller: a retired cop on a bar stool, in his old green uniform,
  *    seated with his back to us at the counter (back view) — he turns round
  *    (front view) to talk. Custom poses: 'reach' and 'drink' (the refrain:
@@ -798,6 +799,90 @@ const HILDE_DRAW = humanDraw(HILDE);
 
 const ALI_DRAW = humanDraw(ALI);
 
+// ---- Flaschenfloh ----------------------------------------------------------------
+// The bottle collector in front of the Epplehaus: bobble hat, grey stubble
+// beard, a red nose, an old green parka with the strap of his bottle bag
+// across the chest.
+
+const FLOH: HumanLook = {
+  skin: '#e8b890',
+  skinShade: '#c08a64',
+  hair: '#9a9aa4',
+  hairShade: '#6a6a78',
+  top: '#5a7a3a',
+  topShade: '#3e5a28',
+  legs: '#4a4a5e',
+  legsShade: '#323242',
+  shoes: '#6a4426',
+  shoeTrim: '#2a1a10',
+  style: 'custom',
+  head: { front: flohHeadFront, side: flohHeadSide },
+  torso: { front: flohCoatFront },
+};
+
+const FLOH_HAT = '#b8322e';
+const FLOH_HAT_SHADE = '#8a2222';
+
+function flohHatFront(): string {
+  return (
+    circle(0, -24, 4.6, { fill: '#f4e9d8', stroke: INK, sw: OUT }) +
+    path('M-15.5 -6Q-15 -22 0 -22Q15 -22 15.5 -6Z', { fill: FLOH_HAT, stroke: INK, sw: OUT }) +
+    path('M4 -21Q13 -19 14 -8L9 -8Q9 -17 4 -21Z', { fill: FLOH_HAT_SHADE }) +
+    path('M-16.5 -9Q0 -13 16.5 -9L16.5 -4Q0 -8 -16.5 -4Z', { fill: '#f4e9d8', stroke: INK, sw: OUT }) +
+    path('M-10 -7.6v3M-4 -8.6v3M2 -8.7v3M8 -8v3', { stroke: '#c8b8a0', sw: 1.2 })
+  );
+}
+
+function flohHeadFront(r: Rig, back: boolean): string {
+  const L = FLOH;
+  const s: string[] = [ear(L, -14), ear(L, 14)];
+  if (back) {
+    s.push(path(blob([[-14.5, 9], [-15, -5], [0, -8], [15, -5], [14.5, 9], [7, 14], [-7, 14]]), { fill: L.hair, stroke: INK, sw: OUT }));
+    s.push(flohHatFront());
+    return s.join('');
+  }
+  s.push(shadedHead(L, FACE_FRONT, 'faceF', 3));
+  // Stubble beard round the chin.
+  s.push(path(blob([[-13, 3], [-9, 7], [0, 8.5], [9, 7], [13, 3], [12, 12], [6, 18], [0, 19.5], [-6, 18], [-12, 12]]), { fill: L.hair, stroke: INK, sw: 1.6 }));
+  s.push(path('M-8 12v3M-3 14v3M3 14v3M8 12v3', { stroke: L.hairShade, sw: 1.1 }));
+  s.push(eyesFront(r, [-5.6, 5.6], 0.3, -1.6));
+  s.push(path('M-10 -7Q-5.6 -9.6 -2 -7.2M2 -7.2Q5.6 -9.6 10 -7', { stroke: L.hairShade, sw: 2 }));
+  s.push(ellipse(0, 5, 4.2, 4.2, { fill: '#e88a7a', stroke: INK, sw: 1.8 }));
+  s.push(circle(-1.3, 3.6, 1, { fill: '#ffffff', opacity: 0.7 }));
+  s.push(mouthFront(r.mouth, 12.4, 3.4));
+  s.push(flohHatFront());
+  return s.join('');
+}
+
+function flohHeadSide(r: Rig): string {
+  const L = FLOH;
+  const s: string[] = [];
+  s.push(shadedHead(L, SKULL_SIDE, 'faceS', -3));
+  s.push(path(blob([[3, 6], [13, 7], [13.5, 12], [9, 17.5], [2, 16], [-3, 10]]), { fill: L.hair, stroke: INK, sw: 1.6 }));
+  s.push(eyeSide(r, 8.4, -1.8));
+  s.push(path('M5 -7.4Q8.6 -9.4 12 -7', { stroke: L.hairShade, sw: 1.8 }));
+  s.push(path(blob([[12, -0.5], [16.5, 2.4], [15.6, 6.2], [11.6, 5.6]]), { fill: '#e88a7a', stroke: INK, sw: 1.5 }));
+  s.push(mouthSide(r.mouth, 10, 11.4));
+  s.push(circle(-4, -23, 4.4, { fill: '#f4e9d8', stroke: INK, sw: OUT }));
+  s.push(path('M-14.5 -5Q-14 -21 0 -21Q13 -20 14.5 -7Z', { fill: FLOH_HAT, stroke: INK, sw: OUT }));
+  s.push(path('M-15.5 -8Q0 -11.5 15.5 -9.5L15.5 -4.8Q0 -6.6 -15.5 -3.4Z', { fill: '#f4e9d8', stroke: INK, sw: OUT }));
+  return s.join('');
+}
+
+/** The parka: zip, two patch pockets, and the bag strap across the chest. */
+function flohCoatFront(top: number, back: boolean, clip: string): string {
+  const s: string[] = [];
+  if (back) {
+    s.push(path(`M21 ${top + 22}L43 ${top + 2}`, { stroke: '#d8782a', sw: 3.4 }));
+  } else {
+    s.push(path(`M32 ${top + 2}V${top + 30}`, { stroke: FLOH.topShade, sw: 1.6 }));
+    s.push(rect(22.5, top + 18, 7, 7, { fill: FLOH.topShade, stroke: INK, sw: 1 }, 1.5) + rect(34.5, top + 18, 7, 7, { fill: FLOH.topShade, stroke: INK, sw: 1 }, 1.5));
+    s.push(path(`M43 ${top + 22}L21 ${top + 2}`, { stroke: '#d8782a', sw: 3.4 }));
+    s.push(path(`M43 ${top + 22}L21 ${top + 2}`, { stroke: '#f0a85a', sw: 1 }));
+  }
+  return group(s, undefined, `clip-path="url(#${clip})"`);
+}
+
 export const GOA_CAST: SvgActorAsset[] = [
   { key: 'raver', width: 64, height: 120, poses: POSES, draw: humanDraw(RAVER) },
   {
@@ -813,6 +898,7 @@ export const GOA_CAST: SvgActorAsset[] = [
     },
   },
   { key: 'cop', width: COP_W, height: COP_H, poses: COP_POSES, draw: copDraw },
+  { key: 'floh', width: 64, height: 120, poses: POSES, draw: humanDraw(FLOH) },
   {
     key: 'hilde',
     width: 64,

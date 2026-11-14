@@ -240,29 +240,30 @@ async function leave(ctx: ScriptContext): Promise<void> {
       await ctx.playerSay('Folge dem Bass. Chakabunga. Los geht’s!');
     });
   }
-  await ctx.goToRoom('neckar', 'picasso');
+  await ctx.goToRoom('epplehaus', 'picasso');
 }
 
-/** The rickety stool in front of the jukebox: sit on it and it collapses.
- *  Among the debris lies its worm-eaten leg. */
-const RICKETY = { x: 350, floor: 392 };
+/** The Zocker-Hocker: the rickety stool at the counter, right in front of
+ *  the slot machines. Sit on it and it collapses; among the debris lies its
+ *  worm-eaten leg. */
+const RICKETY = { x: 522, floor: 398 };
 
 async function sitDown(ctx: ScriptContext): Promise<void> {
-  await ctx.playerSay('Erstmal hinsetzen. Die Nacht wird lang.');
-  ctx.place(ctx.activeCharId, RICKETY.x, RICKETY.floor + 10, 'down');
+  await ctx.playerSay('Einmal Probesitzen auf dem Zocker-Hocker. Vielleicht bringt er Glück.');
+  ctx.place(ctx.activeCharId, RICKETY.x, RICKETY.floor + 8, 'up');
   await ctx.wait(500);
   ctx.setFlag('stoolBroken');
   ctx.sfx('deny');
   ctx.shake(350, 0.012);
   await ctx.repaint();
   await ctx.playerSay('*KRACH!*');
-  await ctx.playerSay('Autsch. Mein Steißbein.');
-  await ctx.walkTo(ctx.activeCharId, RICKETY.x - 58, 406);
+  await ctx.playerSay('Autsch. Mein Steißbein. So viel zum Glück.');
+  await ctx.walkTo(ctx.activeCharId, RICKETY.x - 58, 412);
   ctx.face(ctx.activeCharId, 'right');
   if (!(await anzeige(ctx, 'Sachbeschädigung! Und Ruhestörung! Beides notiert!'))) {
     await ctx.playerSay('Gut, dass der Partykiller schläft.');
   }
-  await ctx.say('ali', 'Der war eh nur noch Deko, mein Lieber. Holzwurm.');
+  await ctx.say('ali', 'Der Zocker-Hocker! Auf dem hat eh noch nie einer gewonnen, mein Lieber. Holzwurm.');
   await ctx.playerSay('Eins der Beine ist ganz durchlöchert. Und es knuspert immer noch.');
 }
 
@@ -372,7 +373,7 @@ const HOTSPOTS: HotspotDef[] = [
   at('door', 'Ausgang', R(280, 142, 62, 158), P(311, 322), 'up', {
     defaultVerb: 'open',
     on: {
-      lookat: 'Die Treppe rauf, raus an den Neckar. Irgendwo dahinter ist ein Wald.',
+      lookat: 'Die Treppe rauf, raus vors Epplehaus. Dahinter der Neckar, und irgendwo dahinter ein Wald.',
       open: leave,
       use: leave,
       close: 'Sie ist zu. Noch.',
@@ -483,34 +484,28 @@ const HOTSPOTS: HotspotDef[] = [
   at('counter', 'Tresen', R(408, 304, 552, 56), P(500, 404), 'up', {
     on: { lookat: 'Der Tresen. Klebt an genau den richtigen Stellen.' },
   }),
-  at('stool', 'Barhocker', R(504, 334, 38, 66), P(492, 414), 'up', {
-    on: {
-      lookat: 'Ein Hocker mit Herz in der Lehne. Direkt neben dem Partykiller. Kein Zufall.',
-      use: 'Ich setz mich lieber nicht neben ihn. Er nimmt bestimmt Fingerabdrücke.',
-    },
-  }),
-  at('rickety', 'klappriger Barhocker', R(326, 306, 48, 88), P(RICKETY.x + 4, 406), 'up', {
+  at('rickety', 'Zocker-Hocker', R(504, 334, 38, 66), P(492, 414), 'up', {
     defaultVerb: 'use',
     visible: (state) => !state.getFlag('stoolBroken'),
     on: {
       lookat: async (ctx) => {
-        await ctx.playerSay('Ein Barhocker, ein bisschen abseits. Er wackelt schon, wenn man ihn nur anschaut.');
-        await ctx.playerSay('Und irgendwas knuspert darin.');
+        await ctx.playerSay('Der Zocker-Hocker. Direkt vor den Spielautomaten, blank gesessen von Generationen von Pechvögeln.');
+        await ctx.playerSay('Er wackelt schon, wenn man ihn nur anschaut. Und irgendwas knuspert darin.');
       },
       use: sitDown,
       pickup: 'Den schlepp ich nicht rum. Der fällt ja schon beim Angucken auseinander.',
       push: 'Er schwankt bedenklich. Und fängt sich wieder. Knapp.',
     },
   }),
-  at('debris', 'Hockertrümmer', R(318, 372, 66, 26), P(RICKETY.x + 4, 406), 'up', {
+  at('debris', 'Hockertrümmer', R(494, 378, 62, 26), P(492, 414), 'up', {
     visible: (state) => !!state.getFlag('stoolBroken'),
     on: {
-      lookat: 'Was vom klapprigen Hocker übrig ist. Ruhe in Spänen.',
+      lookat: 'Was vom Zocker-Hocker übrig ist. Ruhe in Spänen.',
       pickup: 'Brennholz brauch ich nicht. Nur das eine Bein.',
       use: 'Draufsetzen? Nicht noch mal.',
     },
   }),
-  at('leg', 'wurmstichiges Stuhlbein', R(RICKETY.x + 2, RICKETY.floor - 8, 40, 18), P(RICKETY.x + 22, 410), 'up', {
+  at('leg', 'wurmstichiges Stuhlbein', R(RICKETY.x + 2, RICKETY.floor - 6, 34, 16), P(RICKETY.x + 22, 414), 'up', {
     defaultVerb: 'pickup',
     visible: (state) => !!state.getFlag('stoolBroken') && !state.getFlag('legTaken'),
     on: {
@@ -674,23 +669,23 @@ export const picassoRoom: RoomDef = {
       svg: group(refrainBanner(480, 14), 'translate(-220 -8)'),
       visible: (state) => !!state.getFlag('refrain'),
     },
-    roomLayer('stool', 399, 486, 300, 72, 104, heartStool(522, 398, stoolScale(398), true)),
-    // The rickety stool in front of the jukebox — whole, or collapsed.
+    // The Zocker-Hocker in front of the slot machines — whole, or collapsed.
     {
       id: 'rickety',
-      depth: RICKETY.floor,
-      x: RICKETY.x - 50,
-      y: RICKETY.floor - 90,
-      w: 100,
-      h: 104,
+      depth: 399,
+      x: 486,
+      y: 300,
+      w: 72,
+      h: 108,
       svg: (state) =>
         group(
           state.getFlag('stoolBroken')
             ? brokenStool(RICKETY.x, RICKETY.floor, stoolScale(RICKETY.floor), !state.getFlag('legTaken'))
-            : heartStool(RICKETY.x, RICKETY.floor, stoolScale(RICKETY.floor), false, true),
-          `translate(${50 - RICKETY.x} ${90 - RICKETY.floor})`
+            : heartStool(RICKETY.x, RICKETY.floor, stoolScale(RICKETY.floor), true, true),
+          'translate(-486 -300)'
         ),
     },
+
     // He sits facing the counter, so his stool's backrest is in front of him.
     roomLayer('copStool', 414, 600, 300, 82, 118, heartStool(640, 413, stoolScale(413), true)),
     roomLayer('stool3', 441, 766, 326, 86, 120, heartStool(808, 440, stoolScale(440), true)),
@@ -715,8 +710,7 @@ export const picassoRoom: RoomDef = {
   holes: [
     box(100, 414, 144, 430), // front column
     box(14, 434, 126, 446), // front table + stool
-    box(332, 386, 368, 398), // the rickety stool (and later its debris)
-    box(504, 390, 540, 404), // stools at the counter
+    box(504, 390, 540, 404), // stools at the counter (the first is the Zocker-Hocker, later its debris)
     box(618, 402, 662, 420),
     box(788, 428, 828, 446),
     box(HILDE.x - 20, HILDE.y - 8, HILDE.x + 20, HILDE.y + 6), // Hilde

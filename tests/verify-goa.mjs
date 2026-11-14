@@ -6,11 +6,12 @@ import { chromium } from 'playwright';
 // drink in stock, drink it, swap the can for 25 cents, jam the coin in the
 // jukebox, play Ali's song, and during three refrains slide Ali's ouzo in
 // front of the Partykiller — he dances himself to sleep, Ali gives up the
-// password. Sit on the rickety stool and it collapses: its worm-eaten leg
+// password. Sit on the Zocker-Hocker at the slot machines and it collapses: its worm-eaten leg
 // comes along out onto the
 // Neckarbrücke, and into the next punt full of Burschenschaftler with it:
 // the woodworms sink it, and a cap floats to the jetty at the Hölderlinturm,
-// a walk along the whole Neckarfront away. The bar can be left any time.
+// a walk along the whole Neckarfront away. The bar can be left any time;
+// between it and the bridge lies the Epplehaus, with Flaschenfloh and pigeons.
 
 const BASE = process.env.BASE_URL ?? 'http://localhost:5173';
 const SHOT = process.env.SHOT_DIR ?? '.';
@@ -117,17 +118,40 @@ check('Ali polishes a glass when idle (stance)', await ev(() => window.__engine.
 await page.screenshot({ path: `${SHOT}/goa-02-pub.png` });
 
 // --- the door is open from the start: out onto the Neckarbrücke and back
-await click(311, 220, { button: 'right' }); // open the door
-await waitFor(async () => (await ev(() => window.__engine.state.currentRoom)) === 'neckar', 8000, 'the bridge');
+const room = () => ev(() => window.__engine.state.currentRoom);
+const goTo = async (id, x, y, opts) => {
+  await click(x, y, opts);
+  await waitFor(async () => (await room()) === id, 14000, id);
+  await settle();
+};
+await goTo('epplehaus', 311, 220, { button: 'right' }); // open the door
+check('the bar can be left before the riddle is solved: out in front of the Epplehaus', (await room()) === 'epplehaus' && !(await flag('password')));
+await page.screenshot({ path: `${SHOT}/goa-02a-epplehaus.png` });
+
+// --- the Epplehaus: Flaschenfloh by the bottle banks, pigeons strolling about
+const actorsHere = await ev(() => [...window.__engine.roomScene.actors.keys()]);
+check('Flaschenfloh is there', actorsHere.includes('floh') && (await hotspotAt(556, 300)) === 'floh', actorsHere.join(','));
+const pigeons = () => ev(() => [...window.__engine.roomScene.actors.entries()].filter(([k]) => k.startsWith('taube')).map(([k, a]) => [k, Math.round(a.x), Math.round(a.y)]));
+const before = await pigeons();
+check('and a flock of pigeons', before.length >= 8, String(before.length));
+await page.waitForTimeout(5000);
+const after = await pigeons();
+const moved = after.filter(([k, x, y], i) => Math.abs(x - before[i][1]) + Math.abs(y - before[i][2]) > 8).length;
+check('the pigeons walk about', moved >= 2, `(${moved} moved)`);
+await click(556, 300, { button: 'right' }); // talk to Flaschenfloh
 await settle();
-check('the bar can be left before the riddle is solved', (await ev(() => window.__engine.state.currentRoom)) === 'neckar' && !(await flag('password')));
+await pick('Wer bist du');
+await pick('Kennst du die Goa');
+await pick('Mach');
+check('talked to Flaschenfloh (he does not follow yet)', !(await flag('flohFollows')));
+await goTo('neckar', 932, 380); // on to the bridge
+check('the street leads on to the Neckarbrücke', (await room()) === 'neckar');
 await click(15, 432); // towards the forest
 await settle();
 check('but no forest without knowing where the party is', !(await flag('chapterDone')));
-await click(945, 432); // back to the Picasso
-await waitFor(async () => (await ev(() => window.__engine.state.currentRoom)) === 'picasso', 12000, 'the bar');
-await settle();
-check('and back into the Picasso', (await ev(() => window.__engine.state.currentRoom)) === 'picasso');
+await goTo('epplehaus', 945, 432); // back to the Epplehaus
+await goTo('picasso', 86, 260); // and down the cellar stairs
+check('and back into the Picasso', (await room()) === 'picasso');
 
 // --- up the two steps to the toilet: the player climbs, keeping their size
 const scaleAt = (y) => 0.9 + 0.32 * Math.max(0, Math.min(1, (y - 300) / 145));
@@ -251,21 +275,20 @@ await page.keyboard.press('F5');
 await page.waitForTimeout(300);
 check('quick save lands in the game\'s own slot', await ev(() => !!localStorage.getItem('pnc-save-goa-0') && !localStorage.getItem('pnc-save-0')));
 
-// --- the rickety stool in front of the jukebox: sit down, it collapses
-check('the rickety stool stands in front of the jukebox', (await hotspotAt(350, 350)) === 'rickety');
-await click(350, 350); // default verb: sit on it
+// --- the Zocker-Hocker in front of the slot machines: sit down, it collapses
+check('the Zocker-Hocker stands in front of the slot machines', (await hotspotAt(522, 372)) === 'rickety');
+await click(522, 372); // default verb: sit on it
 await settle();
-check('it collapsed under me', (await flag('stoolBroken')) === true && (await hotspotAt(350, 350)) !== 'rickety');
+check('it collapsed under me', (await flag('stoolBroken')) === true && (await hotspotAt(522, 372)) !== 'rickety');
 await page.screenshot({ path: `${SHOT}/goa-04b-stool.png` });
-await click(372, 392); // the worm-eaten leg among the debris (default verb: take)
+await click(541, 400); // the worm-eaten leg among the debris (default verb: take)
 await settle();
 check('took the worm-eaten chair leg', JSON.stringify(await inv()) === '["stuhlbein"]' && (await flag('legTaken')) === true, JSON.stringify(await inv()));
 
 // --- leave: up the stairs, out onto the Neckarbrücke
-await click(311, 220, { button: 'right' }); // open the door
-await waitFor(async () => (await ev(() => window.__engine.state.currentRoom)) === 'neckar', 8000, 'the bridge');
-await settle();
-check('the door leads to the Neckarbrücke', (await ev(() => window.__engine.state.currentRoom)) === 'neckar');
+await goTo('epplehaus', 311, 220, { button: 'right' }); // open the door
+await goTo('neckar', 932, 380);
+check('past the Epplehaus to the Neckarbrücke', (await room()) === 'neckar');
 await page.screenshot({ path: `${SHOT}/goa-05-neckar.png` });
 
 // --- a punt full of Burschenschaftler comes down the river, again and again

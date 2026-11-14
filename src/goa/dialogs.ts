@@ -218,4 +218,76 @@ export const DIALOGS: Record<string, DialogDef> = {
       },
     },
   },
+
+  // Flaschenfloh, the bottle collector in front of the Epplehaus.
+  floh: {
+    id: 'floh',
+    start: 'root',
+    nodes: {
+      root: {
+        choices: [
+          {
+            text: 'Wer bist du denn?',
+            once: true,
+            script: async (ctx) => {
+              await ctx.say('floh', 'Flaschenfloh. Ich hüpf von Flasche zu Flasche.');
+              await ctx.say('floh', 'Acht Cent Bier, fünfzehn Mehrweg, fünfundzwanzig Einweg. Ich kenn jeden Kurs.');
+              await ctx.playerSay('Wie an der Börse.');
+              await ctx.say('floh', 'Nur ehrlicher.');
+            },
+          },
+          {
+            text: 'Läuft das Geschäft?',
+            script: async (ctx) => {
+              await ctx.say('floh', 'Vorm Epplehaus? Goldgrube. Nach jedem Konzert dreißig Euro.');
+              await ctx.say('floh', 'Nur die Tauben machen mir Konkurrenz. Die picken die Etiketten ab.');
+              await ctx.say('floh', 'Ohne Etikett kein Pfand. Die wissen das. Die machen das mit Absicht.');
+            },
+          },
+          {
+            text: 'Kennst du die Goa im Wald?',
+            if: (s) => !s.getFlag('flohFollows'),
+            script: async (ctx) => {
+              await ctx.say('floh', 'Die Goa! Nach so einer Nacht liegt da Pfand für drei Monatsmieten.');
+              await ctx.say('floh', 'Aber wo die steigt, sagt mir keiner. Die wollen ihre Flaschen angeblich selber wegbringen.');
+              if (ctx.flag('password')) {
+                await ctx.playerSay('Ich weiß, wo sie ist. Aber ich darf’s nicht sagen. Passwort und so.');
+                await ctx.say('floh', 'Musst du auch nicht. Ich lauf dir einfach nach. Ganz unauffällig.');
+                await ctx.say('floh', 'Klirr.');
+                ctx.setFlag('flohFollows');
+              } else {
+                await ctx.playerSay('Mir sagt’s auch keiner. Noch nicht.');
+                await ctx.say('floh', 'Frag Ali im Picasso. Der weiß alles. Der sagt nur nichts, solange der Partykiller zuhört.');
+              }
+            },
+          },
+          {
+            text: 'Und du läufst mir wirklich nach?',
+            if: (s) => !!s.getFlag('flohFollows'),
+            script: async (ctx) => {
+              await ctx.say('floh', 'Mit zwanzig Metern Abstand. Du wirst mich gar nicht bemerken.');
+              await ctx.say('floh', 'Klirr, klirr.');
+            },
+          },
+          {
+            text: 'Was ist mit den Burschen auf dem Stocherkahn?',
+            if: (s) => !!s.getFlag('once:neckarIntro'),
+            once: true,
+            script: async (ctx) => {
+              await ctx.say('floh', 'Die? Trinken aus Krügen. Kein Pfand. Kulturlos.');
+              await ctx.say('floh', 'Und der Kahn ist so morsch, den halten nur noch die Holzwürmer zusammen. Händchen haltend.');
+              await ctx.playerSay('Holzwürmer, sagst du.');
+            },
+          },
+          {
+            text: 'Mach’s gut, Flaschenfloh.',
+            end: true,
+            script: async (ctx) => {
+              await ctx.say('floh', 'Und denk dran: Pfand gehört daneben!');
+            },
+          },
+        ],
+      },
+    },
+  },
 };

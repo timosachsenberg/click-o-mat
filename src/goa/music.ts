@@ -18,6 +18,14 @@ export const GOA_MUSIC: Record<string, MusicTrack> = {
     bass: [-19, null, -12, -7, -14, null, -7, -2, -12, null, -5, 0, -17, null, -12, -5],
     lead: [9, null, 7, 9, 12, null, null, 10, 9, null, 7, 5, 7, null, null, null],
   },
+  // The Epplehaus: a scrappy little offbeat number leaking out of the Plenum.
+  'epple-theme': {
+    bpm: 126,
+    bassType: 'square',
+    leadType: 'triangle',
+    bass: [-24, null, -12, null, -24, null, -12, -14, -19, null, -7, null, -21, null, -9, -12],
+    lead: [null, 7, null, 7, 10, null, 7, 3, null, 5, null, 5, 8, 7, 3, null],
+  },
   // ---- the jukebox -----------------------------------------------------------------
   // "Du hast mein Herz am Pfandautomat vergessen": slow, heartbroken, in C.
   'song-pfand': {
