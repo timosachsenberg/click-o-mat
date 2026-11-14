@@ -23,26 +23,30 @@ import {
 } from '../../game/art/toon';
 
 /**
- * The Neckar, seen from the Neckarbrücke in Tübingen (after a summer photo):
- * the Platanenallee on the left bank, the Hölderlinturm and a weeping willow
- * where the river bends away, the Altstadt's coloured gabled houses above
- * the quay wall on the right, the Stiftskirche tower, a café with a red
- * awning — and in the foreground the bridge's sandstone balustrade, with a
- * gap and steps down to a little jetty on the left.
+ * The Neckarfront in Tübingen at sunset, seen from the Neckarbrücke: the
+ * Altstadt's gabled houses run along the quay wall from the big corner
+ * house close by on the right into the distance on the left, where the
+ * Hölderlinturm stands among the willows and the river comes round the
+ * bend — right there the sun is about to go down. Behind the roofs the
+ * Stiftskirche and, on the hill, the Schloss; on the far left the dark
+ * trees of the Neckarinsel. In the foreground the bridge's sandstone
+ * balustrade, with a gap and steps down to a little jetty on the left.
  *
  * All functions draw in room coordinates (960×450) and return SVG markup.
  */
 
 /** Shared geometry: the room and its art must agree on these. */
 export const NK = {
-  /** Where the river vanishes round the bend. */
-  far: 262,
-  /** Left water edge, far → near. */
-  bankL: [[392, 262], [0, 362]] as [Pt, Pt],
-  /** Foot of the quay wall on the right (the waterline), far → near. */
-  quayFoot: [[534, 264], [960, 356]] as [Pt, Pt],
+  /** Where the river vanishes round the bend (the horizon). */
+  far: 244,
+  /** The setting sun, over the bend. */
+  sun: [120, 226] as Pt,
+  /** Left water edge (the Neckarinsel), far → near. */
+  bankL: [[150, 244], [0, 304]] as [Pt, Pt],
+  /** Foot of the quay wall (the waterline), far → near. */
+  quayFoot: [[246, 250], [960, 404]] as [Pt, Pt],
   /** Top of the quay wall, far → near. */
-  quayTop: [[530, 254], [960, 306]] as [Pt, Pt],
+  quayTop: [[250, 236], [960, 300]] as [Pt, Pt],
   /** The balustrade: coping top, baseline (occluder), and the gap with the steps. */
   parapetTop: 372,
   parapetBase: 408,
@@ -57,213 +61,269 @@ const yAt = (e: [Pt, Pt], x: number) => e[0][1] + ((x - e[0][0]) / (e[1][0] - e[
 /** x of a straight edge at y. */
 const xAt = (e: [Pt, Pt], y: number) => e[0][0] + ((y - e[0][1]) / (e[1][1] - e[0][1])) * (e[1][0] - e[0][0]);
 
-export const RIVER = {
-  sky0: '#3f8fe0',
-  sky1: '#bfe3ff',
-  far: '#9fd0e4',
-  near: '#3f8f86',
-  /** The water colour around the punt's sinking spot (its frames paint over the hull). */
-  around: '#4b968c',
-};
+// ---- sky: Abendrot -------------------------------------------------------------------
 
-// ---- sky ---------------------------------------------------------------------------
-
-function cloud(cx: number, cy: number, rx: number, ry: number, seed: number): string {
+/** A long cloud band, purple above, glowing where the low sun hits it from below. */
+function band(x0: number, x1: number, y: number, th: number, seed: number): string {
+  const r = rng(seed);
+  const top: Pt[] = [];
+  const bot: Pt[] = [];
+  for (let i = 0; i <= 8; i++) {
+    const t = i / 8;
+    const x = x0 + (x1 - x0) * t;
+    const k = Math.sin(t * Math.PI);
+    top.push([x, y - th * k * (0.6 + r() * 0.5)]);
+    bot.push([x, y + th * 0.45 * k * (0.5 + r() * 0.6)]);
+  }
+  const under = curve(bot);
   return (
-    path(puff(cx, cy + ry * 0.25, rx * 0.98, ry * 0.7, 7, seed + 7, 0.12), { fill: '#b8c8e4' }) +
-    path(puff(cx, cy, rx, ry, 8, seed, 0.16), { fill: '#ffffff', stroke: '#9fb4d8', sw: 2 }) +
-    path(puff(cx + rx * 0.08, cy + ry * 0.35, rx * 0.8, ry * 0.42, 9, seed + 3, 0.2), { fill: '#dfe8f6' }) +
-    path(puff(cx - rx * 0.25, cy - ry * 0.25, rx * 0.4, ry * 0.35, 7, seed + 5, 0.2), { fill: '#ffffff' })
+    path(curve(top) + poly([...bot].reverse(), false).replace('M', 'L') + 'Z', { fill: '#6a4a8a', opacity: 0.9 }) +
+    path(under, { stroke: '#ff8a5a', sw: Math.max(2, th * 0.22), opacity: 0.9 }) +
+    path(curve(bot.map(([x, yy]) => [x, yy - th * 0.22] as Pt)), { stroke: '#e85a7a', sw: Math.max(2, th * 0.2), opacity: 0.55 })
   );
 }
 
 function sky(): string {
+  const [sx, sy] = NK.sun;
   return [
     rect(0, 0, 960, 300, { fill: 'url(#nkSky)' }),
-    glow('nkSun', 300, 40, 260, '#fff6d0', 0.35, 160),
-    cloud(560, 92, 150, 70, 11),
-    cloud(760, 44, 120, 52, 23),
-    cloud(410, 168, 80, 34, 37),
-    cloud(900, 160, 90, 40, 41),
-    cloud(640, 196, 70, 24, 53),
+    ...([[70, 22], [210, 40], [330, 16], [520, 30]] as Pt[]).map(([x, y]) => circle(x, y, 1.2, { fill: '#fff6d8', opacity: 0.8 })),
+    glow('nkSunGlow', sx, sy, 330, '#ffd27a', 0.75, 200),
+    band(360, 990, 44, 26, 3),
+    band(20, 540, 82, 22, 5),
+    band(220, 760, 132, 15, 7),
+    band(-40, 330, 168, 11, 9),
+    band(130, 470, 198, 7, 11),
+    circle(sx, sy, 25, { fill: '#fff3c0' }),
+    circle(sx, sy, 25, { stroke: '#ffb04a', sw: 2.4, opacity: 0.8 }),
+    // Swallows on their last round.
+    ...([[300, 104, 5], [322, 96, 4], [348, 108, 4], [596, 20, 5]] as Array<[number, number, number]>).map(([x, y, k]) =>
+      path(`M${x - k} ${y - k * 0.5}Q${x - k * 0.4} ${y - k * 0.8} ${x} ${y}Q${x + k * 0.4} ${y - k * 0.8} ${x + k} ${y - k * 0.5}`, { stroke: '#2a1e40', sw: 1.6 })
+    ),
   ].join('');
 }
 
 // ---- the Altstadt --------------------------------------------------------------------
 
-const WALLS = ['#f2c84a', '#f4efe4', '#e8a0a8', '#f0a050', '#f8e6b0', '#e8d08a', '#f6d2c0', '#fff4dc'];
-const SHUTTERS = ['#3a9a4a', '#c43a2a', '#3a9a4a', '#2a6a9a'];
+const WALLS = ['#e8b060', '#dccac4', '#cf8f88', '#e39a58', '#b9b89c', '#d9a79c', '#a8705a', '#c4b8c8'];
+const SHUTTERS = ['#2f6a4a', '#8a2f2a', '#2f6a4a', '#34507a'];
+const LIT = '#ffd870';
+const DARK_PANE = '#3a3258';
 
-/** One gabled town house standing on `foot` at x, `w` wide; returns markup. */
+/** One gabled town house standing on `foot` at x, `w` wide, in evening
+ *  light: warm on its left edge, some windows already lit. */
 function house(x: number, foot: number, w: number, seed: number, lean = 0): string {
   const r = rng(seed);
   const wall = WALLS[Math.floor(r() * WALLS.length)];
   const shut = SHUTTERS[Math.floor(r() * SHUTTERS.length)];
-  const h = w * (1.15 + r() * 0.5);
+  const h = w * (1.2 + r() * 0.5);
   const roofH = w * (0.55 + r() * 0.25);
   const top = foot - h;
   const s: string[] = [];
   const sw = Math.max(1.2, w / 40);
-  // Facade, a little crooked.
   s.push(inked(wobble([[x + lean, top], [x + w + lean, top], [x + w, foot], [x, foot]], { seed, wobble: w / 60 }), wall, sw));
-  // A shaded strip on the left edge (light comes from the left/top).
-  s.push(path(poly([[x + w - w * 0.12 + lean, top], [x + w + lean, top], [x + w, foot], [x + w - w * 0.12, foot]]), { fill: '#000000', opacity: 0.12 }));
-  // Half-timbering on some.
+  // Evening light: the low sun warms the left edge, the right falls into violet shade.
+  s.push(path(poly([[x + lean, top], [x + w * 0.16 + lean, top], [x + w * 0.16, foot], [x, foot]]), { fill: '#ffb45a', opacity: 0.3 }));
+  s.push(path(poly([[x + w * 0.62 + lean, top], [x + w + lean, top], [x + w, foot], [x + w * 0.62, foot]]), { fill: '#3a2058', opacity: 0.22 }));
   if (r() < 0.4) {
-    const beam = '#6a3a22';
+    const beam = '#5a3028';
     for (let k = 1; k < 3; k++) s.push(line([x + lean * (1 - k / 3), top + (h * k) / 3], [x + w + lean * (1 - k / 3), top + (h * k) / 3], beam, sw * 1.1));
     s.push(line([x + lean, top], [x + w * 0.5, top + h / 3], beam, sw * 0.9));
     s.push(line([x + w + lean, top], [x + w * 0.5, top + h / 3], beam, sw * 0.9));
   }
-  // Roof: a steep gable, red-brown tiles.
-  const roof = r() < 0.5 ? '#b8442a' : '#a8502e';
-  s.push(inked(poly([[x - w * 0.06 + lean, top + 1], [x + w * 0.5 + lean, top - roofH], [x + w * 1.06 + lean, top + 1]]), roof, sw));
-  s.push(path(poly([[x + w * 0.5 + lean, top - roofH], [x + w * 1.06 + lean, top + 1], [x + w * 0.62 + lean, top + 1]]), { fill: '#000000', opacity: 0.18 }));
-  for (let k = 1; k < 4; k++) {
-    const y = top - roofH + (roofH * k) / 4;
-    const half = (w * 0.56 * k) / 4;
-    s.push(line([x + w * 0.5 - half + lean, y], [x + w * 0.5 + half + lean, y], '#7a2a18', sw * 0.6, 0.6));
-  }
-  // A roof window now and then.
-  if (w > 40 && r() < 0.6) {
-    const dx = x + w * 0.5 + lean - w * 0.09;
-    s.push(inked(poly([[dx, top - roofH * 0.25], [dx + w * 0.18, top - roofH * 0.25], [dx + w * 0.18, top - roofH * 0.05], [dx, top - roofH * 0.05]]), '#f4efe4', sw * 0.7));
-  }
-  // Windows with shutters.
+  // The gable itself (wall colour), under a dusky roof seen edge-on.
+  const apex: Pt = [x + w * 0.5 + lean, top - roofH];
+  s.push(inked(poly([[x - w * 0.06 + lean, top + 1], apex, [x + w * 1.06 + lean, top + 1]]), r() < 0.5 ? '#5e3a54' : '#6e3c44', sw));
+  s.push(path(poly([apex, [x + w * 1.06 + lean, top + 1], [x + w * 0.56 + lean, top + 1]]), { fill: '#1e1038', opacity: 0.3 }));
+  s.push(line([x - w * 0.06 + lean, top + 1], apex, '#ff9a5a', sw * 0.9, 0.7));
+  // Windows with shutters; some are lit.
   const cols = w > 60 ? 4 : w > 36 ? 3 : 2;
   const rows = Math.max(2, Math.round(h / (w * 0.42)));
   const ww = (w / cols) * 0.42;
   const wh = Math.min(ww * 1.5, (h / rows) * 0.55);
+  if (w > 30) {
+    const lit = r() < 0.5;
+    s.push(rect(apex[0] - ww * 0.45, top - roofH * 0.42, ww * 0.9, wh * 0.8, { fill: lit ? LIT : DARK_PANE, stroke: INK, sw: sw * 0.6 }));
+  }
   for (let row = 0; row < rows; row++) {
     for (let c = 0; c < cols; c++) {
       const t = 1 - (row + 0.5) / rows;
       const cx = x + lean * t + (w * (c + 0.5)) / cols;
       const cy = foot - (h * (row + 0.55)) / rows;
-      if (row === 0 && r() < 0.35) continue;
+      const lit = r() < 0.3;
+      if (row === 0 && r() < 0.3) continue;
       s.push(rect(cx - ww * 0.95, cy - wh / 2, ww * 0.42, wh, { fill: shut }));
       s.push(rect(cx + ww * 0.53, cy - wh / 2, ww * 0.42, wh, { fill: shut }));
-      s.push(rect(cx - ww / 2, cy - wh / 2, ww, wh, { fill: '#2a3a5a', stroke: INK, sw: sw * 0.6 }));
-      s.push(rect(cx - ww / 2 + ww * 0.15, cy - wh / 2 + wh * 0.1, ww * 0.25, wh * 0.35, { fill: '#a8d4f0', opacity: 0.7 }));
+      if (lit) s.push(rect(cx - ww * 0.8, cy - wh * 0.75, ww * 1.6, wh * 1.5, { fill: LIT, opacity: 0.22 }, ww * 0.4));
+      s.push(rect(cx - ww / 2, cy - wh / 2, ww, wh, { fill: lit ? LIT : DARK_PANE, stroke: INK, sw: sw * 0.6 }));
+      if (lit) s.push(path(`M${cx} ${cy - wh / 2}V${cy + wh / 2}M${cx - ww / 2} ${cy}H${cx + ww / 2}`, { stroke: '#a8742a', sw: sw * 0.5 }));
+      else s.push(rect(cx - ww / 2 + ww * 0.15, cy - wh / 2 + wh * 0.1, ww * 0.25, wh * 0.35, { fill: '#ff9a6a', opacity: 0.55 }));
     }
   }
   return s.join('');
 }
 
-/** The Stiftskirche's tower, rising over the roofs. */
-function stiftskirche(x: number, base: number): string {
+/** The Stiftskirche's tower (drawn around its base at 0,0), a silhouette against the glow. */
+function stiftskirche(): string {
   const s: string[] = [];
-  s.push(inked(poly([[x - 16, base], [x - 15, base - 150], [x + 15, base - 150], [x + 16, base]]), '#e8dcc0', 2.4));
-  s.push(path(poly([[x + 6, base - 150], [x + 15, base - 150], [x + 16, base], [x + 6, base]]), { fill: '#000000', opacity: 0.14 }));
-  // Clock and belfry openings.
-  s.push(circle(x, base - 120, 6.5, { fill: '#2a3a6a', stroke: INK, sw: 1.6 }));
-  s.push(path(`M${x} ${base - 120}V${base - 124.5}M${x} ${base - 120}L${x + 3} ${base - 119}`, { stroke: '#ffd34a', sw: 1.4 }));
-  for (const dx of [-8, 3]) s.push(inked(`M${x + dx} ${base - 138}h5v10h-5z`, '#2a2238', 1.2));
-  // Gallery, then the dark slender spire with a little lantern.
-  s.push(inked(poly([[x - 19, base - 150], [x + 19, base - 150], [x + 17, base - 156], [x - 17, base - 156]]), '#c8b890', 2));
-  s.push(inked(poly([[x - 13, base - 156], [x + 13, base - 156], [x + 7, base - 176], [x - 7, base - 176]]), '#3a3a4a', 2));
-  s.push(inked(`M${x - 5} ${base - 176}h10v-10h-10z`, '#4a4a5a', 1.6));
-  s.push(inked(poly([[x - 6, base - 186], [x + 6, base - 186], [x, base - 228]]), '#2e2e3e', 2));
-  s.push(line([x, base - 228], [x, base - 238], INK, 1.6));
-  s.push(circle(x, base - 232, 1.8, { fill: '#ffd34a', stroke: INK, sw: 0.8 }));
+  s.push(inked(poly([[-16, 0], [-15, -150], [15, -150], [16, 0]]), '#b89a94', 2.4));
+  s.push(path(poly([[-15, -150], [-9, -150], [-10, 0], [-16, 0]]), { fill: '#ffb45a', opacity: 0.45 }));
+  s.push(path(poly([[4, -150], [15, -150], [16, 0], [4, 0]]), { fill: '#2a1848', opacity: 0.3 }));
+  s.push(circle(0, -120, 6.5, { fill: '#2a2a5a', stroke: INK, sw: 1.6 }));
+  s.push(path('M0 -120V-124.5M0 -120L3 -119', { stroke: '#ffd34a', sw: 1.4 }));
+  for (const dx of [-8, 3]) s.push(inked(`M${dx} -138h5v10h-5z`, '#2a2238', 1.2));
+  s.push(inked(poly([[-19, -150], [19, -150], [17, -156], [-17, -156]]), '#a08a80', 2));
+  s.push(inked(poly([[-13, -156], [13, -156], [7, -176], [-7, -176]]), '#3a3048', 2));
+  s.push(inked('M-5 -176h10v-10h-10z', '#4a3e58', 1.6));
+  s.push(inked(poly([[-6, -186], [6, -186], [0, -232]]), '#2a2238', 2));
+  s.push(line([0, -232], [0, -242], INK, 1.6));
+  s.push(circle(0, -236, 1.8, { fill: '#ffd34a', stroke: INK, sw: 0.8 }));
   return s.join('');
 }
 
+const houseFoot = (x: number) => yAt(NK.quayTop, x) - 2;
+
+/** The row of gabled houses along the quay: small at the bend, bigger and
+ *  bigger towards us on the right. */
 function altstadt(): string {
   const s: string[] = [];
-  // Far houses at the bend, small, then the long row above the quay, each
-  // nearer one bigger and lower on screen.
-  const foot = (x: number) => yAt(NK.quayTop, x) - 4;
-  s.push(stiftskirche(712, foot(712) - 40));
-  let x = 448;
+  const row: string[] = [];
+  let x = 304;
   let seed = 100;
-  while (x < 980) {
-    const w = 22 + (x - 448) * 0.17;
+  while (x < 742) {
+    const w = 24 + (x - 304) * 0.2;
     const lean = (rng(seed)() - 0.5) * w * 0.08;
-    // The far ones sit behind the bend, on the horizon.
-    const f = x < 534 ? 258 : foot(x);
-    s.push(house(x, f, w, seed, lean));
-    x += w * 0.92;
+    row.push(house(x, houseFoot(x + w / 2) + w * 0.04, w, seed, lean));
+    x += w * 0.93;
     seed += 7;
+  }
+  s.push(group(stiftskirche(), 'translate(478 232) scale(0.74)'));
+  // Far ones first, so each nearer house overlaps its neighbour.
+  s.push(row.join(''));
+  return s.join('');
+}
+
+/** The big corner house at the bridge, close to us on the right: pale
+ *  walls, a round bay tower under a pointed roof, windows already lit. */
+function eckhaus(): string {
+  const s: string[] = [];
+  const wall = '#c9a9b2';
+  const win = (x: number, y: number, w: number, h: number, lit: boolean) =>
+    (lit ? rect(x - 8, y - 8, w + 16, h + 16, { fill: LIT, opacity: 0.2 }, 8) : '') +
+    rect(x, y, w, h, { fill: lit ? LIT : DARK_PANE, stroke: INK, sw: 2 }) +
+    path(`M${x + w / 2} ${y}V${y + h}M${x} ${y + h * 0.42}H${x + w}`, { stroke: lit ? '#a8742a' : '#5a5078', sw: 1.6 });
+  // Main block, running off the top of the picture.
+  s.push(inked(poly([[742, 384], [748, -10], [970, -10], [970, 384]]), wall, 3));
+  s.push(path(poly([[748, -10], [776, -10], [772, 384], [742, 384]]), { fill: '#ffb45a', opacity: 0.35 }));
+  s.push(win(756, 58, 30, 46, true) + win(756, 150, 30, 46, true) + win(756, 240, 30, 44, false));
+  // The plinth with its dark arch, down at the water.
+  s.push(inked(poly([[742, 384], [743, 318], [970, 318], [970, 384]]), '#a58a9c', 2.6));
+  s.push(inked('M754 384V350Q770 328 786 350V384Z', '#2a1e3a', 2));
+  // The bay tower and its pointed roof.
+  s.push(inked('M804 318V112H946V318Z', '#d6b6ba', 3));
+  s.push(path('M804 112H826V318H804Z', { fill: '#ffc27a', opacity: 0.4 }));
+  s.push(path('M900 112H946V318H900Z', { fill: '#3a2058', opacity: 0.22 }));
+  for (const y of [176, 250]) s.push(path(`M804 ${y}H946`, { stroke: '#a88a98', sw: 2 }));
+  s.push(inked(poly([[792, 114], [874, -4], [958, 114]]), '#6a4a60', 3));
+  s.push(path(poly([[874, -4], [958, 114], [884, 114]]), { fill: '#1e1038', opacity: 0.3 }));
+  for (let k = 1; k < 5; k++) s.push(line([874 - k * 16.4, -4 + k * 23.6], [874 + k * 16.8, -4 + k * 23.6], '#3a2a44', 1.4, 0.7));
+  s.push(line([792, 114], [874, -4], '#ff9a5a', 2.4, 0.8));
+  s.push(win(822, 128, 30, 38, false) + win(884, 128, 34, 38, true));
+  s.push(win(822, 194, 30, 42, true) + win(884, 194, 34, 42, false));
+  s.push(win(822, 266, 30, 42, false) + win(884, 266, 34, 42, false));
+  s.push(rect(878, 262, 6, 50, { fill: '#8a2f2a', stroke: INK, sw: 1.2 }) + rect(918, 262, 6, 50, { fill: '#8a2f2a', stroke: INK, sw: 1.2 }));
+  // The balcony's iron railing.
+  s.push(path('M742 300Q800 322 960 314', { stroke: INK, sw: 3 }));
+  s.push(path('M742 318Q800 340 960 332', { stroke: INK, sw: 4 }));
+  for (let x = 750; x < 960; x += 13) s.push(line([x, 303 + Math.min(18, (x - 742) * 0.25) * 0.8], [x, 321 + Math.min(18, (x - 742) * 0.25) * 0.8], INK, 1.6));
+  return s.join('');
+}
+
+// ---- the bend: the hill with the Schloss, the Hölderlinturm, the willows ----------------------
+
+function willow(x: number, y: number, k: number, seed: number): string {
+  const s: string[] = [];
+  s.push(path(puff(x, y - 14 * k, 17 * k, 13 * k, 6, seed, 0.14), { fill: '#55783a', stroke: INK, sw: 1.4 }));
+  for (let i = 0; i < 8; i++) {
+    const sx = x - 15 * k + i * 4.3 * k;
+    s.push(path(`M${sx} ${y - 16 * k + (i % 3) * 2}Q${sx - 1.5} ${y} ${sx + 1} ${y + 18 * k - (i % 2) * 4}`, { stroke: i % 3 ? '#4e7034' : '#d0b050', sw: 2.2 * k }));
   }
   return s.join('');
 }
-
-// ---- the bend: hills, the Hölderlinturm, the willow ---------------------------------
 
 function bend(): string {
   const s: string[] = [];
-  s.push(inked(curve([[330, 268], [380, 236], [440, 226], [500, 232], [560, 244], [600, 262]]) + 'Z', '#6aa858', 1.6));
-  s.push(path(puff(400, 240, 44, 18, 8, 71, 0.25), { fill: '#4e8a46', stroke: INK, sw: 1.4 }));
-  s.push(path(puff(470, 238, 36, 14, 7, 73, 0.25), { fill: '#5e9a4e', stroke: INK, sw: 1.4 }));
-  // The Hölderlinturm: a round yellow tower with a pointed grey-blue roof.
-  const tx = 372;
-  s.push(inked(`M${tx - 12} 266V232Q${tx} 228 ${tx + 12} 232V266Z`, '#f2d27a', 1.8));
-  s.push(path(`M${tx + 4} 230V266H${tx + 12}V232Q${tx + 8} 230 ${tx + 4} 230Z`, { fill: '#000000', opacity: 0.15 }));
-  s.push(inked(poly([[tx - 15, 233], [tx + 15, 233], [tx, 200]]), '#6a7a9a', 1.8));
-  s.push(path(poly([[tx, 200], [tx + 15, 233], [tx + 4, 233]]), { fill: '#000000', opacity: 0.2 }));
-  s.push(line([tx, 200], [tx, 193], INK, 1.2));
-  for (const [wx, wy] of [[tx - 5, 242], [tx + 4, 242], [tx - 1, 254]] as Pt[]) s.push(rect(wx - 2, wy - 3, 4, 6, { fill: '#2a3a5a', stroke: INK, sw: 0.8 }));
-  // Its little garden house next to it.
-  s.push(inked(poly([[tx + 14, 266], [tx + 14, 250], [tx + 36, 250], [tx + 36, 266]]), '#f4efe4', 1.4));
-  s.push(inked(poly([[tx + 11, 251], [tx + 25, 240], [tx + 39, 251]]), '#b8442a', 1.4));
-  // The weeping willow, hanging into the water.
-  s.push(inked(`M430 268L428 236`, '#6a5a3a', 3));
-  s.push(path(puff(432, 230, 30, 26, 9, 81, 0.22), { fill: '#8ac85a', stroke: INK, sw: 1.6 }));
-  for (let i = 0; i < 9; i++) {
-    const x = 408 + i * 6;
-    s.push(path(`M${x} ${226 + (i % 3) * 3}Q${x - 2} ${248} ${x + 1} ${266 - (i % 2) * 4}`, { stroke: i % 2 ? '#6aa848' : '#a8dc6a', sw: 2.4 }));
+  // The hill behind the town, in the evening haze, the Schloss on top.
+  s.push(path(curve([[120, 244], [190, 196], [262, 170], [340, 160], [470, 150], [640, 120], [760, 110]]) + 'L760 260L120 260Z', { fill: '#7a5282' }));
+  s.push(inked('M250 170V154H334V168Z', '#9a6a86', 1.4));
+  s.push(inked('M246 155L258 144H326L338 155Z', '#5a3a5e', 1.4));
+  s.push(inked('M330 168V146h12v22z', '#9a6a86', 1.4) + inked('M328 147l8 -12l8 12z', '#5a3a5e', 1.4));
+  for (const x of [262, 280, 300, 316]) s.push(rect(x, 159, 3, 4, { fill: LIT, opacity: 0.9 }));
+  // Roofs up the slope.
+  const r = rng(33);
+  for (let i = 0; i < 16; i++) {
+    const x = 200 + r() * 330;
+    const y = 190 + r() * 34 - (x - 200) * 0.06;
+    const w = 12 + r() * 12;
+    s.push(path(poly([[x, y], [x + w / 2, y - w * 0.6], [x + w, y], [x + w, y + w * 0.7], [x, y + w * 0.7]]), { fill: r() < 0.5 ? '#8a5a80' : '#6a4674' }));
+    if (r() < 0.5) s.push(rect(x + w * 0.35, y + w * 0.2, 2.4, 3, { fill: LIT, opacity: 0.85 }));
   }
+  // Trees where the river comes round the bend.
+  s.push(path(puff(190, 236, 30, 13, 6, 71, 0.16), { fill: '#3e3a5a', stroke: INK, sw: 1.2 }));
+  s.push(path(puff(236, 226, 26, 16, 6, 73, 0.16), { fill: '#4a5a44', stroke: INK, sw: 1.2 }));
+  // The Hölderlinturm: a round yellow tower under a pointed roof, at the water.
+  const tx = 270;
+  s.push(inked(`M${tx - 12} 252V214Q${tx} 210 ${tx + 12} 214V252Z`, '#e8bc68', 1.8));
+  s.push(path(`M${tx - 12} 214Q${tx - 9} 212 ${tx - 6} 212V252H${tx - 12}Z`, { fill: '#fff0b0', opacity: 0.5 }));
+  s.push(path(`M${tx + 3} 212V252H${tx + 12}V214Q${tx + 8} 212 ${tx + 3} 212Z`, { fill: '#3a2058', opacity: 0.25 }));
+  s.push(inked(poly([[tx - 15, 215], [tx + 15, 215], [tx, 184]]), '#5a4a6e', 1.8));
+  s.push(line([tx - 15, 215], [tx, 184], '#ff9a5a', 1.4, 0.8));
+  s.push(line([tx, 184], [tx, 177], INK, 1.2));
+  s.push(rect(tx - 7, 224, 4, 6, { fill: LIT, stroke: INK, sw: 0.8 }) + rect(tx + 2, 224, 4, 6, { fill: DARK_PANE, stroke: INK, sw: 0.8 }) + rect(tx - 2, 237, 4, 6, { fill: DARK_PANE, stroke: INK, sw: 0.8 }));
+  s.push(willow(238, 234, 0.9, 81));
+  s.push(willow(296, 238, 1.05, 83));
   return s.join('');
 }
 
-// ---- the quay wall, the hedge, the café ------------------------------------------------
+// ---- the quay wall with its lamps and trees ------------------------------------------------
+
+/** Lamp posts on the wall, far → near. */
+const LAMPS = [352, 430, 520, 628];
 
 function quay(): string {
   const s: string[] = [];
   const [t0, t1] = NK.quayTop;
   const [f0, f1] = NK.quayFoot;
-  s.push(inked(poly([t0, t1, [962, f1[1]], f0]), '#cfc4ae', 2.4));
+  s.push(inked(poly([t0, t1, f1, f0]), '#9c8a94', 2.4));
   // Stone courses, foreshortened.
-  for (let k = 1; k < 6; k++) {
-    const a = lerp(t0, f0, k / 6);
-    const b = lerp(t1, [962, f1[1]], k / 6);
-    s.push(line(a, b, '#9a8e78', 1.2, 0.8));
-  }
+  for (let k = 1; k < 6; k++) s.push(line(lerp(t0, f0, k / 6), lerp(t1, f1, k / 6), '#6a5a70', 1.2, 0.8));
   const r = rng(91);
-  for (let i = 0; i < 70; i++) {
-    const t = r();
+  for (let i = 0; i < 80; i++) {
+    const t = r() * r();
     const k = Math.floor(r() * 6);
-    const a = lerp(lerp(t0, f0, k / 6), lerp(t1, [962, f1[1]], k / 6), t);
-    const b = lerp(lerp(t0, f0, (k + 1) / 6), lerp(t1, [962, f1[1]], (k + 1) / 6), t);
-    s.push(line(a, b, '#9a8e78', 1, 0.7));
+    s.push(line(lerp(lerp(t0, f0, k / 6), lerp(t1, f1, k / 6), t), lerp(lerp(t0, f0, (k + 1) / 6), lerp(t1, f1, (k + 1) / 6), t), '#6a5a70', 1, 0.7));
   }
-  // Damp, mossy band at the waterline.
-  s.push(path(poly([lerp(t0, f0, 0.8), lerp(t1, [962, f1[1]], 0.8), [962, f1[1]], f0]), { fill: '#5a7a4a', opacity: 0.45 }));
-  // Bushes along the top, the hedge, and the café's terrace.
-  const hedge: Pt[] = [];
-  for (let x = 540; x <= 970; x += 12) {
-    const y = yAt(NK.quayTop, x);
-    hedge.push([x, y - 4 - ((x - 540) / 430) * 16 - (Math.sin(x * 0.7) + 1) * 2]);
+  s.push(path(poly([lerp(t0, f0, 0.82), lerp(t1, f1, 0.82), f1, f0]), { fill: '#3a4a40', opacity: 0.5 }));
+  // The lamps are on already: pools of light down the wall.
+  for (const x of LAMPS) {
+    const yt = yAt(NK.quayTop, x);
+    const yf = yAt(NK.quayFoot, x);
+    const k = (x - 250) / 500 + 0.25;
+    s.push(path(poly([[x, yt], [x + 26 * k, yf], [x - 22 * k, yf - 6 * k]]), { fill: LIT, opacity: 0.33 }));
+    s.push(line([x, yt + 1], [x, yt - 20 * k], INK, 1.4 + k));
+    s.push(circle(x, yt - 21 * k, 2.6 * k + 0.8, { fill: '#fff6c8', stroke: INK, sw: 1 }));
+    s.push(circle(x, yt - 21 * k, 9 * k, { fill: LIT, opacity: 0.3 }));
   }
-  s.push(inked(curve(hedge) + `L970 ${yAt(NK.quayTop, 970) + 2}L540 ${yAt(NK.quayTop, 540) + 2}Z`, '#3a8a3a', 2));
-  s.push(path(curve(hedge.map(([x, y]) => [x, y + 4] as Pt)), { stroke: '#7ac85a', sw: 3, opacity: 0.8 }));
-  for (const [bx, sz, seed] of [[600, 14, 3], [680, 18, 5], [880, 26, 9]] as Array<[number, number, number]>) {
-    s.push(path(puff(bx, yAt(NK.quayTop, bx) - sz, sz * 1.2, sz, 5, seed, 0.14), { fill: '#4e9a3e', stroke: INK, sw: 1.6 }));
+  // A low railing along the top, and round trees in front of the houses.
+  s.push(line([t0[0], t0[1] - 3], [742, yAt(NK.quayTop, 742) - 9], INK, 1.6));
+  for (let x = 262; x < 742; x += 8 + (x - 250) * 0.03) s.push(line([x, yAt(NK.quayTop, x)], [x, yAt(NK.quayTop, x) - 3 - (x - 250) * 0.012], INK, 1.2));
+  for (const [x, sz, seed] of [[330, 9, 3], [398, 13, 5], [476, 17, 7], [574, 23, 9], [690, 30, 13]] as Array<[number, number, number]>) {
+    const y = yAt(NK.quayTop, x) - sz * 1.3;
+    s.push(line([x, y + sz * 0.6], [x, yAt(NK.quayTop, x)], '#3a2a2a', Math.max(1.6, sz / 5)));
+    s.push(path(puff(x, y, sz * 1.25, sz, 6, seed, 0.14), { fill: '#2e5a3c', stroke: INK, sw: 1.8 }));
+    s.push(ellipse(x - sz * 0.25, y - sz * 0.2, sz * 0.75, sz * 0.58, { fill: '#4e7e40' }));
+    s.push(ellipse(x - sz * 0.5, y - sz * 0.38, sz * 0.34, sz * 0.24, { fill: '#d0a850', opacity: 0.85 }));
   }
-  // Café: stairs, a red awning, little tables with guests.
-  const cx = 776;
-  const cy = yAt(NK.quayTop, cx);
-  s.push(inked(poly([[cx - 40, cy - 6], [cx + 38, cy - 2], [cx + 38, cy - 30], [cx - 40, cy - 34]]), '#f6efe0', 1.6));
-  s.push(inked(wobble([[cx - 52, cy - 44], [cx + 48, cy - 40], [cx + 44, cy - 28], [cx - 48, cy - 32]], { seed: 5, wobble: 1 }), '#d83a2a', 2));
-  for (let i = 0; i < 8; i++) {
-    const x = cx - 48 + i * 12;
-    s.push(path(`M${x} ${cy - 32 + i * 0.5}q6 6 12 0`, { fill: i % 2 ? '#d83a2a' : '#f6efe0', stroke: INK, sw: 1.2 }));
-  }
-  for (const [px, col] of [[cx - 26, '#2a6aaa'], [cx - 6, '#f0a030'], [cx + 18, '#9a3aa8']] as Array<[number, string]>) {
-    s.push(circle(px, cy - 22, 3, { fill: '#f2c39c', stroke: INK, sw: 0.9 }));
-    s.push(inked(`M${px - 3} ${cy - 19}h6v7h-6z`, col, 0.9));
-  }
-  s.push(inked(`M${cx + 40} ${cy}L${cx + 60} ${cy + 26}`, '#9a9aa8', 2));
   return s.join('');
 }
 
@@ -273,90 +333,62 @@ function river(): string {
   const s: string[] = [];
   const [l0, l1] = NK.bankL;
   const [f0, f1] = NK.quayFoot;
-  const water = [l0, f0, [962, f1[1]], [962, 452], [-2, 452], [-2, l1[1]]] as Pt[];
-  s.push(path(poly(water), { fill: 'url(#nkWater)' }));
-  // Reflections: the coloured houses as soft vertical smears under the quay,
-  // the willow's green, the clouds.
+  s.push(path(poly([l0, f0, f1, [962, 452], [-2, 452], [-2, l1[1]]]), { fill: 'url(#nkWater)' }));
   const r = rng(61);
-  for (let x = 560; x < 960; x += 16) {
+  // The houses, the lamps and the lit windows, smeared into the water.
+  for (let x = 300; x < 800; x += 13) {
     const y = yAt(NK.quayFoot, x);
-    const col = WALLS[Math.floor(r() * WALLS.length)];
-    s.push(path(`M${x} ${y + 2}h${10 + r() * 6}l-2 ${20 + (x - 560) * 0.1}h-${8 + r() * 6}z`, { fill: col, opacity: 0.32 }));
+    const len = 14 + (x - 300) * 0.12;
+    s.push(path(`M${x} ${y + 1}h${9 + r() * 5}l-3 ${len}h-${6 + r() * 5}z`, { fill: r() < 0.25 ? LIT : WALLS[Math.floor(r() * WALLS.length)], opacity: 0.26 }));
   }
-  s.push(path(puff(430, 276, 26, 9, 7, 83, 0.2), { fill: '#7ab84a', opacity: 0.4 }));
-  s.push(ellipse(560, 300, 90, 14, { fill: '#ffffff', opacity: 0.22 }));
-  s.push(ellipse(700, 340, 120, 12, { fill: '#ffffff', opacity: 0.16 }));
-  // Ripples: short light strokes, longer and further apart as they come close.
-  for (let i = 0; i < 90; i++) {
+  for (const x of LAMPS) {
+    const y = yAt(NK.quayFoot, x);
+    const k = (x - 250) / 500 + 0.25;
+    for (let i = 0; i < 5; i++) s.push(path(`M${x - (5 - i) * k - 6 * k} ${y + 5 * k + i * 7 * k}h${(14 - i * 1.6) * k}`, { stroke: LIT, sw: 2.2 * k, opacity: 0.6 - i * 0.08 }));
+  }
+  // The sun's glitter path, straight towards us.
+  for (let i = 0; i < 16; i++) {
+    const y = 258 + i * 6.5 + i * i * 0.12;
+    const half = 5 + i * 3.2;
+    s.push(path(`M${NK.sun[0] + 6 - half + r() * 6} ${y}h${half * 2 - r() * 8}`, { stroke: '#fff0b0', sw: 1.2 + i * 0.16, opacity: 0.8 - i * 0.03 }));
+  }
+  // Ripples: longer and further apart as they come close.
+  for (let i = 0; i < 110; i++) {
     const t = r();
-    const y = NK.far + 4 + t * t * 110;
+    const y = NK.far + 6 + t * t * 124;
     const span = 0.2 + t * 0.8;
     const xl = Math.max(0, xAt(NK.bankL, y));
-    const xr = xAt(NK.quayFoot, y);
-    const x = xl + r() * Math.max(0, Math.min(960, xr) - xl);
-    const len = 4 + span * 22;
-    s.push(path(`M${x} ${y}q${len / 2} ${-1.2 - span} ${len} 0`, { stroke: r() < 0.7 ? '#e6f6ff' : '#2a6a6a', sw: 0.8 + span * 1.4, opacity: 0.55 }));
+    const x = xl + r() * Math.max(0, Math.min(960, xAt(NK.quayFoot, y)) - xl);
+    const len = 4 + span * 24;
+    s.push(path(`M${x} ${y}q${len / 2} ${-1.2 - span} ${len} 0`, { stroke: r() < 0.55 ? '#ffd8a0' : '#3a2a62', sw: 0.8 + span * 1.4, opacity: 0.5 }));
   }
   return s.join('');
 }
 
-// ---- the left bank: the Platanenallee -----------------------------------------------------
-
-function plane(x: number, base: number, h: number, w: number): string {
-  // A plane tree's trunk: mottled grey, olive and cream patches.
-  const s: string[] = [];
-  s.push(inked(`M${x - w} ${base}Q${x - w * 0.7} ${base - h * 0.5} ${x - w * 0.5} ${base - h}L${x + w * 0.5} ${base - h}Q${x + w * 0.7} ${base - h * 0.5} ${x + w} ${base}Z`, '#b8b098', Math.max(1.2, w / 6)));
-  const r = rng(Math.round(x * 3 + base));
-  for (let i = 0; i < 6; i++) {
-    const py = base - r() * h * 0.9;
-    s.push(ellipse(x + (r() - 0.5) * w, py, w * 0.3, w * 0.5, { fill: r() < 0.5 ? '#7a7a5a' : '#e8e2c8', opacity: 0.8 }));
-  }
-  return s.join('');
-}
+// ---- the left bank: the Neckarinsel, dark against the sun ------------------------------------
 
 function leftBank(): string {
   const s: string[] = [];
   const [l0, l1] = NK.bankL;
-  // The grassy bank down to the water, the gravel path above it.
-  s.push(inked(poly([[-4, 300], [350, 254], [l0[0] + 4, l0[1]], [l1[0] - 4, l1[1] + 2]]), '#5aa84a', 2));
-  s.push(path(poly([[-4, 330], [l1[0], l1[1]], [l0[0], l0[1]], [320, 262]]), { fill: '#3e8a3a', opacity: 0.55 }));
-  s.push(inked(poly([[-4, 300], [340, 254], [352, 258], [-4, 318]]), '#e2d2a8', 1.6));
-  // Walkers on the path, small and far.
-  const r = rng(17);
-  for (let i = 0; i < 9; i++) {
-    const x = 20 + i * 34 + r() * 10;
-    const y = 312 - (x / 340) * 52;
-    const k = 0.4 + (1 - x / 340) * 0.7;
-    const col = ['#2a5aaa', '#d83a5a', '#f0f0f0', '#3a3a4a', '#f0a030'][i % 5];
-    s.push(inked(`M${x - 3 * k} ${y}l1 ${-12 * k}h${4 * k}l1 ${12 * k}z`, '#3a3a4a', 0.8));
-    s.push(inked(`M${x - 4 * k} ${y - 11 * k}h${8 * k}l-1 ${-11 * k}h${-6 * k}z`, col, 0.8));
-    s.push(circle(x, y - 25 * k, 3.4 * k, { fill: '#f2c39c', stroke: INK, sw: 0.8 }));
+  s.push(inked(poly([[-4, 236], [l0[0], 240], l0, l1, [-4, l1[1]]]), '#34304e', 2));
+  s.push(line(l0, l1, '#ff9a5a', 1.6, 0.6));
+  // The Platanenallee, receding towards the sun, then the big dark tree close by.
+  for (const [x, rx, ry] of [[84, 14, 12], [58, 20, 18]] as Array<[number, number, number]>) {
+    s.push(path(puff(x, 240 - ry, rx, ry, 6, x, 0.15), { fill: '#3a3458', stroke: INK, sw: 1.4 }));
   }
-  // The avenue: trunks along the path, nearest biggest.
-  for (const [x, h, w] of [[330, 70, 4], [292, 86, 5], [246, 104, 6], [188, 132, 8], [118, 170, 11], [30, 230, 15]] as Array<[number, number, number]>) {
-    s.push(plane(x, 300 - (x / 340) * 46 + 4, h, w));
-  }
-  // The canopy: huge, layered green puffs filling the top left.
-  const greens = ['#2e6a2e', '#3e8a3a', '#5aa848', '#7ac85a'];
-  const blobs: Array<[number, number, number, number, number]> = [
-    [120, 40, 200, 120, 0], [300, 90, 110, 90, 0], [40, 180, 120, 110, 0], [250, 180, 110, 70, 1],
-    [140, 120, 150, 110, 1], [330, 170, 70, 50, 1], [70, 60, 120, 70, 2], [230, 70, 90, 60, 2],
-    [130, 210, 90, 50, 2], [180, 30, 80, 40, 3], [60, 140, 60, 40, 3], [300, 130, 50, 30, 3],
+  s.push(inked('M24 304Q30 240 22 150L44 150Q40 240 50 300Z', '#1e1a30', 2));
+  const blobs: Array<[number, number, number, number, string]> = [
+    [-6, 70, 84, 80, '#1c1830'], [26, 168, 74, 86, '#1c1830'], [44, 232, 40, 34, '#221e38'],
+    [-12, 150, 60, 70, '#262240'], [18, 96, 50, 44, '#262240'],
   ];
-  blobs.forEach(([cx, cy, rx, ry, g], i) => {
-    s.push(path(puff(cx, cy, rx, ry, 7 + (i % 3), 200 + i, 0.13), { fill: greens[g], stroke: g < 2 ? INK : 'none', sw: 2.4 }));
-  });
-  // A big fern-like bush at the water.
+  blobs.forEach(([cx, cy, rx, ry, c], i) => s.push(path(puff(cx, cy, rx, ry, 7 + (i % 3), 200 + i, 0.13), { fill: c, stroke: i < 3 ? INK : 'none', sw: 2.4 })));
+  // Rim light where the sun catches the leaves.
+  s.push(path('M72 96Q92 130 86 170M96 196Q104 220 92 250', { stroke: '#e8805a', sw: 2.4, opacity: 0.7 }));
+  // Reeds.
   for (let i = 0; i < 9; i++) {
-    const a = -2.6 + i * 0.3;
-    s.push(path(`M150 330Q${150 + Math.cos(a) * 30} ${330 + Math.sin(a) * 40} ${150 + Math.cos(a) * 52} ${330 + Math.sin(a) * 56}`, { stroke: i % 2 ? '#3a7a5a' : '#6aa87a', sw: 7 }));
-  }
-  s.push(path(puff(232, 300, 26, 14, 5, 31, 0.15), { fill: '#4e9a3e', stroke: INK, sw: 1.6 }));
-  // Reeds at the water's edge.
-  for (let i = 0; i < 14; i++) {
-    const x = 196 + i * 12;
+    const x = 20 + i * 13;
     const y = yAt(NK.bankL, x) + 2;
-    s.push(path(`M${x} ${y}q-2 -10 ${i % 2 ? 3 : -3} -18`, { stroke: '#7aa84a', sw: 2 }));
+    s.push(path(`M${x} ${y}q-2 -10 ${i % 2 ? 3 : -3} -18`, { stroke: '#4a5a44', sw: 2 }));
   }
   return s.join('');
 }
@@ -406,26 +438,38 @@ export function neckarBg(): string {
   return [
     defs(
       grainDefs(53),
-      linear('nkSky', 0, 0, 0, 280, [
-        [0, RIVER.sky0],
-        [1, RIVER.sky1],
+      linear('nkSky', 0, 0, 0, 250, [
+        [0, '#34347c'],
+        [0.3, '#7c4a94'],
+        [0.58, '#e2607a'],
+        [0.8, '#ff9a52'],
+        [1, '#ffe08a'],
       ]),
-      linear('nkWater', 0, NK.far, 0, 380, [
-        [0, RIVER.far],
-        [0.45, '#5aa8a8'],
-        [1, RIVER.near],
+      linear('nkWater', 0, NK.far, 0, 400, [
+        [0, '#ffc070'],
+        [0.22, '#f08a6a'],
+        [0.55, '#a8588a'],
+        [1, '#4a3a80'],
+      ]),
+      linear('nkDusk', 0, 250, 0, 450, [
+        [0, '#2a1a50', 0],
+        [1, '#2a1a50', 0.3],
       ])
     ),
     sky(),
     bend(),
     altstadt(),
     quay(),
+    eckhaus(),
     river(),
     leftBank(),
     jetty(),
     steps(),
     deck(),
-    vignette('nkVig', 960, 450, 0.22, '#1e2a40'),
+    // Dusk: everything warms towards the sun and sinks into violet near us.
+    rect(0, 0, 960, 450, { fill: '#ff7a3a', opacity: 0.07 }),
+    rect(0, 250, 960, 200, { fill: 'url(#nkDusk)' }),
+    vignette('nkVig', 960, 450, 0.4, '#241040'),
     grainOverlay(960, 450, 0.3, 0.22),
   ].join('');
 }
@@ -436,23 +480,23 @@ export function balustrade(): string {
   const { x0, x1 } = NK.gap;
   const top = NK.parapetTop;
   const s: string[] = [];
-  const stone = '#c89a78';
-  const stoneDark = '#9a6a52';
+  const stone = '#b98274';
+  const stoneDark = '#7a4e5c';
   const run = (a: number, b: number) => {
     // Coping, balusters, plinth.
     s.push(inked(poly([[a, top + 26], [b, top + 26], [b, NK.parapetBase], [a, NK.parapetBase]]), stoneDark, 2.4));
     for (let x = a + 12; x < b - 6; x += 18) {
       s.push(inked(`M${x - 4} ${top + 13}Q${x - 8} ${top + 20} ${x - 3} ${top + 27}h6Q${x + 8} ${top + 20} ${x + 4} ${top + 13}Z`, stone, 1.6));
     }
-    s.push(inked(poly([[a - 2, top], [b + 2, top], [b + 2, top + 13], [a - 2, top + 13]]), '#dcb08c', 2.4));
-    s.push(path(`M${a} ${top + 3}H${b}`, { stroke: '#f2d2b0', sw: 2, opacity: 0.8 }));
+    s.push(inked(poly([[a - 2, top], [b + 2, top], [b + 2, top + 13], [a - 2, top + 13]]), '#d89c80', 2.4));
+    s.push(path(`M${a} ${top + 3}H${b}`, { stroke: '#ffc890', sw: 2, opacity: 0.9 }));
   };
   run(-6, x0);
   run(x1, 966);
   // Pillars either side of the gap.
   for (const px of [x0 - 6, x1 - 6]) {
     s.push(inked(poly([[px, top - 10], [px + 18, top - 10], [px + 18, NK.parapetBase], [px, NK.parapetBase]]), stone, 2.4));
-    s.push(inked(poly([[px - 3, top - 16], [px + 21, top - 16], [px + 21, top - 9], [px - 3, top - 9]]), '#dcb08c', 2));
+    s.push(inked(poly([[px - 3, top - 16], [px + 21, top - 16], [px + 21, top - 9], [px - 3, top - 9]]), '#d89c80', 2));
   }
   // The street lamp on the right.
   const lx = 862;
@@ -462,6 +506,7 @@ export function balustrade(): string {
   s.push(path(`M${lx} ${top - 170}q0 -14 18 -14`, { stroke: '#3a4a4a', sw: 1.6 }));
   s.push(inked(`M${lx + 10} ${top - 184}h16l-3 -14h-10z`, '#3a4a4a', 1.8));
   s.push(inked(`M${lx + 12} ${top - 184}l2 10h8l2 -10z`, '#fff4c0', 1.4));
+  s.push(glow('nkLamp', lx + 18, top - 176, 46, '#ffe08a', 0.55));
   return s.join('');
 }
 
@@ -607,22 +652,24 @@ function hull(holes: boolean): string {
   return s.join('');
 }
 
-/** Water painted over the frame's bottom, up to `level` (y in frame px). */
-function waterOver(level: number, f: number): string {
+/** While sinking, the boat is cut off at the waterline `level` (y in
+ *  frame px) — no painted-over water, so it sits in any light. */
+function sunk(boat: string, sink: number, level: number, f: number): string {
   const pts: Pt[] = [];
-  for (let x = -4; x <= PUNT_W + 4; x += 11) pts.push([x, level + Math.sin(x * 0.18 + f * 1.7) * 1.6]);
+  for (let x = 2; x <= PUNT_W - 2; x += 11) pts.push([x, level + Math.sin(x * 0.18 + f * 1.7) * 1.6]);
   return (
-    path(curve(pts) + `L${PUNT_W + 4} ${PUNT_H + 2}L-4 ${PUNT_H + 2}Z`, { fill: RIVER.around }) +
-    path(curve(pts), { stroke: '#d8f2f4', sw: 1.6, opacity: 0.85 })
+    `<defs><clipPath id="puntClip"><rect x="-10" y="-30" width="${PUNT_W + 20}" height="${level + 30}"/></clipPath></defs>` +
+    group(group(boat, `translate(0 ${sink})`), undefined, 'clip-path="url(#puntClip)"') +
+    path(curve(pts), { stroke: '#fff0d0', sw: 2, opacity: 0.9 })
   );
 }
 
-/** The bow wave and a little wake around the waterline. */
+/** The hull's shadow on the water, the bow wave and a little wake. */
 function wake(f: number): string {
   return (
-    ellipse(110, WL + 3, 112, 5, { fill: RIVER.around }) +
-    path(`M${8 - f} ${WL + 2}q-10 2 -6 5M214 ${WL}q8 2 4 6`, { stroke: '#e6f6ff', sw: 1.6, opacity: 0.8 }) +
-    path(`M30 ${WL + 5}h${30 + f * 3}M120 ${WL + 6}h${24 - f * 2}`, { stroke: '#e6f6ff', sw: 1.2, opacity: 0.6 })
+    ellipse(110, WL + 3, 112, 5, { fill: '#241040', opacity: 0.35 }) +
+    path(`M${8 - f} ${WL + 2}q-10 2 -6 5M214 ${WL}q8 2 4 6`, { stroke: '#fff0d0', sw: 1.6, opacity: 0.8 }) +
+    path(`M30 ${WL + 5}h${30 + f * 3}M120 ${WL + 6}h${24 - f * 2}`, { stroke: '#fff0d0', sw: 1.2, opacity: 0.6 })
   );
 }
 
@@ -647,8 +694,7 @@ function puntFrame(f: number, p: PuntPose): string {
   boat.push(bursche(92, 86, { seated: true, arms: p.arms[1], mouth: p.mouths[1], f, dir: 1 }));
   boat.push(bursche(152, 86, { seated: true, arms: p.arms[2], mouth: p.mouths[2], f: f + 2, dir: -1 }));
   if (sink === 0) s.push(wake(f % 4));
-  s.push(group(boat, sink ? `translate(0 ${sink})` : undefined));
-  if (sink) s.push(waterOver(WL - 6, f));
+  s.push(sink ? sunk(boat.join(''), sink, WL - 6, f) : group(boat));
   return s.join('');
 }
 
@@ -657,10 +703,10 @@ function goneFrame(f: number): string {
   const s: string[] = [];
   for (let i = 0; i < 3; i++) {
     const r = 20 + ((f * 10 + i * 26) % 70);
-    s.push(ellipse(110, WL - 4, r, r * 0.16, { stroke: '#e6f6ff', sw: 1.6, opacity: Math.max(0, 0.9 - r / 90) }));
+    s.push(ellipse(110, WL - 4, r, r * 0.16, { stroke: '#fff0d0', sw: 1.6, opacity: Math.max(0, 0.9 - r / 90) }));
   }
   for (const [x, y, rr] of [[96, WL - 8 - f * 3, 3], [120, WL - 14 + f * 2, 2.2], [108, WL - 20 - f, 1.6]] as Array<[number, number, number]>) {
-    s.push(circle(x, y, rr, { stroke: '#e6f6ff', sw: 1.2 }));
+    s.push(circle(x, y, rr, { stroke: '#fff0d0', sw: 1.2 }));
   }
   return s.join('');
 }
@@ -706,7 +752,7 @@ export const PUNT_ACTOR: SvgActorAsset = {
 
 /** The cap that floats ashore (drawn around its own centre, 40×24 box). */
 export function floatingCap(): string {
-  return ellipse(20, 18, 17, 4, { fill: '#e6f6ff', opacity: 0.5 }) + couleurCap(20, 18, 1.6, -14);
+  return ellipse(20, 18, 17, 4, { fill: '#fff0d0', opacity: 0.5 }) + couleurCap(20, 18, 1.6, -14);
 }
 
 /** The worm-eaten chair leg, in flight (36×14, centred). */

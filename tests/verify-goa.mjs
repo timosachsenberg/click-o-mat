@@ -256,7 +256,7 @@ await page.screenshot({ path: `${SHOT}/goa-05-neckar.png` });
 
 // --- a punt full of Burschenschaftler comes down the river, again and again
 const punt = () => ev(() => { const a = window.__engine.roomScene.actors.get('kahn'); return { x: a.x, y: a.y, h: a.sprite.displayHeight, s: a.sprite.scale }; });
-await click(330, 430); // to the balustrade
+await click(680, 430); // to the balustrade
 await settle();
 const seenAt = [];
 const nearby = await waitFor(async () => {
@@ -281,7 +281,7 @@ await settle();
 check('took the cap', JSON.stringify(await inv()) === '["muetze"]', JSON.stringify(await inv()));
 
 // --- on towards the forest
-await click(945, 432); // the way on (default verb)
+await click(15, 432); // the way on (default verb)
 await settle();
 check('chapter done', (await flag('chapterDone')) === true);
 await page.screenshot({ path: `${SHOT}/goa-07-end.png` });

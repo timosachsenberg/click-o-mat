@@ -135,11 +135,11 @@ talk while he does.
 8. **Sit on the rickety bar stool** in front of the jukebox (any time): it
    collapses under you. **Take the worm-eaten leg** from the debris and leave
    through the door.
-9. Out on the **Neckarbrücke** a Stocherkahn full of Burschenschaftler comes down
-   the river every few seconds. When one is close enough, **use the chair leg
+9. Out on the **Neckarbrücke**, at sunset, a Stocherkahn full of Burschenschaftler
+   comes down the river every few seconds and turns in front of the bridge. When one is close enough, **use the chair leg
    with the punt**: the woodworms eat through it in no time and the crew goes
    down with it (the Neckar is only waist-deep). Only a **cap** floats ashore —
-   take it from the jetty (down the steps on the left), then head right,
+   take it from the jetty (down the steps on the left), then head on left,
    **towards the forest**.
 
 </details>
