@@ -15,10 +15,10 @@ a few PNGs that exercise the image pipeline (themselves rendered from SVG
 sources), the whole thing is code.
 
 Next to the demo lives the start of an actual adventure, **„Folge dem Bass“**
-(German, `src/goa/`): you begin in the **Picasso**, Ali's basement bar, with nothing but a
-two-euro coin and need the password for tonight's Goa party in the forest — then
-out onto the **Neckarbrücke** in Tübingen, where the Stocherkähne pass by, and up
-into the **Hölderlinturm** — a cut-open doll's house — where a
+(German, `src/goa/`): you get off the bus on the **Neckarbrücke** in Tübingen with
+nothing but a two-euro coin, need the password for tonight's Goa party from Ali in
+the **Picasso** basement bar (past the Epplehaus and a döner stand), find the way
+into the forest closed for tree felling, and go up into the **Hölderlinturm** — a cut-open doll's house — where a
 Rössler attractor throws the picture between three time layers (hand-painted,
 1987 pixels, modern cartoon collage). The
 **title screen picks between the two** (SPIEL · DEMO); `?game=goa` /
@@ -108,14 +108,22 @@ Phaser's own WebGL-first detection.
 
 ### Playing the adventure („Folge dem Bass“)
 
-You're in the **Picasso**, Ali's basement bar, with a two-euro coin in your pocket.
-Ali knows where tonight's Goa party in the forest is — but the only other
-guest, a retired cop known as *der Partykiller*, is listening, and Ali won't
-talk while he does.
+You get off the bus on the **Neckarbrücke** in Tübingen, at sunset, with a
+two-euro coin in your pocket. Somewhere in the forest there's a Goa party
+tonight — and you don't know where.
+
+The options menu (⚙) has a **mode switch**: *Normal* (the default — few, subtle
+hints) or *Einfach* (characters spell out much more).
 
 <details><summary>Solution</summary>
 
-(Mind the Wilde Hilde, dancing in front of the DJ booth: get too close and she grabs.)
+**The password (the Picasso).** From the bridge, the right end leads to the
+**Epplehaus** (Flaschenfloh, the bottle collector; pigeons everywhere), its left
+side to the **döner stand** (no puzzle — it just smells good), and the stairs there
+down into the **Picasso**, Ali's basement bar. Ali knows where the party is — but
+the only other guest, a retired cop known as *der Partykiller*, is listening, and
+Ali won't talk while he does. (Mind the Wilde Hilde, dancing in front of the DJ
+booth: get too close and she grabs.)
 
 1. Talk to **Ali** about the Goa — he points at the Partykiller.
 2. Order a drink: Red Cow? *Aus.* Flying Pony? *Auch aus.* **Magic Woman**?
@@ -136,23 +144,42 @@ talk while he does.
    tanzt!* He dances (traffic duty, then the disco finger) and falls asleep.
 7. Ask Ali again: the password is **Chakabunga**.
 8. **Sit on the Zocker-Hocker**, the rickety bar stool in front of the slot
-   machines (any time): it
-   collapses under you. **Take the worm-eaten leg** from the debris and leave
-   through the door (it is open from the start). Outside is the **Epplehaus**:
-   Flaschenfloh, the bottle collector, has a few hints (and a lot of opinions
-   on deposit), pigeons stroll about; the street on the right leads to the bridge.
-9. Out on the **Neckarbrücke**, at sunset, a Stocherkahn full of Burschenschaftler
-   comes down the river every few seconds and turns in front of the bridge.
-   When one is close enough, **use the chair leg with the punt**: the woodworms
-   eat through it in no time and the crew goes down with it (the Neckar is only
-   waist-deep). Only a **cap** floats away — to the jetty at the
-   **Hölderlinturm**. Walk there along the Neckarfront (round the corner house
-   at the right end of the bridge, then along the top of the quay wall), take
-   the cap, and head left over the bridge, **towards the forest** (you need the
-   password and the cap).
+   machines (any time): it collapses under you. **Take the worm-eaten leg**
+   from the debris.
 
-**Optional: the Hölderlinturm.** Open the tower's door at the end of the
-promenade. The tower is shown as a doll's house, its front wall cut away:
+**The cap (the Neckarbrücke).** A Stocherkahn full of Burschenschaftler comes
+down the river every few seconds and turns in front of the bridge. When one is
+close enough, **use the chair leg with the punt**: the woodworms eat through it
+in no time and the crew goes down with it (the Neckar is only waist-deep). Only
+a **cap** floats away — to the jetty at the **Hölderlinturm**. Walk there along
+the Neckarfront (round the corner house at the right end of the bridge, then
+along the top of the quay wall) and take the cap.
+
+**The forest is closed.** Over the bridge to the left you reach the **edge of the
+forest**: the Goa's lights pulse behind the trees and you can hear the bass — but
+the path is closed for *Baumfällarbeiten*. Five things lying around look like a
+way past the barrier, and none of them is: the **bolt cutters** on the bridge
+(they break), the **pogo stick** in the Picasso (you crash into the barrier), the
+**heart balloon** at the Epplehaus (a pigeon pecks it), the punt's **pole**,
+washed up at the jetty (too bendy for a pole vault) and the **folding spade** in
+the tower's cellar (a root, and your fingers).
+
+**The Hölderlinturm.** The way into the forest is closed for tree felling, so the only way to the Goa is through Otto R.'s wormhole in the
+tower. The tower's door at the end of the promenade is locked: Otto R. answers on the intercom and wants the password.
+
+- The bowl on Ali's counter is full of **pretzel crumbs**, but by hand they
+  trickle through your fingers: **use the cap with the bowl** (the
+  Burschenschaftler's cap from the punt) and you've got a crumb bag.
+- **Give the cap full of crumbs to Flaschenfloh** at the Epplehaus. He feeds
+  the pigeons — *„Put, put, put!“* — and one of them starts parroting
+  **„Put put“**. He hands the cap back.
+- Say „Put put?“ yourself at the intercom: *hört sich gut an, aber der Klang
+  der Stimme passt irgendwie nicht.*
+- While the parroting pigeon is busy with the crumbs, **pick it up**, and
+  **use it with the tower**: it says the password in exactly the right voice,
+  the door opens and the pigeon flies home.
+
+The tower is shown as a doll's house, its front wall cut away:
 upstairs the Turmstube with Hölderlin's desk, a sofa and his bed (the door
 opens onto it), downstairs the vaulted cellar at the river's level, joined
 by stairs. In the Turmstube stands Otto R.'s **Rössler attractor**. *Use* (or *push*) it
@@ -178,8 +205,8 @@ collage with photo textures) → hand-painted.
    **modern** layer it peels off like a sticker. **Take it**, then **use the
    hole with the Taschen-Attraktor**: the spiral circles the black hole and
    you get a **Wurmloch**. With the password, **use the wormhole** (anywhere)
-   and you're through, straight to the Goa in the forest — a shortcut to the
-   chapter's end, no cap needed.
+   and you're through, straight to the Goa in the forest, past the forestry
+   barrier — the end of the chapter.
 
 </details>
 
@@ -521,6 +548,10 @@ src/
     rooms/picasso.ts   The Picasso, Ali's basement bar
     art/epplehaus.ts   The Epplehaus forecourt, and the pigeons
     rooms/epplehaus.ts The Epplehaus (Flaschenfloh, a flock of pigeon actors)
+    art/doener.ts      The döner stand (and the stairs down to the Picasso)
+    rooms/doener.ts    The döner stand between the Picasso and the Epplehaus
+    art/waldrand.ts    The edge of the forest at dusk, the barrier, the Goa's glow
+    rooms/waldrand.ts  The edge of the forest (closed for tree felling; distant bass)
     rooms/neckar.ts    The Neckarbrücke (a punt passes regularly; sink it)
     art/turm.ts        The Hölderlinturm as a cut-open doll's house, in three
                        time layers (toon, an EGA pixel grid, a photo-textured
@@ -571,8 +602,9 @@ game.
 export const CONTENT: GameContent = {
   id: 'goa',              // namespaces the save slots (pnc-save-goa-*)
   rooms, items, actors, dialogs, assets, theme,
-  playerId: 'player', startRoom: 'picasso', startEntry: 'start',
+  playerId: 'player', startRoom: 'neckar', startEntry: 'bus',
   startItems: ['euro'],   // carried from the very beginning
+  easyMode: true,         // offer an easy/normal switch in the options
   strings: DE_STRINGS,    // the engine's UI text, translated (see below)
   music: GOA_MUSIC,       // extra procedural tracks, played by key
 };
@@ -582,6 +614,10 @@ export const CONTENT: GameContent = {
   page load and sets `engine.launcher` (`{ current, games, select }`); the
   title screen then shows a picker, and picking another game reloads with
   `?game=<id>`. Give each game an `id` so their saves don't collide.
+- **Easy mode.** With `easyMode: true` the options panel gets a switch between
+  the normal mode (default) and an easy one, remembered per game. Scripts read
+  it as `ctx.easyMode` and give more explicit hints when it's on — the adventure
+  keeps its normal-mode lines subtle.
 - **UI strings.** Everything the engine itself writes — verb labels, the
   sentence line (`useWith`/`giveTo`/`walkTo`), the fallback responses for
   unhandled verbs, toasts, the title menu, the options panel and save slots —
@@ -1013,6 +1049,7 @@ Every handler and cutscene receives a `ctx`. The essentials:
 | `ctx.flash(color?, ms?)` / `ctx.shake(ms?, intensity?)` | Camera effects |
 | `ctx.zoomCamera(zoom, ms?)` | Tween camera zoom (cutscene-scoped; rooms reset to 1) |
 | `ctx.toast(text)` | Short notice above the UI band that fades by itself |
+| `ctx.easyMode` | The player picked the easy mode (games with `GameContent.easyMode`) — give more hints |
 | `ctx.showTitle(text)` | Big centered title card |
 
 ## Using PNG assets

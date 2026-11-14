@@ -7,6 +7,8 @@ import { GOA_MUSIC } from './music';
 import { picassoRoom } from './rooms/picasso';
 import { neckarRoom } from './rooms/neckar';
 import { epplehausRoom } from './rooms/epplehaus';
+import { waldrandRoom } from './rooms/waldrand';
+import { doenerRoom } from './rooms/doener';
 import { hoelderlinturmRoom } from './rooms/hoelderlinturm';
 import { GOA_CAST } from './art/cast';
 import { GOA_ICONS } from './art/icons';
@@ -25,7 +27,9 @@ export const CONTENT: GameContent = {
   id: 'goa',
   rooms: {
     picasso: picassoRoom,
+    doener: doenerRoom,
     epplehaus: epplehausRoom,
+    waldrand: waldrandRoom,
     neckar: neckarRoom,
     hoelderlinturm: hoelderlinturmRoom,
   },
@@ -37,7 +41,8 @@ export const CONTENT: GameContent = {
   strings: DE_STRINGS,
   music: GOA_MUSIC,
   playerId: 'player',
-  startRoom: 'picasso',
-  startEntry: 'start',
+  startRoom: 'neckar',
+  startEntry: 'bus',
   startItems: ['euro'],
+  easyMode: true,
 };

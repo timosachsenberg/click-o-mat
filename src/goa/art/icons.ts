@@ -187,10 +187,123 @@ function wurmloch(): string {
   ].join('');
 }
 
+/** The cap, upside down and heaped with pretzel crumbs. */
+function muetzeKruemel(): string {
+  const crumbs: Array<[number, number]> = [[22, 18], [27, 15], [33, 14], [39, 15], [44, 18], [25, 20], [31, 18], [37, 19], [42, 21], [29, 22], [35, 22]];
+  return [
+    shadow(32, 18),
+    path('M14 22L17 38H47L50 22Z', { fill: '#2f7a3a', stroke: INK, sw: 2.4 }),
+    path('M15.5 28H48.5', { stroke: '#ffffff', sw: 2.4 }),
+    path('M16 32H48', { stroke: '#c43a2a', sw: 2.4 }),
+    path('M38 22H49L47 38H40Z', { fill: '#000000', opacity: 0.18 }),
+    path(`M15 23Q20 10 32 11Q44 10 49 23Z`, { fill: '#c8803a', stroke: INK, sw: 2 }),
+    ...crumbs.map(([x, y], i) => (i % 3 ? circle(x, y, 2.2, { fill: '#a85a22', stroke: INK, sw: 0.8 }) : path(`M${x - 3} ${y}q1.5 -3 3 0q1.5 -3 3 0`, { stroke: '#7a3a12', sw: 1.6 }))),
+    ...([[24, 15], [35, 12], [41, 17], [30, 19]] as Array<[number, number]>).map(([x, y]) => rect(x - 0.8, y - 0.8, 1.6, 1.6, { fill: '#ffffff' })),
+  ].join('');
+}
+
+/** Bolt cutters, red handles, a slightly dull jaw. */
+function drahtschere(): string {
+  return [
+    shadow(32, 20),
+    group(
+      [
+        path('M-24 6L2 0M-24 -6L2 0', { stroke: INK, sw: 7 }),
+        path('M-24 6L2 0M-24 -6L2 0', { stroke: '#d8322a', sw: 4.4 }),
+        path('M0 0L18 -6L24 -2L8 3Z', { fill: '#8a8a9a', stroke: INK, sw: 1.8 }),
+        path('M0 0L18 6L24 2L8 -3Z', { fill: '#a8a8b8', stroke: INK, sw: 1.8 }),
+        circle(2, 0, 2.6, { fill: '#5a5a6a', stroke: INK, sw: 1 }),
+      ],
+      'translate(32 24) rotate(-14)'
+    ),
+  ].join('');
+}
+
+/** A pogo stick: spring, foot pegs, handlebar. */
+function pogostick(): string {
+  return [
+    shadow(32, 12),
+    group(
+      [
+        path('M0 -22V20', { stroke: INK, sw: 5 }),
+        path('M0 -22V20', { stroke: '#3aa8c8', sw: 3 }),
+        path('M-12 -22H12', { stroke: INK, sw: 5 }),
+        path('M-12 -22H12', { stroke: '#d8322a', sw: 3 }),
+        path('M-4 6q8 2 0 4t0 4t0 4', { stroke: '#c8c8d0', sw: 2.4 }),
+        path('M-9 2H9', { stroke: INK, sw: 4 }),
+        circle(0, 21, 3, { fill: '#2a2a2a' }),
+      ],
+      'translate(32 23) rotate(16)'
+    ),
+  ].join('');
+}
+
+/** A helium balloon on its string, heart-shaped and pink. */
+function ballon(): string {
+  return [
+    path('M34 32Q30 38 36 44', { stroke: '#e8e2d8', sw: 1.6 }),
+    path('M32 31C14 18 20 4 32 12C44 4 50 18 32 31Z', { fill: '#ff5ab4', stroke: INK, sw: 2.2 }),
+    path('M24 12Q26 9 29 11', { stroke: '#ffffff', sw: 2, opacity: 0.8 }),
+    path('M31 31l2 3l2 -3z', { fill: '#ff5ab4', stroke: INK, sw: 1 }),
+  ].join('');
+}
+
+/** The punt pole, impossibly long, folded into the inventory by adventure physics. */
+function stange(): string {
+  return [
+    shadow(32, 26),
+    path('M6 38L58 8', { stroke: INK, sw: 6 }),
+    path('M6 38L58 8', { stroke: '#c8a060', sw: 3.6 }),
+    path('M6 38l-2 2', { stroke: '#5a3a1a', sw: 4 }),
+    path('M20 30l4 -2M38 19l4 -2', { stroke: '#8a6a3a', sw: 1.4 }),
+  ].join('');
+}
+
+/** A folding spade, olive, a bit rusty. */
+function klappspaten(): string {
+  return [
+    shadow(32, 16),
+    group(
+      [
+        path('M0 -20V10', { stroke: INK, sw: 6 }),
+        path('M0 -20V10', { stroke: '#8a6a3a', sw: 3.6 }),
+        path('M-7 -22H7', { stroke: INK, sw: 5 }),
+        path('M-7 -22H7', { stroke: '#4a4a3a', sw: 3 }),
+        path('M-10 8H10L8 20Q0 26 -8 20Z', { fill: '#6a7a4a', stroke: INK, sw: 2 }),
+        path('M-4 12l3 5', { stroke: '#a85a2a', sw: 1.6 }),
+      ],
+      'translate(32 22) rotate(-20)'
+    ),
+  ].join('');
+}
+
+/** The Put-Put pigeon, sitting pretty. */
+function taube(): string {
+  return [
+    shadow(32, 14),
+    path('M18 30L8 36L18 37Z', { fill: '#6e6e86', stroke: INK, sw: 1.6 }),
+    ellipse(30, 30, 15, 10, { fill: '#9a9aae', stroke: INK, sw: 2 }),
+    path('M18 29Q28 19 41 28Q31 37 18 33Z', { fill: '#6e6e86', stroke: INK, sw: 1.6 }),
+    path('M38 23Q40 15 44 13L48 15Q46 22 42 27Z', { fill: '#4a9a8a', stroke: INK, sw: 1.6 }),
+    circle(46, 13, 5.6, { fill: '#5a6a80', stroke: INK, sw: 1.8 }),
+    path('M51 12l6 2l-6 2z', { fill: '#f0b040', stroke: INK, sw: 1 }),
+    circle(47.5, 12, 1.6, { fill: '#ff8a3a', stroke: INK, sw: 0.8 }),
+    path('M26 39v4h4M33 39v4h4', { stroke: '#f08a8a', sw: 2 }),
+    text(56, 8, 'put!', { size: 8, fill: '#ffffff', stroke: INK, sw: 2.4 }),
+  ].join('');
+}
+
 export const GOA_ICONS: SvgImageAsset[] = [
   { key: 'icon-loch', width: 64, height: 48, svg: loch() },
   { key: 'icon-taschenattraktor', width: 64, height: 48, svg: taschenattraktor() },
   { key: 'icon-wurmloch', width: 64, height: 48, svg: wurmloch() },
+  { key: 'icon-muetzekruemel', width: 64, height: 48, svg: muetzeKruemel() },
+  { key: 'icon-taube', width: 64, height: 48, svg: taube() },
+  { key: 'icon-drahtschere', width: 64, height: 48, svg: drahtschere() },
+  { key: 'icon-pogostick', width: 64, height: 48, svg: pogostick() },
+  { key: 'icon-ballon', width: 64, height: 48, svg: ballon() },
+  { key: 'icon-stange', width: 64, height: 48, svg: stange() },
+  { key: 'icon-klappspaten', width: 64, height: 48, svg: klappspaten() },
   { key: 'icon-dose', width: 64, height: 48, svg: emptyCan() },
   { key: 'icon-cent25', width: 64, height: 48, svg: cent25() },
   { key: 'icon-ouzo', width: 64, height: 48, svg: ouzo() },

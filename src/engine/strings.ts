@@ -46,6 +46,9 @@ export interface UIStrings {
   soundToast: (muted: boolean) => string;
   commentaryState: (on: boolean) => string;
   commentaryToast: (on: boolean) => string;
+  /** The easy/normal mode switch (only shown when the game offers it). */
+  difficultyState: (easy: boolean) => string;
+  difficultyToast: (easy: boolean) => string;
   saves: string;
   close: string;
   save: string;
@@ -121,6 +124,8 @@ export const DEFAULT_STRINGS: UIStrings = {
   soundToast: (muted) => (muted ? 'Sound off' : 'Sound on'),
   commentaryState: (on) => `Director's commentary: ${on ? 'ON' : 'OFF'}  (F2)`,
   commentaryToast: (on) => `Director's commentary ${on ? 'on' : 'off'}`,
+  difficultyState: (easy) => `Mode: ${easy ? 'EASY (more hints)' : 'NORMAL'}  (click to change)`,
+  difficultyToast: (easy) => (easy ? 'Easy mode: more hints' : 'Normal mode'),
   saves: '— SAVES —',
   close: 'Close',
   save: 'Save',

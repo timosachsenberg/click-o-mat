@@ -123,7 +123,7 @@ export const DIALOGS: Record<string, DialogDef> = {
             script: async (ctx) => {
               await ctx.say('ali', 'Mein Feierabend-Ouzo. Finger weg, mein Lieber.');
               await ctx.say('cop', 'Ich hab ein Auge drauf.');
-              await ctx.say('ali', 'Außer bei meinem Lied. Da singen wir alle mit. Mit geschlossenen Augen.');
+              if (ctx.easyMode) await ctx.say('ali', 'Außer bei meinem Lied. Da singen wir alle mit. Mit geschlossenen Augen.');
             },
           },
           {
@@ -203,8 +203,10 @@ export const DIALOGS: Record<string, DialogDef> = {
               await ctx.say('cop', 'Müde? Ich? Ich schlafe nicht. Ich lauere.');
               await ctx.playerSay('Und mal einen trinken?');
               await ctx.say('cop', 'Nie. Außer die Musik verlangt es. Dann muss man. Das ist quasi Vorschrift.');
-              await ctx.say('cop', 'Drei Stück, und ich tanz auf dem Tresen. Hat man mir erzählt.');
-              await ctx.playerSay('...Interessant.');
+              if (ctx.easyMode) {
+                await ctx.say('cop', 'Drei Stück, und ich tanz auf dem Tresen. Hat man mir erzählt.');
+                await ctx.playerSay('...Interessant.');
+              }
             },
           },
           {
@@ -212,6 +214,69 @@ export const DIALOGS: Record<string, DialogDef> = {
             end: true,
             script: async (ctx) => {
               await ctx.say('cop', 'Ich hab dich im Auge.');
+            },
+          },
+        ],
+      },
+    },
+  },
+
+  // Otto R. on the Hölderlinturm's intercom: he wants the password.
+  turmtuer: {
+    id: 'turmtuer',
+    start: 'root',
+    nodes: {
+      root: {
+        choices: [
+          {
+            text: 'Wer ist da überhaupt?',
+            once: true,
+            script: async (ctx) => {
+              await ctx.say('ottoTuer', 'Otto R. Chaosforscher. Ich hüte den Turm. Und den Attraktor.');
+              await ctx.say('ottoTuer', 'Ich steck in einer anderen Zeitebene fest. Deshalb klinge ich so blechern.');
+              await ctx.playerSay('Wie komm ich rein?');
+              await ctx.say('ottoTuer', 'Mit der Parole. Und die verrat ich nicht.');
+              if (ctx.easyMode) await ctx.say('ottoTuer', 'Steht aber eh an jeder zweiten Wand in Tübingen.');
+            },
+          },
+          {
+            text: 'Chakabunga?',
+            script: async (ctx) => {
+              await ctx.say('ottoTuer', 'Das ist die Parole für den Wald. Hier ist der Turm. Andere Party.');
+            },
+          },
+          {
+            text: 'Hölderlin?',
+            once: true,
+            script: async (ctx) => {
+              await ctx.say('ottoTuer', 'Wohnt hier nicht mehr. Schon länger nicht. Seit 1843, um genau zu sein.');
+            },
+          },
+          {
+            text: 'Put put?',
+            if: (s) => !!s.getFlag('putHeard'),
+            script: async (ctx) => {
+              await ctx.say('ottoTuer', 'Put put ... Hört sich gut an.');
+              await ctx.say('ottoTuer', 'Aber der Klang der Stimme passt irgendwie nicht.');
+              await ctx.playerSay('Was stimmt nicht mit meiner Stimme?');
+              if (ctx.easyMode) await ctx.say('ottoTuer', 'Zu menschlich. Zu wenig Gurr. Die Parole muss klingen wie das Original.');
+              else await ctx.say('ottoTuer', 'Kann ich nicht erklären. Ich weiß es, wenn ich es höre.');
+              ctx.setFlag('putTried');
+            },
+          },
+          {
+            text: 'Put put. Gurr.',
+            if: (s) => !!s.getFlag('putTried'),
+            once: true,
+            script: async (ctx) => {
+              await ctx.say('ottoTuer', 'Nett versucht. Aber das Gurr war geschauspielert. Ich hör das.');
+            },
+          },
+          {
+            text: 'Schon gut, ich komm wieder.',
+            end: true,
+            script: async (ctx) => {
+              await ctx.say('ottoTuer', 'Mit der richtigen Parole. In der richtigen Stimme.');
             },
           },
         ],
@@ -245,6 +310,18 @@ export const DIALOGS: Record<string, DialogDef> = {
             },
           },
           {
+            text: 'Du und die Tauben, ihr seid Freunde?',
+            once: true,
+            script: async (ctx) => {
+              await ctx.say('floh', 'Freunde? Kollegen. Ich füttere sie, sie lassen meine Flaschen in Ruhe. Meistens.');
+              await ctx.say('floh', 'Aber heute hab ich nix für sie.');
+              if (ctx.easyMode) {
+                await ctx.say('floh', 'Brezelkrümel wären schön. Ali hat immer welche auf dem Tresen.');
+                await ctx.say('floh', 'Nur: Krümel trägt man nicht in der Hand. Da brauchst du was zum Reinfüllen.');
+              }
+            },
+          },
+          {
             text: 'Kennst du die Goa im Wald?',
             if: (s) => !s.getFlag('flohFollows'),
             script: async (ctx) => {
@@ -257,7 +334,8 @@ export const DIALOGS: Record<string, DialogDef> = {
                 ctx.setFlag('flohFollows');
               } else {
                 await ctx.playerSay('Mir sagt’s auch keiner. Noch nicht.');
-                await ctx.say('floh', 'Frag Ali im Picasso. Der weiß alles. Der sagt nur nichts, solange der Partykiller zuhört.');
+                await ctx.say('floh', 'Frag Ali im Picasso. Der weiß alles.');
+                if (ctx.easyMode) await ctx.say('floh', 'Der sagt nur nichts, solange der Partykiller zuhört.');
               }
             },
           },
@@ -275,8 +353,10 @@ export const DIALOGS: Record<string, DialogDef> = {
             once: true,
             script: async (ctx) => {
               await ctx.say('floh', 'Die? Trinken aus Krügen. Kein Pfand. Kulturlos.');
-              await ctx.say('floh', 'Und der Kahn ist so morsch, den halten nur noch die Holzwürmer zusammen. Händchen haltend.');
-              await ctx.playerSay('Holzwürmer, sagst du.');
+              if (ctx.easyMode) {
+                await ctx.say('floh', 'Und der Kahn ist so morsch, den halten nur noch die Holzwürmer zusammen. Händchen haltend.');
+                await ctx.playerSay('Holzwürmer, sagst du.');
+              }
             },
           },
           {
@@ -329,6 +409,11 @@ export const DIALOGS: Record<string, DialogDef> = {
             text: 'Wo krieg ich ein Loch her?',
             if: (s) => !!s.getFlag('ottoExplained') && !s.getFlag('holeTaken'),
             script: async (ctx) => {
+              if (!ctx.easyMode) {
+                await ctx.say('otto', 'Irgendwo hier im Haus liegt eins. Ein kleines schwarzes Loch. Ich hab’s versteckt, als es noch ganz jung war.');
+                await ctx.say('otto', 'Wo genau? Vergessen. Vergesslich, wir Genies.');
+                return;
+              }
               await ctx.say('otto', 'Oben in der Turmstube, unterm Teppich, liegt eins. Ein kleines schwarzes Loch, ich hab’s da versteckt, als es noch ganz jung war.');
               await ctx.say('otto', 'Hier in 1987 ist es Teil vom Boden, das kriegst du nicht hoch.');
               await ctx.say('otto', 'Aber in der modernen Ebene ... da gelten Zeichentrick-Gesetze. Da sind Löcher tragbar.');

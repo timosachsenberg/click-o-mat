@@ -21,6 +21,12 @@ function at(id: string, name: string, r: Rect, walkTo: Vec2, facing: Facing, res
 
 /** Where everybody walks: the cobbles in front of the house. */
 const FLOOR = { x0: 20, x1: 940, y0: 342, y1: 444 };
+/** The heart balloon on its string (layer coordinates: 60×140 at 206,196). */
+const BALLOON_ART =
+  '<path d="M30 54Q24 90 34 136" fill="none" stroke="#e8e2d8" stroke-width="1.6"/>' +
+  '<path d="M30 52C4 30 12 6 30 18C48 6 56 30 30 52Z" fill="#ff5ab4" stroke="#1e1424" stroke-width="2.4" stroke-linejoin="round"/>' +
+  '<path d="M18 18Q21 13 26 16" fill="none" stroke="#ffffff" stroke-width="2.4" opacity="0.8"/>';
+
 const FLOH = P(556, 352);
 
 // ---- the pigeons -------------------------------------------------------------------
@@ -35,6 +41,14 @@ const PIGEONS: Array<{ id: string; x: number; y: number; facing: Facing }> = [
   { id: 'taube7', x: 806, y: 424, facing: 'right' },
   { id: 'taube8', x: 150, y: 428, facing: 'right' },
 ];
+
+/** The pigeon that learns to say "Put put", and where it pecks once fed. */
+const PUT_TAUBE = 'taube3';
+const PUT_SPOT = P(506, 376);
+/** Fed and parroting, not caught yet: it stays put, pecking crumbs. */
+const pecking = (s: { getFlag: (k: string) => unknown }) => !!s.getFlag('putTaube') && !s.getFlag('taubeCaught');
+/** Caught and in the player's pocket (until it opened the tower door and flew home). */
+const pocketed = (s: { getFlag: (k: string) => unknown }) => !!s.getFlag('taubeCaught') && !s.getFlag('turmOpen');
 
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 const pick = <T,>(list: T[]) => list[Math.floor(Math.random() * list.length)];
@@ -57,7 +71,14 @@ function flee(ctx: ScriptContext, id: string, from: Vec2): void {
 async function pigeonLife(ctx: ScriptContext): Promise<void> {
   const player = ctx.player;
   let fled = false;
-  for (const p of PIGEONS) {
+  // The parroting pigeon is too busy with its crumbs to run, or gone.
+  const free = PIGEONS.filter((p) => p.id !== PUT_TAUBE || (!pecking(ctx.state) && !pocketed(ctx.state)));
+  if (pecking(ctx.state)) {
+    // Shooed off its crumbs somehow? It comes straight back.
+    const t = ctx.actor(PUT_TAUBE);
+    if (Math.hypot(t.x - PUT_SPOT.x, t.y - PUT_SPOT.y) > 6) send(ctx, PUT_TAUBE, PUT_SPOT.x, PUT_SPOT.y);
+  }
+  for (const p of free) {
     const a = ctx.actor(p.id);
     if (Math.hypot(a.x - player.x, (a.y - player.y) * 1.6) < 62) {
       flee(ctx, p.id, player);
@@ -66,17 +87,67 @@ async function pigeonLife(ctx: ScriptContext): Promise<void> {
   }
   if (fled) return;
   // Otherwise one of them wanders a few steps, pecking its way across the yard.
-  const p = pick(PIGEONS);
+  const p = pick(free);
   const a = ctx.actor(p.id);
   send(ctx, p.id, a.x + (Math.random() - 0.5) * 220, a.y + (Math.random() - 0.5) * 70);
+}
+
+/** Feed the pigeons: Flaschenfloh crumbles the pretzel and calls them —
+ *  "Put, put, put!" — and one of them starts saying it too. */
+async function feedPigeons(ctx: ScriptContext): Promise<void> {
+  ctx.removeItem('muetzekruemel');
+  // From now on the parroting pigeon only has eyes for the crumbs (no fleeing).
+  ctx.setFlag('putTaube');
+  await ctx.say('floh', 'Brezelkrümel? In einer Burschenmütze? Du hast Stil, Junge.');
+  await ctx.say('floh', 'Pass auf, so macht man das.');
+  // Crumbs on the cobbles; everybody comes running.
+  // The others peck on Flaschenfloh's right; the parroting one gets its own spot on his left.
+  PIGEONS.filter((p) => p.id !== PUT_TAUBE).forEach((p, i) => {
+    send(ctx, p.id, FLOH.x + 50 + (i % 4) * 34, FLOH.y + 18 + Math.floor(i / 4) * 34);
+  });
+  send(ctx, PUT_TAUBE, PUT_SPOT.x, PUT_SPOT.y);
+  ctx.face('floh', 'down');
+  await ctx.say('floh', 'Put, put, put, put, put!');
+  await ctx.say('floh', 'Put, put, put! Putputputput!');
+  await ctx.wait(600);
+  await ctx.walkTo(PUT_TAUBE, PUT_SPOT.x, PUT_SPOT.y);
+  ctx.place(PUT_TAUBE, PUT_SPOT.x, PUT_SPOT.y, 'right');
+  ctx.setFlag('putHeard');
+  await ctx.say(PUT_TAUBE, 'Put put!');
+  await ctx.playerSay('Hat die Taube gerade „Put put“ gesagt?');
+  await ctx.say('floh', 'Die da? Die plappert alles nach. Wie ein Papagei. Nur grauer.');
+  await ctx.say(PUT_TAUBE, 'Put put! Put put!');
+  await ctx.say('floh', 'Und jetzt ist sie so mit den Krümeln beschäftigt, die merkt nicht mal, wenn die Welt untergeht.');
+  ctx.addItem('muetze', { silent: true });
+  await ctx.say('floh', 'Hier, deine Mütze. Riecht jetzt nach Bier UND Brezel. Ein Upgrade.');
+}
+
+/** Catch the parroting pigeon — only while it's busy with the crumbs. */
+async function catchPutTaube(ctx: ScriptContext): Promise<void> {
+  if (!pecking(ctx.state)) {
+    flee(ctx, PUT_TAUBE, ctx.player);
+    await ctx.playerSay('Zu schnell. Ohne Ablenkung krieg ich keine Taube zu fassen.');
+    return;
+  }
+  ctx.setFlag('taubeCaught');
+  ctx.addItem('taube');
+  ctx.place(PUT_TAUBE, -200, 400);
+  await ctx.repaint();
+  await ctx.playerSay('Sie pickt so konzentriert, dass sie mich gar nicht kommen sieht. Hab dich!');
+  await ctx.say('floh', 'Na, die passt aber auf dich auf. Füttern nicht vergessen!');
 }
 
 const pigeonHotspot = (id: string): HotspotDef => ({
   id,
   name: 'Taube',
   actor: id,
+  ...(id === PUT_TAUBE ? { visible: (state) => !pocketed(state) } : {}),
   on: {
     lookat: async (ctx) => {
+      if (id === PUT_TAUBE && pecking(ctx.state)) {
+        await ctx.playerSay('Die Put-Put-Taube. Pickt Brezelkrümel und plappert dabei Flaschenflohs Lockruf nach.');
+        return;
+      }
       await ctx.playerSay(
         pick([
           'Eine Taube. Die eigentlichen Hausbesetzer vom Epplehaus.',
@@ -87,9 +158,14 @@ const pigeonHotspot = (id: string): HotspotDef => ({
     },
     talkto: async (ctx) => {
       await ctx.playerSay('Na, du?');
+      if (id === PUT_TAUBE && ctx.flag('putTaube')) {
+        await ctx.say(id, 'Put put!');
+        return;
+      }
       await ctx.say(id, pick(['Gurr.', 'Gurruu.', 'Ruckediguh.']));
     },
     pickup: async (ctx) => {
+      if (id === PUT_TAUBE) return catchPutTaube(ctx);
       flee(ctx, id, ctx.player);
       await ctx.playerSay('Zu schnell. Und will ich die wirklich in der Tasche haben?');
     },
@@ -103,6 +179,9 @@ const pigeonHotspot = (id: string): HotspotDef => ({
       stuhlbein: 'Die Holzwürmer wären ein Festmahl für sie. Aber die Würmer brauch ich noch.',
     },
     give: {
+      muetzekruemel: async (ctx) => {
+        await ctx.playerSay('Wenn ich die Mütze hinhalte, flattert der ganze Schwarm auf mich drauf. Flaschenfloh hat da mehr Übung.');
+      },
       stuhlbein: 'Die Holzwürmer wären ein Festmahl für sie. Aber die Würmer brauch ich noch.',
       magicwoman: 'Energydrink für Tauben? Die sind schon nervös genug.',
     },
@@ -111,9 +190,8 @@ const pigeonHotspot = (id: string): HotspotDef => ({
 
 // ---- scripts ---------------------------------------------------------------------
 
-async function toPicasso(ctx: ScriptContext): Promise<void> {
-  ctx.sfx('open');
-  await ctx.goToRoom('picasso', 'door');
+async function toDoener(ctx: ScriptContext): Promise<void> {
+  await ctx.goToRoom('doener', 'epplehaus');
 }
 
 async function toNeckar(ctx: ScriptContext): Promise<void> {
@@ -128,7 +206,7 @@ async function handsOff(ctx: ScriptContext): Promise<void> {
 // ---- hotspots --------------------------------------------------------------------
 
 const HOTSPOTS: HotspotDef[] = [
-  at('haus', 'Epplehaus', R(EP.x0, EP.eaves, EP.x1 - EP.x0, 94), P(480, 350), 'up', {
+  at('haus', 'Epplehaus', R(EP.x0, 0, EP.x1 - EP.x0, 40), P(480, 350), 'up', {
     on: {
       lookat: async (ctx) => {
         await ctx.playerSay('Das Epplehaus. Selbstverwaltetes Jugendzentrum seit 1972.');
@@ -136,13 +214,10 @@ const HOTSPOTS: HotspotDef[] = [
       },
     },
   }),
-  at('dach', 'Dach', R(EP.x0 - 20, 0, EP.x1 - EP.x0 + 40, EP.eaves), P(480, 350), 'up', {
-    on: { lookat: 'Tauben auf dem First, Tauben auf dem Sims. Das Plenum der Tauben tagt offenbar öffentlich.' },
-  }),
-  at('graffiti', 'Graffiti', R(EP.x0, 168, EP.x1 - EP.x0, 136), P(320, 346), 'up', {
+  at('graffiti', 'Graffiti', R(EP.x0, 40, EP.x1 - EP.x0, 264), P(320, 346), 'up', {
     on: {
       lookat: async (ctx) => {
-        await ctx.playerSay('Graffiti bis unters Fensterbrett. „EPPLE“, „ÄKTSCHN“, „1972“.');
+        await ctx.playerSay('Graffiti vom Gehweg bis in den ersten Stock. „EPPLE“, „GOA“, „BASS“, „1972“, „PLENUM!“.');
         await ctx.playerSay('Und „KEIN BASS IST ILLEGAL“. Das sollte man dem Partykiller mal zeigen.');
       },
       use: 'Ohne Sprühdose? Ich könnte höchstens was mit dem Finger in den Dreck malen.',
@@ -166,6 +241,19 @@ const HOTSPOTS: HotspotDef[] = [
       },
       use: 'Klopfen bringt nichts. Beim Plenum hört keiner zu. Dem Plenum auch nicht.',
       close: 'Ist zu. Bis das Plenum fertig ist.',
+    },
+  }),
+  at('ballon', 'Heliumballon', R(214, 200, 46, 52), P(236, 346), 'up', {
+    defaultVerb: 'pickup',
+    visible: (state) => !state.getFlag('ballonTaken'),
+    on: {
+      lookat: 'Ein pinker Herzballon, an den Fahrradständer geknotet. Vom letzten Konzert übrig. Er zerrt an der Schnur.',
+      pickup: async (ctx) => {
+        ctx.setFlag('ballonTaken');
+        ctx.addItem('ballon');
+        await ctx.repaint();
+        await ctx.playerSay('Losgeknotet. Er zieht ganz schön nach oben.');
+      },
     },
   }),
   at('raeder', 'Fahrräder', R(EP.bikes.x, EP.bikes.y, EP.bikes.w, EP.bikes.h), P(310, 346), 'up', {
@@ -211,12 +299,12 @@ const HOTSPOTS: HotspotDef[] = [
   at('lichterkette', 'Lichterkette', R(EP.x1 + 4, 110, 70, 84), P(820, 348), 'up', {
     on: { lookat: 'Eine Lichterkette, vom Haus zum Wegweiser gespannt. Jede zweite Birne brennt. Reicht.' },
   }),
-  at('toPicasso', 'Treppe zum Picasso', R(EP.cellar.x - 10, EP.cellar.y - 50, EP.cellar.w + 20, EP.cellar.h + 50), P(88, 346), 'up', {
+  at('toDoener', 'Zur Dönerbude', R(0, 140, 30, 306), P(24, 400), 'left', {
     defaultVerb: 'use',
     on: {
-      lookat: 'Die Kellertreppe runter ins Picasso. Die Leuchtschrift flackert hier draußen genauso wie drinnen.',
-      use: toPicasso,
-      open: toPicasso,
+      lookat: 'Da lang geht’s zur Dönerbude. Und dahinter die Treppe runter ins Picasso. Es riecht bis hierher.',
+      use: toDoener,
+      open: toDoener,
     },
   }),
   at('toNeckar', 'Zur Neckarbrücke', R(900, 250, 60, 196), P(932, 400), 'right', {
@@ -249,8 +337,10 @@ const HOTSPOTS: HotspotDef[] = [
       give: {
         dose: async (ctx) => {
           await ctx.say('floh', 'Magic Woman? Die nimmt kein Automat der Welt. Zu lila.');
-          await ctx.say('floh', 'Die nimmt nur einer zurück: Ali. Fünfundzwanzig Cent. Ehrensache.');
-          await ctx.playerSay('Gut zu wissen.');
+          if (ctx.easyMode) {
+            await ctx.say('floh', 'Die nimmt nur einer zurück: Ali. Fünfundzwanzig Cent. Ehrensache.');
+            await ctx.playerSay('Gut zu wissen.');
+          }
         },
         magicwoman: async (ctx) => {
           await ctx.say('floh', 'Voll? Ich handel nur mit leer. Erst austrinken, dann reden wir.');
@@ -264,14 +354,20 @@ const HOTSPOTS: HotspotDef[] = [
         stuhlbein: async (ctx) => {
           await ctx.say('floh', 'Holz? Da ist kein Pfand drauf. Und es knuspert. Nimm das weg.');
         },
+        muetzekruemel: feedPigeons,
+        taube: async (ctx) => {
+          await ctx.say('floh', 'Behalt sie. Die mag dich. Und sie hält mir keine Vorträge über Mehrweg.');
+        },
         muetze: async (ctx) => {
           await ctx.say('floh', 'Eine Burschenmütze! Die Burschen trinken aus Krügen. Kein Pfand. Kulturlos.');
-          await ctx.say('floh', 'Behalt sie. Bei mir würde sie nur nach Bier riechen. Also wie vorher.');
+          if (ctx.easyMode) await ctx.say('floh', 'Aber als Futtersack für die Tauben, da wär sie was. Wenn was drin wär.');
         },
       },
     },
   },
-  ...PIGEONS.map((p) => pigeonHotspot(p.id)),
+  // The parroting pigeon last: on top when pigeons crowd together.
+  ...PIGEONS.filter((p) => p.id !== PUT_TAUBE).map((p) => pigeonHotspot(p.id)),
+  pigeonHotspot(PUT_TAUBE),
 ];
 
 // ---- room ------------------------------------------------------------------------
@@ -280,7 +376,11 @@ export const epplehausRoom: RoomDef = {
   id: 'epplehaus',
   name: 'Epplehaus',
 
-  layers: [{ id: 'bg', depth: Layer.BEHIND, svg: epplehausBg() }],
+  layers: [
+    { id: 'bg', depth: Layer.BEHIND, svg: epplehausBg() },
+    // A heart balloon from the last concert, tied to the bike rack.
+    { id: 'ballon', depth: Layer.BEHIND, x: 206, y: 196, w: 60, h: 140, svg: BALLOON_ART, visible: (state) => !state.getFlag('ballonTaken') },
+  ],
 
   walkArea: [P(FLOOR.x0, FLOOR.y0), P(FLOOR.x1, FLOOR.y0), P(FLOOR.x1, FLOOR.y1), P(FLOOR.x0, FLOOR.y1)],
   holes: [[P(FLOH.x - 22, FLOH.y - 6), P(FLOH.x + 22, FLOH.y - 6), P(FLOH.x + 22, FLOH.y + 6), P(FLOH.x - 22, FLOH.y + 6)]],
@@ -291,16 +391,18 @@ export const epplehausRoom: RoomDef = {
   assets: { svgActors: PIGEON_ACTORS },
 
   entries: {
-    picasso: { x: 96, y: 352, facing: 'down' },
+    doener: { x: 40, y: 400, facing: 'right' },
     neckar: { x: 910, y: 400, facing: 'left' },
   },
 
   actors: [{ id: 'floh', x: FLOH.x, y: FLOH.y, facing: 'down' }, ...PIGEONS],
 
   async onEnter(ctx) {
+    // The parroting pigeon: pecking crumbs by Flaschenfloh, or in the pocket.
+    if (pocketed(ctx.state)) ctx.place(PUT_TAUBE, -200, 400);
+    else if (pecking(ctx.state)) ctx.place(PUT_TAUBE, PUT_SPOT.x, PUT_SPOT.y, 'right');
     await ctx.once('eppleIntro', async () => {
       await ctx.wait(400);
-      await ctx.playerSay('Abendrot? Alis Uhr geht also mal wieder ein paar Stunden vor.');
       await ctx.playerSay('Das Epplehaus. Und mehr Tauben als Gäste.');
     });
   },
@@ -329,7 +431,12 @@ export const epplehausRoom: RoomDef = {
       every: [9000, 17000],
       run: async (ctx) => {
         if (ctx.busy) return;
-        await ctx.say(pick(PIGEONS).id, pick(['Gurr.', 'Gurruu.', 'Gurr-gurr.']));
+        if (pecking(ctx.state) && Math.random() < 0.6) {
+          await ctx.say(PUT_TAUBE, pick(['Put put!', 'Put put put!', 'Gurr. Put put.']));
+          return;
+        }
+        const talkers = PIGEONS.filter((p) => p.id !== PUT_TAUBE || !pocketed(ctx.state));
+        await ctx.say(pick(talkers).id, pick(['Gurr.', 'Gurruu.', 'Gurr-gurr.']));
       },
     },
   ],

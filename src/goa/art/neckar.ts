@@ -17,6 +17,7 @@ import {
   puff,
   rect,
   rng,
+  text,
   vignette,
   wobble,
   type Pt,
@@ -548,6 +549,40 @@ export function eckhausLayer(): string {
   );
 }
 
+/** The city bus that brings the player (drawn around its own box: 380×150,
+ *  wheels at the bottom). Only on screen for the arrival. */
+export function bus(): string {
+  const s: string[] = [];
+  const W = 380;
+  const H = 150;
+  s.push(ellipse(W / 2, H - 4, W / 2 - 6, 6, { fill: '#000000', opacity: 0.35 }));
+  // Body: red and white, rounded front on the right.
+  s.push(inked(`M8 ${H - 22}V22Q8 8 24 8H${W - 34}Q${W - 6} 8 ${W - 6} 40V${H - 22}Z`, '#d8322a', 3));
+  s.push(path(`M8 ${H - 50}H${W - 6}V${H - 22}H8Z`, { fill: '#f4efe4' }));
+  s.push(path(`M8 ${H - 50}H${W - 6}`, { stroke: INK, sw: 2 }));
+  s.push(path(`M8 ${H - 22}V22Q8 8 24 8H${W - 34}Q${W - 6} 8 ${W - 6} 40V${H - 22}Z`, { stroke: INK, sw: 3 }));
+  // Windows with passengers' silhouettes, the destination display.
+  for (let k = 0; k < 5; k++) {
+    const x = 22 + k * 56;
+    s.push(rect(x, 26, 46, 44, { fill: '#3a4a7a', stroke: INK, sw: 2 }, 4));
+    s.push(path(`M${x + 4} 30L${x + 18} 30L${x + 6} 64Z`, { fill: '#ffffff', opacity: 0.18 }));
+    if (k % 2 === 0) s.push(circle(x + 26, 56, 7, { fill: '#2a2a4a' }) + rect(x + 17, 62, 18, 8, { fill: '#2a2a4a' }));
+  }
+  s.push(rect(W - 72, 22, 54, 52, { fill: '#3a4a7a', stroke: INK, sw: 2 }, 6));
+  s.push(rect(W - 130, 12, 104, 14, { fill: '#1a1a1a', stroke: INK, sw: 1.6 }, 2));
+  s.push(text(W - 78, 23, '5  NECKARBRÜCKE', { size: 8.5, fill: '#ffb030', weight: 700 }));
+  // The open door, the wheels, a headlight.
+  s.push(rect(W - 150, 30, 40, H - 52, { fill: '#2a2a3a', stroke: INK, sw: 2 }));
+  s.push(path(`M${W - 150} 30l-14 6v${H - 64}l14 6`, { fill: '#3a4a7a', stroke: INK, sw: 1.6 }));
+  for (const wx of [70, W - 70]) {
+    s.push(circle(wx, H - 20, 18, { fill: '#1a1a1a', stroke: INK, sw: 2.4 }));
+    s.push(circle(wx, H - 20, 7, { fill: '#8a8a9a', stroke: INK, sw: 1.4 }));
+  }
+  s.push(rect(W - 14, H - 46, 8, 10, { fill: '#fff6c0', stroke: INK, sw: 1.2 }, 2));
+  s.push(text(120, H - 31, 'SWT · Linie 5', { size: 11, fill: '#d8322a', weight: 900 }));
+  return s.join('');
+}
+
 /** The sandstone balustrade (an occluder) and an old street lamp. Drawn in room coordinates. */
 export function balustrade(): string {
   const top = NK.parapetTop;
@@ -564,11 +599,26 @@ export function balustrade(): string {
     s.push(path(`M${a} ${top + 3}H${b}`, { stroke: '#ffc890', sw: 2, opacity: 0.9 }));
   };
   run(-6, 966);
+  // Love locks on the coping — most of them cut off already (the city's cleaners were here).
+  const locks: Array<[number, string]> = [[272, '#d8322a'], [282, '#f2c230'], [296, '#3aa8c8'], [308, '#ff5ab4']];
+  for (const [lx, c] of locks) {
+    s.push(path(`M${lx - 3} ${top + 13}v-4q3 -4 6 0v4`, { stroke: '#8a8a9a', sw: 1.6 }));
+    s.push(rect(lx - 4.5, top + 13, 9, 8, { fill: c, stroke: INK, sw: 1.2 }, 1.5));
+  }
+  for (const lx of [322, 334, 344]) s.push(path(`M${lx - 3} ${top + 13}v-4q3 -4 5 -1`, { stroke: '#8a8a9a', sw: 1.4 }));
   // A pillar every so often.
   for (const px of [150, 470, 790]) {
     s.push(inked(poly([[px, top - 10], [px + 18, top - 10], [px + 18, NK.parapetBase], [px, NK.parapetBase]]), stone, 2.4));
     s.push(inked(poly([[px - 3, top - 16], [px + 21, top - 16], [px + 21, top - 9], [px - 3, top - 9]]), '#d89c80', 2));
   }
+  // The bus stop: the green H on yellow, the timetable.
+  const hx = 586;
+  s.push(inked(`M${hx - 2.5} ${top + 30}V${top - 96}h5V${top + 30}Z`, '#5a5a6a', 1.6));
+  s.push(circle(hx, top - 112, 17, { fill: '#f2c230', stroke: INK, sw: 2.2 }));
+  s.push(circle(hx, top - 112, 13, { fill: '#2a8a4a', stroke: INK, sw: 1.4 }));
+  s.push(text(hx, top - 106, 'H', { size: 17, fill: '#f2c230', weight: 900 }));
+  s.push(inked(`M${hx + 4} ${top - 84}h26v36h-26z`, '#f4efe4', 1.4));
+  for (let k = 0; k < 5; k++) s.push(line([hx + 8, top - 78 + k * 6], [hx + 26 - (k % 2) * 6, top - 78 + k * 6], '#5a5a6a', 1.4));
   // The street lamp on the right.
   const lx = 862;
   s.push(inked(`M${lx - 7} ${top + 2}h14l-3 -14h-8z`, '#2a3a3a', 2));
@@ -820,6 +870,25 @@ export const PUNT_ACTOR: SvgActorAsset = {
 };
 
 // ---- loose props -------------------------------------------------------------------
+
+/** Bolt cutters lying on the deck (36×16, local coordinates). */
+export function cuttersOnDeck(): string {
+  return (
+    ellipse(18, 13, 17, 3, { fill: '#000000', opacity: 0.3 }) +
+    path('M2 10L20 7M2 14L20 7', { stroke: INK, sw: 5 }) +
+    path('M2 10L20 7M2 14L20 7', { stroke: '#d8322a', sw: 3 }) +
+    path('M19 7L32 3L34 6L22 9Z', { fill: '#a8a8b8', stroke: INK, sw: 1.4 })
+  );
+}
+
+/** The punt pole, floating along the jetty (120×20, local coordinates). */
+export function floatingPole(): string {
+  return (
+    ellipse(60, 12, 58, 4, { fill: '#fff0d0', opacity: 0.35 }) +
+    path('M4 14L116 6', { stroke: INK, sw: 5 }) +
+    path('M4 14L116 6', { stroke: '#c8a060', sw: 3 })
+  );
+}
 
 /** The cap that floats to the jetty (32×20 box). */
 export function floatingCap(): string {

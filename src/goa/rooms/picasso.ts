@@ -1,6 +1,6 @@
 import { Layer, type Facing, type HotspotDef, type LayerDef, type Rect, type RoomDef, type SvgImageAsset, type Vec2 } from '../../engine/types';
 import type { ScriptContext } from '../../engine/ScriptContext';
-import { INK, defs, ellipse, glow, grainDefs, grainOverlay, group, inked, line, linear, path, poly, rect, vignette } from '../../game/art/toon';
+import { INK, circle, defs, ellipse, glow, grainDefs, grainOverlay, group, inked, line, linear, path, poly, rect, vignette } from '../../game/art/toon';
 import {
   PAL,
   acUnit,
@@ -172,16 +172,57 @@ function picassoCounter(): string {
   s.push(inked('M402 316Q406 304 430 302L962 330L962 362L408 324Q400 322 402 316Z', 'url(#pcTop)', 3));
   s.push(path('M420 310L940 338', { stroke: '#ffd08a', sw: 3, opacity: 0.6 }));
   s.push(glow('pcCounterGlow', 690, 330, 220, '#ffe0a0', 0.3, 22));
-  // On the counter: glasses, a bowl of peanuts, a bottle.
+  // On the counter: glasses, a bottle (the bowl of old pretzels is its own layer).
   for (const [x, y] of [[860, 344], [874, 346], [888, 347]] as Array<[number, number]>) {
     s.push(inked(`M${x - 4} ${y - 14}h8l-1 14h-6z`, '#d8eef4', 1.4));
   }
   s.push(inked('M926 350V322h8V312h4V322h8V350z', '#8a2a1a', 1.6));
   s.push(rect(927, 330, 18, 8, { fill: '#f4f0e6', stroke: INK, sw: 1 }));
   s.push(ellipse(560, 328, 13, 4, { fill: '#e8dcc0', stroke: INK, sw: 1.4 }));
-  s.push(ellipse(560, 325, 9, 2.5, { fill: '#c89a5a' }));
+  s.push(ellipse(560, 326.5, 9, 2.2, { fill: '#a8988a' }));
   s.push(aliCoaster(OUZO.coaster.x, OUZO.coaster.y));
   return s.join('');
+}
+
+/** Yesterday's pretzels, crumbled to bits in the bowl on the counter. */
+function pretzelBits(): string {
+  const s: string[] = [];
+  for (const [x, y, r] of [[553, 324, -20], [560, 322, 15], [567, 325, 40], [557, 326, 70]] as Array<[number, number, number]>) {
+    s.push(`<g transform="rotate(${r} ${x} ${y})">` + path(`M${x - 4} ${y}q2 -4 4 0q2 -4 4 0`, { stroke: INK, sw: 3.4 }) + path(`M${x - 4} ${y}q2 -4 4 0q2 -4 4 0`, { stroke: '#a85a22', sw: 2 }) + `</g>`);
+  }
+  for (const [x, y] of [[554, 322.5], [561, 320.6], [566, 323.5]] as Array<[number, number]>) s.push(circle(x, y, 0.6, { fill: '#ffffff' }));
+  for (const [x, y] of [[550, 326], [556, 324.5], [563, 326.5], [569, 324], [552, 323.5], [565, 322]] as Array<[number, number]>) s.push(circle(x, y, 1, { fill: '#c8803a' }));
+  return s.join('');
+}
+
+/** By hand it's hopeless: the crumbs trickle through your fingers. */
+async function takeCrumbs(ctx: ScriptContext): Promise<void> {
+  await ctx.playerSay('Ich greif rein ... und die Krümel rieseln mir durch die Finger.');
+  await ctx.playerSay('Ich bräuchte irgendwas zum Reinfüllen.');
+  if (!ctx.hasItem('muetze')) await ctx.say('ali', 'Eine Tüte hab ich nicht, mein Lieber. Wir sind hier kein Bäcker.');
+}
+
+/** The cap makes a fine crumb bag. */
+async function fillCap(ctx: ScriptContext): Promise<void> {
+  ctx.removeItem('muetze');
+  ctx.addItem('muetzekruemel');
+  ctx.setFlag('brezelTaken');
+  await ctx.repaint();
+  await ctx.playerSay('Krümel rein in die Mütze. Passt genau. Die Burschen hätten’s nicht anders gewollt.');
+  await ctx.say('ali', 'Die Brezel von gestern? Nimm ruhig mit, mein Lieber. Die war eh härter als der Partykiller.');
+}
+
+/** A pogo stick leaning against the back column (room coordinates). */
+function pogoArt(): string {
+  return [
+    path('M236 304L254 232', { stroke: INK, sw: 5 }),
+    path('M236 304L254 232', { stroke: '#3aa8c8', sw: 3 }),
+    path('M244 234L264 238', { stroke: INK, sw: 5 }),
+    path('M244 234L264 238', { stroke: '#d8322a', sw: 3 }),
+    path('M236 288l9 2M238 280q6 2 4 4t3 4t3 4', { stroke: '#c8c8d0', sw: 2.2 }),
+    path('M233 282L247 285', { stroke: INK, sw: 4 }),
+    circle(236, 305, 3, { fill: '#2a2a2a' }),
+  ].join('');
 }
 
 /** Where Ali's ouzo stands: on his coaster, or in front of the Partykiller. */
@@ -240,7 +281,7 @@ async function leave(ctx: ScriptContext): Promise<void> {
       await ctx.playerSay('Folge dem Bass. Chakabunga. Los geht’s!');
     });
   }
-  await ctx.goToRoom('epplehaus', 'picasso');
+  await ctx.goToRoom('doener', 'picasso');
 }
 
 /** The Zocker-Hocker: the rickety stool at the counter, right in front of
@@ -306,7 +347,7 @@ const HOTSPOTS: HotspotDef[] = [
     on: { lookat: 'Zwei Stufen. Der Höhepunkt jeder Nacht im Picasso.' },
   }),
   at('clock', 'Uhr', R(40, 70, 40, 40), P(60, 338), 'up', {
-    on: { lookat: 'Kurz vor zwölf. Im Wald geht’s jetzt los.' },
+    on: { lookat: 'Kurz vor neun. Im Wald geht’s erst los, wenn die Sonne weg ist.' },
   }),
   at('flyer', 'Flyer', R(166, 124, 56, 68), P(194, 326), 'up', {
     on: {
@@ -323,6 +364,20 @@ const HOTSPOTS: HotspotDef[] = [
   }),
   at('discoball', 'Discokugel', R(176, 54, 36, 44), P(194, 326), 'up', {
     on: { lookat: 'Eine Discokugel. Dreht sich nur, wenn jemand tanzt. Also nie.' },
+  }),
+  at('pogo', 'Pogo-Stick', R(232, 226, 30, 80), P(240, 328), 'up', {
+    defaultVerb: 'pickup',
+    visible: (state) => !state.getFlag('pogoTaken'),
+    on: {
+      lookat: 'Ein Pogo-Stick, an die Säule gelehnt. Ein Überbleibsel der Neunziger-Party. Oder der Neunziger.',
+      pickup: async (ctx) => {
+        ctx.setFlag('pogoTaken');
+        ctx.addItem('pogostick');
+        await ctx.repaint();
+        await ctx.say('ali', 'Nimm ihn mit, mein Lieber. Bevor Hilde wieder draufspringt.');
+      },
+      use: 'Hier drin? Ich würde mir den Kopf an der Lüftung stoßen.',
+    },
   }),
   at('dj', 'DJ-Pult', R(136, 200, 116, 100), P(194, 326), 'up', {
     on: {
@@ -373,7 +428,7 @@ const HOTSPOTS: HotspotDef[] = [
   at('door', 'Ausgang', R(280, 142, 62, 158), P(311, 322), 'up', {
     defaultVerb: 'open',
     on: {
-      lookat: 'Die Treppe rauf, raus vors Epplehaus. Dahinter der Neckar, und irgendwo dahinter ein Wald.',
+      lookat: 'Die Treppe rauf, raus auf die Straße. Da vorne die Dönerbude, dann das Epplehaus, dann der Neckar.',
       open: leave,
       use: leave,
       close: 'Sie ist zu. Noch.',
@@ -484,13 +539,23 @@ const HOTSPOTS: HotspotDef[] = [
   at('counter', 'Tresen', R(408, 304, 552, 56), P(500, 404), 'up', {
     on: { lookat: 'Der Tresen. Klebt an genau den richtigen Stellen.' },
   }),
+  at('brezel', 'Brezelkrümel', R(544, 314, 32, 18), P(560, 412), 'up', {
+    defaultVerb: 'pickup',
+    visible: (state) => !state.getFlag('brezelTaken'),
+    on: {
+      lookat: 'Eine Schale mit zerbröselter Brezel. Von gestern. Oder von 1998. Bei Ali weiß man das nie.',
+      pickup: takeCrumbs,
+      use: 'Reinbeißen? Damit könnte man Nägel einschlagen.',
+    },
+    onItem: { use: { muetze: fillCap } },
+  }),
   at('rickety', 'Zocker-Hocker', R(504, 334, 38, 66), P(492, 414), 'up', {
     defaultVerb: 'use',
     visible: (state) => !state.getFlag('stoolBroken'),
     on: {
       lookat: async (ctx) => {
         await ctx.playerSay('Der Zocker-Hocker. Direkt vor den Spielautomaten, blank gesessen von Generationen von Pechvögeln.');
-        await ctx.playerSay('Er wackelt schon, wenn man ihn nur anschaut. Und irgendwas knuspert darin.');
+        await ctx.playerSay(ctx.easyMode ? 'Er wackelt schon, wenn man ihn nur anschaut. Und irgendwas knuspert darin.' : 'Er wackelt schon, wenn man ihn nur anschaut.');
       },
       use: sitDown,
       pickup: 'Den schlepp ich nicht rum. Der fällt ja schon beim Angucken auseinander.',
@@ -636,6 +701,7 @@ export const picassoRoom: RoomDef = {
     { id: 'bg', depth: Layer.BEHIND, svg: picassoBg() },
     { id: 'slots', depth: Layer.BEHIND, x: SLOTS.x, y: SLOTS.y, anim: 'picasso-slots' },
     roomLayer('counter', 375, 396, 296, 566, 154, picassoCounter()),
+    { id: 'brezel', depth: 375, x: 540, y: 310, w: 40, h: 22, svg: group(pretzelBits(), 'translate(-540 -310)'), visible: (state) => !state.getFlag('brezelTaken') },
     // Ali's ouzo: on its coaster (full or empty), or in front of the guest.
     {
       id: 'ouzoCoaster',
@@ -669,6 +735,7 @@ export const picassoRoom: RoomDef = {
       svg: group(refrainBanner(480, 14), 'translate(-220 -8)'),
       visible: (state) => !!state.getFlag('refrain'),
     },
+    { id: 'pogo', depth: Layer.BEHIND, x: 226, y: 220, w: 44, h: 92, svg: group(pogoArt(), 'translate(-226 -220)'), visible: (state) => !state.getFlag('pogoTaken') },
     // The Zocker-Hocker in front of the slot machines — whole, or collapsed.
     {
       id: 'rickety',
@@ -759,7 +826,7 @@ export const picassoRoom: RoomDef = {
     if (ctx.flag('introDone')) return;
     ctx.setFlag('introDone');
     await ctx.wait(400);
-    await ctx.playerSay('Das Picasso. Wenn einer weiß, wo heute die Goa im Wald steigt, dann Ali.');
+    await ctx.playerSay('Das Picasso. Hier unten ist es immer kurz nach Mitternacht.');
     await ctx.playerSay('Zwei Euro hab ich noch. Das muss reichen.');
   },
 

@@ -60,6 +60,20 @@ export const ACTORS: Record<string, ActorDef> = {
     // Otto lives in the pixel layer only (turmEra 1) — until he's out.
     stance: (state) => ((state.getFlag<number>('turmEra') ?? 0) !== 1 || state.getFlag('ottoFree') ? 'gone' : undefined),
   },
+  // The döner man behind his counter: drawn into the backdrop, this is his voice.
+  doenermann: { id: 'doenermann', name: 'Dönermann', talkColor: '#ffc07a', textureSet: 'otto', stance: () => 'gone' },
+  // Otto R.'s voice on the tower's intercom, out on the promenade: never seen.
+  ottoTuer: {
+    id: 'ottoTuer',
+    name: 'Otto R.',
+    talkColor: '#55ffff',
+    textureSet: 'otto',
+    stance: () => 'gone',
+  },
+  // A pigeon at the edge of the forest that pops the balloon.
+  waldtaube: { id: 'waldtaube', name: 'Taube', talkColor: '#d8d8ea', textureSet: 'taube', baseScale: 0.9 },
+  // The Put-Put pigeon at the tower's door (the Epplehaus pigeon, on loan).
+  taubeTuer: { id: 'taubeTuer', name: 'Put-Put-Taube', talkColor: '#d8d8ea', textureSet: 'taube2', baseScale: 0.9 },
   // The pigeons in front of the Epplehaus: eight of them, two plumages.
   ...Object.fromEntries(
     [1, 2, 3, 4, 5, 6, 7, 8].map((n): [string, ActorDef] => [

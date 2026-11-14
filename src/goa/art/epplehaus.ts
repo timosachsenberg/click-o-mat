@@ -35,13 +35,12 @@ import { band } from './neckar';
  */
 
 export const EP = {
-  /** The house: left and right edge, eaves, ground line. */
+  /** The house: left and right edge, top (off the picture: no roof in view), ground line. */
   x0: 190,
   x1: 770,
-  eaves: 74,
+  eaves: -12,
   ground: 304,
   door: { x: 440, y: 196, w: 80, h: 104 },
-  cellar: { x: 46, y: 204, w: 78, h: 100 },
   trolley: { x: 590, y: 286, w: 72, h: 52 },
   banks: { x: 684, y: 256, w: 112, h: 78 },
   bikes: { x: 214, y: 262, w: 190, h: 72 },
@@ -84,10 +83,10 @@ function street(): string {
   return s.join('');
 }
 
-/** The neighbour's wall on the left, with the stairs down to the Picasso. */
+/** The neighbour's wall on the left; past it the street goes on to the döner
+ *  stand (and the Picasso beyond). */
 function neighbour(): string {
   const s: string[] = [];
-  const { x, y, w, h } = EP.cellar;
   s.push(inked(poly([[-4, 34], [178, 58], [178, EP.ground], [-4, EP.ground]]), '#6c4a70', 3));
   s.push(path(poly([[-4, 34], [178, 58], [178, 70], [-4, 46]]), { fill: '#3a2850' }));
   const r = rng(5);
@@ -98,16 +97,16 @@ function neighbour(): string {
   // A dark window with a drawn curtain.
   s.push(rect(22, 84, 44, 60, { fill: DARK_PANE, stroke: INK, sw: 2.4 }));
   s.push(path('M44 84V144M22 110H66', { stroke: '#5a5078', sw: 1.6 }));
-  // The cellar stairs: an arch, steps going down into the dark, a railing.
-  s.push(inked(`M${x} ${y + h}V${y + 26}Q${x + w / 2} ${y - 16} ${x + w} ${y + 26}V${y + h}Z`, '#1a1028', 2.6));
-  for (let k = 0; k < 5; k++) s.push(path(`M${x + 6 + k * 3} ${y + h - 6 - k * 13}H${x + w - 6 - k * 3}`, { stroke: '#5a3a6a', sw: 3, opacity: 0.9 - k * 0.15 }));
-  s.push(glow('epCellar', x + w / 2, y + 50, 46, '#ff5ab4', 0.5, 40));
-  s.push(path(`M${x - 8} ${y + h}V${y + 58}H${x + 6}M${x + w + 8} ${y + h}V${y + 58}H${x + w - 6}`, { stroke: INK, sw: 4 }));
-  s.push(path(`M${x - 8} ${y + h}V${y + 58}H${x + 6}M${x + w + 8} ${y + h}V${y + 58}H${x + w - 6}`, { stroke: '#8a8a9a', sw: 1.6 }));
-  // The neon sign and its arrow.
-  s.push(glow('epNeon', x + w / 2, y - 26, 70, '#ff5ab4', 0.55, 28));
-  s.push(text(x + w / 2, y - 20, 'Picasso', { size: 24, fill: '#ffe6f4', stroke: '#ff3aa0', sw: 3.4, family: "'Brush Script MT', 'Segoe Script', cursive", weight: 700, rotate: -4 }));
-  s.push(path(`M${x + w / 2 - 9} ${y - 8}h18l-9 11z`, { fill: '#ffe6f4', stroke: '#ff3aa0', sw: 2 }));
+  // A shuttered shop front, sprayed over, and a street sign pointing left.
+  s.push(inked('M30 206H150V304H30Z', '#5a4a5e', 2.4));
+  for (let yy = 214; yy < 300; yy += 8) s.push(line([32, yy], [148, yy], '#3e3044', 1.4));
+  s.push(text(90, 262, 'PUT PUT', { size: 15, fill: '#4ae8ff', stroke: INK, sw: 3, rotate: -3 }));
+  s.push(path('M44 236q10 -12 22 -2t20 -4M100 284q8 -10 18 0', { stroke: '#ff4a8a', sw: 2.2 }));
+  s.push(inked('M54 150V200h4V150z', '#4a4a5a', 1.4));
+  s.push(inked('M18 150h76l-10 9l10 9h-76z', '#f4efe4', 1.8));
+  s.push(text(56, 163, '← DÖNER', { size: 9, fill: INK, weight: 900 }));
+  // Warm light and a whiff of grilled meat from round the corner.
+  s.push(glow('epDoenerGlow', -10, 270, 90, '#ffb050', 0.4, 50));
   return s.join('');
 }
 
@@ -153,11 +152,30 @@ function graffiti(): string {
   for (const [x, y, c] of [[392, 196, '#ffd34a'], [540, 262, '#8aff5a'], [756, 232, '#4ae8ff'], [204, 290, '#ffd34a']] as Array<[number, number, string]>) {
     s.push(path(`M${x} ${y - 8}l2.4 5.4l5.8 0.6l-4.4 4l1.3 5.8l-5.1 -3l-5.1 3l1.3 -5.8l-4.4 -4l5.8 -0.6z`, { fill: c, stroke: INK, sw: 1.4 }));
   }
-  // Tags: quick scribbles, wherever there was room.
-  for (let i = 0; i < 46; i++) {
+  // Up the wall, as high as a ladder (or a friend's shoulders) reaches.
+  s.push(path(puff(420, 120, 70, 26, 8, 11, 0.16), { fill: '#2a6a3a', opacity: 0.85 }));
+  s.push(piece(420, 132, 'GOA', 34, '#8aff5a', -6));
+  s.push(path(puff(560, 128, 54, 20, 7, 13, 0.16), { fill: '#5a2a7a', opacity: 0.8 }));
+  s.push(piece(560, 138, 'BASS', 26, '#ff7a2a', 4, 4));
+  s.push(piece(300, 160, 'PLENUM!', 14, '#ffd34a', -2, 3));
+  s.push(piece(690, 160, 'WALD STATT WAND', 9.5, '#ffffff', 2, 2.6));
+  s.push(piece(250, 66, 'PUT PUT', 13, '#4ae8ff', -3, 3));
+  s.push(piece(700, 64, 'FLOH WAR HIER', 9, '#ff4a8a', 3, 2.6));
+  // A big grinning face, a lightning bolt, a crown, drips.
+  s.push(circle(736, 236, 18, { fill: '#ffd34a', stroke: INK, sw: 2.4 }));
+  s.push(path('M726 232h4M742 232h4M724 242q12 10 24 0', { stroke: INK, sw: 2.4 }));
+  s.push(path('M370 210l-12 22h10l-8 20l22 -28h-11l9 -14z', { fill: '#4ae8ff', stroke: INK, sw: 1.8 }));
+  s.push(path('M536 202l6 -12l6 8l6 -10l6 10l6 -8l6 12z', { fill: '#ffd34a', stroke: INK, sw: 1.6 }));
+  for (const [x, y, c] of [[330, 290, '#ff4a8a'], [420, 146, '#8aff5a'], [580, 150, '#ff7a2a'], [640, 204, '#ffd34a']] as Array<[number, number, string]>) {
+    s.push(path(`M${x} ${y}v${10 + (x % 7)}`, { stroke: c, sw: 2, opacity: 0.85 }));
+  }
+  // Tags: quick scribbles, wherever there was room — floor to first floor.
+  for (let i = 0; i < 140; i++) {
     const x = EP.x0 + 8 + r() * (EP.x1 - EP.x0 - 40);
-    const y = 176 + r() * 122;
-    if (x > EP.door.x - 26 && x < EP.door.x + EP.door.w + 6) continue;
+    const y = 40 + r() * 258;
+    if (x > EP.door.x - 26 && x < EP.door.x + EP.door.w + 6 && y > 150) continue;
+    // Not across the window panes.
+    if ([250, 345, 480, 615, 710].some((cx) => Math.abs(x + 6 - cx) < 26 && ((y > 86 && y < 156) || (y > 198 && y < 260)))) continue;
     const c = SPRAY[Math.floor(r() * SPRAY.length)];
     const d = `M${x} ${y}q${4 + r() * 6} ${-10 - r() * 6} ${9 + r() * 5} ${-1}t${6 + r() * 6} ${2 - r() * 6}q${3} ${5} ${-4 - r() * 8} ${4}`;
     s.push(path(d, { stroke: c, sw: 1.8 + r() * 1.4, opacity: 0.9 }));
@@ -180,22 +198,20 @@ function roostingPigeon(x: number, y: number, flip: boolean): string {
 function house(): string {
   const s: string[] = [];
   const { x0, x1, eaves, ground, door } = EP;
-  // Roof: a hip roof with a chimney, pigeons along the ridge.
-  s.push(inked('M610 22V-6h26v32z', '#7a4a52', 2.4));
-  s.push(inked(poly([[x0 - 22, eaves + 2], [x0 + 46, 14], [x1 - 46, 14], [x1 + 22, eaves + 2]]), '#6a3a48', 3));
-  s.push(path(poly([[x1 - 180, 14], [x1 - 46, 14], [x1 + 22, eaves + 2], [x1 - 150, eaves + 2]]), { fill: '#1e1038', opacity: 0.25 }));
-  for (let k = 1; k < 5; k++) s.push(line([x0 - 22 + k * 14, eaves + 2 - k * 12], [x1 + 22 - k * 14, eaves + 2 - k * 12], '#3a2030', 1.4, 0.6));
-  s.push(line([x0 - 22, eaves + 2], [x0 + 46, 14], '#ff9a5a', 2.4, 0.8));
-  for (const [x, f] of [[300, false], [318, true], [420, false], [520, true], [540, true], [690, false]] as Array<[number, boolean]>) s.push(roostingPigeon(x, 14, f));
-  // The wall, warm on the left where the sun still reaches it.
+  // The wall rises out of the picture: no roof in view. Warm on the left
+  // where the sun still reaches it.
   s.push(inked(wobble([[x0, eaves], [x1, eaves], [x1, ground], [x0, ground]], { seed: 9, wobble: 1.4 }), 'url(#epWall)', 3));
   s.push(path(poly([[x0, eaves], [x0 + 70, eaves], [x0 + 70, ground], [x0, ground]]), { fill: '#ffb45a', opacity: 0.28 }));
   s.push(path(poly([[x1 - 150, eaves], [x1, eaves], [x1, ground], [x1 - 150, ground]]), { fill: '#3a2058', opacity: 0.2 }));
-  s.push(inked(poly([[x0 - 8, eaves - 4], [x1 + 8, eaves - 4], [x1 + 6, eaves + 8], [x0 - 6, eaves + 8]]), '#e8dcc8', 2.4));
+  s.push(path(`M${x0} 74H${x1}`, { stroke: '#b89a8a', sw: 3 }));
   s.push(path(`M${x0} 168H${x1}`, { stroke: '#b89a8a', sw: 3 }));
   s.push(graffiti());
   s.push(inked(poly([[x0 - 4, ground - 18], [x1 + 4, ground - 18], [x1 + 4, ground], [x0 - 4, ground]]), '#6a5a70', 2.4, 'opacity="0.55"'));
-  // Windows: upstairs five, downstairs two either side of the door.
+  // Windows: the top floor (cut off by the picture's edge), upstairs five,
+  // downstairs two either side of the door.
+  const top: Array<[number, 'lit' | 'dark' | 'poster']> = [[250, 'lit'], [345, 'dark'], [480, 'poster'], [615, 'dark'], [710, 'lit']];
+  top.forEach(([cx, kind], i) => s.push(window(cx, -6, 44, 58, kind, 60 + i)));
+  for (const [x, f] of [[262, true], [480, false], [626, true]] as Array<[number, boolean]>) s.push(roostingPigeon(x, 58, f));
   const up: Array<[number, 'lit' | 'dark' | 'poster']> = [[250, 'dark'], [345, 'lit'], [480, 'dark'], [615, 'lit'], [710, 'poster']];
   up.forEach(([cx, kind], i) => s.push(window(cx, 92, 44, 58, kind, 20 + i)));
   for (const [x, f] of [[236, false], [352, true], [704, false]] as Array<[number, boolean]>) s.push(roostingPigeon(x, 86, f));

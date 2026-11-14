@@ -60,7 +60,7 @@ export const ITEMS: Record<string, ItemDef> = {
       await ctx.playerSay('Ein Stuhlbein, löchrig wie ein Emmentaler. Drinnen knuspert es.');
       await ctx.playerSay('Holzwürmer. Und so wie die mampfen, haben sie seit Wochen nichts Frisches gehabt.');
     },
-    use: 'Ich bin doch kein Holzwurm. Die Würmer brauchen was Größeres.',
+    use: (ctx) => ctx.playerSay(ctx.easyMode ? 'Ich bin doch kein Holzwurm. Die Würmer brauchen was Größeres.' : 'Ich bin doch kein Holzwurm.'),
   },
   muetze: {
     id: 'muetze',
@@ -70,7 +70,7 @@ export const ITEMS: Record<string, ItemDef> = {
       await ctx.playerSay('Eine grüne Couleurmütze, grün-weiß-rot. Noch ein bisschen nass.');
       await ctx.playerSay('Innen eingestickt: „Eigentum der Verbindung. Finder bitte Bier zurückbringen.“');
     },
-    use: 'Aufsetzen? Über meine Mütze? Später vielleicht. Im richtigen Moment.',
+    use: (ctx) => ctx.playerSay(ctx.easyMode ? 'Aufsetzen? Über meine Mütze? Nee. Aber als Beutel taugt sie bestimmt.' : 'Aufsetzen? Über meine Mütze? Nee.'),
   },
   loch: {
     id: 'loch',
@@ -96,8 +96,68 @@ export const ITEMS: Record<string, ItemDef> = {
       await ctx.playerSay('Ich dreh an der Spirale ...');
       ctx.sfx('zap');
       await ctx.playerSay('Nichts. Otto meinte, hier draußen braucht es dafür mehr Chaos.');
-      await ctx.playerSay('Oder irgendwas Dunkles, Rundes, um das sie kreisen kann.');
+      if (ctx.easyMode) await ctx.playerSay('Oder irgendwas Dunkles, Rundes, um das sie kreisen kann.');
     },
+  },
+  muetzekruemel: {
+    id: 'muetzekruemel',
+    name: 'Mütze voller Brezelkrümel',
+    icon: 'icon-muetzekruemel',
+    lookAt: async (ctx) => {
+      await ctx.playerSay('Die Burschenschaftsmütze, randvoll mit Brezelkrümeln. Hart wie Granit, salzig wie das Meer.');
+      await ctx.playerSay('Für Menschen ungeeignet. Für Tauben ein Festmahl.');
+    },
+    use: 'Aufsetzen? Dann rieseln mir die Krümel in den Kragen. Nein danke.',
+  },
+  taube: {
+    id: 'taube',
+    name: 'Put-Put-Taube',
+    icon: 'icon-taube',
+    lookAt: async (ctx) => {
+      await ctx.playerSay('Die Taube, die alles nachplappert. Sie sitzt erstaunlich zufrieden in meiner Hand.');
+      await ctx.playerSay('Ab und zu sagt sie „Put put“. Mit perfekter Betonung.');
+    },
+    use: async (ctx) => {
+      await ctx.playerSay('Na, sag mal was.');
+      await ctx.playerSay('*Taube:* „Put put.“');
+      await ctx.playerSay('Genau so. Das muss nur noch jemand hören, der Wert drauf legt.');
+    },
+  },
+  // ---- red herrings: each of them looks like a way past the forest barrier
+  drahtschere: {
+    id: 'drahtschere',
+    name: 'Drahtschere',
+    icon: 'icon-drahtschere',
+    lookAt: 'Eine Drahtschere mit roten Griffen. Damit kriegt man so ziemlich jede Kette durch. Theoretisch.',
+    use: 'Ich knips mal probehalber in die Luft. Schnapp. Ja, die schneidet.',
+  },
+  pogostick: {
+    id: 'pogostick',
+    name: 'Pogo-Stick',
+    icon: 'icon-pogostick',
+    lookAt: 'Ein Pogo-Stick aus den Neunzigern. Die Feder ist noch voll gespannt. Wie ich, eigentlich.',
+    use: 'Hier drin? Ich würde mir den Kopf an der Decke stoßen. Oder an Ali.',
+  },
+  ballon: {
+    id: 'ballon',
+    name: 'Heliumballon',
+    icon: 'icon-ballon',
+    lookAt: 'Ein pinker Herzballon mit Helium. Er zieht ganz schön an der Schnur. Ob der mich trägt?',
+    use: 'Helium einatmen und mit Micky-Maus-Stimme reden? Später. Der Ballon hat Größeres vor.',
+  },
+  stange: {
+    id: 'stange',
+    name: 'Stocherstange',
+    icon: 'icon-stange',
+    lookAt: 'Die Stocherstange der Burschen. Vier Meter lang, biegsam, leicht. Perfekt für Stabhochsprung.',
+    use: 'Hier ist kein Platz für Anlauf.',
+  },
+  klappspaten: {
+    id: 'klappspaten',
+    name: 'Klappspaten',
+    icon: 'icon-klappspaten',
+    lookAt: 'Ein alter Klappspaten. Etwas rostig, aber man könnte sich damit irgendwo durchgraben.',
+    use: 'Einfach so ein Loch graben? Ich bräuchte einen Grund. Und eine Stelle.',
   },
   wurmloch: {
     id: 'wurmloch',

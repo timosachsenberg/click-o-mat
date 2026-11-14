@@ -130,15 +130,61 @@ const useItemOn = async (item, x, y) => {
   await settle();
 };
 
-await settle(); // intro lines
+await settle(); // off the bus on the Neckarbrücke
+// --- to the Picasso: past the Epplehaus and the döner stand
+await goTo('epplehaus', 945, 432);
+await goTo('doener', 15, 400);
+await goTo('picasso', 86, 260);
+check('in the Picasso', (await room()) === 'picasso');
 
-// --- out of the Picasso, past the Epplehaus, onto the bridge
-await goTo('epplehaus', 311, 220, { button: 'right' });
+// --- the Picasso: pretzel crumbs in the bowl on the counter — by hand they trickle away
+check('a bowl of pretzel crumbs on the counter', (await hotspotAt(560, 322)) === 'brezel');
+await click(560, 322); // default verb: take
+await settle();
+check('crumbs can\'t be carried by hand', !(await flag('brezelTaken')) && JSON.stringify(await inv()) === '["euro"]', JSON.stringify(await inv()));
+// The cap comes from sinking the punt (covered by verify-goa); here it's handed over directly.
+await ev(() => window.__engine.makeContext().addItem('muetze', { silent: true }));
+await useItemOn('muetze', 560, 322);
+check('the cap makes a crumb bag', (await inv()).includes('muetzekruemel') && !(await inv()).includes('muetze') && (await flag('brezelTaken')) === true, JSON.stringify(await inv()));
+
+// --- the Epplehaus: Flaschenfloh feeds the pigeons — put, put, put! — and one parrots it
+await goTo('doener', 311, 220, { button: 'right' });
+await goTo('epplehaus', 945, 400);
+await verb('give');
+await click(522 + (await inv()).indexOf('muetzekruemel') * 112, 505);
+await page.waitForTimeout(150);
+await click(556, 300); // Flaschenfloh
+await settle();
+check('Flaschenfloh feeds the pigeons, one starts saying "Put put"', (await flag('putTaube')) === true && (await flag('putHeard')) === true && !(await inv()).includes('muetzekruemel'));
+check('and hands the cap back', (await inv()).includes('muetze'), JSON.stringify(await inv()));
+const putPos = await ev(() => { const a = window.__engine.roomScene.actors.get('taube3'); return { x: a.x, y: a.y, h: a.sprite.displayHeight }; });
+check('the parroting pigeon pecks crumbs by Flaschenfloh', Math.abs(putPos.x - 506) < 6 && Math.abs(putPos.y - 376) < 6, JSON.stringify(putPos));
+await page.waitForTimeout(2500);
+const stillThere = await ev(() => { const a = window.__engine.roomScene.actors.get('taube3'); return { x: a.x, y: a.y }; });
+check('busy with its crumbs, it stays put', Math.abs(stillThere.x - 506) < 6, JSON.stringify(stillThere));
+await page.screenshot({ path: `${SHOT}/hoel-00a-feeding.png` });
+await doVerb('pickup', putPos.x, putPos.y - putPos.h * 0.4);
+check('caught the Put-Put pigeon', (await inv()).includes('taube') && (await flag('taubeCaught')) === true, JSON.stringify(await inv()));
+
+// --- on to the bridge
 await goTo('neckar', 932, 380);
 check('on the Neckarbrücke', (await room()) === 'neckar');
 
-// --- along the promenade, and in through the tower's door
+// --- the tower's door: Otto R. on the intercom wants the password
 check('the Hölderlinturm is a hotspot on the bridge', (await hotspotAt(440, 200)) === 'turm');
+await verb('open');
+await click(440, 200);
+await waitFor(() => ev(() => window.__engine.choicesShowing), 25000, 'the intercom');
+check('the door is locked: Otto asks for the password', (await room()) === 'neckar' && (await flag('turmAsked')) === true);
+await pick('Chakabunga');
+await pick('Put put?');
+check('saying "Put put" yourself: the voice is wrong', (await flag('putTried')) === true && !(await flag('turmOpen')));
+await pick('Schon gut');
+check('still outside', (await room()) === 'neckar');
+
+// --- the pigeon says it, in the right voice: the door opens
+await useItemOn('taube', 440, 200);
+check('the pigeon says the password: the door is open', (await flag('turmOpen')) === true && !(await inv()).includes('taube'));
 await verb('open');
 await click(440, 200);
 await waitFor(async () => (await room()) === 'hoelderlinturm', 25000, 'the tower');
@@ -246,7 +292,8 @@ await page.screenshot({ path: `${SHOT}/hoel-06-toon-after.png` });
 await camSettle();
 await clickW(122, 214);
 await waitFor(async () => (await room()) === 'neckar', 15000, 'neckar');
-await settle();
+// No clicking to skip lines here: a stray click would walk the player off.
+await waitFor(async () => !(await ev(() => window.__engine.busy)), 8000, 'arrival');
 const out = await ev(() => { const a = window.__engine.roomScene.actors.get('player'); return { x: a.x, y: a.y }; });
 check('out of the door: back at the tower on the promenade', (await room()) === 'neckar' && Math.abs(out.x - 478) < 12 && Math.abs(out.y - 304) < 12, JSON.stringify(out));
 

@@ -6,7 +6,9 @@ import { chromium } from 'playwright';
 // drink in stock, drink it, swap the can for 25 cents, jam the coin in the
 // jukebox, play Ali's song, and during three refrains slide Ali's ouzo in
 // front of the Partykiller — he dances himself to sleep, Ali gives up the
-// password. Sit on the Zocker-Hocker at the slot machines and it collapses: its worm-eaten leg
+// password. The game starts on the Neckarbrücke, off the bus; between the
+// bridge and the bar lie the Epplehaus and the döner stand.
+// Sit on the Zocker-Hocker at the slot machines and it collapses: its worm-eaten leg
 // comes along out onto the
 // Neckarbrücke, and into the next punt full of Burschenschaftler with it:
 // the woodworms sink it, and a cap floats to the jetty at the Hölderlinturm,
@@ -108,27 +110,27 @@ const waitFor = async (fn, ms, label) => {
   return false;
 };
 
-await settle(); // intro lines
-check('starts in the Picasso', await ev(() => window.__engine.state.currentRoom === 'picasso'));
-check('the two-euro coin is in the inventory from the start', JSON.stringify(await inv()) === '["euro"]', JSON.stringify(await inv()));
-check('Ali hotspot sits on Ali', (await hotspotAt(720, 280)) === 'ali');
-check('Partykiller hotspot sits on him', (await hotspotAt(640, 330)) === 'cop');
-check('DJ booth, toilet door and jukebox are there', (await hotspotAt(194, 250)) === 'dj' && (await hotspotAt(58, 200)) === 'wc' && (await hotspotAt(376, 240)) === 'jukebox');
-check('Ali polishes a glass when idle (stance)', await ev(() => window.__engine.roomScene.actors.get('ali').sprite.anims.currentAnim?.key === 'ali-polish-front'));
-await page.screenshot({ path: `${SHOT}/goa-02-pub.png` });
-
-// --- the door is open from the start: out onto the Neckarbrücke and back
 const room = () => ev(() => window.__engine.state.currentRoom);
 const goTo = async (id, x, y, opts) => {
   await click(x, y, opts);
   await waitFor(async () => (await room()) === id, 14000, id);
   await settle();
 };
-await goTo('epplehaus', 311, 220, { button: 'right' }); // open the door
-check('the bar can be left before the riddle is solved: out in front of the Epplehaus', (await room()) === 'epplehaus' && !(await flag('password')));
-await page.screenshot({ path: `${SHOT}/goa-02a-epplehaus.png` });
+
+// --- the game starts on the Neckarbrücke: off the bus
+await settle(); // the bus pulls in, the player gets off, the bus drives away
+check('starts on the Neckarbrücke', (await room()) === 'neckar');
+check('the bus has driven off', (await flag('busGone')) === true && !(await ev(() => window.__engine.roomScene.layerObj('bus').visible)));
+const start = await ev(() => { const a = window.__engine.roomScene.actors.get('player'); return { x: a.x, y: a.y }; });
+check('the player got off at the bus stop', Math.abs(start.x - 652) < 4 && Math.abs(start.y - 432) < 4, JSON.stringify(start));
+check('the two-euro coin is in the inventory from the start', JSON.stringify(await inv()) === '["euro"]', JSON.stringify(await inv()));
+check('the easy mode is off by default', await ev(() => window.__engine.offersEasyMode && !window.__engine.easyMode));
+await page.screenshot({ path: `${SHOT}/goa-01b-bridge.png` });
 
 // --- the Epplehaus: Flaschenfloh by the bottle banks, pigeons strolling about
+await goTo('epplehaus', 945, 432);
+check('the bridge\'s right end leads to the Epplehaus', (await room()) === 'epplehaus');
+await page.screenshot({ path: `${SHOT}/goa-02a-epplehaus.png` });
 const actorsHere = await ev(() => [...window.__engine.roomScene.actors.keys()]);
 check('Flaschenfloh is there', actorsHere.includes('floh') && (await hotspotAt(556, 300)) === 'floh', actorsHere.join(','));
 const pigeons = () => ev(() => [...window.__engine.roomScene.actors.entries()].filter(([k]) => k.startsWith('taube')).map(([k, a]) => [k, Math.round(a.x), Math.round(a.y)]));
@@ -144,13 +146,29 @@ await pick('Wer bist du');
 await pick('Kennst du die Goa');
 await pick('Mach');
 check('talked to Flaschenfloh (he does not follow yet)', !(await flag('flohFollows')));
-await goTo('neckar', 932, 380); // on to the bridge
-check('the street leads on to the Neckarbrücke', (await room()) === 'neckar');
-await click(15, 432); // towards the forest
-await settle();
-check('but no forest without knowing where the party is', !(await flag('chapterDone')));
-await goTo('epplehaus', 945, 432); // back to the Epplehaus
-await goTo('picasso', 86, 260); // and down the cellar stairs
+
+// --- the döner stand: no puzzle, it just smells good
+await goTo('doener', 15, 400);
+check('past the Epplehaus: the döner stand', (await room()) === 'doener');
+check('stand, spit, döner man and the Picasso stairs are there', (await hotspotAt(480, 100)) === 'bude' && (await hotspotAt(376, 214)) === 'spiess' && (await hotspotAt(530, 230)) === 'doenermann' && (await hotspotAt(86, 260)) === 'toPicasso');
+const spitFrames = new Set();
+for (let i = 0; i < 6; i++) { spitFrames.add(await ev(() => window.__engine.roomScene.layerObj('spit').frame.texture.key)); await page.waitForTimeout(120); }
+check('the spit turns', spitFrames.size >= 2, [...spitFrames].join(','));
+await page.screenshot({ path: `${SHOT}/goa-02b-doener.png` });
+
+// --- down into the Picasso
+await goTo('picasso', 86, 260);
+check('the stairs lead down into the Picasso', (await room()) === 'picasso');
+check('Ali hotspot sits on Ali', (await hotspotAt(720, 280)) === 'ali');
+check('Partykiller hotspot sits on him', (await hotspotAt(640, 330)) === 'cop');
+check('DJ booth, toilet door and jukebox are there', (await hotspotAt(194, 250)) === 'dj' && (await hotspotAt(58, 200)) === 'wc' && (await hotspotAt(376, 240)) === 'jukebox');
+check('Ali polishes a glass when idle (stance)', await ev(() => window.__engine.roomScene.actors.get('ali').sprite.anims.currentAnim?.key === 'ali-polish-front'));
+await page.screenshot({ path: `${SHOT}/goa-02-pub.png` });
+
+// --- the door is open: out to the döner stand and back
+await goTo('doener', 311, 220, { button: 'right' });
+check('the bar can be left any time', (await room()) === 'doener' && !(await flag('password')));
+await goTo('picasso', 86, 260);
 check('and back into the Picasso', (await room()) === 'picasso');
 
 // --- up the two steps to the toilet: the player climbs, keeping their size
@@ -286,7 +304,8 @@ await settle();
 check('took the worm-eaten chair leg', JSON.stringify(await inv()) === '["stuhlbein"]' && (await flag('legTaken')) === true, JSON.stringify(await inv()));
 
 // --- leave: up the stairs, out onto the Neckarbrücke
-await goTo('epplehaus', 311, 220, { button: 'right' }); // open the door
+await goTo('doener', 311, 220, { button: 'right' }); // open the door
+await goTo('epplehaus', 945, 400);
 await goTo('neckar', 932, 380);
 check('past the Epplehaus to the Neckarbrücke', (await room()) === 'neckar');
 await page.screenshot({ path: `${SHOT}/goa-05-neckar.png` });
@@ -320,11 +339,32 @@ check('walked along the Neckarfront to the jetty at the Hölderlinturm, smaller 
 await page.screenshot({ path: `${SHOT}/goa-06b-turm.png` });
 check('took the cap', JSON.stringify(await inv()) === '["muetze"]', JSON.stringify(await inv()));
 
-// --- on towards the forest
-await click(15, 432); // the way on (default verb)
+// --- on towards the forest? Closed for tree felling, password or not —
+// the way to the Goa is Otto R.'s wormhole (verify-hoelderlin plays it).
+await goTo('waldrand', 15, 432);
+check('the bridge leads on to the edge of the forest', (await room()) === 'waldrand');
+check('the barrier, the sign and the felled trunks are there', (await hotspotAt(420, 330)) === 'absperrung' && (await hotspotAt(580, 270)) === 'schild' && (await hotspotAt(200, 320)) === 'baumstaemme');
+check('only the bass, far away', (await ev(() => window.__audio.currentMusic ?? window.__audio.pendingMusic)) === 'wald-wummern', String(await ev(() => window.__audio.currentMusic)));
+const glowA = [];
+for (let i = 0; i < 6; i++) { glowA.push(await ev(() => window.__engine.roomScene.layerObj('goa').alpha)); await page.waitForTimeout(110); }
+check('the Goa\'s lights throb behind the trees', Math.max(...glowA) - Math.min(...glowA) > 0.15, glowA.map((a) => a.toFixed(2)).join(','));
+await page.screenshot({ path: `${SHOT}/goa-03a-waldrand.png` });
+
+// --- the red herrings: the bolt cutters break, the pogo stick bends
+await goTo('neckar', 936, 400);
+await click(298, 434); // the bolt cutters on the deck (default verb: take)
 await settle();
-check('chapter done', (await flag('chapterDone')) === true);
-await page.screenshot({ path: `${SHOT}/goa-07-end.png` });
+check('picked up the bolt cutters on the bridge', (await inv()).includes('drahtschere'), JSON.stringify(await inv()));
+await goTo('waldrand', 15, 432);
+await click(522 + (await inv()).indexOf('drahtschere') * 112, 505);
+await page.waitForTimeout(150);
+await click(420, 330);
+await settle();
+check('the bolt cutters break on the chain', !(await inv()).includes('drahtschere') && (await room()) === 'waldrand');
+await click(420, 330, { button: 'right' });
+await settle();
+check('even with the password, the forest stays closed', (await flag('password')) === 'Chakabunga' && !(await flag('chapterDone')) && (await flag('once:forestClosed')) === true);
+await page.screenshot({ path: `${SHOT}/goa-07-closed.png` });
 
 // --- the picker switches to the demo (reload with ?game=demo)
 await page.goto(withGame('goa'));
