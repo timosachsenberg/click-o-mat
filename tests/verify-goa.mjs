@@ -148,16 +148,16 @@ await pick('Mach');
 check('talked to Flaschenfloh (he does not follow yet)', !(await flag('flohFollows')));
 
 // --- the döner stand: no puzzle, it just smells good
-await goTo('doener', 15, 400);
+await goTo('doener', 945, 400);
 check('past the Epplehaus: the döner stand', (await room()) === 'doener');
-check('stand, spit, döner man and the Picasso stairs are there', (await hotspotAt(480, 100)) === 'bude' && (await hotspotAt(376, 214)) === 'spiess' && (await hotspotAt(530, 230)) === 'doenermann' && (await hotspotAt(86, 260)) === 'toPicasso');
+check('stand, spit, döner man and the Picasso stairs are there', (await hotspotAt(480, 100)) === 'bude' && (await hotspotAt(376, 214)) === 'spiess' && (await hotspotAt(530, 230)) === 'doenermann' && (await hotspotAt(863, 260)) === 'toPicasso');
 const spitFrames = new Set();
 for (let i = 0; i < 6; i++) { spitFrames.add(await ev(() => window.__engine.roomScene.layerObj('spit').frame.texture.key)); await page.waitForTimeout(120); }
 check('the spit turns', spitFrames.size >= 2, [...spitFrames].join(','));
 await page.screenshot({ path: `${SHOT}/goa-02b-doener.png` });
 
 // --- down into the Picasso
-await goTo('picasso', 86, 260);
+await goTo('picasso', 863, 260);
 check('the stairs lead down into the Picasso', (await room()) === 'picasso');
 check('Ali hotspot sits on Ali', (await hotspotAt(720, 280)) === 'ali');
 check('Partykiller hotspot sits on him', (await hotspotAt(640, 330)) === 'cop');
@@ -168,7 +168,7 @@ await page.screenshot({ path: `${SHOT}/goa-02-pub.png` });
 // --- the door is open: out to the döner stand and back
 await goTo('doener', 311, 220, { button: 'right' });
 check('the bar can be left any time', (await room()) === 'doener' && !(await flag('password')));
-await goTo('picasso', 86, 260);
+await goTo('picasso', 863, 260);
 check('and back into the Picasso', (await room()) === 'picasso');
 
 // --- up the two steps to the toilet: the player climbs, keeping their size
@@ -305,8 +305,8 @@ check('took the worm-eaten chair leg', JSON.stringify(await inv()) === '["stuhlb
 
 // --- leave: up the stairs, out onto the Neckarbrücke
 await goTo('doener', 311, 220, { button: 'right' }); // open the door
-await goTo('epplehaus', 945, 400);
-await goTo('neckar', 932, 380);
+await goTo('epplehaus', 15, 400);
+await goTo('neckar', 20, 380);
 check('past the Epplehaus to the Neckarbrücke', (await room()) === 'neckar');
 await page.screenshot({ path: `${SHOT}/goa-05-neckar.png` });
 

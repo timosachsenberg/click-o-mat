@@ -139,14 +139,14 @@ check('took the full stamp card', (await inv()).includes('stempelkarte'), JSON.s
 
 // --- to the Picasso: past the Epplehaus and the döner stand (a free döner on the way)
 await goTo('epplehaus', 945, 432);
-await goTo('doener', 15, 400);
+await goTo('doener', 945, 400);
 await verb('give');
 await click(522 + (await inv()).indexOf('stempelkarte') * 112, 505);
 await page.waitForTimeout(150);
 await click(530, 230); // the döner man
 await settle();
 check('ten stamps: a free döner', (await inv()).includes('doener') && !(await inv()).includes('stempelkarte'), JSON.stringify(await inv()));
-await goTo('picasso', 86, 260);
+await goTo('picasso', 863, 260);
 check('in the Picasso', (await room()) === 'picasso');
 
 let said = [];
@@ -162,7 +162,7 @@ check('the cap makes a crumb bag', (await inv()).includes('muetzekruemel') && !(
 
 // --- the Epplehaus: Flaschenfloh feeds the pigeons — put, put, put! — and one parrots it
 await goTo('doener', 311, 220, { button: 'right' });
-await goTo('epplehaus', 945, 400);
+await goTo('epplehaus', 15, 400);
 const giveFloh = async (item) => {
   await verb('give');
   await click(522 + (await inv()).indexOf(item) * 112, 505);
@@ -187,7 +187,7 @@ await doVerb('pickup', putPos.x, putPos.y - putPos.h * 0.4);
 check('caught the Put-Put pigeon', (await inv()).includes('taube') && (await flag('taubeCaught')) === true, JSON.stringify(await inv()));
 
 // --- on to the bridge
-await goTo('neckar', 932, 380);
+await goTo('neckar', 20, 380);
 check('on the Neckarbrücke', (await room()) === 'neckar');
 
 // --- the tower's door: Otto R. on the intercom wants the password

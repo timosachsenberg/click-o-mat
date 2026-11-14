@@ -1080,6 +1080,22 @@ export const OTTO_ACTOR: SvgActorAsset = {
   draw: ottoFrame,
 };
 
+/** A voice without a body: an actor whose every pose is blank. It speaks for
+ *  people drawn into a backdrop (the döner man) or heard through something
+ *  (Otto at the intercom, the DJ) — a blank `stance` alone would still show
+ *  the talk pose. */
+export const VOICE_ACTOR: SvgActorAsset = {
+  key: 'voice',
+  width: 64,
+  height: 120,
+  poses: {
+    idle: { frames: 1, frameRate: 1 },
+    walk: { frames: 1, frameRate: 1 },
+    talk: { frames: 1, frameRate: 1 },
+  },
+  draw: () => '',
+};
+
 /** The spiral as tiny markup for the pocket attractor's icon (64×48 box). */
 export function miniSpiral(): string {
   const { cx, cy, w, h } = TM.spiral;

@@ -1,6 +1,6 @@
 import { Layer, type Facing, type HotspotDef, type Rect, type RoomDef, type Vec2 } from '../../engine/types';
 import type { ScriptContext } from '../../engine/ScriptContext';
-import { OTTO_ACTOR } from '../art/turm';
+import { VOICE_ACTOR } from '../art/turm';
 import { PIGEON_ACTORS } from '../art/epplehaus';
 import { NK, PUNT_ACTOR, balustrade, bus, cardOnDeck, cuttersOnDeck, swallows, swan, waterShimmer, eckhausLayer, floatingPole, floatingCap, flyingLeg, neckarBg, promGap, quayFootY, quayTopY } from '../art/neckar';
 
@@ -581,7 +581,7 @@ export const neckarRoom: RoomDef = {
 
   music: 'neckar-theme',
 
-  assets: { svgActors: [PUNT_ACTOR, OTTO_ACTOR, ...PIGEON_ACTORS] },
+  assets: { svgActors: [PUNT_ACTOR, VOICE_ACTOR, ...PIGEON_ACTORS] },
 
   entries: {
     picasso: { x: 930, y: 432, facing: 'left' },

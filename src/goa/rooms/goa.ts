@@ -1,7 +1,7 @@
 import { Layer, type Facing, type HotspotDef, type LayerDef, type Rect, type RoomDef, type Vec2 } from '../../engine/types';
 import type { ScriptContext } from '../../engine/ScriptContext';
 import { DANCER_FRAMES, DANCER_SIZES, DH, DW, FAR, FAR_FRAMES, GO, LOOKS, dancerAnim, dancerKey, foregroundShrooms, goaBg, lasers, type DancerSize } from '../art/goa';
-import { OTTO_ACTOR } from '../art/turm';
+import { VOICE_ACTOR } from '../art/turm';
 
 // ---- layout ----------------------------------------------------------------------
 // The Goa: the dance floor in the forest, behind the gate. Blacklight, a
@@ -212,7 +212,7 @@ export const goaRoom: RoomDef = {
         }))
       ),
     ],
-    svgActors: [OTTO_ACTOR],
+    svgActors: [VOICE_ACTOR],
   },
 
   entries: {

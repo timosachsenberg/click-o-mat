@@ -340,13 +340,13 @@ const HOTSPOTS: HotspotDef[] = [
       use: handsOff,
     },
   }),
-  at('wegweiser', 'Wegweiser', R(EP.sign.x - 6, EP.sign.y, 98, 50), P(880, 348), 'up', {
-    on: { lookat: '„Neckarbrücke“ nach rechts. Und: „Wald 4 km“. Der Bass ist also schon ausgeschildert.' },
+  at('wegweiser', 'Wegweiser', R(960 - EP.sign.x - 92, EP.sign.y, 98, 50), P(80, 348), 'up', {
+    on: { lookat: '„Neckarbrücke“ nach links. Und: „Wald 4 km“. Der Bass ist also schon ausgeschildert.' },
   }),
-  at('lichterkette', 'Lichterkette', R(EP.x1 + 4, 110, 70, 84), P(820, 348), 'up', {
+  at('lichterkette', 'Lichterkette', R(960 - EP.x1 - 74, 110, 70, 84), P(140, 348), 'up', {
     on: { lookat: 'Eine Lichterkette, vom Haus zum Wegweiser gespannt. Jede zweite Birne brennt. Reicht.' },
   }),
-  at('toDoener', 'Zur Dönerbude', R(0, 140, 30, 306), P(24, 400), 'left', {
+  at('toDoener', 'Zur Dönerbude', R(930, 140, 30, 306), P(936, 400), 'right', {
     defaultVerb: 'use',
     on: {
       lookat: 'Da lang geht’s zur Dönerbude. Und dahinter die Treppe runter ins Picasso. Es riecht bis hierher.',
@@ -354,7 +354,7 @@ const HOTSPOTS: HotspotDef[] = [
       open: toDoener,
     },
   }),
-  at('toNeckar', 'Zur Neckarbrücke', R(900, 250, 60, 196), P(932, 400), 'right', {
+  at('toNeckar', 'Zur Neckarbrücke', R(0, 250, 60, 196), P(28, 400), 'left', {
     defaultVerb: 'use',
     on: {
       lookat: 'Da vorne ist die Neckarbrücke. Dahinter irgendwo: der Wald.',
@@ -449,8 +449,8 @@ export const epplehausRoom: RoomDef = {
   },
 
   entries: {
-    doener: { x: 40, y: 400, facing: 'right' },
-    neckar: { x: 910, y: 400, facing: 'left' },
+    neckar: { x: 50, y: 400, facing: 'right' },
+    doener: { x: 910, y: 400, facing: 'left' },
   },
 
   actors: [{ id: 'floh', x: FLOH.x, y: FLOH.y, facing: 'down' }, ...PIGEONS],

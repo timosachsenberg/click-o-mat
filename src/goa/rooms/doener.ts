@@ -2,11 +2,11 @@ import { Layer, type Facing, type HotspotDef, type Rect, type RoomDef, type Vec2
 import type { ScriptContext } from '../../engine/ScriptContext';
 import { DB, KNIFE, KNIFE_FRAMES, SPIT_FRAMES, doenerBg, openGlow, smell } from '../art/doener';
 import { PIGEON_ACTORS } from '../art/epplehaus';
-import { OTTO_ACTOR } from '../art/turm';
+import { VOICE_ACTOR } from '../art/turm';
 
 // ---- layout ----------------------------------------------------------------------
-// The street between the Picasso (stairs down on the left) and the
-// Epplehaus (right). In the middle: a döner stand. It redeems the full stamp
+// The street between the Picasso (stairs down on the right) and the
+// Epplehaus (left). In the middle: a döner stand. It redeems the full stamp
 // card for a döner; otherwise it's there to smell good when you walk past (an ambient notices the player in
 // front of the counter and says a line in passing).
 // The döner man is a voice behind the counter (drawn into the backdrop; an
@@ -20,6 +20,8 @@ function at(id: string, name: string, r: Rect, walkTo: Vec2, facing: Facing, res
 }
 
 const COUNTER_SPOT = P(480, 356);
+/** Beside the döner man, so the player doesn't stand in front of him. */
+const MAN_SPOT = P(DB.counter.x + 128, 352);
 const pick = <T,>(list: T[]) => list[Math.floor(Math.random() * list.length)];
 
 /** The smell gets you once per visit, not on every step. */
@@ -80,8 +82,8 @@ const HOTSPOTS: HotspotDef[] = [
     id: 'doenermann',
     name: 'Dönermann',
     rect: R(DB.counter.x + 170, DB.counter.y + 20, 60, 68),
-    walkTo: COUNTER_SPOT,
-    facing: 'up',
+    walkTo: MAN_SPOT,
+    facing: 'right',
     defaultVerb: 'talkto',
     on: {
       lookat: 'Der Dönermann. Weiße Mütze, mächtiger Schnurrbart, das Messer immer in Bewegung.',
@@ -103,7 +105,7 @@ const HOTSPOTS: HotspotDef[] = [
       use: { stempelkarte: redeemCard },
     },
   },
-  at('tische', 'Stehtische', R(DB.tables[0] - 36, DB.ground - 40, DB.tables[1] - DB.tables[0] + 72, 90), P(760, 380), 'up', {
+  at('tische', 'Stehtische', R(DB.tables[0] - 36, DB.ground - 40, DB.tables[1] - DB.tables[0] + 72, 90), P(180, 380), 'up', {
     on: {
       lookat: 'Stehtische mit Serviettenspendern. Und einem einsamen Zwiebelring.',
       pickup: 'Der Zwiebelring hat schon bessere Zeiten gesehen. Und mehrere Tauben.',
@@ -113,8 +115,8 @@ const HOTSPOTS: HotspotDef[] = [
     id: 'doenertaube',
     name: 'Taube',
     actor: 'doenertaube',
-    walkTo: P(DB.tables[0] - 50, 372),
-    facing: 'right',
+    walkTo: P(DB.tables[1] + 56, 372),
+    facing: 'left',
     on: {
       lookat: 'Eine Taube auf dem Stehtisch. Sie arbeitet sich an einem Zwiebelring ab. Mit Hingabe.',
       talkto: async (ctx) => {
@@ -130,7 +132,7 @@ const HOTSPOTS: HotspotDef[] = [
   at('balkon', 'Balkon', R(188, 160, 86, 40), P(240, 380), 'up', {
     on: { lookat: 'Ein Balkon mit Wäscheleine. Vier Socken, keine zwei gleich. Hier wohnen Studenten.' },
   }),
-  at('toPicasso', 'Treppe zum Picasso', R(DB.cellar.x - 10, DB.cellar.y - 50, DB.cellar.w + 20, DB.cellar.h + 50), P(88, 348), 'up', {
+  at('toPicasso', 'Treppe zum Picasso', R(DB.cellar.x - 10, DB.cellar.y - 50, DB.cellar.w + 20, DB.cellar.h + 50), P(DB.cellar.x + 39, 348), 'up', {
     defaultVerb: 'use',
     on: {
       lookat: 'Die Kellertreppe runter ins Picasso. Die Leuchtschrift flackert hier draußen genauso wie drinnen.',
@@ -138,7 +140,7 @@ const HOTSPOTS: HotspotDef[] = [
       open: toPicasso,
     },
   }),
-  at('toEpplehaus', 'Zum Epplehaus', R(930, 140, 30, 306), P(940, 400), 'right', {
+  at('toEpplehaus', 'Zum Epplehaus', R(0, 140, 30, 306), P(22, 400), 'left', {
     defaultVerb: 'use',
     on: {
       lookat: 'Da lang geht’s zum Epplehaus.',
@@ -173,18 +175,19 @@ export const doenerRoom: RoomDef = {
       { key: 'doener-spit', textures: SPIT_FRAMES.map((f) => f.key), frameRate: 5 },
       { key: 'doener-knife', textures: KNIFE_FRAMES.map((f) => f.key), frameRate: 3 },
     ],
-    svgActors: [OTTO_ACTOR, ...PIGEON_ACTORS],
+    svgActors: [VOICE_ACTOR, ...PIGEON_ACTORS],
   },
 
   entries: {
-    picasso: { x: 96, y: 354, facing: 'down' },
-    epplehaus: { x: 920, y: 400, facing: 'left' },
+    picasso: { x: DB.cellar.x + 39, y: 354, facing: 'down' },
+    epplehaus: { x: 44, y: 400, facing: 'right' },
   },
 
   actors: [
-    { id: 'doenermann', x: DB.counter.x + 200, y: DB.counter.y + 62, facing: 'down' },
+    // (An invisible voice: its feet are placed so the speech sits just above the drawn man's cap.)
+    { id: 'doenermann', x: DB.counter.x + 200, y: DB.counter.y + 134, facing: 'down' },
     // A pigeon on the standing table, working on the lonely onion ring.
-    { id: 'doenertaube', x: DB.tables[0] + 6, y: DB.ground - 20, facing: 'left' },
+    { id: 'doenertaube', x: DB.tables[1] + 6, y: DB.ground - 20, facing: 'left' },
   ],
 
   async onEnter() {
