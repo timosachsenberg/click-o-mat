@@ -38,7 +38,7 @@ async function tryBarrier(ctx: ScriptContext): Promise<void> {
   ctx.sfx('deny');
   await ctx.playerSay('„Baumfällarbeiten. Durchgang verboten.“ Ausgerechnet heute.');
   if (!ctx.flag('password')) {
-    await ctx.playerSay('Wobei: Ohne Passwort käm ich da eh nicht rein.');
+    await ctx.playerSay(ctx.flag('portalOpen') || ctx.hasItem('wurmloch') ? 'Wobei: Rüber käm ich schon. Aber ohne Parole lässt mich da drüben keiner tanzen.' : 'Wobei: Ohne Passwort käm ich da eh nicht rein.');
     return;
   }
   await ctx.once('forestClosed', async () => {
@@ -139,6 +139,14 @@ export async function throwWormhole(ctx: ScriptContext): Promise<void> {
 /** Into the portal: out in the middle of the dance floor. Whatever is in the
  *  pockets doesn't make it through. */
 async function enterPortal(ctx: ScriptContext): Promise<void> {
+  // Without the password the Goazwerg would throw the player out — and the
+  // portal takes the pockets (the two euros for Ali's drink). So: not yet.
+  if (!ctx.flag('password')) {
+    await ctx.playerSay('Moment. Da drüben steht bestimmt ein Türsteher. Und ich kenn die Parole nicht.');
+    await ctx.playerSay(ctx.easyMode ? 'Ali im Picasso weiß sie. Erst die Parole, dann das Loch.' : 'Erst die Parole. Dann das Loch.');
+    return;
+  }
+  ctx.setFlag('portalLanding');
   await ctx.playerSay(ctx.flag('wormholeUsed') ? 'Noch mal durch. Festhalten.' : 'Augen zu, Luft anhalten, und ...');
   ctx.sfx('zap');
   ctx.shake(600, 0.02);
@@ -318,6 +326,8 @@ export const waldrandRoom: RoomDef = {
     neckar: { x: 900, y: 420, facing: 'left' },
     // Back out of the wormhole.
     portal: { x: PORTAL_SPOT.x, y: PORTAL_SPOT.y, facing: 'down' },
+    // On foot from the Goa's entrance, through the woods on the other side.
+    wald: { x: 140, y: 420, facing: 'right' },
   },
 
   // A pigeon that only turns up to pop the balloon.

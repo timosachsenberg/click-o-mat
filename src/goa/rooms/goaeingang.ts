@@ -21,7 +21,11 @@ function at(id: string, name: string, r: Rect, walkTo: Vec2, facing: Facing, res
 const BOUNCER = P(560, 360);
 const BOUNCER_SPOT = P(470, 372);
 const FLOH = P(790, 352);
-const GATE_SPOT = P(560, 336);
+const GATE_SPOT = P(560, 340);
+
+async function toForest(ctx: ScriptContext): Promise<void> {
+  await ctx.goToRoom('waldrand', 'wald');
+}
 
 async function throughTheGate(ctx: ScriptContext): Promise<void> {
   if (!ctx.flag('goaEntered')) {
@@ -49,6 +53,14 @@ const HOTSPOTS: HotspotDef[] = [
   }),
   at('wegweiser', 'Wegweiser', R(662, 258, 92, 44), P(700, 352), 'up', {
     on: { lookat: '„MAINFLOOR“ geradeaus. „CHAI · CHILL“ irgendwo links. Erst mal Mainfloor.' },
+  }),
+  at('toWald', 'Zurück in den Wald', R(0, 300, 70, 146), P(36, 410), 'left', {
+    defaultVerb: 'use',
+    on: {
+      lookat: 'Ein Trampelpfad durch den Wald, zurück zur Absperrung. Von dieser Seite ist sie kein Hindernis.',
+      use: toForest,
+      open: toForest,
+    },
   }),
   at('mond', 'Mond', R(786, 36, 70, 70), P(700, 400), 'up', {
     on: { lookat: 'Vollmond. Wie auf dem Flyer versprochen. Die Goa hält, was sie verspricht.' },
@@ -87,19 +99,7 @@ const HOTSPOTS: HotspotDef[] = [
       push: 'Einen Goazwerg schubst man nicht. Der steht fester als das Tor.',
       pickup: 'Einstecken? Er ist klein genug. Aber er guckt, als hätte das schon mal einer versucht. Und bereut.',
     },
-    onItem: {
-      give: {
-        euro: async (ctx) => {
-          await ctx.say('tuersteher', 'Zwei Euro? Hier kommt man mit Parole rein, nicht mit Kleingeld.');
-        },
-        doener: async (ctx) => {
-          await ctx.say('tuersteher', 'Bestechung mit Döner? Fast. Aber Zwerge essen nur Pilze.');
-        },
-        muetze: async (ctx) => {
-          await ctx.say('tuersteher', 'Eine Burschenmütze? Nee. Ich trag nur Filz. Saunamütze. Hält den Kopf kühl, wenn der Bass heiß läuft.');
-        },
-      },
-    },
+
   },
   {
     id: 'floh',
@@ -149,7 +149,9 @@ export const goaEingangRoom: RoomDef = {
 
   entries: {
     // Back out of the Goa, through the gate.
-    tor: { x: 560, y: 342, facing: 'down' },
+    tor: { x: 660, y: 356, facing: 'left' },
+    // On foot from the edge of the forest.
+    wald: { x: 80, y: 410, facing: 'right' },
   },
 
   actors: [

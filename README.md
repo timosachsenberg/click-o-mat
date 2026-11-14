@@ -210,14 +210,15 @@ hand-painted → **1987** (sixteen colours, chunky pixels) → a **1930s cartoon
    you get a **Wurmloch-Paar** — two ends, one tunnel. Take it to the **edge
    of the forest** and **use it on the barrier**: one end flies over towards
    the lights, the other stands beside the barrier. **Step into the portal**
-   and you fall out in the **middle of the Goa's dance floor** — a stage with
+   (only once you know Ali's password — the player won't go without it) and
+   you fall out in the **middle of the Goa's dance floor** — a stage with
    a huge mandala, a canopy of blacklight threads, giant glowing mushrooms,
    lasers, and dancers everywhere. Everything in your pockets is lost on the
    way. The **bouncer** — a Goazwerg in a felt sauna hat — comes over from the
    gate and wants the password anyway: say **Chakabunga** (from Ali) and you
-   may stay; without it you're thrown out to the **Goa's entrance**, where
-   Flaschenfloh is collecting empties, and get in through the gate once you
-   know it. **Use the dance floor** — to be continued. The portal stays open
+   may stay; give him any other answer and you're thrown out to the **Goa's
+   entrance**, where Flaschenfloh is collecting empties: say it at the gate,
+   or walk back to the forest's edge and jump again. **Use the dance floor** — to be continued. The portal stays open
    both ways.
 
 </details>
