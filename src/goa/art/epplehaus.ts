@@ -1,4 +1,4 @@
-import type { ActorVariant, SvgActorAsset } from '../../engine/types';
+import type { ActorVariant, SvgActorAsset, SvgImageAsset } from '../../engine/types';
 import {
   INK,
   circle,
@@ -51,6 +51,11 @@ const LIT = '#ffd870';
 const DARK_PANE = '#3a3258';
 const SPRAY = ['#ff4a8a', '#4ae8ff', '#ffd34a', '#8aff5a', '#b06aff', '#ff7a2a', '#ffffff'];
 
+/** The house stands in the middle; the street's two ends are drawn for the
+ *  other way round and mirrored (text is flipped back). */
+const mirrored = (markup: string) => `<g transform="translate(960 0) scale(-1 1)">${markup}</g>`;
+const unflip = (cx: number, markup: string) => `<g transform="translate(${2 * cx} 0) scale(-1 1)">${markup}</g>`;
+
 function sky(): string {
   return [
     rect(0, 0, 960, 310, { fill: 'url(#epSky)' }),
@@ -77,9 +82,9 @@ function street(): string {
   const { x, y } = EP.sign;
   s.push(inked(`M${x - 2.5} ${y}V${EP.ground + 28}h5V${y}Z`, '#4a4a5a', 1.6));
   s.push(inked(`M${x - 4} ${y + 6}h78l12 9l-12 9h-78z`, '#f2c230', 2));
-  s.push(text(x + 36, y + 19, 'NECKARBRÜCKE', { size: 8.4, fill: INK, weight: 700 }));
+  s.push(unflip(x + 36, text(x + 36, y + 19, 'NECKARBRÜCKE', { size: 8.4, fill: INK, weight: 700 })));
   s.push(inked(`M${x - 4} ${y + 30}h60v14h-60z`, '#f4efe4', 1.6));
-  s.push(text(x + 26, y + 40.5, 'Wald 4 km', { size: 8, fill: '#2a6a3a', weight: 700 }));
+  s.push(unflip(x + 26, text(x + 26, y + 40.5, 'Wald 4 km', { size: 8, fill: '#2a6a3a', weight: 700 })));
   return s.join('');
 }
 
@@ -100,11 +105,11 @@ function neighbour(): string {
   // A shuttered shop front, sprayed over, and a street sign pointing left.
   s.push(inked('M30 206H150V304H30Z', '#5a4a5e', 2.4));
   for (let yy = 214; yy < 300; yy += 8) s.push(line([32, yy], [148, yy], '#3e3044', 1.4));
-  s.push(text(90, 262, 'PUT PUT', { size: 15, fill: '#4ae8ff', stroke: INK, sw: 3, rotate: -3 }));
+  s.push(unflip(90, text(90, 262, 'PUT PUT', { size: 15, fill: '#4ae8ff', stroke: INK, sw: 3, rotate: -3 })));
   s.push(path('M44 236q10 -12 22 -2t20 -4M100 284q8 -10 18 0', { stroke: '#ff4a8a', sw: 2.2 }));
   s.push(inked('M54 150V200h4V150z', '#4a4a5a', 1.4));
   s.push(inked('M18 150h76l-10 9l10 9h-76z', '#f4efe4', 1.8));
-  s.push(text(56, 163, '← DÖNER', { size: 9, fill: INK, weight: 900 }));
+  s.push(unflip(56, text(56, 163, 'DÖNER →', { size: 9, fill: INK, weight: 900 })));
   // Warm light and a whiff of grilled meat from round the corner.
   s.push(glow('epDoenerGlow', -10, 270, 90, '#ffb050', 0.4, 50));
   return s.join('');
@@ -235,8 +240,24 @@ function house(): string {
     s.push(`<g transform="rotate(${(r() - 0.5) * 30} ${px + 7} ${py + 5})">` + rect(px, py, 10 + r() * 8, 7 + r() * 6, { fill: SPRAY[Math.floor(r() * SPRAY.length)], stroke: INK, sw: 1 }, 1.5) + `</g>`);
   }
   s.push(circle(door.x + door.w / 2 - 7, door.y + 62, 2.4, { fill: '#e8c860', stroke: INK, sw: 1 }) + circle(door.x + door.w / 2 + 7, door.y + 62, 2.4, { fill: '#e8c860', stroke: INK, sw: 1 }));
+  // Concert posters by the door, and the sofa that lives outside.
+  const poster = (px: number, py: number, col: string, l1: string, l2: string, rot: number) =>
+    `<g transform="rotate(${rot} ${px + 13} ${py + 17})">` + rect(px, py, 26, 34, { fill: col, stroke: INK, sw: 1.4 }) + text(px + 13, py + 12, l1, { size: 4.6, fill: INK, weight: 900 }) + text(px + 13, py + 19, l2, { size: 4.6, fill: INK, weight: 900 }) + path(`M${px + 4} ${py + 24}h18M${px + 6} ${py + 29}h14`, { stroke: INK, sw: 1 }) + `</g>`;
+  s.push(poster(374, 204, '#ffd34a', 'PFAND-', 'PIRATEN', -4));
+  s.push(poster(402, 212, '#4ae8ff', 'PLENUM', 'OF DOOM', 5));
+  s.push(ellipse(556, ground + 2, 40, 5, { fill: '#000000', opacity: 0.3 }));
+  s.push(inked('M524 300V268Q556 258 588 268V300Z', '#7a3048', 2.4));
+  s.push(inked('M518 302V280q8 -6 12 0v22zM582 302V280q4 -6 12 0v22z', '#8a3a54', 2.2));
+  s.push(inked('M530 302v-14h52v14z', '#a04a64', 2));
+  s.push(path('M556 288v14', { stroke: INK, sw: 1.6 }) + path('M568 290q3 -9 6 0q3 -9 6 0', { stroke: '#c8c8d0', sw: 1.6 }));
   for (let k = 0; k < 3; k++) s.push(inked(poly([[door.x - 12 - k * 8, ground - 6 + k * 6], [door.x + door.w + 12 + k * 8, ground - 6 + k * 6], [door.x + door.w + 14 + k * 8, ground + k * 6], [door.x - 14 - k * 8, ground + k * 6]]), k % 2 ? '#a89aa4' : '#c0b0b4', 2));
-  // A string of coloured bulbs from the corner to the signpost.
+  return s.join('');
+}
+
+/** A string of coloured bulbs from the corner to the signpost (drawn mirrored). */
+function lightString(): string {
+  const s: string[] = [];
+  const x1 = EP.x1;
   const sag = (t: number): Pt => [x1 + (EP.sign.x - x1) * t, 108 + 90 * t + Math.sin(t * Math.PI) * 26 - 0];
   let d = `M${x1} 108`;
   for (let i = 1; i <= 10; i++) d += `L${sag(i / 10)[0]} ${sag(i / 10)[1]}`;
@@ -261,6 +282,13 @@ function ground(): string {
   // Light from the door, the lit window, the cellar's neon.
   s.push(glow('epDoorPool', EP.door.x + EP.door.w / 2, 336, 110, LIT, 0.3, 30));
   s.push(glow('epNeonPool', 86, 324, 90, '#ff5ab4', 0.3, 26));
+  // Crown caps from a thousand concerts, trodden into the cobbles.
+  const rc = rng(31);
+  for (let i = 0; i < 34; i++) {
+    const cx = 200 + rc() * 580;
+    const cy = 336 + rc() * 104;
+    s.push(ellipse(cx, cy, 2.6, 1.6, { fill: rc() < 0.5 ? '#c8c8d0' : '#e8c860', stroke: INK, sw: 0.6 }));
+  }
   // Crumbs and bottle caps the pigeons are after.
   const r = rng(23);
   for (let i = 0; i < 26; i++) s.push(circle(40 + r() * 880, 344 + r() * 96, 1 + r(), { fill: r() < 0.5 ? '#e8d8a8' : '#c8a060', opacity: 0.8 }));
@@ -322,6 +350,36 @@ function trolley(): string {
   return s.join('');
 }
 
+/** The fairy lights' glow (its own layer: it flickers). */
+export function lightStringGlow(): string {
+  const s: string[] = [];
+  for (let i = 1; i < 10; i++) {
+    const t = i / 10;
+    const bx = 960 - (EP.x1 + (EP.sign.x - EP.x1) * t);
+    const by = 108 + 90 * t + Math.sin(t * Math.PI) * 26 + 4;
+    s.push(circle(bx, by, 11, { fill: SPRAY[i % 6], opacity: 0.4 }) + circle(bx, by, 2, { fill: '#ffffff', opacity: 0.9 }));
+  }
+  return s.join('');
+}
+
+/** The Plenum behind the lit first-floor window: hands going up and down. */
+export const PLENUM = { x: 323, y: 92, w: 44, h: 58 };
+export const PLENUM_FRAMES: SvgImageAsset[] = [0, 1].map((f) => {
+  const s: string[] = [];
+  const heads: Array<[number, number, boolean]> = [[9, 44, f === 0], [22, 40, f === 1], [35, 45, f === 0]];
+  for (const [hx, hy, up] of heads) {
+    s.push(circle(hx, hy, 5, { fill: '#5a3418' }));
+    s.push(path(`M${hx - 6} 58V${hy + 8}q6 -5 12 0V58Z`, { fill: '#5a3418' }));
+    if (up) s.push(path(`M${hx + 4} ${hy + 6}L${hx + 7} ${hy - 12}`, { stroke: '#5a3418', sw: 3.4 }));
+  }
+  return { key: `epple-plenum-${f}`, width: PLENUM.w, height: PLENUM.h, svg: s.join('') };
+});
+
+/** A pigeon taking off from a sill (a small layer an ambient flies about). */
+export function flyingPigeon(): string {
+  return path('M2 10Q8 0 14 8Q20 0 26 10', { stroke: INK, sw: 4 }) + path('M2 10Q8 0 14 8Q20 0 26 10', { stroke: '#9a9aae', sw: 2 }) + ellipse(14, 10, 4.4, 3, { fill: '#8a8a9c', stroke: INK, sw: 1 });
+}
+
 export function epplehausBg(): string {
   return [
     defs(
@@ -347,9 +405,10 @@ export function epplehausBg(): string {
       ])
     ),
     sky(),
-    street(),
-    neighbour(),
+    mirrored(street()),
+    mirrored(neighbour()),
     house(),
+    mirrored(lightString()),
     ground(),
     bikes(),
     bottleBanks(),

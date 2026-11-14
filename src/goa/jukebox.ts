@@ -132,7 +132,7 @@ async function refill(ctx: ScriptContext): Promise<void> {
   ctx.setFlag('ouzoEmpty', false);
   ctx.sfx('pickup');
   await ctx.repaint();
-  await ctx.say('ali', 'Ein leerer Feierabend ist kein Feierabend.');
+  await ctx.say('ali', 'Ein leerer Feierabend ist kein Feierabend, mein Lieber.');
 }
 
 /** "Trink!" — he grabs the glass in front of him, downs it, and pushes it

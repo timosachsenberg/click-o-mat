@@ -1,6 +1,6 @@
 import { Layer, type Facing, type HotspotDef, type Rect, type RoomDef, type Vec2 } from '../../engine/types';
 import type { ScriptContext } from '../../engine/ScriptContext';
-import { EP, PIGEON_ACTORS, epplehausBg } from '../art/epplehaus';
+import { EP, PIGEON_ACTORS, PLENUM, PLENUM_FRAMES, epplehausBg, flyingPigeon, lightStringGlow } from '../art/epplehaus';
 
 // ---- layout ----------------------------------------------------------------------
 // The forecourt of the Epplehaus, between the Picasso and the Neckarbrücke:
@@ -136,8 +136,8 @@ async function feedPigeons(ctx: ScriptContext): Promise<void> {
   await ctx.say('floh', 'Die da? Die plappert alles nach. Wie ein Papagei. Nur grauer.');
   await ctx.say(PUT_TAUBE, 'Put put! Put put!');
   await ctx.say('floh', 'Und jetzt ist sie so mit den Krümeln beschäftigt, die merkt nicht mal, wenn die Welt untergeht.');
-  ctx.addItem('muetze', { silent: true });
-  await ctx.say('floh', 'Hier, deine Mütze. Riecht jetzt nach Bier UND Brezel. Ein Upgrade.');
+  await ctx.say('floh', 'Die Mütze behalt ich, wenn’s recht ist. Als Futtersack. Riecht nach Bier UND Brezel, die Kollegen lieben das.');
+  await ctx.playerSay('Behalt sie. Steht dir besser als den Burschen.');
 }
 
 /** Catch the parroting pigeon — only while it's busy with the crumbs. */
@@ -153,6 +153,11 @@ async function catchPutTaube(ctx: ScriptContext): Promise<void> {
   await ctx.repaint();
   await ctx.playerSay('Sie pickt so konzentriert, dass sie mich gar nicht kommen sieht. Hab dich!');
   await ctx.say('floh', 'Na, die mag dich. Füttern nicht vergessen!');
+}
+
+/** Crumbs straight to the pigeons: not from my hand. */
+async function crumbsNotMe(ctx: ScriptContext): Promise<void> {
+  await ctx.playerSay('Wenn ich die Mütze hinhalte, flattert der ganze Schwarm auf mich drauf. Flaschenfloh hat da mehr Übung.');
 }
 
 const pigeonHotspot = (id: string): HotspotDef => ({
@@ -195,11 +200,10 @@ const pigeonHotspot = (id: string): HotspotDef => ({
   onItem: {
     use: {
       stuhlbein: 'Die Holzwürmer wären ein Festmahl für sie. Aber die Würmer brauch ich noch.',
+      muetzekruemel: crumbsNotMe,
     },
     give: {
-      muetzekruemel: async (ctx) => {
-        await ctx.playerSay('Wenn ich die Mütze hinhalte, flattert der ganze Schwarm auf mich drauf. Flaschenfloh hat da mehr Übung.');
-      },
+      muetzekruemel: crumbsNotMe,
       stuhlbein: 'Die Holzwürmer wären ein Festmahl für sie. Aber die Würmer brauch ich noch.',
       magicwoman: 'Energydrink für Tauben? Die sind schon nervös genug.',
     },
@@ -256,6 +260,25 @@ const HOTSPOTS: HotspotDef[] = [
       lookat: '„EPPLEHAUS“, mit Edding auf ein Bettlaken. Hängt da, seit ich denken kann. Dasselbe Laken.',
       pickup: 'Das hängt zu hoch. Und irgendwer vermisst es bestimmt als Bettlaken.',
     },
+  }),
+  at('plakate', 'Konzertplakate', R(370, 200, 62, 50), P(410, 346), 'up', {
+    on: {
+      lookat: async (ctx) => {
+        await ctx.playerSay('Konzertplakate. „DIE PFANDPIRATEN – Releaseparty“. Flaschenflohs Lieblingsband, wetten?');
+        await ctx.playerSay('Und „PLENUM OF DOOM – Doom Metal, Einlass nach Konsens“.');
+      },
+      pickup: 'Die kleben hier seit Jahren übereinander. Das ist tragende Bausubstanz.',
+    },
+  }),
+  at('sofa', 'Sofa', R(516, 262, 80, 44), P(556, 346), 'up', {
+    on: {
+      lookat: 'Ein Sofa vor der Tür. Weinrot, durchgesessen, eine Feder guckt raus. Hier haben schon Generationen den Bus verpasst.',
+      use: 'Wenn ich mich da reinsetze, komm ich nie wieder hoch. Das Sofa hat schon ganze Semester verschluckt.',
+      pickup: 'Das Sofa gehört zum Haus wie das Plenum.',
+    },
+  }),
+  at('plenum', 'Fenster', R(PLENUM.x - 4, PLENUM.y - 4, PLENUM.w + 8, PLENUM.h + 8), P(345, 346), 'up', {
+    on: { lookat: 'Hinter dem Fenster gehen Hände hoch. Und wieder runter. Und wieder hoch. Das Plenum stimmt ab. Über die Tagesordnung.' },
   }),
   at('tuer', 'Tür', R(EP.door.x - 8, EP.door.y - 8, EP.door.w + 16, EP.door.h + 24), P(480, 346), 'up', {
     defaultVerb: 'open',
@@ -321,13 +344,13 @@ const HOTSPOTS: HotspotDef[] = [
       use: handsOff,
     },
   }),
-  at('wegweiser', 'Wegweiser', R(EP.sign.x - 6, EP.sign.y, 98, 50), P(880, 348), 'up', {
-    on: { lookat: '„Neckarbrücke“ nach rechts. Und: „Wald 4 km“. Der Bass ist also schon ausgeschildert.' },
+  at('wegweiser', 'Wegweiser', R(960 - EP.sign.x - 92, EP.sign.y, 98, 50), P(80, 348), 'up', {
+    on: { lookat: '„Neckarbrücke“ nach links. Und: „Wald 4 km“. Der Bass ist also schon ausgeschildert.' },
   }),
-  at('lichterkette', 'Lichterkette', R(EP.x1 + 4, 110, 70, 84), P(820, 348), 'up', {
+  at('lichterkette', 'Lichterkette', R(960 - EP.x1 - 74, 110, 70, 84), P(140, 348), 'up', {
     on: { lookat: 'Eine Lichterkette, vom Haus zum Wegweiser gespannt. Jede zweite Birne brennt. Reicht.' },
   }),
-  at('toDoener', 'Zur Dönerbude', R(0, 140, 30, 306), P(24, 400), 'left', {
+  at('toDoener', 'Zur Dönerbude', R(890, 140, 70, 306), P(936, 400), 'right', {
     defaultVerb: 'use',
     on: {
       lookat: 'Da lang geht’s zur Dönerbude. Und dahinter die Treppe runter ins Picasso. Es riecht bis hierher.',
@@ -335,7 +358,7 @@ const HOTSPOTS: HotspotDef[] = [
       open: toDoener,
     },
   }),
-  at('toNeckar', 'Zur Neckarbrücke', R(900, 250, 60, 196), P(932, 400), 'right', {
+  at('toNeckar', 'Zur Neckarbrücke', R(0, 250, 70, 196), P(28, 400), 'left', {
     defaultVerb: 'use',
     on: {
       lookat: 'Da vorne ist die Neckarbrücke. Dahinter irgendwo: der Wald.',
@@ -363,6 +386,7 @@ const HOTSPOTS: HotspotDef[] = [
       push: 'Lieber nicht. Wer weiß, was dann alles klirrt.',
     },
     onItem: {
+      use: { muetzekruemel: feedPigeons, doener: feedFloh },
       give: {
         dose: async (ctx) => {
           await ctx.say('floh', 'Magic Woman? Die nimmt kein Automat der Welt. Zu lila.');
@@ -408,6 +432,11 @@ export const epplehausRoom: RoomDef = {
 
   layers: [
     { id: 'bg', depth: Layer.BEHIND, svg: epplehausBg() },
+    // The Plenum's shadows behind a lit window, the fairy lights' flicker, a pigeon off a sill.
+    { id: 'plenum', depth: Layer.BEHIND, x: PLENUM.x, y: PLENUM.y, anim: 'epple-plenum' },
+    { id: 'lichter', depth: Layer.BEHIND, x: 0, y: 0, w: 960, h: 450, svg: lightStringGlow() },
+    { id: 'flieger', depth: Layer.BEHIND, x: 690, y: 68, w: 28, h: 16, svg: flyingPigeon(), alpha: 0 },
+    { id: 'light', depth: Layer.FRONT, x: 0, y: 0, w: 960, h: 450, svg: '<rect width="960" height="450" fill="#c0507a"/>', alpha: 0.1 },
     // A heart balloon from the last concert, tied to the bike rack.
     { id: 'ballon', depth: Layer.BEHIND, x: 206, y: 196, w: 60, h: 140, svg: BALLOON_ART, visible: (state) => !state.getFlag('ballonTaken') },
   ],
@@ -418,11 +447,15 @@ export const epplehausRoom: RoomDef = {
 
   music: 'epple-theme',
 
-  assets: { svgActors: PIGEON_ACTORS },
+  assets: {
+    svgActors: PIGEON_ACTORS,
+    svgImages: PLENUM_FRAMES,
+    anims: [{ key: 'epple-plenum', textures: PLENUM_FRAMES.map((f) => f.key), frameRate: 0.7 }],
+  },
 
   entries: {
-    doener: { x: 40, y: 400, facing: 'right' },
-    neckar: { x: 910, y: 400, facing: 'left' },
+    neckar: { x: 50, y: 400, facing: 'right' },
+    doener: { x: 910, y: 400, facing: 'left' },
   },
 
   actors: [{ id: 'floh', x: FLOH.x, y: FLOH.y, facing: 'down' }, ...PIGEONS],
@@ -440,6 +473,25 @@ export const epplehausRoom: RoomDef = {
   },
 
   ambients: [
+    {
+      // The fairy lights flicker: every other bulb has a loose contact.
+      every: [900, 2600],
+      run: async (ctx) => {
+        const l = ctx.layerObj('lichter');
+        for (const a of [0.35, 1, 0.6, 1]) await ctx.tween(l, { alpha: a }, 90, { skippable: false });
+      },
+    },
+    {
+      // Now and then a pigeon takes off from a window sill and circles the house.
+      every: [7000, 14000],
+      run: async (ctx) => {
+        const b = ctx.layerObj('flieger');
+        b.setPosition(690, 68).setAlpha(1);
+        await ctx.tween(b, { x: 520, y: 14, ease: 'Sine.easeOut' }, 1500, { skippable: false });
+        await ctx.tween(b, { x: 250, y: 60, ease: 'Sine.easeInOut' }, 1800, { skippable: false });
+        await ctx.tween(b, { x: 230, y: 70, alpha: 0 }, 300, { skippable: false });
+      },
+    },
     { every: [500, 1300], run: pigeonLife },
     {
       // Flaschenfloh, talking shop to himself and to the pigeons.

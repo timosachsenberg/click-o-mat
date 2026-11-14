@@ -428,6 +428,12 @@ function hoelderlinturm(): string {
     lit(-6, -13, false) + lit(1, -13, true),
     // Damp at the waterline.
     path('M-12 -4Q0 -2 12 -4V0H-12Z', { fill: '#3a4a40', opacity: 0.5 }),
+    // The door onto the promenade, a lamp over it, the intercom beside it.
+    inked('M5 0V-9Q7.8 -12 10.6 -9V0Z', '#6a3a1e', 0.8),
+    path('M7.8 -10.6V0', { stroke: '#3a1e0e', sw: 0.5 }),
+    circle(9.6, -4.6, 0.5, { fill: '#f2c24a' }),
+    circle(7.8, -13.4, 2.6, { fill: '#ffe08a', opacity: 0.45 }) + circle(7.8, -13.4, 0.8, { fill: '#fff4c0', stroke: INK, sw: 0.3 }),
+    rect(2.6, -8, 1.6, 2.6, { fill: '#c8c8d0', stroke: INK, sw: 0.4 }),
   ];
   return [
     // Its reflection, and the willow's.
@@ -435,9 +441,8 @@ function hoelderlinturm(): string {
     willow(x - 56, base - 36, 2.2, 85),
     group(tower, `translate(${x} ${base}) scale(2.2)`),
     // Sprayed across the tower's foot, as on every other wall in town: PUT PUT.
-    text(x - 1, base - 13, 'PUT PUT', { size: 10.5, fill: '#4ae8ff', stroke: INK, sw: 2.6, rotate: -5 }),
-    path(`M${x - 22} ${base - 9}q8 -4 16 0t16 -1`, { stroke: '#ff4a8a', sw: 1.6 }),
-    path(`M${x + 14} ${base - 12}v7`, { stroke: '#4ae8ff', sw: 1.2, opacity: 0.8 }),
+    text(x - 9, base - 13, 'PUT PUT', { size: 9, fill: '#4ae8ff', stroke: INK, sw: 2.6, rotate: -5 }),
+    path(`M${x - 26} ${base - 9}q7 -4 14 0t14 -1`, { stroke: '#ff4a8a', sw: 1.6 }),
   ].join('');
 }
 
@@ -616,13 +621,21 @@ export function balustrade(): string {
     s.push(inked(poly([[px - 3, top - 16], [px + 21, top - 16], [px + 21, top - 9], [px - 3, top - 9]]), '#d89c80', 2));
   }
   // The bus stop: the green H on yellow, the timetable.
-  const hx = 586;
+  const hx = 722;
   s.push(inked(`M${hx - 2.5} ${top + 30}V${top - 96}h5V${top + 30}Z`, '#5a5a6a', 1.6));
   s.push(circle(hx, top - 112, 17, { fill: '#f2c230', stroke: INK, sw: 2.2 }));
   s.push(circle(hx, top - 112, 13, { fill: '#2a8a4a', stroke: INK, sw: 1.4 }));
   s.push(text(hx, top - 106, 'H', { size: 17, fill: '#f2c230', weight: 900 }));
   s.push(inked(`M${hx + 4} ${top - 84}h26v36h-26z`, '#f4efe4', 1.4));
   for (let k = 0; k < 5; k++) s.push(line([hx + 8, top - 78 + k * 6], [hx + 26 - (k % 2) * 6, top - 78 + k * 6], '#5a5a6a', 1.4));
+  // Signposts at both ends of the bridge: the forest one way, the town the other.
+  const signpost = (px: number, label: string, dir: 1 | -1, col: string) =>
+    inked(`M${px - 2.5} ${top + 34}V${top - 52}h5V${top + 34}Z`, '#5a5a6a', 1.6) +
+    inked(`M${px - 30} ${top - 50}h60v18h-60z`, col, 1.8) +
+    inked(dir > 0 ? `M${px + 30} ${top - 54}l14 13l-14 13z` : `M${px - 30} ${top - 54}l-14 13l14 13z`, col, 1.8) +
+    text(px, top - 37, label, { size: 8.6, fill: INK, weight: 900 });
+  s.push(signpost(46, 'WALD', -1, '#8ad070'));
+  s.push(signpost(914, 'EPPLEHAUS', 1, '#f2c230'));
   // The street lamp on the right.
   const lx = 862;
   s.push(inked(`M${lx - 7} ${top + 2}h14l-3 -14h-8z`, '#2a3a3a', 2));
@@ -875,6 +888,40 @@ export const PUNT_ACTOR: SvgActorAsset = {
 
 // ---- loose props -------------------------------------------------------------------
 
+/** Overlays for the river's life: glitter on the water, swallows, a swan. */
+export function waterShimmer(): string {
+  const r = rng(303);
+  const s: string[] = [];
+  for (let i = 0; i < 70; i++) {
+    const t = r();
+    const y = 262 + t * 104;
+    const xl = Math.max(4, xAt(NK.bankL, y) + 6);
+    const xr = Math.min(950, xAt(NK.quayFoot, y) - 10);
+    if (xr - xl < 20) continue;
+    const x = xl + r() * (xr - xl);
+    const len = 5 + t * 16;
+    s.push(path(`M${x.toFixed(1)} ${y.toFixed(1)}h${len.toFixed(1)}`, { stroke: r() < 0.6 ? '#fff0b0' : '#ffc890', sw: 1 + t * 1.2, opacity: 0.8 }));
+  }
+  return s.join('');
+}
+
+export function swallows(): string {
+  return ([[10, 16, 7], [34, 8, 6], [54, 20, 5]] as Array<[number, number, number]>)
+    .map(([x, y, k]) => path(`M${x - k} ${y - k * 0.5}Q${x - k * 0.4} ${y - k * 0.9} ${x} ${y}Q${x + k * 0.4} ${y - k * 0.9} ${x + k} ${y - k * 0.5}`, { stroke: '#2a1e40', sw: 1.8 }))
+    .join('');
+}
+
+export function swan(): string {
+  return (
+    ellipse(20, 24, 18, 3, { fill: '#fff0d0', opacity: 0.35 }) +
+    inked('M6 22Q4 14 14 13Q26 12 32 18Q30 24 18 24Z', '#f8f4ec', 1.6) +
+    path('M12 16Q20 12 28 17', { stroke: '#d8d0c0', sw: 1.2 }) +
+    path('M30 18Q36 12 32 6Q30 2 34 2', { stroke: INK, sw: 4.2 }) +
+    path('M30 18Q36 12 32 6Q30 2 34 2', { stroke: '#f8f4ec', sw: 2.4 }) +
+    path('M34 2l5 1.6l-5 1z', { fill: '#f08a2a', stroke: INK, sw: 0.8 })
+  );
+}
+
 /** A stamp card lying on the deck (24×14, local coordinates). */
 export function cardOnDeck(): string {
   return (
@@ -884,25 +931,6 @@ export function cardOnDeck(): string {
     rect(2, 2, 20, 3, { fill: '#d8322a' }) +
     [0, 1, 2, 3].map((k) => circle(6 + k * 4, 9, 1.3, { fill: '#c43a8a' })).join('') +
     `</g>`
-  );
-}
-
-/** Bolt cutters lying on the deck (36×16, local coordinates). */
-export function cuttersOnDeck(): string {
-  return (
-    ellipse(18, 13, 17, 3, { fill: '#000000', opacity: 0.3 }) +
-    path('M2 10L20 7M2 14L20 7', { stroke: INK, sw: 5 }) +
-    path('M2 10L20 7M2 14L20 7', { stroke: '#d8322a', sw: 3 }) +
-    path('M19 7L32 3L34 6L22 9Z', { fill: '#a8a8b8', stroke: INK, sw: 1.4 })
-  );
-}
-
-/** The punt pole, floating along the jetty (120×20, local coordinates). */
-export function floatingPole(): string {
-  return (
-    ellipse(60, 12, 58, 4, { fill: '#fff0d0', opacity: 0.35 }) +
-    path('M4 14L116 6', { stroke: INK, sw: 5 }) +
-    path('M4 14L116 6', { stroke: '#c8a060', sw: 3 })
   );
 }
 

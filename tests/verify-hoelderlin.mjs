@@ -139,14 +139,14 @@ check('took the full stamp card', (await inv()).includes('stempelkarte'), JSON.s
 
 // --- to the Picasso: past the Epplehaus and the döner stand (a free döner on the way)
 await goTo('epplehaus', 945, 432);
-await goTo('doener', 15, 400);
+await goTo('doener', 945, 400);
 await verb('give');
 await click(522 + (await inv()).indexOf('stempelkarte') * 112, 505);
 await page.waitForTimeout(150);
 await click(530, 230); // the döner man
 await settle();
 check('ten stamps: a free döner', (await inv()).includes('doener') && !(await inv()).includes('stempelkarte'), JSON.stringify(await inv()));
-await goTo('picasso', 86, 260);
+await goTo('picasso', 863, 260);
 check('in the Picasso', (await room()) === 'picasso');
 
 let said = [];
@@ -162,7 +162,7 @@ check('the cap makes a crumb bag', (await inv()).includes('muetzekruemel') && !(
 
 // --- the Epplehaus: Flaschenfloh feeds the pigeons — put, put, put! — and one parrots it
 await goTo('doener', 311, 220, { button: 'right' });
-await goTo('epplehaus', 945, 400);
+await goTo('epplehaus', 15, 400);
 const giveFloh = async (item) => {
   await verb('give');
   await click(522 + (await inv()).indexOf(item) * 112, 505);
@@ -176,7 +176,7 @@ await giveFloh('doener');
 check('he eats the döner', (await flag('flohSatt')) === true && !(await inv()).includes('doener'));
 await giveFloh('muetzekruemel');
 check('Flaschenfloh feeds the pigeons, one starts saying "Put put"', (await flag('putTaube')) === true && (await flag('putHeard')) === true && !(await inv()).includes('muetzekruemel'));
-check('and hands the cap back', (await inv()).includes('muetze'), JSON.stringify(await inv()));
+check('and keeps the cap', !(await inv()).some((i) => i.startsWith('muetze')), JSON.stringify(await inv()));
 const putPos = await ev(() => { const a = window.__engine.roomScene.actors.get('taube3'); return { x: a.x, y: a.y, h: a.sprite.displayHeight }; });
 check('the parroting pigeon pecks crumbs by Flaschenfloh', Math.abs(putPos.x - 506) < 6 && Math.abs(putPos.y - 376) < 6, JSON.stringify(putPos));
 await page.waitForTimeout(2500);
@@ -187,27 +187,27 @@ await doVerb('pickup', putPos.x, putPos.y - putPos.h * 0.4);
 check('caught the Put-Put pigeon', (await inv()).includes('taube') && (await flag('taubeCaught')) === true, JSON.stringify(await inv()));
 
 // --- on to the bridge
-await goTo('neckar', 932, 380);
+await goTo('neckar', 20, 380);
 check('on the Neckarbrücke', (await room()) === 'neckar');
 
 // --- the tower's door: Otto R. on the intercom wants the password
 check('the Hölderlinturm is a hotspot on the bridge', (await hotspotAt(440, 200)) === 'turm');
-await verb('open');
-await click(440, 200);
+await goTo('turmtuer', 458, 284); // the tower's door (default verb): on to the close-up
+check('a close-up of the door: door, intercom and graffiti', (await hotspotAt(480, 250)) === 'tuer' && (await hotspotAt(630, 235)) === 'sprechanlage' && (await hotspotAt(322, 250)) === 'putput');
+await click(480, 250); // default verb: open — locked, so the intercom
 await waitFor(() => ev(() => window.__engine.choicesShowing), 25000, 'the intercom');
-check('the door is locked: Otto asks for the password', (await room()) === 'neckar' && (await flag('turmAsked')) === true);
+check('the door is locked: Otto asks for the password', (await room()) === 'turmtuer' && (await flag('turmAsked')) === true);
 said = (await choices()).map((c) => c.text);
 check('no Chakabunga at the intercom before Ali said it', !said.some((t) => t.startsWith('Chakabunga')), said.join(' | '));
 await pick('Put put?');
 check('saying "Put put" yourself: the voice is wrong', (await flag('putTried')) === true && !(await flag('turmOpen')));
 await pick('Schon gut');
-check('still outside', (await room()) === 'neckar');
+check('still outside', (await room()) === 'turmtuer');
 
 // --- the pigeon says it, in the right voice: the door opens
-await useItemOn('taube', 440, 200);
+await useItemOn('taube', 630, 235);
 check('the pigeon says the password: the door is open', (await flag('turmOpen')) === true && !(await inv()).includes('taube'));
-await verb('open');
-await click(440, 200);
+await click(480, 250);
 await waitFor(async () => (await room()) === 'hoelderlinturm', 25000, 'the tower');
 await settle();
 check('opening the Hölderlinturm leads inside', (await room()) === 'hoelderlinturm');
@@ -285,6 +285,8 @@ await page.screenshot({ path: `${SHOT}/hoel-05-free.png` });
 // --- the hole stays in the wall in 1987; in the modern layer it peels off again
 await doVerb('pickup', 671, 340);
 check('in 1987 the hole is stuck in the wall', (await flag('wallHoleTaken')) !== true && (await hotspotAt(671, 340)) === 'mauerloch');
+await useItemOn('taschenattraktor', 671, 340);
+check('the pocket attractor on the stuck hole: no wormhole yet', !(await inv()).includes('wurmloch') && (await inv()).includes('taschenattraktor'), JSON.stringify(await inv()));
 await clickW(382, 164);
 await settle();
 check('on to the modern layer', (await era()) === 2);
@@ -312,11 +314,15 @@ await page.screenshot({ path: `${SHOT}/hoel-06-toon-after.png` });
 // --- out through the door, back on the promenade by the tower
 await camSettle();
 await clickW(122, 214);
-await waitFor(async () => (await room()) === 'neckar', 15000, 'neckar');
+await waitFor(async () => (await room()) === 'turmtuer', 15000, 'the door');
 // No clicking to skip lines here: a stray click would walk the player off.
 await waitFor(async () => !(await ev(() => window.__engine.busy)), 8000, 'arrival');
 const out = await ev(() => { const a = window.__engine.roomScene.actors.get('player'); return { x: a.x, y: a.y }; });
-check('out of the door: back at the tower on the promenade', (await room()) === 'neckar' && Math.abs(out.x - 478) < 12 && Math.abs(out.y - 304) < 12, JSON.stringify(out));
+check('out of the door: in front of it, in the close-up', (await room()) === 'turmtuer' && Math.abs(out.x - 479) < 12 && Math.abs(out.y - 366) < 12, JSON.stringify(out));
+check('the door stands ajar now', await ev(() => window.__engine.roomScene.layerObj('ajar').visible === true));
+await goTo('neckar', 930, 400);
+const back = await ev(() => { const a = window.__engine.roomScene.actors.get('player'); return { x: a.x, y: a.y }; });
+check('along the promenade: back at the tower on the bridge scene', Math.abs(back.x - 478) < 12 && Math.abs(back.y - 304) < 12, JSON.stringify(back));
 
 // --- saving is refused while a scene is running
 await click(440, 200, { button: 'right' }); // look at the tower: a line starts
@@ -327,18 +333,34 @@ await page.waitForTimeout(200);
 check('no quick save mid-scene', (await ev(() => localStorage.getItem('pnc-save-goa-0'))) === savesBefore && (await ev(() => window.__engine.busy)) === true);
 await settle();
 
-// --- through the wormhole: out at the Goa's entrance in the forest
-const useWormhole = async () => {
-  await verb('use');
-  await click(522 + (await inv()).indexOf('wurmloch') * 112, 505);
-  await waitFor(async () => (await room()) === 'goaeingang', 15000, 'the Goa');
-  await settle();
-};
-await useWormhole();
-check('the wormhole leads to the Goa\'s entrance', (await room()) === 'goaeingang' && (await flag('wormholeUsed')) === true);
-check('and stays in the pocket (there and back)', (await inv()).includes('wurmloch'));
-check('bouncer, Flaschenfloh, gate and the wormhole back are there',
-  (await hotspotAt(560, 334)) === 'tuersteher' && (await hotspotAt(790, 300)) === 'floh' && (await hotspotAt(560, 160)) === 'tor' && (await hotspotAt(110, 300)) === 'wurmloch');
+// --- the wormhole pair: useless here, it wants throwing at the forest's barrier
+await verb('use');
+await click(522 + (await inv()).indexOf('wurmloch') * 112, 505);
+await settle();
+check('on the bridge the wormhole pair stays in the pocket', (await room()) === 'neckar' && (await inv()).includes('wurmloch') && !(await flag('portalOpen')));
+await goTo('waldrand', 15, 432);
+await useItemOn('wurmloch', 420, 330);
+await waitFor(async () => (await flag('portalOpen')) === true, 20000, 'the throw');
+await settle();
+check('one end thrown over the barrier: a portal stands at the forest\'s edge', (await flag('portalOpen')) === true && !(await inv()).includes('wurmloch') && (await hotspotAt(724, 326)) === 'portal');
+await page.screenshot({ path: `${SHOT}/hoel-07-portal.png` });
+const pocketsBefore = (await inv()).length;
+await click(724, 326); // the portal (default verb: use)
+await waitFor(async () => (await room()) === 'goa', 20000, 'the dance floor');
+// The landing is a cutscene that ends in the Goazwerg's question.
+await waitFor(async () => { if (await ev(() => window.__engine.choicesShowing)) return true; await page.keyboard.press('Escape'); return false; }, 40000, 'the Goazwerg');
+check('out of the portal: in the middle of the dance floor', (await room()) === 'goa' && (await flag('wormholeUsed')) === true);
+const landed = await ev(() => { const a = window.__engine.roomScene.actors.get('player'); return { x: a.x, y: a.y }; });
+check('the player landed on the floor, by the portal', Math.abs(landed.x - 384) < 30 && Math.abs(landed.y - 404) < 20, JSON.stringify(landed));
+check('everything in the pockets is lost on the way', pocketsBefore > 0 && (await inv()).length === 0, JSON.stringify(await inv()));
+said = (await choices()).map((c) => c.text);
+check('the Goazwerg wants the password on the dance floor — and there is no Chakabunga to say', !said.some((t) => t.startsWith('Chakabunga')), said.join(' | '));
+await pick('Ich komm gleich');
+await waitFor(async () => (await room()) === 'goaeingang', 20000, 'thrown out');
+await settle();
+check('without the password: thrown out, in front of the gate', (await room()) === 'goaeingang' && !(await flag('goaEntered')));
+check('bouncer, Flaschenfloh and the gate are there',
+  (await hotspotAt(560, 334)) === 'tuersteher' && (await hotspotAt(790, 300)) === 'floh' && (await hotspotAt(560, 160)) === 'tor' && (await hotspotAt(110, 300)) !== 'wurmloch');
 await page.screenshot({ path: `${SHOT}/hoel-07-goa.png` });
 
 // --- the gate: not without the bouncer's say-so
@@ -360,11 +382,29 @@ await click(560, 334, { button: 'right' });
 await waitFor(() => ev(() => window.__engine.choicesShowing), 8000, 'bouncer');
 await pick('Chakabunga');
 check('Chakabunga: the bouncer lets you in', (await flag('goaEntered')) === true);
+const gateFrames = new Set();
+for (let i = 0; i < 6; i++) { gateFrames.add(await ev(() => window.__engine.roomScene.layerObj('gatecrowd').frame.texture.key)); await page.waitForTimeout(130); }
+check('dancers are visible through the gate', gateFrames.size >= 2, [...gateFrames].join(','));
 await click(560, 160);
-await waitFor(async () => (await flag('chapterDone')) === true, 15000, 'gate');
+await waitFor(async () => (await room()) === 'goa', 15000, 'the dance floor');
 await settle();
-check('through the gate: to be continued', (await flag('chapterDone')) === true);
-await page.screenshot({ path: `${SHOT}/hoel-08-end.png` });
+check('through the gate: the Goa', (await room()) === 'goa' && !(await flag('chapterDone')));
+
+// --- the Goa: dancers everywhere, stomping; mushrooms, threads, the DJ
+const dancing = new Set();
+for (let i = 0; i < 6; i++) { dancing.add(await ev(() => window.__engine.roomScene.layerObj('dancer3').frame.texture.key + '|' + window.__engine.roomScene.layerObj('far').frame.texture.key)); await page.waitForTimeout(130); }
+check('the crowd dances (animated dancers near and far)', dancing.size >= 2, String(dancing.size));
+check('eighteen dancers to walk among', await ev(() => { let n = 0; for (let i = 0; i < 40; i++) { try { window.__engine.roomScene.layerObj('dancer' + i); n++; } catch { break; } } return n; }) === 18);
+check('the portal back, mushrooms, threads, mandala, DJ and the dance floor are there',
+  (await hotspotAt(384, 402)) === 'portal' && (await hotspotAt(230, 220)) === 'pilze' && (await hotspotAt(200, 60)) === 'faeden' && (await hotspotAt(480, 140)) === 'mandala' && (await hotspotAt(480, 240)) === 'dj' && (await hotspotAt(480, 394)) === 'tanzflaeche');
+await page.screenshot({ path: `${SHOT}/hoel-08-goa.png` });
+
+// --- dance: the chapter ends on the dance floor
+await click(480, 394); // the dance floor (default verb: use)
+await waitFor(async () => (await flag('chapterDone')) === true, 30000, 'dance');
+await settle();
+check('danced: to be continued', (await flag('goaDanced')) === true && (await flag('chapterDone')) === true);
+await page.screenshot({ path: `${SHOT}/hoel-09-end.png` });
 
 console.log('ERRORS:', errors.length ? '\n' + errors.slice(0, 8).join('\n') : 'none');
 if (errors.length) process.exitCode = 1;

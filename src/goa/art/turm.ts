@@ -35,7 +35,9 @@ import {
  *
  *   0  toon   — the house style (hand-inked, cel-shaded, paper grain)
  *   1  pixel  — a 1987 EGA adventure: 5 px blocks, sixteen colours
- *   2  modern — a cartoon collage: thick black outlines, photo textures
+ *   2  a 1930s cartoon reel — black and white, rubber-hose wobble, film grain
+ *      (drawn as the collage below — thick outlines, procedural textures —
+ *      and then run through the `film` filter)
  *
  * One shared plan (TM, FLOORS) — all three renderers draw the same house,
  * so hotspots, walk area and actors fit every layer. Everything is drawn in
@@ -384,7 +386,7 @@ const MODERN: Look = { modern: true, ink: '#000000', sw: 4.2 };
 
 /** Fill + outline in the given look (wobbly in toon, clean in modern). */
 function shape(L: Look, pts: Pt[], fill: string, seed: number, sw = L.sw): string {
-  const d = L.modern ? poly(pts) : wobble(pts, { seed, wobble: 1.2 });
+  const d = L.modern ? wobble(pts, { seed, wobble: 2.6 }) : wobble(pts, { seed, wobble: 1.2 });
   return path(d, { fill, stroke: L.ink, sw });
 }
 const box = (L: Look, x: number, y: number, w: number, h: number, fill: string, seed: number, sw = L.sw) =>
@@ -836,9 +838,63 @@ function modernDefs(): string {
 }
 
 /** The whole doll's house in one of the three time layers (static per layer). */
+/** The old-film look of the third time layer: everything drawn there goes
+ *  through this — black and white with a warm tone, hard contrast. Every
+ *  layer of that era wraps its markup in it (each layer is its own image). */
+export function film(markup: string): string {
+  return (
+    `<defs><filter id="ofFilm" filterUnits="userSpaceOnUse" x="0" y="0" width="${ROOM.w}" height="${ROOM.h}" color-interpolation-filters="sRGB">` +
+    `<feColorMatrix type="matrix" values="0.33 0.5 0.17 0 0  0.33 0.5 0.17 0 0  0.33 0.5 0.17 0 0  0 0 0 1 0"/>` +
+    `<feComponentTransfer><feFuncR type="table" tableValues="0.05 0.2 0.62 0.9 1"/><feFuncG type="table" tableValues="0.04 0.19 0.58 0.85 0.96"/><feFuncB type="table" tableValues="0.03 0.15 0.48 0.72 0.84"/></feComponentTransfer>` +
+    `</filter></defs><g filter="url(#ofFilm)">${markup}</g>`
+  );
+}
+
+/** Pie eyes and a grin: in a 1930s cartoon the furniture is alive. */
+function pieFace(cx: number, cy: number, k = 1): string {
+  const eye = (ex: number) =>
+    ellipse(ex, cy, 4.6 * k, 6.4 * k, { fill: '#ffffff', stroke: '#000000', sw: 1.8 }) +
+    path(`M${ex} ${cy + 1.6 * k}m${-2.6 * k} 0a${2.6 * k} ${3.4 * k} 0 1 0 ${5.2 * k} 0a${2.6 * k} ${3.4 * k} 0 1 0 ${-5.2 * k} 0`, { fill: '#000000' }) +
+    path(`M${ex} ${cy + 1.6 * k}l${3 * k} ${-3.4 * k}l${1.2 * k} ${2.6 * k}z`, { fill: '#ffffff' });
+  return eye(cx - 6.5 * k) + eye(cx + 6.5 * k) + path(`M${cx - 9 * k} ${cy + 11 * k}q${9 * k} ${7 * k} ${18 * k} 0`, { stroke: '#000000', sw: 2 });
+}
+
+function cartoonFaces(): string {
+  const so = TM.sofa;
+  const ba = TM.barrels;
+  const p = TM.pedestal;
+  return [
+    pieFace(so.x + so.w / 2, so.foot - 32, 1),
+    ...[0, 1, 2].map((i) => pieFace(ba.x + 22 + i * 45, ba.foot - 30, 0.8)),
+    pieFace(p.x + p.w / 2, p.foot - 10, 0.5),
+    // Speed lines and sparkle marks, as the animators liked them.
+    path(`M${TM.spiral.cx - 70} ${TM.spiral.cy - 34}l-12 -8M${TM.spiral.cx + 72} ${TM.spiral.cy - 30}l12 -8M${TM.spiral.cx} ${TM.spiral.cy - 52}v-12`, { stroke: '#000000', sw: 2.4 }),
+  ].join('');
+}
+
+/** Grain, scratches, dust and an iris vignette: a FRONT overlay for the
+ *  third layer (an ambient makes it flicker). */
+export function filmOverlay(): string {
+  const r = rng(1930);
+  const s: string[] = [];
+  s.push(
+    `<defs><filter id="ofGrain" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3"/>` +
+      `<feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 0.96  0 0 0 0 0.84  0 0 0 0.3 -0.02"/></filter>` +
+      `<radialGradient id="ofIris" cx="50%" cy="50%" r="72%"><stop offset="0.62" stop-color="#000" stop-opacity="0"/><stop offset="0.86" stop-color="#000" stop-opacity="0.75"/><stop offset="1" stop-color="#000" stop-opacity="1"/></radialGradient></defs>`
+  );
+  s.push(`<rect width="${ROOM.w}" height="${ROOM.h}" filter="url(#ofGrain)"/>`);
+  for (let i = 0; i < 5; i++) {
+    const x = 40 + r() * 880;
+    s.push(path(`M${x.toFixed(0)} ${(r() * 120).toFixed(0)}q${(r() * 6 - 3).toFixed(1)} 120 ${(r() * 4 - 2).toFixed(1)} ${(200 + r() * 240).toFixed(0)}`, { stroke: '#fff8e0', sw: 0.9, opacity: 0.4 }));
+  }
+  for (let i = 0; i < 14; i++) s.push(circle(r() * 960, r() * 450, 0.8 + r() * 1.8, { fill: r() < 0.5 ? '#000000' : '#fff8e0', opacity: 0.55 }));
+  s.push(`<rect width="${ROOM.w}" height="${ROOM.h}" fill="url(#ofIris)"/>`);
+  return s.join('');
+}
+
 export function turmBg(era: Era): string {
   if (era === 1) return pixelRoom();
-  if (era === 2) return [modernDefs(), vectorRoom(MODERN), vignette('mdVig', ROOM.w, ROOM.h, 0.3, '#1a0a2a')].join('');
+  if (era === 2) return modernDefs() + film(vectorRoom(MODERN) + cartoonFaces());
   return [toonDefs(), vectorRoom(TOON), vignette('tmVig', ROOM.w, ROOM.h, 0.38), grainOverlay(ROOM.w, ROOM.h, 0.3, 0.26)].join('');
 }
 
@@ -893,7 +949,7 @@ export function blackHoleArt(era: Era): string {
     return g.svg();
   }
   if (era === 2) {
-    return [
+    return film([
       defs(
         `<filter id="mdDiskF" x="-30%" y="-80%" width="160%" height="260%"><feTurbulence type="turbulence" baseFrequency="0.08 0.4" numOctaves="3" seed="21"/>` +
           `<feDisplacementMap in="SourceGraphic" scale="6"/><feGaussianBlur stdDeviation="0.6"/></filter>`,
@@ -907,7 +963,7 @@ export function blackHoleArt(era: Era): string {
       ellipse(cx, cy, rx + 16, ry + 5, { fill: 'url(#mdDisk)', extra: 'filter="url(#mdDiskF)"' }),
       ellipse(cx, cy, rx, ry, { fill: '#000000', stroke: '#000000', sw: 3 }),
       path(`M${cx + rx - 14} ${cy - ry + 2}q14 -10 20 2q-8 3 -20 -2z`, { fill: '#2a2a3a', stroke: '#000000', sw: 2.4 }),
-    ].join('');
+    ].join(''));
   }
   const r = rng(77);
   const stars: string[] = [];
@@ -939,7 +995,7 @@ export function wallHoleArt(era: Era): string {
     return g.svg();
   }
   const L = era === 2 ? MODERN : TOON;
-  return [
+  const out = [
     defs(linear('whSky', 0, top, 0, foot, [
       [0, '#2a2060'],
       [0.5, '#c25a8a'],
@@ -951,6 +1007,7 @@ export function wallHoleArt(era: Era): string {
     path(arch, { stroke: L.ink, sw: L.sw + 1 }),
     path(`M${x} ${top + 46}l-8 -5M${x + w} ${top + 38}l10 -6l5 3M${x + w / 2} ${top - 4}l-3 -10`, { stroke: L.ink, sw: 1.8 }),
   ].join('');
+  return era === 2 ? film(out) : out;
 }
 
 /** The attractor's pulsing glow (an ambient tweens its alpha). */
@@ -961,7 +1018,7 @@ export function spiralGlow(era: Era): string {
     ROESSLER.slice(0, 190).forEach(([x, y], i) => i % 9 === 0 && g.set(Math.floor(x / CELL), Math.floor(y / CELL), 'w'));
     return g.svg();
   }
-  return glow('spGlow', cx, cy, 80, era === 2 ? '#7af0ff' : '#fff0a0', 0.5, 56);
+  return glow('spGlow', cx, cy, 80, era === 2 ? '#ffffff' : '#fff0a0', 0.5, 56);
 }
 
 // ---- Otto R., stuck in 1987 -----------------------------------------------------------
@@ -1078,6 +1135,22 @@ export const OTTO_ACTOR: SvgActorAsset = {
     gone: { frames: 1, frameRate: 1 },
   },
   draw: ottoFrame,
+};
+
+/** A voice without a body: an actor whose every pose is blank. It speaks for
+ *  people drawn into a backdrop (the döner man) or heard through something
+ *  (Otto at the intercom, the DJ) — a blank `stance` alone would still show
+ *  the talk pose. */
+export const VOICE_ACTOR: SvgActorAsset = {
+  key: 'voice',
+  width: 64,
+  height: 120,
+  poses: {
+    idle: { frames: 1, frameRate: 1 },
+    walk: { frames: 1, frameRate: 1 },
+    talk: { frames: 1, frameRate: 1 },
+  },
+  draw: () => '',
 };
 
 /** The spiral as tiny markup for the pocket attractor's icon (64×48 box). */

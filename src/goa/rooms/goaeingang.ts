@@ -1,11 +1,11 @@
 import { Layer, type Facing, type HotspotDef, type Rect, type RoomDef, type Vec2 } from '../../engine/types';
 import type { ScriptContext } from '../../engine/ScriptContext';
-import { GE, goaEingangBg, portal } from '../art/goaeingang';
+import { GATE_CROWD, GATE_CROWD_FRAMES, GE, goaEingangBg } from '../art/goaeingang';
 
 // ---- layout ----------------------------------------------------------------------
-// The Goa's entrance, deep in the forest: the wormhole spits the player out
-// on the left (and stays open — the way back to the Hölderlinturm). In the
-// middle the gate, the bouncer — a Goazwerg in a felt sauna hat — in front of it: here the password Chakabunga
+// The Goa's entrance, deep in the forest — seen from outside only by those
+// the bouncer threw off the dance floor (the wormhole lands in the middle of
+// it) or who walk out. In the middle the gate, the bouncer — a Goazwerg in a felt sauna hat — in front of it: here the password Chakabunga
 // is finally needed. Flaschenfloh is already here, collecting empties. Past
 // the bouncer and through the gate, the party goes on — in the next chapter.
 //
@@ -28,22 +28,27 @@ async function throughTheGate(ctx: ScriptContext): Promise<void> {
     await ctx.say('tuersteher', 'Moment, Kollege. Erst die Parole.');
     return;
   }
-  await ctx.playerSay('Folge dem Bass.');
-  ctx.sfx('win');
-  ctx.setFlag('chapterDone');
-  ctx.showTitle('FORTSETZUNG FOLGT …');
-}
-
-async function backThroughWormhole(ctx: ScriptContext): Promise<void> {
-  await ctx.playerSay('Zurück durchs Wurmloch. Festhalten.');
-  ctx.sfx('zap');
-  ctx.flash(0xb06aff, 300);
-  await ctx.goToRoom('hoelderlinturm', 'door');
+  await ctx.once('throughGate', async () => {
+    await ctx.playerSay('Folge dem Bass.');
+  });
+  await ctx.goToRoom('goa', 'eingang');
 }
 
 const HOTSPOTS: HotspotDef[] = [
   at('wald', 'Wald', R(0, 60, 960, 250), P(480, 400), 'up', {
     on: { lookat: 'Tiefer Wald, Vollmond, und überall wummert es. Genau so hab ich mir das vorgestellt.' },
+  }),
+  at('pilze', 'Leuchtpilze', R(296, 228, 110, 96), P(350, 352), 'up', {
+    on: {
+      lookat: 'Pilze, so groß wie Stehlampen. Und sie leuchten auch so. Schon der Eingang ist ein Versprechen.',
+      pickup: 'Die stehen hier als Wegbeleuchtung. Und der Goazwerg guckt.',
+    },
+  }),
+  at('faeden', 'Schwarzlicht-Fäden', R(262, 20, 160, 200), P(350, 352), 'up', {
+    on: { lookat: 'Leuchtende Fäden, vom Baum zum Tor gespannt. Jeder einzelne gerade, alle zusammen eine Kurve.' },
+  }),
+  at('wegweiser', 'Wegweiser', R(662, 258, 92, 44), P(700, 352), 'up', {
+    on: { lookat: '„MAINFLOOR“ geradeaus. „CHAI · CHILL“ irgendwo links. Erst mal Mainfloor.' },
   }),
   at('mond', 'Mond', R(786, 36, 70, 70), P(700, 400), 'up', {
     on: { lookat: 'Vollmond. Wie auf dem Flyer versprochen. Die Goa hält, was sie verspricht.' },
@@ -57,13 +62,6 @@ const HOTSPOTS: HotspotDef[] = [
       },
       use: throughTheGate,
       open: throughTheGate,
-    },
-  }),
-  at('wurmloch', 'Wurmloch', R(GE.portal.x - GE.portal.rx, GE.portal.y - GE.portal.ry, GE.portal.rx * 2, GE.portal.ry * 2), P(200, 392), 'left', {
-    defaultVerb: 'use',
-    on: {
-      lookat: 'Das Wurmloch, aus dem ich gefallen bin. Es dreht sich noch. Zurück zum Hölderlinturm geht’s also auch.',
-      use: backThroughWormhole,
     },
   }),
   {
@@ -133,15 +131,9 @@ export const goaEingangRoom: RoomDef = {
 
   layers: [
     { id: 'bg', depth: Layer.BEHIND, svg: goaEingangBg() },
-    {
-      id: 'portal',
-      depth: Layer.BEHIND,
-      x: GE.portal.x - GE.portal.rx,
-      y: GE.portal.y - GE.portal.ry,
-      w: GE.portal.rx * 2,
-      h: GE.portal.ry * 2,
-      svg: `<g transform="translate(${GE.portal.rx - GE.portal.x} ${GE.portal.ry - GE.portal.y})">${portal()}</g>`,
-    },
+    // The party, glimpsed through the gate: dancers stomping in time.
+    { id: 'gatecrowd', depth: Layer.BEHIND, x: GATE_CROWD.x, y: GATE_CROWD.y, anim: 'goa-gatecrowd' },
+    { id: 'light', depth: Layer.FRONT, x: 0, y: 0, w: 960, h: 450, svg: '<rect width="960" height="450" fill="#2a1a6a"/>', alpha: 0.2 },
   ],
 
   walkArea: [P(30, 340), P(940, 336), P(940, 446), P(30, 446)],
@@ -150,8 +142,14 @@ export const goaEingangRoom: RoomDef = {
 
   music: 'goa-theme',
 
+  assets: {
+    svgImages: GATE_CROWD_FRAMES,
+    anims: [{ key: 'goa-gatecrowd', textures: GATE_CROWD_FRAMES.map((f) => f.key), frameRate: 4000 / 856 }],
+  },
+
   entries: {
-    wurmloch: { x: 200, y: 392, facing: 'right' },
+    // Back out of the Goa, through the gate.
+    tor: { x: 560, y: 342, facing: 'down' },
   },
 
   actors: [
@@ -161,26 +159,34 @@ export const goaEingangRoom: RoomDef = {
 
   async onEnter(ctx) {
     await ctx.once('goaArrival', async () => {
-      ctx.flash(0xb06aff, 400);
-      ctx.shake(400, 0.015);
-      await ctx.wait(500);
-      await ctx.playerSay('Uff. Das war ... schnell.');
-      await ctx.playerSay('Bass! Lichter! Laser! Ich bin da. Ich bin wirklich da.');
-      await ctx.say('floh', ctx.flag('flohFollows') ? 'Da bist du ja endlich! Klirr.' : 'Na, auch hier? Klirr.');
-      await ctx.playerSay('Und wer bist du? Ein ... Gartenzwerg?');
-      await ctx.say('tuersteher', 'Goazwerg. Türsteher. Und das ist eine Saunamütze, bevor du fragst.');
-      await ctx.say('tuersteher', 'Du kommst aus einem Wurmloch. Respekt. Trotzdem: ohne Parole kein Einlass.');
+      await ctx.playerSay('Das Tor. Von außen. So rum war das eigentlich gedacht.');
+      await ctx.say('floh', ctx.flag('goaEntered') ? 'Na, frische Luft schnappen? Klirr.' : 'Na, rausgeflogen? Klirr. Passiert den Besten.');
+      if (!ctx.flag('goaEntered')) await ctx.say('tuersteher', 'Erst Parole, dann Tor. Nicht erst Loch, dann Tanzfläche.');
     });
   },
 
   ambients: [
     {
-      // The wormhole keeps turning.
-      every: [10, 50],
+      // The Goazwerg bobs along with the bass. He'd deny it.
+      every: [30, 90],
       run: async (ctx) => {
-        const p = ctx.layerObj('portal');
-        if (p.originX !== 0.5) p.setOrigin(0.5).setPosition(GE.portal.x, GE.portal.y);
-        await ctx.tween(p, { angle: p.angle + 360 }, 6000, { skippable: false });
+        const z = ctx.actor('tuersteher').sprite;
+        const y0 = ctx.actor('tuersteher').y;
+        for (let i = 0; i < 4; i++) {
+          await ctx.tween(z, { y: y0 - 3, ease: 'Quad.easeOut' }, 110, { skippable: false });
+          await ctx.tween(z, { y: y0, ease: 'Quad.easeIn' }, 318, { skippable: false });
+        }
+      },
+    },
+    {
+      // Flaschenfloh makes his rounds: from bottle to bottle, and back.
+      every: [5000, 9000],
+      run: async (ctx) => {
+        if (ctx.busy) return;
+        const spots: Array<[number, number]> = [[770, 404], [836, 380], [700, 420], [FLOH.x, FLOH.y]];
+        const [x, y] = spots[Math.floor(Math.random() * spots.length)];
+        await ctx.walkTo('floh', x, y);
+        ctx.face('floh', 'down');
       },
     },
     {

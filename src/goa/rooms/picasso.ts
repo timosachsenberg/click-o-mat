@@ -100,6 +100,10 @@ function picassoBg(): string {
   s.push(whiteboard(398, 150, 116, 70));
   // The genuine Picasso. (The slot machines are their own animated layer.)
   s.push(picassoPainting(528, 108, 44, 50));
+  // Photos of the regulars, under the drinks board: decades of Stammgäste.
+  ([[426, 232, -3, '#e8b890'], [456, 228, 2, '#c88a5e'], [486, 234, -2, '#f2c8a4']] as Array<[number, number, number, string]>).forEach(([px, py, rot, skin]) => {
+    s.push(`<g transform="rotate(${rot} ${px + 11} ${py + 13})">` + rect(px, py, 22, 26, { fill: '#f4efe4', stroke: INK, sw: 1.4 }) + rect(px + 3, py + 3, 16, 15, { fill: '#5a4a6a' }) + `<circle cx="${px + 11}" cy="${py + 10}" r="4" fill="${skin}"/>` + path(`M${px + 5} ${py + 18}q6 -6 12 0`, { fill: '#2a2a3a' }) + `</g>`);
+  });
   s.push(metalShelf(764, 70, 192, 228, 7));
   // The overhead rack above the counter.
   const ceil = (x: number) => 54 - ((x + 10) * 18) / 980;
@@ -180,6 +184,10 @@ function picassoCounter(): string {
   s.push(rect(927, 330, 18, 8, { fill: '#f4f0e6', stroke: INK, sw: 1 }));
   s.push(ellipse(560, 328, 13, 4, { fill: '#e8dcc0', stroke: INK, sw: 1.4 }));
   s.push(ellipse(560, 326.5, 9, 2.2, { fill: '#a8988a' }));
+  // Bar clutter: an ashtray, a dice cup, a stack of beer mats.
+  s.push(ellipse(478, 316, 10, 3.4, { fill: '#c8c8d0', stroke: INK, sw: 1.4 }) + ellipse(478, 315, 6, 1.8, { fill: '#5a5a6a' }) + path('M474 313l8 -3', { stroke: '#f4efe4', sw: 1.6 }));
+  s.push(inked('M604 330l2 -14h10l2 14z', '#6a3a1e', 1.6) + circle(624, 329, 2.4, { fill: '#f4efe4', stroke: INK, sw: 0.8 }) + circle(630, 331, 2.4, { fill: '#f4efe4', stroke: INK, sw: 0.8 }));
+  for (let k = 0; k < 4; k++) s.push(inked(`M812 ${346 - k * 2.2}l14 1l-1 3l-14 -1z`, k % 2 ? '#f4efe4' : '#d8322a', 1));
   s.push(aliCoaster(OUZO.coaster.x, OUZO.coaster.y));
   return s.join('');
 }
@@ -231,9 +239,32 @@ async function insertCoin(ctx: ScriptContext): Promise<void> {
   ctx.setFlag('jukeboxCredit');
   ctx.sfx('deny');
   await ctx.playerSay('Ich werf die 25 Cent ein ... und die Münze steckt fest.');
-  await ctx.say('ali', 'Dann gehört dir jetzt die Musik.');
+  await ctx.say('ali', 'Dann gehört dir jetzt die Musik, mein Lieber.');
   await ctx.dialog('jukebox');
 }
+
+/** Spots of light the disco ball throws round the DJ corner (a layer an ambient moves). */
+function discoLights(): string {
+  const cols = ['#4ae8ff', '#ff5ab4', '#ffe23a', '#8aff5a'];
+  let s = '';
+  let seed = 7;
+  const r = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  for (let i = 0; i < 22; i++) {
+    const x = 90 + r() * 300;
+    const y = 60 + r() * 250;
+    const c = cols[i % 4];
+    s += `<ellipse cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" rx="${(4 + r() * 4).toFixed(1)}" ry="${(3 + r() * 3).toFixed(1)}" fill="${c}" opacity="0.5"/>`;
+  }
+  return s;
+}
+
+/** Ribbons on the air conditioner's vent, fluttering: two frames. */
+const AC_RIBBONS: SvgImageAsset[] = [0, 1].map((f) => ({
+  key: `picasso-ribbons-${f}`,
+  width: 70,
+  height: 22,
+  svg: [10, 26, 42, 58].map((x, i) => `<path d="M${x} 0q${(i + f) % 2 ? 5 : -5} 7 0 12t${(i + f) % 2 ? -3 : 3} 8" fill="none" stroke="${i % 2 ? '#ff5ab4' : '#4ae8ff'}" stroke-width="2" stroke-linecap="round"/>`).join(''),
+}));
 
 /** Where Ali's ouzo stands: on his coaster, or in front of the Partykiller. */
 const OUZO = { coaster: { x: 772, y: 338 }, cop: { x: 684, y: 332 } };
@@ -488,11 +519,20 @@ const HOTSPOTS: HotspotDef[] = [
       pickup: 'Die Karte gehört an die Wand. Sagt die Karte.',
     },
   }),
+  at('fotos', 'Fotos', R(422, 224, 92, 42), P(402, 396), 'up', {
+    on: {
+      lookat: async (ctx) => {
+        await ctx.playerSay('Fotos von Stammgästen. Dauerwellen, Schnurrbärte, Schulterpolster.');
+        await ctx.playerSay('Auf einem: eine junge Frau im Discofox, 1979. Die Hilde. Auf einem anderen ein junger Polizist, der lächelt. Das glaubt mir keiner.');
+      },
+      pickup: 'Die hängen hier seit Jahrzehnten. Die Wand dahinter hat eine andere Farbe.',
+    },
+  }),
   at('painting', 'Gemälde', R(520, 100, 60, 66), P(520, 404), 'up', {
     on: {
       lookat: async (ctx) => {
         await ctx.playerSay('Ein Gesicht, von vorne und von der Seite gleichzeitig.');
-        await ctx.say('ali', 'Ein echter Picasso. Deshalb heißt der Laden so.');
+        await ctx.say('ali', 'Ein echter Picasso, mein Lieber. Deshalb heißt der Laden so.');
         await ctx.playerSay('Signiert mit „P.“ in Kugelschreiber.');
       },
       pickup: async (ctx) => {
@@ -625,7 +665,7 @@ const HOTSPOTS: HotspotDef[] = [
         },
         dose: async (ctx) => {
           ctx.removeItem('dose');
-          await ctx.say('ali', 'Leer? Sehr gut. Pfand, wie versprochen.');
+          await ctx.say('ali', 'Leer? Sehr gut, mein Lieber. Pfand, wie versprochen.');
           ctx.addItem('cent25');
         },
         ouzo: async (ctx) => {
@@ -703,6 +743,10 @@ export const picassoRoom: RoomDef = {
   layers: [
     { id: 'bg', depth: Layer.BEHIND, svg: picassoBg() },
     { id: 'slots', depth: Layer.BEHIND, x: SLOTS.x, y: SLOTS.y, anim: 'picasso-slots' },
+    // The disco ball's light spots, the AC's ribbons, the neon's bad contact.
+    { id: 'disco', depth: Layer.BEHIND, x: 0, y: 0, w: 960, h: 450, svg: discoLights(), alpha: 0.7 },
+    { id: 'ribbons', depth: Layer.BEHIND, x: 416, y: 80, anim: 'picasso-ribbons' },
+    { id: 'neonDim', depth: Layer.BEHIND, x: 284, y: 84, w: 82, h: 30, svg: '<rect width="82" height="30" rx="6" fill="#3a1e3a"/>', alpha: 0 },
     roomLayer('counter', 375, 396, 296, 566, 154, picassoCounter()),
     { id: 'brezel', depth: 375, x: 540, y: 310, w: 40, h: 22, svg: group(pretzelBits(), 'translate(-540 -310)'), visible: (state) => !state.getFlag('brezelTaken') },
     // Ali's ouzo: on its coaster (full or empty), or in front of the guest.
@@ -793,8 +837,11 @@ export const picassoRoom: RoomDef = {
 
   // The slot machines' animation frames.
   assets: {
-    svgImages: SLOT_FRAMES,
-    anims: [{ key: 'picasso-slots', textures: SLOT_FRAMES.map((f) => f.key), frameRate: 4 }],
+    svgImages: [...SLOT_FRAMES, ...AC_RIBBONS],
+    anims: [
+      { key: 'picasso-slots', textures: SLOT_FRAMES.map((f) => f.key), frameRate: 4 },
+      { key: 'picasso-ribbons', textures: AC_RIBBONS.map((f) => f.key), frameRate: 5 },
+    ],
   },
 
   // Too close to Hilde and she grabs.
@@ -840,6 +887,23 @@ export const picassoRoom: RoomDef = {
   },
 
   ambients: [
+    {
+      // The disco ball's spots wander across the wall.
+      every: [50, 150],
+      run: async (ctx) => {
+        const d = ctx.layerObj('disco');
+        await ctx.tween(d, { x: 46, y: 6, alpha: 0.85, ease: 'Sine.easeInOut' }, 4200, { skippable: false });
+        await ctx.tween(d, { x: -30, y: -4, alpha: 0.5, ease: 'Sine.easeInOut' }, 4600, { skippable: false });
+      },
+    },
+    {
+      // The neon sign's second S has a loose contact.
+      every: [2500, 7000],
+      run: async (ctx) => {
+        const n = ctx.layerObj('neonDim');
+        for (const a of [0.6, 0, 0.45, 0]) await ctx.tween(n, { alpha: a }, 80, { skippable: false });
+      },
+    },
     {
       // The Partykiller keeps a running commentary on everybody's misdeeds.
       every: [9000, 16000],

@@ -1,8 +1,8 @@
 import { Layer, type Facing, type HotspotDef, type Rect, type RoomDef, type Vec2 } from '../../engine/types';
 import type { ScriptContext } from '../../engine/ScriptContext';
-import { OTTO_ACTOR } from '../art/turm';
+import { VOICE_ACTOR } from '../art/turm';
 import { PIGEON_ACTORS } from '../art/epplehaus';
-import { NK, PUNT_ACTOR, balustrade, bus, cardOnDeck, cuttersOnDeck, eckhausLayer, floatingPole, floatingCap, flyingLeg, neckarBg, promGap, quayFootY, quayTopY } from '../art/neckar';
+import { NK, PUNT_ACTOR, balustrade, bus, cardOnDeck, swallows, swan, waterShimmer, eckhausLayer, floatingCap, flyingLeg, neckarBg, promGap, quayFootY, quayTopY } from '../art/neckar';
 
 // ---- layout ----------------------------------------------------------------------
 // The Neckarbrücke in Tübingen at sunset, looking upstream along the
@@ -46,10 +46,6 @@ const TOWER_SPOT = P(478, 304);
 /** Where the bus stops on the bridge (top-left of its art), and where the player gets off. */
 const BUS = P(420, 270);
 const BUS_STOP = P(652, 432);
-/** Behind the tower's door: Otto R.'s voice on the intercom (an invisible actor). */
-const DOOR_VOICE = P(452, 296);
-/** Where the Put-Put pigeon perches to say the password. */
-const PIGEON_PERCH = P(462, 300);
 const JETTY_SPOT = P(504, 314);
 
 // ---- the punt ------------------------------------------------------------------------
@@ -65,11 +61,8 @@ const OFF = P(-400, 300);
 /** Where the player throws from, and where the cap washes up. */
 const THROW_SPOT = P(680, 420);
 const CAP_SPOT = P(506, 332);
-/** Where the bolt cutters lie on the deck, and where the punt pole washes up. */
-const CUTTERS = P(280, 426);
 /** A full döner stamp card someone lost, by the street lamp. */
 const CARD = P(812, 430);
-const POLE = P(452, 316);
 
 function course(t: number): Vec2 {
   const n = COURSE.length - 1;
@@ -222,38 +215,9 @@ async function toPicasso(ctx: ScriptContext): Promise<void> {
   await ctx.goToRoom('epplehaus', 'neckar');
 }
 
-/** Into the Hölderlinturm, from the end of the promenade — once Otto R.
- *  has heard the password in the right voice. Until then: the intercom. */
+/** To the Hölderlinturm's door at the end of the promenade (a close-up). */
 async function toTower(ctx: ScriptContext): Promise<void> {
-  if (!ctx.flag('turmOpen')) {
-    ctx.sfx('deny');
-    await ctx.playerSay('Zu. Neben der Tür eine uralte Gegensprechanlage. Ich drück mal.');
-    await ctx.say('ottoTuer', ctx.flag('turmAsked') ? 'Schon wieder du? Parole!' : 'Halt! Wer da? Ohne Parole kommt hier keiner rein!');
-    ctx.setFlag('turmAsked');
-    await ctx.dialog('turmtuer');
-    return;
-  }
-  ctx.sfx('open');
-  await ctx.goToRoom('hoelderlinturm', 'door');
-}
-
-/** The Put-Put pigeon says the password into the intercom — in exactly the
- *  right voice. The door opens and the pigeon flies home to the Epplehaus. */
-async function pigeonPassword(ctx: ScriptContext): Promise<void> {
-  if (ctx.flag('turmOpen')) return;
-  ctx.removeItem('taube');
-  ctx.place('taubeTuer', PIGEON_PERCH.x, PIGEON_PERCH.y, 'left');
-  await ctx.playerSay('Ich halt die Taube an die Gegensprechanlage. Na los, sag’s ihm.');
-  await ctx.say('ottoTuer', 'Parole?');
-  await ctx.say('taubeTuer', 'Put put!');
-  await ctx.say('ottoTuer', 'PUT PUT! Korrekt! Und diese Stimme ... dieses Timbre ... endlich jemand mit Klangfarbe!');
-  ctx.sfx('open');
-  ctx.setFlag('turmOpen');
-  await ctx.say('ottoTuer', 'Komm rein. Und bring den Sänger nächstes Mal wieder mit.');
-  await ctx.say('taubeTuer', 'Gurr.');
-  ctx.place('taubeTuer', -300, 300);
-  await ctx.playerSay('Und weg ist sie. Zurück zu den Krümeln am Epplehaus, schätze ich.');
-  await ctx.playerSay('Die Tür ist auf.');
+  await ctx.goToRoom('turmtuer', 'weg');
 }
 
 /** Over the bridge to the edge of the forest. */
@@ -335,6 +299,7 @@ const HOTSPOTS: HotspotDef[] = [
         await ctx.playerSay('Der Hölderlinturm. Hier hat Hölderlin sechsunddreißig Jahre gewohnt.');
         await ctx.playerSay('Gedichtet, aufs Wasser geschaut, Besuch verwirrt. Klingt nach einem guten Leben.');
         await ctx.playerSay('Unten an die Turmwand hat jemand „PUT PUT“ gesprüht. Sogar hier.');
+        if (!ctx.flag('turmOpen')) await ctx.playerSay('Unten ist eine Tür, mit Klingel. Im Turm brennt Licht.');
         ctx.setFlag('putSeen');
         if (ctx.flag('ottoFree')) await ctx.playerSay('Und oben drin dreht sich eine Spirale durch drei Zeitebenen. Kein Witz.');
       },
@@ -342,10 +307,18 @@ const HOTSPOTS: HotspotDef[] = [
       use: toTower,
       talkto: toTower,
     },
-    onItem: {
-      use: { taube: pigeonPassword },
-      give: { taube: pigeonPassword },
+    onItem: { use: { taube: toTower } },
+  }),
+  at('turmtuer', 'Turmtür', R(448, 268, 22, 32), TOWER_SPOT, 'left', {
+    defaultVerb: 'use',
+    on: {
+      lookat: 'Die Tür zum Hölderlinturm, mit Laterne und Klingel. Das schau ich mir aus der Nähe an.',
+      open: toTower,
+      use: toTower,
+      talkto: toTower,
+      push: toTower,
     },
+    onItem: { use: { taube: toTower } },
   }),
   at('weide', 'Trauerweide', R(346, 216, 62, 86), TOWER_SPOT, 'left', {
     on: { lookat: 'Eine Trauerweide. Hängt die Zweige ins Wasser, als hätte sie die Nacht im Picasso verbracht.' },
@@ -394,7 +367,7 @@ const HOTSPOTS: HotspotDef[] = [
   at('laterne', 'Laterne', R(850, 180, 44, 196), P(862, 424), 'up', {
     on: { lookat: 'Eine alte Laterne. Brennt schon. Feierabend für die Sonne, Schichtbeginn für die Laterne.' },
   }),
-  at('toPicasso', 'Zum Epplehaus', R(930, 408, 30, 42), P(948, 432), 'right', {
+  at('toPicasso', 'Zum Epplehaus', R(880, 330, 80, 120), P(948, 432), 'right', {
     defaultVerb: 'use',
     on: {
       lookat: 'Da geht’s in die Stadt, zum Epplehaus. Dahinter die Dönerbude und die Treppe runter ins Picasso.',
@@ -402,12 +375,27 @@ const HOTSPOTS: HotspotDef[] = [
       open: toPicasso,
     },
   }),
-  at('toForest', 'Richtung Wald', R(0, 408, 30, 42), P(12, 432), 'left', {
+  at('toForest', 'Richtung Wald', R(0, 330, 80, 120), P(12, 432), 'left', {
     defaultVerb: 'use',
     on: {
       lookat: 'Über die Brücke, dann den Weg hoch zum Waldrand. Irgendwo da draußen wummert der Bass.',
       use: toForest,
       open: toForest,
+    },
+  }),
+  at('schwan', 'Schwan', R(180, 276, 170, 40), THROW_SPOT, 'up', {
+    on: {
+      lookat: 'Ein Schwan. Zieht seine Bahn, als gehörte ihm der Neckar. Tut er vermutlich auch.',
+      talkto: 'Er ignoriert mich. Mit Würde.',
+    },
+    onItem: { use: { stuhlbein: 'Auf den Schwan? Niemals. Der kann nichts dafür.' } },
+  }),
+  at('fahrplan', 'Fahrplan', R(722, 282, 36, 44), P(736, 424), 'up', {
+    on: {
+      lookat: async (ctx) => {
+        await ctx.playerSay('Der Fahrplan. Linie 5: alle dreißig Minuten. Letzter Bus: 23:58 Uhr.');
+        await ctx.playerSay('Darunter, mit Edding: „Nachtbus fährt, wenn er Lust hat.“ Zurück komm ich also zu Fuß. Oder gar nicht.');
+      },
     },
   }),
   at('schloesser', 'Liebesschlösser', R(262, 372, 92, 24), P(300, 420), 'up', {
@@ -426,32 +414,6 @@ const HOTSPOTS: HotspotDef[] = [
         ctx.addItem('stempelkarte');
         await ctx.repaint();
         await ctx.playerSay('Eine Stempelkarte vom Neckar-Kebap. Und sie ist voll!');
-      },
-    },
-  }),
-  at('drahtschere', 'Drahtschere', R(CUTTERS.x - 4, CUTTERS.y - 4, 44, 24), P(CUTTERS.x + 18, 424), 'down', {
-    defaultVerb: 'pickup',
-    visible: (state) => !state.getFlag('schereTaken'),
-    on: {
-      lookat: 'Eine Drahtschere. Damit hat die Stadt wohl die Liebesschlösser abgeknipst. Und sie dann liegen lassen.',
-      pickup: async (ctx) => {
-        ctx.setFlag('schereTaken');
-        ctx.addItem('drahtschere');
-        await ctx.repaint();
-        await ctx.playerSay('Eine Drahtschere. Mal sehen, wofür die gut ist.');
-      },
-    },
-  }),
-  at('stange', 'Stocherstange', R(POLE.x, POLE.y - 6, 120, 28), JETTY_SPOT, 'down', {
-    defaultVerb: 'pickup',
-    visible: (state) => !!state.getFlag('capAshore') && !state.getFlag('stangeTaken'),
-    on: {
-      lookat: 'Die Stocherstange der Burschen. Sie ist mit der Mütze angetrieben.',
-      pickup: async (ctx) => {
-        ctx.setFlag('stangeTaken');
-        ctx.addItem('stange');
-        await ctx.repaint();
-        await ctx.playerSay('Vier Meter Stange. Passt erstaunlich gut in meine Tasche. Frag nicht.');
       },
     },
   }),
@@ -509,6 +471,11 @@ export const neckarRoom: RoomDef = {
 
   layers: [
     { id: 'bg', depth: Layer.BEHIND, svg: neckarBg() },
+    // The river's life: glitter on the water, swallows hunting, a swan.
+    { id: 'shimmer', depth: Layer.BEHIND, x: 0, y: 0, w: 960, h: 450, svg: waterShimmer(), alpha: 0.5 },
+    { id: 'schwalben', depth: Layer.BEHIND, x: -120, y: 80, w: 70, h: 30, svg: swallows() },
+    { id: 'schwan', depth: Layer.BEHIND, x: 190, y: 282, w: 42, h: 28, svg: swan() },
+    { id: 'light', depth: Layer.FRONT, x: 0, y: 0, w: 960, h: 450, svg: '<rect width="960" height="450" fill="#c0507a"/>', alpha: 0.1 },
     // The corner house: whoever goes round it to the promenade is behind it.
     { id: 'eckhaus', depth: NK.parapetBase - 1, x: NK.eckhaus.x, y: NK.eckhaus.y, w: NK.eckhaus.w, h: NK.eckhaus.h, svg: eckhausLayer() },
     // After the corner house, so it runs on in front of it.
@@ -517,8 +484,6 @@ export const neckarRoom: RoomDef = {
     { id: 'bus', depth: 420, x: BUS.x, y: BUS.y, w: 380, h: 150, svg: bus(), visible: (state) => !state.getFlag('busGone') },
     { id: 'karte', depth: 300, x: CARD.x, y: CARD.y, w: 24, h: 14, svg: cardOnDeck(), visible: (state) => !state.getFlag('karteTaken') },
     // Bolt cutters on the deck, the punt pole at the jetty (once the punt has sunk).
-    { id: 'schere', depth: 300, x: CUTTERS.x, y: CUTTERS.y, w: 36, h: 16, svg: cuttersOnDeck(), visible: (state) => !state.getFlag('schereTaken') },
-    { id: 'stange', depth: 300, x: POLE.x, y: POLE.y, w: 120, h: 20, svg: floatingPole(), visible: (state) => !!state.getFlag('capAshore') && !state.getFlag('stangeTaken') },
     // The cap, once it has washed up at the jetty.
     {
       id: 'cap',
@@ -561,7 +526,7 @@ export const neckarRoom: RoomDef = {
 
   music: 'neckar-theme',
 
-  assets: { svgActors: [PUNT_ACTOR, OTTO_ACTOR, ...PIGEON_ACTORS] },
+  assets: { svgActors: [PUNT_ACTOR, VOICE_ACTOR, ...PIGEON_ACTORS] },
 
   entries: {
     picasso: { x: 930, y: 432, facing: 'left' },
@@ -575,10 +540,6 @@ export const neckarRoom: RoomDef = {
 
   actors: [
     { id: 'kahn', x: OFF.x, y: OFF.y, facing: 'right' },
-    // Otto R. on the tower's intercom: a voice, never seen out here.
-    { id: 'ottoTuer', x: DOOR_VOICE.x, y: DOOR_VOICE.y, facing: 'down' },
-    // The Put-Put pigeon, off screen until it says the password.
-    { id: 'taubeTuer', x: -300, y: 300, facing: 'left' },
   ],
 
   async onEnter(ctx) {
@@ -612,6 +573,38 @@ export const neckarRoom: RoomDef = {
   },
 
   ambients: [
+    {
+      // The low sun glitters on the water.
+      every: [80, 200],
+      run: async (ctx) => {
+        const w = ctx.layerObj('shimmer');
+        await ctx.tween(w, { alpha: 0.9, x: 5, ease: 'Sine.easeInOut' }, 1300, { skippable: false });
+        await ctx.tween(w, { alpha: 0.3, x: -4, ease: 'Sine.easeInOut' }, 1500, { skippable: false });
+      },
+    },
+    {
+      // Swallows sweep across the evening sky.
+      every: [5000, 11000],
+      run: async (ctx) => {
+        const b = ctx.layerObj('schwalben');
+        const y = 50 + Math.random() * 90;
+        const ltr = Math.random() < 0.5;
+        b.setFlipX(!ltr).setPosition(ltr ? -90 : 1000, y);
+        await ctx.tween(b, { x: 440, y: y + 34, ease: 'Sine.easeIn' }, 1700, { skippable: false });
+        await ctx.tween(b, { x: ltr ? 1000 : -90, y: y - 20, ease: 'Sine.easeOut' }, 1700, { skippable: false });
+      },
+    },
+    {
+      // The swan patrols its stretch of river.
+      every: [300, 900],
+      run: async (ctx) => {
+        const sw = ctx.layerObj('schwan');
+        sw.setFlipX(false);
+        await ctx.tween(sw, { x: 300, y: 300, ease: 'Sine.easeInOut' }, 13000, { skippable: false });
+        sw.setFlipX(true);
+        await ctx.tween(sw, { x: 190, y: 282, ease: 'Sine.easeInOut' }, 13000, { skippable: false });
+      },
+    },
     {
       // The punts come down the river, one after the other.
       every: [2500, 6000],

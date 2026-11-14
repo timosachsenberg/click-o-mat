@@ -20,7 +20,7 @@ nothing but a two-euro coin, need the password for tonight's Goa party from Ali 
 the **Picasso** basement bar (past the Epplehaus and a döner stand), find the way
 into the forest closed for tree felling, and go up into the **Hölderlinturm** — a cut-open doll's house — where a
 Rössler attractor throws the picture between three time layers (hand-painted,
-1987 pixels, modern cartoon collage). The
+1987 pixels, a black-and-white 1930s cartoon reel). The
 **title screen picks between the two** (SPIEL · DEMO); `?game=goa` /
 `?game=demo` select one directly, and the last pick is remembered.
 
@@ -157,15 +157,13 @@ along the top of the quay wall) and take the cap.
 
 **The forest is closed.** Over the bridge to the left you reach the **edge of the
 forest**: the Goa's lights pulse behind the trees and you can hear the bass — but
-the path is closed for *Baumfällarbeiten*. Five things lying around look like a
-way past the barrier, and none of them is: the **bolt cutters** on the bridge
-(they break), the **pogo stick** in the Picasso (you crash into the barrier), the
-**heart balloon** at the Epplehaus (a pigeon pecks it), the punt's **pole**,
-washed up at the jetty (too bendy for a pole vault) and the **folding spade** in
-the tower's cellar (a root, and your fingers).
+the path is closed for *Baumfällarbeiten*. Two things lying around look like a
+way past the barrier, and neither is: the **pogo stick** in the Picasso (you
+crash into the barrier) and the **heart balloon** at the Epplehaus (a pigeon
+pecks it).
 
 **The Hölderlinturm.** The way into the forest is closed for tree felling, so the only way to the Goa is through Otto R.'s wormhole in the
-tower. The tower's door at the end of the promenade is locked: Otto R. answers on the intercom and wants the password.
+tower. The tower's door at the end of the promenade (its own close-up scene) is locked: Otto R. answers on the intercom — a piece of 1987 in the wall, the one thing that still reaches into his time layer — and wants the password.
 
 - The bowl on Ali's counter is full of **pretzel crumbs**, but by hand they
   trickle through your fingers: **use the cap with the bowl** (the
@@ -177,7 +175,7 @@ tower. The tower's door at the end of the promenade is locked: Otto R. answers o
   Tauben.*)
 - Then **give him the cap full of crumbs**. He feeds the pigeons —
   *„Put, put, put!“* — and one of them starts parroting **„Put put“**. He
-  hands the cap back.
+  keeps the cap as a feed bag.
 - Say „Put put?“ yourself at the intercom: *hört sich gut an, aber der Klang
   der Stimme passt irgendwie nicht.*
 - While the parroting pigeon is busy with the crumbs, **pick it up**, and
@@ -189,8 +187,8 @@ upstairs the Turmstube with Hölderlin's desk, a sofa and his bed (the door
 opens onto it), downstairs the vaulted cellar at the river's level, joined
 by stairs. In the Turmstube stands Otto R.'s **Rössler attractor**. *Use* (or *push*) it
 to throw the whole picture into the next time layer, *pull* it to go back:
-hand-painted → **1987** (sixteen colours, chunky pixels) → **today** (cartoon
-collage with photo textures) → hand-painted.
+hand-painted → **1987** (sixteen colours, chunky pixels) → a **1930s cartoon reel**
+(black and white, film grain, furniture with pie eyes) → hand-painted.
 
 1. Turn the attractor once: in 1987 **Otto R.**, chaos researcher, is stuck in
    the cellar on his own strange attractor. Talk to him: the door is only
@@ -207,15 +205,29 @@ collage with photo textures) → hand-painted.
    (which hums along to the bass on the way to the forest). Putting the hole
    up in another layer doesn't help him — he's only in 1987.
 5. Once Otto is out, the hole in the wall is just a hole again — and in the
-   **modern** layer it peels off like a sticker. **Take it**, then **use the
+   **cartoon** layer it peels off like a sticker. **Take it**, then **use the
    hole with the Taschen-Attraktor**: the spiral circles the black hole and
-   you get a **Wurmloch**. **Use the wormhole** (anywhere): you come out at the
-   **Goa's entrance** in the forest, past the forestry barrier. Flaschenfloh is
-   already there, collecting empties. The **bouncer** — a Goazwerg in a felt sauna hat — wants the password: say
-   **Chakabunga** (from Ali), and through the gate — to be continued. The
-   wormhole stays open: there's a way back to the tower.
+   you get a **Wurmloch-Paar** — two ends, one tunnel. Take it to the **edge
+   of the forest** and **use it on the barrier**: one end flies over towards
+   the lights, the other stands beside the barrier. **Step into the portal**
+   and you fall out in the **middle of the Goa's dance floor** — a stage with
+   a huge mandala, a canopy of blacklight threads, giant glowing mushrooms,
+   lasers, and dancers everywhere. Everything in your pockets is lost on the
+   way. The **bouncer** — a Goazwerg in a felt sauna hat — comes over from the
+   gate and wants the password anyway: say **Chakabunga** (from Ali) and you
+   may stay; without it you're thrown out to the **Goa's entrance**, where
+   Flaschenfloh is collecting empties, and get in through the gate once you
+   know it. **Use the dance floor** — to be continued. The portal stays open
+   both ways.
 
 </details>
+
+The scenes are alive beyond the riddles: the Plenum votes behind a lit window of
+the Epplehaus, a swan patrols the Neckar under hunting swallows, the Picasso's
+neon has a loose contact, an owl watches the forestry barrier, and Hölderlin's
+portrait changes with the tower's time layers. Each outdoor room also carries a
+`light` layer — a flat tint at `Layer.FRONT` — so the figures take on the colour
+of the dusk or the night.
 
 ### Playing the demo
 
@@ -559,12 +571,16 @@ src/
     rooms/doener.ts    The döner stand between the Picasso and the Epplehaus
     art/waldrand.ts    The edge of the forest at dusk, the barrier, the Goa's glow
     rooms/waldrand.ts  The edge of the forest (closed for tree felling; distant bass)
-    art/goaeingang.ts  The Goa's entrance at night: gate, mandala, lasers, the wormhole
+    art/turmtuer.ts    The Hölderlinturm's door close up, with the 1987 intercom
+    rooms/turmtuer.ts  In front of the tower: door, intercom, the password
+    art/goaeingang.ts  The Goa's entrance at night: gate, mandala, lasers; the portal art
     rooms/goaeingang.ts The Goa's entrance (the bouncer wants Chakabunga)
+    art/goa.ts         The Goa: stage, UV string art, glowing mushrooms, dancer frames
+    rooms/goa.ts       The dance floor (animated dancers as occluder layers; dance)
     rooms/neckar.ts    The Neckarbrücke (a punt passes regularly; sink it)
     art/turm.ts        The Hölderlinturm as a cut-open doll's house, in three
-                       time layers (toon, an EGA pixel grid, a photo-textured
-                       cartoon collage), the Rössler attractor (integrated,
+                       time layers (toon, an EGA pixel grid, a black-and-white
+                       cartoon reel), the Rössler attractor (integrated,
                        not drawn), Otto R.
     rooms/hoelderlinturm.ts  Turmstube and cellar joined by stairs (a side
                        view): switch time layers, free Otto R.

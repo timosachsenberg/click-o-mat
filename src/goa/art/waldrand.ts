@@ -1,3 +1,4 @@
+import type { SvgImageAsset } from '../../engine/types';
 import {
   INK,
   circle,
@@ -164,6 +165,8 @@ function sign(x: number, y: number): string {
   s.push(text(x + 66, y + 34, 'Durchgang verboten!', { size: 10, fill: INK, weight: 800 }));
   s.push(text(x + 66, y + 47, 'Lebensgefahr', { size: 9, fill: '#c4241a', weight: 800 }));
   s.push(text(x + 66, y + 59, 'Forstamt Tübingen', { size: 7, fill: '#4a4a4a', weight: 700 }));
+  // A handwritten note taped to the corner.
+  s.push(`<g transform="rotate(6 ${x + 108} ${y + 54})">` + rect(x + 96, y + 44, 30, 24, { fill: '#fff8c0', stroke: INK, sw: 1.2 }) + path(`M${x + 100} ${y + 51}h22M${x + 100} ${y + 56}h18M${x + 100} ${y + 61}h20`, { stroke: '#3a3a6a', sw: 1 }) + `</g>`);
   // A warning triangle with a falling tree.
   s.push(inked(`M${x + 120} ${y - 30}l14 24h-28z`, '#f2c230', 1.8));
   s.push(path(`M${x + 116} ${y - 12}l10 -8M${x + 121} ${y - 16}l3 3`, { stroke: INK, sw: 1.8 }));
@@ -190,6 +193,99 @@ function logs(): string {
   // Spray-painted numbers, forestry style.
   s.push(text(x + 50, y + h - 12, '17', { size: 9, fill: '#e83a8a', weight: 900 }));
   s.push(text(x + 110, y + h - 40, 'X', { size: 11, fill: '#e83a8a', weight: 900 }));
+  return s.join('');
+}
+
+/** The forestry harvester, parked for the night behind the stumps. */
+function harvester(): string {
+  const x = 742;
+  const y = 250;
+  const s: string[] = [];
+  s.push(ellipse(x + 80, y + 86, 96, 7, { fill: '#000000', opacity: 0.4 }));
+  // Crane arm with its saw head, folded over the cab.
+  s.push(path(`M${x + 96} ${y + 30}L${x + 40} ${y - 22}L${x - 6} ${y + 26}`, { stroke: INK, sw: 9 }) + path(`M${x + 96} ${y + 30}L${x + 40} ${y - 22}L${x - 6} ${y + 26}`, { stroke: '#e8b020', sw: 5 }));
+  s.push(inked(`M${x - 18} ${y + 22}h24v20h-24z`, '#3a3a3a', 2));
+  s.push(path(`M${x - 14} ${y + 42}v10M${x - 6} ${y + 42}v10M${x + 2} ${y + 42}v10`, { stroke: '#8a8a9a', sw: 2 }));
+  // Body, cab, wheels.
+  s.push(inked(`M${x + 20} ${y + 70}V${y + 40}h120v30z`, '#e8b020', 2.6));
+  s.push(inked(`M${x + 86} ${y + 40}V${y + 6}h44l10 34z`, '#e8b020', 2.6));
+  s.push(inked(`M${x + 92} ${y + 36}V${y + 12}h34l7 24z`, '#2a3a5a', 1.8));
+  s.push(path(`M${x + 96} ${y + 16}l10 0l-8 16z`, { fill: '#a05a7a', opacity: 0.5 }));
+  s.push(path(`M${x + 24} ${y + 52}h60`, { stroke: INK, sw: 2 }) + path(`M${x + 28} ${y + 46}h10M${x + 44} ${y + 46}h10`, { stroke: '#1e1424', sw: 3 }));
+  for (const wx of [x + 44, x + 84, x + 124]) {
+    s.push(circle(wx, y + 72, 17, { fill: '#16161e', stroke: INK, sw: 2.6 }));
+    s.push(circle(wx, y + 72, 7, { fill: '#e8b020', stroke: INK, sw: 1.6 }));
+  }
+  s.push(inked(`M${x + 150} ${y + 44}h8v8h-8z`, '#ff5a3a', 1.2));
+  return s.join('');
+}
+
+/** A chainsaw, left on top of the stack. */
+function chainsaw(): string {
+  const x = WR.logs.x + 96;
+  const y = WR.logs.y - 34;
+  return (
+    inked(`M${x} ${y + 4}h34v6h-34z`, '#c8c8d0', 1.4) +
+    path(`M${x + 2} ${y + 7}h30`, { stroke: '#5a5a6a', sw: 1.2, extra: 'stroke-dasharray="2 2"' }) +
+    inked(`M${x + 32} ${y - 2}h22v16h-22z`, '#e8702a', 1.8) +
+    path(`M${x + 38} ${y - 2}q8 -10 16 0`, { stroke: INK, sw: 3 })
+  );
+}
+
+/** Red-and-white barrier tape between the trunks, sagging. */
+function tape(): string {
+  const run = (a: Pt, b: Pt) => {
+    const d = `M${a[0]} ${a[1]}Q${(a[0] + b[0]) / 2} ${Math.max(a[1], b[1]) + 14} ${b[0]} ${b[1]}`;
+    return path(d, { stroke: INK, sw: 6 }) + path(d, { stroke: '#f4efe4', sw: 4 }) + path(d, { stroke: '#d8322a', sw: 4, extra: 'stroke-dasharray="7 7"' });
+  };
+  return run([296, 286], [366, 292]) + run([520, 250], [610, 290]) + run([610, 290], [700, 296]);
+}
+
+/** The branch the owl sits on (the owl itself is an animation). */
+export const OWL = { x: 596, y: 168, w: 30, h: 34 };
+function branch(): string {
+  return path(`M612 ${OWL.y + OWL.h - 2}Q590 ${OWL.y + OWL.h + 4} 566 ${OWL.y + OWL.h - 6}`, { stroke: INK, sw: 7 }) + path(`M612 ${OWL.y + OWL.h - 2}Q590 ${OWL.y + OWL.h + 4} 566 ${OWL.y + OWL.h - 6}`, { stroke: '#1c1a2a', sw: 4 });
+}
+
+/** The owl: eyes open, blinking, head turned — four frames. */
+export const OWL_FRAMES: SvgImageAsset[] = [0, 1, 2, 3].map((f) => {
+  const s: string[] = [];
+  const turn = f === 3 ? 4 : 0;
+  s.push(inked('M5 32Q1 16 8 8Q15 2 22 8Q29 16 25 32Z', '#5a4a3a', 1.6));
+  s.push(path('M9 18q6 8 12 0M9 24q6 6 12 0', { stroke: '#8a7a5a', sw: 1.2 }));
+  s.push(path(`M${7 + turn} 8l-2 -6l6 4M${23 + turn} 8l2 -6l-6 4`, { fill: '#5a4a3a', stroke: INK, sw: 1.2 }));
+  for (const ex of [10.5, 19.5]) {
+    if (f === 1) s.push(path(`M${ex - 3.4 + turn} 12h6.8`, { stroke: INK, sw: 1.6 }));
+    else s.push(circle(ex + turn, 12, 4, { fill: '#ffe23a', stroke: INK, sw: 1.2 }) + circle(ex + turn + (f === 3 ? 1.4 : 0), 12, 1.8, { fill: INK }));
+  }
+  s.push(path(`M${15 + turn} 14l-2 4h4z`, { fill: '#e8a020', stroke: INK, sw: 0.8 }));
+  s.push(path('M10 32v2M14 32v2M17 32v2M21 32v2', { stroke: '#e8a020', sw: 1.4 }));
+  return { key: `wald-owl-${f}`, width: OWL.w, height: OWL.h + 2, svg: s.join('') };
+});
+
+/** Overlays an ambient animates: the warning lamp's flash, fireflies, ground fog. */
+export function lampFlash(): string {
+  const x = WR.barrier.x + 110;
+  const y = WR.barrier.base - 50;
+  return `<defs>${radial('wrFlash', x, y, 46, [[0, '#ffd050', 0.95], [0.3, '#ffb020', 0.5], [1, '#ffb020', 0]])}</defs>` + circle(x, y, 46, { fill: 'url(#wrFlash)' });
+}
+
+export function fireflies(): string {
+  const r = rng(77);
+  const s: string[] = [];
+  for (let i = 0; i < 26; i++) {
+    const x = 20 + r() * 920;
+    const y = 250 + r() * 180;
+    s.push(circle(x, y, 5, { fill: '#d8ff6a', opacity: 0.18 }) + circle(x, y, 1.5, { fill: '#f4ffb0' }));
+  }
+  return s.join('');
+}
+
+export function fog(): string {
+  const s: string[] = [];
+  for (const [x, y, rx, ry] of [[160, 356, 220, 16], [560, 372, 260, 14], [860, 350, 200, 18], [380, 420, 300, 16]] as Array<[number, number, number, number]>) {
+    s.push(ellipse(x, y, rx, ry, { fill: '#b8a8d8', opacity: 0.16 }));
+  }
   return s.join('');
 }
 
@@ -263,7 +359,11 @@ export function waldrandBg(): string {
     s.push(ellipse(x, y - 12 * k, 8 * k, 2.4 * k, { stroke: '#c8a060', sw: 1 }));
     s.push(ellipse(x + 18 * k, y + 2, 14 * k, 3, { fill: '#e8c890', opacity: 0.5 }));
   }
+  s.push(harvester());
+  s.push(tape());
+  s.push(branch());
   s.push(logs());
+  s.push(chainsaw());
   s.push(sign(WR.sign.x, WR.sign.y));
   s.push(barrier(WR.barrier.x, WR.barrier.base));
   // Undergrowth.

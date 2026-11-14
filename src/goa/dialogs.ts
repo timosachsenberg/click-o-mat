@@ -20,7 +20,7 @@ function drinkChoices(back: Partial<DialogChoice>): DialogChoice[] {
     {
       text: 'Eine Magic Woman?',
       script: async (ctx) => {
-        await ctx.say('ali', 'Die haben wir.');
+        await ctx.say('ali', 'Die haben wir, mein Lieber.');
       },
     },
     {
@@ -83,7 +83,7 @@ export const DIALOGS: Record<string, DialogDef> = {
             text: 'Ich suche die Goa im Wald.',
             if: (s) => !s.getFlag('knowsPartykiller') && !s.getFlag('copAsleep'),
             script: async (ctx) => {
-              await ctx.say('ali', 'Nicht so laut. Neben dir sitzt der Partykiller.');
+              await ctx.say('ali', 'Nicht so laut, mein Lieber. Neben dir sitzt der Partykiller.');
               await ctx.playerSay('Ist der nicht im Ruhestand?');
               await ctx.say('ali', 'Er schon. Seine Anzeigen nicht.');
               await ctx.say('cop', 'Ich kann euch übrigens hören.');
@@ -94,7 +94,7 @@ export const DIALOGS: Record<string, DialogDef> = {
             text: 'Und die Goa? Nur ganz leise?',
             if: (s) => !!s.getFlag('knowsPartykiller') && !s.getFlag('copAsleep'),
             script: async (ctx) => {
-              await ctx.say('ali', 'Nicht, solange er zuhört.');
+              await ctx.say('ali', 'Nicht, solange er zuhört, mein Lieber.');
               await ctx.say('cop', 'Ich höre immer zu. Vierzig Jahre Nachtschicht.');
             },
           },
@@ -102,7 +102,7 @@ export const DIALOGS: Record<string, DialogDef> = {
             text: 'Also. Die Party im Wald?',
             if: (s) => !!s.getFlag('copAsleep') && !s.getFlag('password'),
             script: async (ctx) => {
-              await ctx.say('ali', 'Folge dem Bass. Am Eingang sagst du Chakabunga.');
+              await ctx.say('ali', 'Folge dem Bass, mein Lieber. Am Eingang sagst du Chakabunga.');
               await ctx.playerSay('Chakabunga.');
               await ctx.say('ali', 'Genau, mein Lieber. Und jetzt weißt du auch, wofür du die Energie brauchst.');
               ctx.setFlag('password', 'Chakabunga');
@@ -130,7 +130,7 @@ export const DIALOGS: Record<string, DialogDef> = {
             if: (s) => !s.getFlag('boughtDrink'),
             next: 'drinks',
             script: async (ctx) => {
-              await ctx.say('ali', 'Steht alles auf der Karte.');
+              await ctx.say('ali', 'Steht alles auf der Karte, mein Lieber.');
             },
           },
           {
@@ -291,7 +291,10 @@ export const DIALOGS: Record<string, DialogDef> = {
             text: 'Wer ist da überhaupt?',
             script: async (ctx) => {
               await ctx.say('ottoTuer', 'Otto R. Chaosforscher. Ich hüte den Turm. Und den Attraktor.');
-              await ctx.say('ottoTuer', 'Ich steck in einer anderen Zeitebene fest. Deshalb klinge ich so blechern.');
+              await ctx.say('ottoTuer', 'Ich steck in einer anderen Zeitebene fest. In 1987, um genau zu sein.');
+              await ctx.playerSay('Und wieso kann ich dann mit dir reden?');
+              await ctx.say('ottoTuer', 'Die Sprechanlage. Hab ich 1987 eingebaut, und sie ist mit mir hängen geblieben. Sie ist das Einzige, was noch in beide Zeiten reicht.');
+              await ctx.say('ottoTuer', 'Reden geht, der Türsummer geht. Rauskommen geht nicht. Für mich ist eure Tür nur gemalt.');
               await ctx.playerSay('Wie komm ich rein?');
               await ctx.say('ottoTuer', 'Mit der Parole. Und die verrat ich nicht.');
               await ctx.say('ottoTuer', 'Ich lass nur rein, wer die Sprache von 1987 spricht. Sicherheitsprotokoll. Sonst latscht mir jeder durch die Zeitebenen.');
@@ -330,6 +333,14 @@ export const DIALOGS: Record<string, DialogDef> = {
             once: true,
             script: async (ctx) => {
               await ctx.say('ottoTuer', 'Nett versucht. Aber das Gurr war geschauspielert. Ich hör das.');
+            },
+          },
+          {
+            text: 'Komm doch einfach runter und mach auf.',
+            once: true,
+            script: async (ctx) => {
+              await ctx.say('ottoTuer', 'Würd ich ja. Aber ich hänge in 1987 fest, und da ist die Tür bloß eine Textur.');
+              await ctx.say('ottoTuer', 'Nur die Anlage hier reicht bis zu dir durch. Und der Summer. Also: Parole!');
             },
           },
           {
@@ -477,13 +488,15 @@ export const DIALOGS: Record<string, DialogDef> = {
             if: (s) => !!s.getFlag('ottoExplained') && !s.getFlag('holeTaken'),
             script: async (ctx) => {
               if (!ctx.easyMode) {
-                await ctx.say('otto', 'Irgendwo hier im Haus liegt eins. Ein kleines schwarzes Loch. Ich hab’s versteckt, als es noch ganz jung war.');
+                await ctx.say('otto', 'Irgendwo hier im Haus liegt eins. Ein kleines schwarzes Loch. Hab ich beim CERN mitgehen lassen, als es noch ganz klein war.');
+                await ctx.say('otto', 'Die haben’s nie vermisst. Passte in die Brotdose. Inzwischen ist es ein bisschen gewachsen.');
                 await ctx.say('otto', 'Wo genau? Hab ich vergessen. Genies haben Wichtigeres im Kopf.');
                 return;
               }
-              await ctx.say('otto', 'Oben in der Turmstube, unterm Teppich, liegt eins. Ein kleines schwarzes Loch, ich hab’s da versteckt, als es noch ganz jung war.');
+              await ctx.say('otto', 'Oben in der Turmstube, unterm Teppich, liegt eins. Ein kleines schwarzes Loch. Hab ich beim CERN mitgehen lassen, als es noch ganz klein war.');
+              await ctx.say('otto', 'Die haben’s nie vermisst. Passte in die Brotdose. Inzwischen ist es ein bisschen gewachsen.');
               await ctx.say('otto', 'Hier in 1987 ist es Teil vom Boden, das kriegst du nicht hoch.');
-              await ctx.say('otto', 'Aber in der modernen Ebene ... da gelten Zeichentrick-Gesetze. Da sind Löcher tragbar.');
+              await ctx.say('otto', 'Aber in der Zeichentrick-Ebene, der schwarz-weißen ... da gelten Trickfilm-Gesetze. Da sind Löcher tragbar.');
             },
           },
           {

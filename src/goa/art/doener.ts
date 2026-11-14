@@ -23,10 +23,10 @@ import {
 import { band } from './neckar';
 
 /**
- * The street between the Picasso and the Epplehaus at sunset: on the left
+ * The street between the Picasso and the Epplehaus at sunset: on the right
  * the stairs down into the Picasso under its flickering neon, in the middle
  * a döner stand — Neckar-Kebap, a spit turning in the window, steam and a
- * smell you can see — with two standing tables, on the right the street on
+ * smell you can see — with two standing tables, on the left the street on
  * to the Epplehaus. No puzzle here. It just smells good.
  *
  * All functions draw in room coordinates (960×450) and return SVG markup.
@@ -34,12 +34,12 @@ import { band } from './neckar';
 
 export const DB = {
   ground: 304,
-  cellar: { x: 46, y: 204, w: 78, h: 100 },
+  cellar: { x: 824, y: 204, w: 78, h: 100 },
   kiosk: { x: 300, y: 118, w: 360, h: 186 },
   /** The window with the spit (an animation layer). */
   spit: { x: 344, y: 168, w: 64, h: 92 },
   counter: { x: 330, y: 168, w: 300, h: 88 },
-  tables: [700, 820],
+  tables: [120, 236],
 };
 
 const LIT = '#ffd870';
@@ -76,6 +76,14 @@ function backdrop(): string {
       }
     }
   }
+  // Life in the houses: a balcony with washing, a cat on a window sill.
+  s.push(path('M196 196h70M196 196v-14M266 196v-14M196 182h70', { stroke: INK, sw: 2 }));
+  for (let bx = 202; bx < 266; bx += 9) s.push(line([bx, 182], [bx, 196], INK, 1));
+  s.push(path('M190 168h82', { stroke: '#e8e2d8', sw: 1 }));
+  (['#d8322a', '#f4efe4', '#3a8ad8', '#ffd34a'] as const).forEach((col, k) => s.push(inked(`M${200 + k * 17} 168v${10 + (k % 2) * 4}h10v-${10 + (k % 2) * 4}z`, col, 0.9)));
+  s.push(inked('M718 152q-2 -10 4 -10l1 -4l3 4l3 -4l1 4q6 0 4 10q6 0 8 -6', '#16101e', 1.2));
+  s.push(circle(722.4, 144.6, 0.8, { fill: '#ffe23a' }) + circle(727, 144.6, 0.8, { fill: '#ffe23a' }));
+  s.push(path('M708 153h36', { stroke: '#e8dcc8', sw: 2.4 }));
   return s.join('');
 }
 
@@ -117,6 +125,15 @@ function kiosk(): string {
   s.push(path(`M${mx - 9} ${my - 9}q4 4 9 0q5 4 9 0`, { stroke: '#2a1a10', sw: 3.4 }));
   s.push(circle(mx - 5, my - 17, 1.4, { fill: INK }) + circle(mx + 5, my - 17, 1.4, { fill: INK }));
   s.push(inked(`M${mx - 13} ${my - 22}h26v-8q-13 -6 -26 0z`, '#f4efe4', 1.6));
+  // Salad trays on the counter: tomato, onion, cabbage, cucumber.
+  (['#d8322a', '#f4efe4', '#b05a9a', '#5aa83a'] as const).forEach((col, k) => {
+    const tx = c.x + 84 + k * 22;
+    s.push(inked(`M${tx} ${c.y + c.h - 4}v-9h18v9z`, '#c8c8d0', 1.2));
+    s.push(path(`M${tx + 2} ${c.y + c.h - 12}q7 -6 14 0z`, { fill: col, stroke: INK, sw: 0.9 }));
+  });
+  // The neon tube sign in the window's corner (its glow blinks: own layer).
+  s.push(rect(c.x + 86, c.y + 40, 54, 20, { fill: '#1e1838', stroke: INK, sw: 1.4 }, 3));
+  s.push(text(c.x + 113, c.y + 55, 'OPEN', { size: 12, fill: '#ff5ab4', stroke: '#7a1a5a', sw: 1 }));
   // The counter's front, the awning, the sign.
   s.push(inked(poly([[c.x - 10, c.y + c.h - 4], [c.x + c.w + 10, c.y + c.h - 4], [c.x + c.w + 10, c.y + c.h + 6], [c.x - 10, c.y + c.h + 6]]), '#b8b8c8', 2));
   for (const [cx, col] of [[c.x + 236, '#d8322a'], [c.x + 252, '#f2c230'], [c.x + 268, '#3a8a4a']] as Array<[number, string]>) s.push(inked(`M${cx - 5} ${c.y + c.h - 4}v-14h10v14z`, col, 1.2));
@@ -128,6 +145,11 @@ function kiosk(): string {
   s.push(inked(`M${x + 60} ${y - 34}h${w - 120}v34h${-(w - 120)}z`, '#1e1838', 2.4));
   s.push(glow('dbSignGlow', x + w / 2, y - 17, 140, '#ffb04a', 0.4, 26));
   s.push(text(x + w / 2, y - 9, 'NECKAR-KEBAP', { size: 22, fill: '#ffd34a', stroke: '#d8322a', sw: 2, spacing: 1 }));
+  // An Ayran poster on the stand's front.
+  s.push(inked(`M${x + 34} ${y + 142}h48v40h-48z`, '#3a8ad8', 1.6));
+  s.push(inked(`M${x + 50} ${y + 176}v-22q8 -4 16 0v22z`, '#f4efe4', 1.2));
+  s.push(text(x + 58, y + 152, 'AYRAN', { size: 7, fill: '#ffffff', weight: 900 }));
+  s.push(text(x + 58, y + 172, 'eiskalt', { size: 5, fill: '#3a8ad8', weight: 700 }));
   // The menu board on the right.
   s.push(inked(`M${x + w - 56} ${y + 46}h48v108h-48z`, '#2a2a3a', 2));
   const menu: Array<[string, string]> = [['Döner', '7,50'], ['Dürüm', '8,00'], ['Pommes', '4,00'], ['Ayran', '2,50']];
@@ -149,8 +171,8 @@ function tables(): string {
     s.push(inked(`M${tx - 6} ${DB.ground - 20}v-12h12v12z`, '#d8d8e0', 1.4));
     s.push(path(`M${tx - 3} ${DB.ground - 32}v-4h6v4`, { stroke: '#ffffff', sw: 1.6 }));
   }
-  s.push(inked('M890 300h30l-4 44h-22z', '#3a6a4a', 2));
-  s.push(path('M892 300h26', { stroke: '#2a4a3a', sw: 4 }));
+  s.push(inked('M40 300h30l-4 44h-22z', '#3a6a4a', 2));
+  s.push(path('M42 300h26', { stroke: '#2a4a3a', sw: 4 }));
   return s.join('');
 }
 
@@ -224,6 +246,30 @@ export const SPIT_FRAMES: SvgImageAsset[] = [0, 1, 2, 3].map((f) => {
   s.push(rect(w - 8, 6, 6, h - 12, { fill: '#ff6a2a', opacity: 0.4 + (f % 2) * 0.2 }));
   return { key: `doener-spit-${f}`, width: w, height: h, svg: s.join('') };
 });
+
+/** The döner man's arm, sharpening his long knife: two frames. */
+export const KNIFE = { x: DB.counter.x + 204, y: DB.counter.y + 40, w: 54, h: 46 };
+export const KNIFE_FRAMES: SvgImageAsset[] = [0, 1].map((f) => {
+  const hx = 30 + f * 8;
+  const hy = 22 - f * 10;
+  return {
+    key: `doener-knife-${f}`,
+    width: KNIFE.w,
+    height: KNIFE.h,
+    svg:
+      path(`M6 34Q18 34 ${hx} ${hy}`, { stroke: INK, sw: 8 }) +
+      path(`M6 34Q18 34 ${hx} ${hy}`, { stroke: '#f4efe4', sw: 5 }) +
+      circle(hx, hy, 4, { fill: '#e0a878', stroke: INK, sw: 1.4 }) +
+      path(`M${hx} ${hy}L${hx + 18} ${hy - 16}`, { stroke: INK, sw: 4 }) +
+      path(`M${hx} ${hy}L${hx + 18} ${hy - 16}`, { stroke: '#d8e0e8', sw: 2 }),
+  };
+});
+
+/** The OPEN sign's neon glow (an ambient lets it flicker). */
+export function openGlow(): string {
+  const c = DB.counter;
+  return ellipse(c.x + 113, c.y + 50, 44, 22, { fill: '#ff5ab4', opacity: 0.35 }) + text(c.x + 113, c.y + 55, 'OPEN', { size: 12, fill: '#ffd0f0' });
+}
 
 /** Steam and the smell rising from the stand, as wavy lines (its own layer,
  *  so an ambient can let it drift). */

@@ -1,7 +1,8 @@
 import { Layer, type Facing, type HotspotDef, type Rect, type RoomDef, type Vec2 } from '../../engine/types';
 import type { ScriptContext } from '../../engine/ScriptContext';
-import { WR, foregroundTree, goaGlow, waldrandBg } from '../art/waldrand';
+import { OWL, OWL_FRAMES, WR, fireflies, fog, foregroundTree, goaGlow, lampFlash, waldrandBg } from '../art/waldrand';
 import { PIGEON_ACTORS } from '../art/epplehaus';
+import { portalArt } from '../art/goaeingang';
 
 // ---- layout ----------------------------------------------------------------------
 // The edge of the forest, past the Neckarbrücke's left end, at dusk: the
@@ -9,7 +10,9 @@ import { PIGEON_ACTORS } from '../art/epplehaus';
 // closed for tree felling. Behind the trees the Goa's lights throb with a
 // bass you can only just hear (the room's music is nothing but that bass;
 // an ambient pulses the glow layer in time). The only way to the Goa is
-// Otto R.'s wormhole from the Hölderlinturm.
+// Otto R.'s wormhole pair from the Hölderlinturm: one end is thrown over the
+// barrier towards the lights (`portalOpen`), the other stands here — step in
+// and you come out in the middle of the dance floor, with empty pockets.
 
 const P = (x: number, y: number): Vec2 => ({ x, y });
 const R = (x: number, y: number, w: number, h: number): Rect => ({ x, y, w, h });
@@ -20,6 +23,9 @@ function at(id: string, name: string, r: Rect, walkTo: Vec2, facing: Facing, res
 
 /** In front of the barrier. */
 const BARRIER_SPOT = P(420, 380);
+/** Where this end of the wormhole pair stands once it's thrown: beside the barrier. */
+const PORTAL = { x: 724, y: 326, rx: 40, ry: 58 };
+const PORTAL_SPOT = P(PORTAL.x, 394);
 /** One beat of the bass, ms (128 bpm). */
 const BEAT = 469;
 
@@ -38,8 +44,10 @@ async function tryBarrier(ctx: ScriptContext): Promise<void> {
   await ctx.once('forestClosed', async () => {
     await ctx.playerSay('Ich weiß, wo die Goa ist. Ich hab das Passwort. Ich hör sogar den Bass. Und dazwischen: ein Absperrgitter.');
   });
-  if (ctx.hasItem('wurmloch')) {
-    await ctx.playerSay('Brauch ich auch nicht. Ich hab ein Wurmloch in der Tasche.');
+  if (ctx.flag('portalOpen')) {
+    await ctx.playerSay('Brauch ich auch nicht. Mein Wurmloch steht gleich daneben.');
+  } else if (ctx.hasItem('wurmloch')) {
+    await ctx.playerSay('Durch muss ich ja gar nicht. Nur drüber. Mit einem Ende von meinem Wurmloch-Paar.');
   } else if (ctx.easyMode && ctx.flag('ottoFree')) {
     await ctx.playerSay('Otto meinte, sein Taschen-Attraktor zeigt, wo das Chaos am schönsten ist. Vielleicht gibt’s eine Abkürzung.');
   } else {
@@ -47,7 +55,7 @@ async function tryBarrier(ctx: ScriptContext): Promise<void> {
   }
 }
 
-// ---- the red herrings: five ways past the barrier that don't work ---------------
+// ---- the red herrings: two ways past the barrier that don't work ----------------
 
 /** Bounce the player up and down (transient staging). */
 async function hop(ctx: ScriptContext, height: number, ms: number): Promise<void> {
@@ -60,20 +68,8 @@ async function hop(ctx: ScriptContext, height: number, ms: number): Promise<void
 /** After the first failed attempt: a nudge away from tools. */
 async function afterFail(ctx: ScriptContext): Promise<void> {
   await ctx.once('herringHint', async () => {
-    await ctx.playerSay('Mit Werkzeug komm ich an diesem Gitter nicht vorbei. Ich bräuchte eher eine Abkürzung.');
+    await ctx.playerSay('Mit Sportgerät komm ich an diesem Gitter nicht vorbei. Ich bräuchte eher eine Abkürzung.');
   });
-}
-
-async function cutChain(ctx: ScriptContext): Promise<void> {
-  await ctx.playerSay('Die Kette am Gitter einfach durchknipsen. Ganz leise.');
-  ctx.sfx('step');
-  await ctx.wait(300);
-  ctx.sfx('deny');
-  ctx.shake(180, 0.006);
-  ctx.removeItem('drahtschere');
-  await ctx.playerSay('*KNACK.*');
-  await ctx.playerSay('Das war nicht die Kette. Das war die Schere. Die ist stumpfer als Alis Witze.');
-  await afterFail(ctx);
 }
 
 async function pogo(ctx: ScriptContext): Promise<void> {
@@ -116,32 +112,46 @@ async function balloon(ctx: ScriptContext): Promise<void> {
   await afterFail(ctx);
 }
 
-async function poleVault(ctx: ScriptContext): Promise<void> {
-  await ctx.playerSay('Stabhochsprung. Mit Anlauf. Wie bei Olympia.');
-  await ctx.walkTo(ctx.activeCharId, 700, 400);
-  ctx.face(ctx.activeCharId, 'left');
-  await ctx.playerSay('Drei ... zwei ... eins ...');
-  await ctx.walkTo(ctx.activeCharId, 470, 382);
-  await hop(ctx, 70, 700);
-  ctx.sfx('deny');
-  ctx.shake(350, 0.014);
-  ctx.removeItem('stange');
-  await ctx.playerSay('*SCHWUNG ... KNACK.*');
-  await ctx.playerSay('Die Stange war zu biegsam. Sie hat mich nicht rüber-, sondern zurückkatapultiert. Und ist dann zerbrochen.');
-  await afterFail(ctx);
+// ---- the wormhole pair -----------------------------------------------------------
+
+/** One end over the barrier, towards the lights; the other stands here. */
+export async function throwWormhole(ctx: ScriptContext): Promise<void> {
+  if (ctx.flag('portalOpen')) return;
+  await ctx.walkTo(ctx.activeCharId, BARRIER_SPOT.x + 60, BARRIER_SPOT.y);
+  ctx.face(ctx.activeCharId, 'up');
+  await ctx.playerSay('Zwei Enden. Eins fliegt, eins bleibt. Ich ziel auf die Lichter.');
+  ctx.removeItem('wurmloch');
+  const disc = ctx.layerObj('wurf');
+  disc.setPosition(ctx.player.x, ctx.player.y - 90).setAlpha(1).setScale(1);
+  ctx.sfx('step');
+  await ctx.tween(disc, { x: 420, y: 150, ease: 'Sine.easeOut' }, 620);
+  await ctx.tween(disc, { x: WR.glow.x, y: WR.glow.y, scale: 0.25, ease: 'Sine.easeIn' }, 700);
+  disc.setAlpha(0);
+  ctx.sfx('zap');
+  ctx.flash(0xb06aff, 260);
+  ctx.setFlag('portalOpen');
+  await ctx.repaint();
+  await ctx.playerSay('Drüber! Weit drüber. Irgendwo zwischen den Lichtern ist es runtergekommen.');
+  await ctx.playerSay('Und das andere Ende steht jetzt hier neben dem Gitter und wummert.');
+  if (ctx.easyMode) await ctx.playerSay('Ein Schritt rein, und ich bin drüben.');
 }
 
-async function dig(ctx: ScriptContext): Promise<void> {
-  await ctx.playerSay('Ich grab mich einfach unter dem Gitter durch. Wie im Gefängnisfilm.');
-  for (let i = 0; i < 3; i++) {
-    ctx.sfx('step');
-    await ctx.wait(350);
-  }
-  ctx.sfx('deny');
-  ctx.removeItem('klappspaten');
-  await ctx.playerSay('*KLONK.* Eine Wurzel. So dick wie ich.');
-  await ctx.playerSay('Und der Klappspaten ist zusammengeklappt. Mit meinen Fingern drin. Autsch.');
-  await afterFail(ctx);
+/** Into the portal: out in the middle of the dance floor. Whatever is in the
+ *  pockets doesn't make it through. */
+async function enterPortal(ctx: ScriptContext): Promise<void> {
+  await ctx.playerSay(ctx.flag('wormholeUsed') ? 'Noch mal durch. Festhalten.' : 'Augen zu, Luft anhalten, und ...');
+  ctx.sfx('zap');
+  ctx.shake(600, 0.02);
+  ctx.flash(0xff5ab4, 400);
+  await ctx.wait(400);
+  const lost = [...ctx.state.inventory];
+  for (const id of lost) ctx.removeItem(id);
+  if (lost.length) ctx.setFlag('pocketsLost');
+  ctx.place(ctx.activeCharId, -400, ctx.player.y);
+  ctx.flash(0x4ae8ff, 400);
+  ctx.setFlag('wormholeUsed');
+  await ctx.wait(300);
+  await ctx.goToRoom('goa', 'portal');
 }
 
 const HOTSPOTS: HotspotDef[] = [
@@ -164,6 +174,7 @@ const HOTSPOTS: HotspotDef[] = [
         await ctx.playerSay('Die Goa! Keine zwei Kilometer weit weg.');
       },
     },
+    onItem: { use: { wurmloch: throwWormhole } },
   }),
   at('mond', 'Mond', R(770, 40, 60, 60), BARRIER_SPOT, 'up', {
     on: { lookat: 'Der Mond geht auf. Vollmond, wie auf dem Flyer. Die Goa hat einen guten Draht nach oben.' },
@@ -197,6 +208,37 @@ const HOTSPOTS: HotspotDef[] = [
       pickup: 'Das Schild ist einbetoniert. Das Forstamt kennt seine Pappenheimer.',
     },
   }),
+  at('zettel', 'Zettel', R(WR.sign.x + 92, WR.sign.y + 40, 40, 34), P(580, 380), 'up', {
+    on: {
+      lookat: async (ctx) => {
+        await ctx.playerSay('Ein Zettel, mit Tesa ans Schild geklebt: „Fällarbeiten beantragt wegen dringendem Verdacht auf Ruhestörung.“');
+        await ctx.playerSay(ctx.flag('knowsPartykiller') ? 'Unterschrift: „Ein besorgter Bürger a. D.“ Der Partykiller. Wusst ich’s doch.' : 'Unterschrift: „Ein besorgter Bürger a. D.“ Wer macht denn sowas?');
+      },
+      pickup: 'Der klebt da gut. Soll ruhig jeder lesen, wer das war.',
+    },
+  }),
+  at('harvester', 'Harvester', R(724, 226, 180, 116), P(760, 392), 'up', {
+    on: {
+      lookat: 'Ein Harvester. Feierabend, Greifarm eingeklappt. Tagsüber frisst der einen Baum in zwanzig Sekunden.',
+      use: 'Der Schlüssel steckt nicht. Und ich hab nicht mal einen Führerschein fürs Fahrrad.',
+      open: 'Abgeschlossen. Das Forstamt kennt seine Pappenheimer.',
+    },
+  }),
+  at('motorsaege', 'Motorsäge', R(WR.logs.x + 90, WR.logs.y - 42, 62, 26), P(250, 380), 'up', {
+    on: {
+      lookat: 'Eine Motorsäge, oben auf dem Stapel vergessen. Die Kette ist abgenommen. Schade. Oder zum Glück.',
+      pickup: 'Ohne Kette ist das nur ein sehr lauter Briefbeschwerer. Und zu hoch liegt sie auch.',
+    },
+  }),
+  at('eule', 'Eule', R(OWL.x - 4, OWL.y - 4, OWL.w + 8, OWL.h + 8), P(600, 380), 'up', {
+    on: {
+      lookat: 'Eine Eule. Sie schaut mich an, als wüsste sie genau, wie man an dem Gitter vorbeikommt. Sagt aber nichts.',
+      talkto: async (ctx) => {
+        await ctx.playerSay('Na? Auch auf dem Weg zur Goa?');
+        await ctx.playerSay('Sie hat geblinzelt. Einmal. Ich zähl das als Ja.');
+      },
+    },
+  }),
   at('absperrung', 'Absperrung', R(WR.barrier.x - 34, WR.barrier.base - 56, 196, 60), BARRIER_SPOT, 'up', {
     defaultVerb: 'use',
     on: {
@@ -212,14 +254,25 @@ const HOTSPOTS: HotspotDef[] = [
     },
     onItem: {
       use: {
-        drahtschere: cutChain,
         pogostick: pogo,
         ballon: balloon,
-        stange: poleVault,
-        klappspaten: dig,
+        wurmloch: throwWormhole,
         stuhlbein: 'Die Würmer fressen sich durchs Holz, nicht durch Stahl.',
         loch: 'Ein Loch ins Gitter? Dahinter liegen immer noch umgefallene Bäume. Ich brauch eher eine Abkürzung.',
       },
+    },
+  }),
+  at('portal', 'Wurmloch', R(PORTAL.x - PORTAL.rx, PORTAL.y - PORTAL.ry, PORTAL.rx * 2, PORTAL.ry * 2), PORTAL_SPOT, 'up', {
+    defaultVerb: 'use',
+    visible: (state) => !!state.getFlag('portalOpen'),
+    on: {
+      lookat: async (ctx) => {
+        await ctx.playerSay('Mein Ende vom Wurmloch-Paar. Es dreht sich, und es riecht nach Nebelmaschine.');
+        await ctx.playerSay('Das andere Ende liegt irgendwo da drüben, mitten im Bass.');
+      },
+      use: enterPortal,
+      open: enterPortal,
+      pickup: 'Jetzt, wo es aufgespannt ist, krieg ich es nicht mehr in die Tasche. Es will benutzt werden.',
     },
   }),
   at('toNeckar', 'Zur Neckarbrücke', R(900, 300, 60, 146), P(936, 420), 'right', {
@@ -240,6 +293,15 @@ export const waldrandRoom: RoomDef = {
     { id: 'bg', depth: Layer.BEHIND, svg: waldrandBg() },
     // The Goa's lights behind the trees: an ambient makes them throb.
     { id: 'goa', depth: Layer.BEHIND, x: 0, y: 0, w: 960, h: 450, svg: goaGlow(), alpha: 0.55 },
+    // Night life: the owl on its branch, the barrier lamp's flash, fireflies, fog.
+    { id: 'owl', depth: Layer.BEHIND, x: OWL.x, y: OWL.y, anim: 'wald-owl' },
+    // The wormhole pair: this end, standing beside the barrier, and the one in flight.
+    { id: 'portal', depth: Layer.BEHIND, x: PORTAL.x - PORTAL.rx, y: PORTAL.y - PORTAL.ry, w: PORTAL.rx * 2, h: PORTAL.ry * 2, svg: portalArt(PORTAL.rx, PORTAL.ry, 'wrPortal'), visible: (state) => !!state.getFlag('portalOpen') },
+    { id: 'wurf', depth: Layer.FRONT, x: 0, y: 0, w: 44, h: 28, svg: portalArt(22, 14, 'wrWurf'), alpha: 0 },
+    { id: 'flash', depth: Layer.BEHIND, x: 0, y: 0, w: 960, h: 450, svg: lampFlash(), alpha: 0 },
+    { id: 'light', depth: Layer.FRONT, x: 0, y: 0, w: 960, h: 450, svg: '<rect width="960" height="450" fill="#1a1a5a"/>', alpha: 0.24 },
+    { id: 'fireflies', depth: Layer.FRONT, x: 0, y: 0, w: 960, h: 450, svg: fireflies(), alpha: 0.6 },
+    { id: 'fog', depth: Layer.FRONT, x: 0, y: 0, w: 960, h: 450, svg: fog() },
     // A big fir in front, on the left.
     { id: 'tree', depth: WR.tree.base, x: WR.tree.x, y: WR.tree.y, w: WR.tree.w, h: WR.tree.h, svg: foregroundTree() },
   ],
@@ -254,10 +316,17 @@ export const waldrandRoom: RoomDef = {
 
   entries: {
     neckar: { x: 900, y: 420, facing: 'left' },
+    // Back out of the wormhole.
+    portal: { x: PORTAL_SPOT.x, y: PORTAL_SPOT.y, facing: 'down' },
   },
 
   // A pigeon that only turns up to pop the balloon.
-  assets: { svgActors: PIGEON_ACTORS },
+  assets: {
+    svgActors: PIGEON_ACTORS,
+    svgImages: OWL_FRAMES,
+    // Mostly staring; now and then a blink, a turn of the head.
+    anims: [{ key: 'wald-owl', textures: [0, 0, 0, 0, 1, 0, 0, 0, 3, 3, 3, 0, 0, 1, 0, 0].map((f) => OWL_FRAMES[f].key), frameRate: 2 }],
+  },
   actors: [{ id: 'waldtaube', x: -200, y: 300, facing: 'left' }],
 
   async onEnter(ctx) {
@@ -271,6 +340,43 @@ export const waldrandRoom: RoomDef = {
   },
 
   ambients: [
+    {
+      // The wormhole breathes.
+      every: [20, 60],
+      run: async (ctx) => {
+        if (!ctx.flag('portalOpen')) return;
+        const p = ctx.layerObj('portal');
+        await ctx.tween(p, { alpha: 0.7, ease: 'Sine.easeInOut' }, 700, { skippable: false });
+        await ctx.tween(p, { alpha: 1, ease: 'Sine.easeInOut' }, 700, { skippable: false });
+      },
+    },
+    {
+      // The barrier's warning lamp flashes.
+      every: [900, 900],
+      run: async (ctx) => {
+        const f = ctx.layerObj('flash');
+        await ctx.tween(f, { alpha: 1 }, 60, { skippable: false });
+        await ctx.tween(f, { alpha: 0 }, 240, { skippable: false });
+      },
+    },
+    {
+      // Fireflies drift and glimmer.
+      every: [100, 300],
+      run: async (ctx) => {
+        const f = ctx.layerObj('fireflies');
+        await ctx.tween(f, { alpha: 0.95, x: 6, y: -5, ease: 'Sine.easeInOut' }, 2200, { skippable: false });
+        await ctx.tween(f, { alpha: 0.35, x: -5, y: 4, ease: 'Sine.easeInOut' }, 2600, { skippable: false });
+      },
+    },
+    {
+      // Ground fog creeps across the path.
+      every: [100, 300],
+      run: async (ctx) => {
+        const f = ctx.layerObj('fog');
+        await ctx.tween(f, { x: 40, ease: 'Sine.easeInOut' }, 9000, { skippable: false });
+        await ctx.tween(f, { x: -40, ease: 'Sine.easeInOut' }, 9000, { skippable: false });
+      },
+    },
     {
       // The lights behind the trees throb with the bass: four on the floor.
       every: [50, 120],
