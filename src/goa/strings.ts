@@ -50,6 +50,8 @@ export const DE_STRINGS: Partial<UIStrings> = {
   soundToast: (muted) => (muted ? 'Ton aus' : 'Ton an'),
   commentaryState: (on) => `Regiekommentar: ${on ? 'AN' : 'AUS'}  (F2)`,
   commentaryToast: (on) => `Regiekommentar ${on ? 'an' : 'aus'}`,
+  difficultyState: (easy) => `Modus: ${easy ? 'EINFACH (mehr Hinweise)' : 'NORMAL'}  (klicken zum Wechseln)`,
+  difficultyToast: (easy) => (easy ? 'Einfacher Modus: mehr Hinweise' : 'Normaler Modus'),
   saves: '— SPIELSTÄNDE —',
   close: 'Schließen',
   save: 'Sichern',

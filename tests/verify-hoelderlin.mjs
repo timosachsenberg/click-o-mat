@@ -130,7 +130,12 @@ const useItemOn = async (item, x, y) => {
   await settle();
 };
 
-await settle(); // intro lines
+await settle(); // off the bus on the Neckarbrücke
+// --- to the Picasso: past the Epplehaus and the döner stand
+await goTo('epplehaus', 945, 432);
+await goTo('doener', 15, 400);
+await goTo('picasso', 86, 260);
+check('in the Picasso', (await room()) === 'picasso');
 
 // --- the Picasso: pretzel crumbs in the bowl on the counter — by hand they trickle away
 check('a bowl of pretzel crumbs on the counter', (await hotspotAt(560, 322)) === 'brezel');
@@ -143,7 +148,8 @@ await useItemOn('muetze', 560, 322);
 check('the cap makes a crumb bag', (await inv()).includes('muetzekruemel') && !(await inv()).includes('muetze') && (await flag('brezelTaken')) === true, JSON.stringify(await inv()));
 
 // --- the Epplehaus: Flaschenfloh feeds the pigeons — put, put, put! — and one parrots it
-await goTo('epplehaus', 311, 220, { button: 'right' });
+await goTo('doener', 311, 220, { button: 'right' });
+await goTo('epplehaus', 945, 400);
 await verb('give');
 await click(522 + (await inv()).indexOf('muetzekruemel') * 112, 505);
 await page.waitForTimeout(150);
@@ -286,7 +292,8 @@ await page.screenshot({ path: `${SHOT}/hoel-06-toon-after.png` });
 await camSettle();
 await clickW(122, 214);
 await waitFor(async () => (await room()) === 'neckar', 15000, 'neckar');
-await settle();
+// No clicking to skip lines here: a stray click would walk the player off.
+await waitFor(async () => !(await ev(() => window.__engine.busy)), 8000, 'arrival');
 const out = await ev(() => { const a = window.__engine.roomScene.actors.get('player'); return { x: a.x, y: a.y }; });
 check('out of the door: back at the tower on the promenade', (await room()) === 'neckar' && Math.abs(out.x - 478) < 12 && Math.abs(out.y - 304) < 12, JSON.stringify(out));
 

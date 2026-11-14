@@ -48,6 +48,9 @@ export interface GameContent {
   /** Optional translations of the engine's own UI text (verbs, sentence
    *  line, fallback lines, menus). Omitted fields stay English. */
   strings?: Partial<UIStrings>;
+  /** Offer an easy mode (more hints) in the options menu. Scripts read the
+   *  player's choice as `ctx.easyMode`; the default is the normal mode. */
+  easyMode?: boolean;
 }
 
 /** Several games built into one page: the title screen shows a picker, and
@@ -75,6 +78,7 @@ export const SAVE_SLOTS = 5;
 export const AUTO_SLOT = 4;
 const TEXT_SPEED_KEY = 'pnc-text-speed';
 const COMMENTARY_KEY = 'pnc-commentary';
+const EASY_KEY = 'pnc-easy-';
 
 interface SaveFile {
   v: 1;
@@ -211,6 +215,8 @@ export class Engine {
     this.charStarts = content.charStarts ?? {};
     this.startRoom = content.startRoom;
     this.startEntry = content.startEntry;
+    this.offersEasyMode = !!content.easyMode;
+    this.gameId = content.id ?? '';
     this.initParty(content.party ?? [content.playerId], content.startItems ?? []);
     // The legacy single-save key predates namespacing: it can only belong to
     // an un-namespaced game.
@@ -324,6 +330,22 @@ export class Engine {
     this.events.emit('ui');
   }
 
+  /** Whether the game offers an easy mode, and whether the player picked it
+   *  (a per-game preference, off by default: the normal mode). */
+  offersEasyMode = false;
+  easyMode = false;
+  private gameId = '';
+
+  setEasyMode(on: boolean): void {
+    this.easyMode = on;
+    try {
+      localStorage.setItem(EASY_KEY + this.gameId, on ? '1' : '0');
+    } catch {
+      /* ignore */
+    }
+    this.events.emit('ui');
+  }
+
   /** True once per room per session — used to fire commentary on first entry. */
   shouldNarrate(roomId: string): boolean {
     if (!this.commentary || this.narratedRooms.has(roomId)) return false;
@@ -342,6 +364,7 @@ export class Engine {
       const raw = localStorage.getItem(TEXT_SPEED_KEY);
       if (raw !== null) this.textSpeed = Math.max(0, Math.min(1, parseFloat(raw)));
       this.commentary = localStorage.getItem(COMMENTARY_KEY) === '1';
+      this.easyMode = this.offersEasyMode && localStorage.getItem(EASY_KEY + this.gameId) === '1';
     } catch {
       /* ignore */
     }

@@ -23,6 +23,12 @@ export class ScriptContext {
     return this.eng.busy;
   }
 
+  /** The player picked the easy mode in the options (games that offer one:
+   *  GameContent.easyMode). Use it to give more explicit hints. */
+  get easyMode(): boolean {
+    return this.eng.easyMode;
+  }
+
   get scene(): Phaser.Scene {
     return this.eng.roomScene;
   }

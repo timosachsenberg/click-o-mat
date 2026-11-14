@@ -212,6 +212,19 @@ async function fillCap(ctx: ScriptContext): Promise<void> {
   await ctx.say('ali', 'Die Brezel von gestern? Nimm ruhig mit, mein Lieber. Die war eh härter als der Partykiller.');
 }
 
+/** A pogo stick leaning against the back column (room coordinates). */
+function pogoArt(): string {
+  return [
+    path('M236 304L254 232', { stroke: INK, sw: 5 }),
+    path('M236 304L254 232', { stroke: '#3aa8c8', sw: 3 }),
+    path('M244 234L264 238', { stroke: INK, sw: 5 }),
+    path('M244 234L264 238', { stroke: '#d8322a', sw: 3 }),
+    path('M236 288l9 2M238 280q6 2 4 4t3 4t3 4', { stroke: '#c8c8d0', sw: 2.2 }),
+    path('M233 282L247 285', { stroke: INK, sw: 4 }),
+    circle(236, 305, 3, { fill: '#2a2a2a' }),
+  ].join('');
+}
+
 /** Where Ali's ouzo stands: on his coaster, or in front of the Partykiller. */
 const OUZO = { coaster: { x: 772, y: 338 }, cop: { x: 684, y: 332 } };
 
@@ -268,7 +281,7 @@ async function leave(ctx: ScriptContext): Promise<void> {
       await ctx.playerSay('Folge dem Bass. Chakabunga. Los geht’s!');
     });
   }
-  await ctx.goToRoom('epplehaus', 'picasso');
+  await ctx.goToRoom('doener', 'picasso');
 }
 
 /** The Zocker-Hocker: the rickety stool at the counter, right in front of
@@ -334,7 +347,7 @@ const HOTSPOTS: HotspotDef[] = [
     on: { lookat: 'Zwei Stufen. Der Höhepunkt jeder Nacht im Picasso.' },
   }),
   at('clock', 'Uhr', R(40, 70, 40, 40), P(60, 338), 'up', {
-    on: { lookat: 'Kurz vor zwölf. Im Wald geht’s jetzt los.' },
+    on: { lookat: 'Kurz vor neun. Im Wald geht’s erst los, wenn die Sonne weg ist.' },
   }),
   at('flyer', 'Flyer', R(166, 124, 56, 68), P(194, 326), 'up', {
     on: {
@@ -351,6 +364,20 @@ const HOTSPOTS: HotspotDef[] = [
   }),
   at('discoball', 'Discokugel', R(176, 54, 36, 44), P(194, 326), 'up', {
     on: { lookat: 'Eine Discokugel. Dreht sich nur, wenn jemand tanzt. Also nie.' },
+  }),
+  at('pogo', 'Pogo-Stick', R(232, 226, 30, 80), P(240, 328), 'up', {
+    defaultVerb: 'pickup',
+    visible: (state) => !state.getFlag('pogoTaken'),
+    on: {
+      lookat: 'Ein Pogo-Stick, an die Säule gelehnt. Ein Überbleibsel der Neunziger-Party. Oder der Neunziger.',
+      pickup: async (ctx) => {
+        ctx.setFlag('pogoTaken');
+        ctx.addItem('pogostick');
+        await ctx.repaint();
+        await ctx.say('ali', 'Nimm ihn mit, mein Lieber. Bevor Hilde wieder draufspringt.');
+      },
+      use: 'Hier drin? Ich würde mir den Kopf an der Lüftung stoßen.',
+    },
   }),
   at('dj', 'DJ-Pult', R(136, 200, 116, 100), P(194, 326), 'up', {
     on: {
@@ -401,7 +428,7 @@ const HOTSPOTS: HotspotDef[] = [
   at('door', 'Ausgang', R(280, 142, 62, 158), P(311, 322), 'up', {
     defaultVerb: 'open',
     on: {
-      lookat: 'Die Treppe rauf, raus vors Epplehaus. Dahinter der Neckar, und irgendwo dahinter ein Wald.',
+      lookat: 'Die Treppe rauf, raus auf die Straße. Da vorne die Dönerbude, dann das Epplehaus, dann der Neckar.',
       open: leave,
       use: leave,
       close: 'Sie ist zu. Noch.',
@@ -528,7 +555,7 @@ const HOTSPOTS: HotspotDef[] = [
     on: {
       lookat: async (ctx) => {
         await ctx.playerSay('Der Zocker-Hocker. Direkt vor den Spielautomaten, blank gesessen von Generationen von Pechvögeln.');
-        await ctx.playerSay('Er wackelt schon, wenn man ihn nur anschaut. Und irgendwas knuspert darin.');
+        await ctx.playerSay(ctx.easyMode ? 'Er wackelt schon, wenn man ihn nur anschaut. Und irgendwas knuspert darin.' : 'Er wackelt schon, wenn man ihn nur anschaut.');
       },
       use: sitDown,
       pickup: 'Den schlepp ich nicht rum. Der fällt ja schon beim Angucken auseinander.',
@@ -708,6 +735,7 @@ export const picassoRoom: RoomDef = {
       svg: group(refrainBanner(480, 14), 'translate(-220 -8)'),
       visible: (state) => !!state.getFlag('refrain'),
     },
+    { id: 'pogo', depth: Layer.BEHIND, x: 226, y: 220, w: 44, h: 92, svg: group(pogoArt(), 'translate(-226 -220)'), visible: (state) => !state.getFlag('pogoTaken') },
     // The Zocker-Hocker in front of the slot machines — whole, or collapsed.
     {
       id: 'rickety',
@@ -798,7 +826,7 @@ export const picassoRoom: RoomDef = {
     if (ctx.flag('introDone')) return;
     ctx.setFlag('introDone');
     await ctx.wait(400);
-    await ctx.playerSay('Das Picasso. Wenn einer weiß, wo heute die Goa im Wald steigt, dann Ali.');
+    await ctx.playerSay('Das Picasso. Hier unten ist es immer kurz nach Mitternacht.');
     await ctx.playerSay('Zwei Euro hab ich noch. Das muss reichen.');
   },
 

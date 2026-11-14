@@ -226,6 +226,7 @@ export class UIScene extends Phaser.Scene {
   private sliderFills: Array<{ fill: Phaser.GameObjects.Rectangle; get: () => number }> = [];
   private muteToggle!: Phaser.GameObjects.Text;
   private commentaryToggle!: Phaser.GameObjects.Text;
+  private difficultyToggle: Phaser.GameObjects.Text | null = null;
   private sliderDrag: { x0: number; w: number; set: (v: number) => void } | null = null;
   private slotRows: Array<{
     info: Phaser.GameObjects.Text;
@@ -290,8 +291,23 @@ export class UIScene extends Phaser.Scene {
     this.muteToggle.on('pointerdown', () => this.toggleMute());
     this.optionsPanel.add(this.muteToggle);
 
+    // Easy/normal mode, for games that offer one; the rows below move down to make room.
+    const shift = engine.offersEasyMode ? 24 : 0;
+    if (engine.offersEasyMode) {
+      this.difficultyToggle = this.add
+        .text(GAME_W / 2, 258, '', {
+          fontFamily: engine.theme.font,
+          fontSize: '16px',
+          color: '#ffd38a',
+        })
+        .setOrigin(0.5)
+        .setInteractive({ useHandCursor: true });
+      this.difficultyToggle.on('pointerdown', () => this.toggleDifficulty());
+      this.optionsPanel.add(this.difficultyToggle);
+    }
+
     this.commentaryToggle = this.add
-      .text(GAME_W / 2, 258, '', {
+      .text(GAME_W / 2, 258 + shift, '', {
         fontFamily: engine.theme.font,
         fontSize: '16px',
         color: '#c9b8ff',
@@ -304,14 +320,14 @@ export class UIScene extends Phaser.Scene {
     // Save slots
     this.optionsPanel.add(
       this.add
-        .text(GAME_W / 2, 284, str.saves, {
+        .text(GAME_W / 2, 284 + shift, str.saves, {
           fontFamily: engine.theme.font,
           fontSize: '14px',
           color: '#8f7fd4',
         })
         .setOrigin(0.5)
     );
-    for (let slot = 0; slot < SAVE_SLOTS; slot++) this.buildSlotRow(slot, 308 + slot * 34);
+    for (let slot = 0; slot < SAVE_SLOTS; slot++) this.buildSlotRow(slot, 308 + shift + slot * 34 - (shift ? 6 * slot : 0));
 
     const close = this.add
       .text(GAME_W / 2, 500, str.close, {
@@ -476,6 +492,7 @@ export class UIScene extends Phaser.Scene {
     this.muteToggle.setText(str.soundState(audio.muted));
     this.commentaryToggle.setText(str.commentaryState(engine.commentary));
     this.commentaryToggle.setColor(engine.commentary ? '#c9b8ff' : '#6b6488');
+    this.difficultyToggle?.setText(str.difficultyState(engine.easyMode));
     this.updateMuteButton();
     // Slot listings (a row in confirm mode shows the inline Yes/No instead)
     const saves = engine.listSaves();
@@ -541,6 +558,12 @@ export class UIScene extends Phaser.Scene {
     this.updateMuteButton();
     if (engine.menuOpen) this.refreshOptions();
     this.toast(engine.strings.soundToast(muted));
+  }
+
+  private toggleDifficulty(): void {
+    engine.setEasyMode(!engine.easyMode);
+    if (engine.menuOpen) this.refreshOptions();
+    this.toast(engine.strings.difficultyToast(engine.easyMode));
   }
 
   private toggleCommentary(): void {

@@ -1,6 +1,7 @@
 import { Layer, type Facing, type HotspotDef, type Rect, type RoomDef, type Vec2 } from '../../engine/types';
 import type { ScriptContext } from '../../engine/ScriptContext';
 import { WR, foregroundTree, goaGlow, waldrandBg } from '../art/waldrand';
+import { PIGEON_ACTORS } from '../art/epplehaus';
 
 // ---- layout ----------------------------------------------------------------------
 // The edge of the forest, past the Neckarbrücke's left end, at dusk: the
@@ -39,11 +40,96 @@ async function tryBarrier(ctx: ScriptContext): Promise<void> {
   });
   if (ctx.hasItem('wurmloch')) {
     await ctx.playerSay('Brauch ich auch nicht. Ich hab ein Wurmloch in der Tasche.');
-  } else if (ctx.flag('ottoFree')) {
+  } else if (ctx.easyMode && ctx.flag('ottoFree')) {
     await ctx.playerSay('Otto meinte, sein Taschen-Attraktor zeigt, wo das Chaos am schönsten ist. Vielleicht gibt’s eine Abkürzung.');
   } else {
     await ctx.playerSay('Es muss einen anderen Weg geben. Einen sehr anderen.');
   }
+}
+
+// ---- the red herrings: five ways past the barrier that don't work ---------------
+
+/** Bounce the player up and down (transient staging). */
+async function hop(ctx: ScriptContext, height: number, ms: number): Promise<void> {
+  const sprite = ctx.player.sprite;
+  const y = sprite.y;
+  await ctx.tween(sprite, { y: y - height, ease: 'Quad.easeOut' }, ms / 2);
+  await ctx.tween(sprite, { y, ease: 'Quad.easeIn' }, ms / 2);
+}
+
+async function cutChain(ctx: ScriptContext): Promise<void> {
+  await ctx.playerSay('Die Kette am Gitter einfach durchknipsen. Ganz leise.');
+  ctx.sfx('step');
+  await ctx.wait(300);
+  ctx.sfx('deny');
+  ctx.shake(180, 0.006);
+  ctx.removeItem('drahtschere');
+  await ctx.playerSay('*KNACK.*');
+  await ctx.playerSay('Das war nicht die Kette. Das war die Schere. Die ist stumpfer als Alis Witze.');
+}
+
+async function pogo(ctx: ScriptContext): Promise<void> {
+  await ctx.playerSay('Mit dem Pogo-Stick einfach drüberhüpfen. Was soll schon schiefgehen?');
+  ctx.face(ctx.activeCharId, 'up');
+  for (const h of [24, 40, 58]) {
+    ctx.sfx('step');
+    await hop(ctx, h, 420);
+  }
+  ctx.sfx('deny');
+  ctx.shake(400, 0.018);
+  ctx.flash(0xffffff, 120);
+  ctx.removeItem('pogostick');
+  await ctx.playerSay('*BOING. BOING. KLONK.*');
+  await ctx.playerSay('Ich hab das Gitter getroffen. Das Gitter hat gewonnen. Und der Pogo-Stick ist jetzt ein Pogo-Knick.');
+}
+
+async function balloon(ctx: ScriptContext): Promise<void> {
+  await ctx.playerSay('Ballon fest in die Hand, kurz abstoßen, und einfach drüberschweben.');
+  ctx.face(ctx.activeCharId, 'up');
+  const sprite = ctx.player.sprite;
+  const y = sprite.y;
+  await ctx.tween(sprite, { y: y - 46, ease: 'Sine.easeOut' }, 1400);
+  await ctx.playerSay('Es klappt! Ich schwebe!');
+  // A pigeon, all the way out here, flies in and has a go at the balloon.
+  ctx.place('waldtaube', 980, y - 120, 'left');
+  await ctx.tween(ctx.actor('waldtaube').sprite, { x: ctx.player.x + 18, y: y - 104 }, 900);
+  await ctx.say('waldtaube', 'Gurr?');
+  ctx.sfx('zap');
+  ctx.flash(0xff5ab4, 120);
+  ctx.removeItem('ballon');
+  await ctx.say('waldtaube', 'Pock.');
+  await ctx.tween(sprite, { y, ease: 'Quad.easeIn' }, 350);
+  ctx.shake(220, 0.01);
+  await ctx.tween(ctx.actor('waldtaube').sprite, { x: -80, y: y - 200 }, 1100);
+  ctx.place('waldtaube', -200, 300);
+  await ctx.playerSay('Eine Taube. Bis hier draußen. Hat meinen Ballon zerpickt und ist einfach weitergeflogen.');
+  await ctx.playerSay('Die Tauben in dieser Stadt haben was gegen mich.');
+}
+
+async function poleVault(ctx: ScriptContext): Promise<void> {
+  await ctx.playerSay('Stabhochsprung. Mit Anlauf. Wie bei Olympia.');
+  await ctx.walkTo(ctx.activeCharId, 700, 400);
+  ctx.face(ctx.activeCharId, 'left');
+  await ctx.playerSay('Drei ... zwei ... eins ...');
+  await ctx.walkTo(ctx.activeCharId, 470, 382);
+  await hop(ctx, 70, 700);
+  ctx.sfx('deny');
+  ctx.shake(350, 0.014);
+  ctx.removeItem('stange');
+  await ctx.playerSay('*SCHWUNG ... KNACK.*');
+  await ctx.playerSay('Die Stange war zu biegsam. Sie hat mich nicht rüber-, sondern zurückkatapultiert. Und ist dann zerbrochen.');
+}
+
+async function dig(ctx: ScriptContext): Promise<void> {
+  await ctx.playerSay('Ich grab mich einfach unter dem Gitter durch. Wie im Gefängnisfilm.');
+  for (let i = 0; i < 3; i++) {
+    ctx.sfx('step');
+    await ctx.wait(350);
+  }
+  ctx.sfx('deny');
+  ctx.removeItem('klappspaten');
+  await ctx.playerSay('*KLONK.* Eine Wurzel. So dick wie ich.');
+  await ctx.playerSay('Und der Klappspaten ist zusammengeklappt. Mit meinen Fingern drin. Autsch.');
 }
 
 const HOTSPOTS: HotspotDef[] = [
@@ -114,6 +200,11 @@ const HOTSPOTS: HotspotDef[] = [
     },
     onItem: {
       use: {
+        drahtschere: cutChain,
+        pogostick: pogo,
+        ballon: balloon,
+        stange: poleVault,
+        klappspaten: dig,
         stuhlbein: 'Die Würmer fressen sich durchs Holz, nicht durch Stahl.',
         loch: 'Ein Loch ins Gitter? Dahinter liegen immer noch umgefallene Bäume. Ich brauch eher eine Abkürzung.',
       },
@@ -152,6 +243,10 @@ export const waldrandRoom: RoomDef = {
   entries: {
     neckar: { x: 900, y: 420, facing: 'left' },
   },
+
+  // A pigeon that only turns up to pop the balloon.
+  assets: { svgActors: PIGEON_ACTORS },
+  actors: [{ id: 'waldtaube', x: -200, y: 300, facing: 'left' }],
 
   async onEnter(ctx) {
     await ctx.once('waldrandIntro', async () => {

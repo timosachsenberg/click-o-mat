@@ -2,7 +2,7 @@ import { Layer, type Facing, type HotspotDef, type Rect, type RoomDef, type Vec2
 import type { ScriptContext } from '../../engine/ScriptContext';
 import { OTTO_ACTOR } from '../art/turm';
 import { PIGEON_ACTORS } from '../art/epplehaus';
-import { NK, PUNT_ACTOR, balustrade, eckhausLayer, floatingCap, flyingLeg, neckarBg, promGap, quayFootY, quayTopY } from '../art/neckar';
+import { NK, PUNT_ACTOR, balustrade, bus, cuttersOnDeck, eckhausLayer, floatingPole, floatingCap, flyingLeg, neckarBg, promGap, quayFootY, quayTopY } from '../art/neckar';
 
 // ---- layout ----------------------------------------------------------------------
 // The Neckarbrücke in Tübingen at sunset, looking upstream along the
@@ -43,6 +43,9 @@ function scaling(x: number, y: number): number {
 /** The promenade ends at the Hölderlinturm; stairs lead down to the jetty at its foot. */
 const PROM = NK.prom;
 const TOWER_SPOT = P(478, 304);
+/** Where the bus stops on the bridge (top-left of its art), and where the player gets off. */
+const BUS = P(420, 270);
+const BUS_STOP = P(652, 432);
 /** Behind the tower's door: Otto R.'s voice on the intercom (an invisible actor). */
 const DOOR_VOICE = P(452, 296);
 /** Where the Put-Put pigeon perches to say the password. */
@@ -62,6 +65,9 @@ const OFF = P(-400, 300);
 /** Where the player throws from, and where the cap washes up. */
 const THROW_SPOT = P(680, 420);
 const CAP_SPOT = P(506, 332);
+/** Where the bolt cutters lie on the deck, and where the punt pole washes up. */
+const CUTTERS = P(280, 426);
+const POLE = P(452, 316);
 
 function course(t: number): Vec2 {
   const n = COURSE.length - 1;
@@ -397,6 +403,38 @@ const HOTSPOTS: HotspotDef[] = [
       open: toForest,
     },
   }),
+  at('schloesser', 'Liebesschlösser', R(262, 372, 92, 24), P(300, 420), 'up', {
+    on: {
+      lookat: 'Liebesschlösser am Geländer. Die meisten hat die Stadt schon abgezwickt. Die Liebe hält, die Schlösser nicht.',
+      pickup: 'Die sind zu. Und die Schlüssel liegen im Neckar. So ist das gedacht.',
+    },
+  }),
+  at('drahtschere', 'Drahtschere', R(CUTTERS.x - 4, CUTTERS.y - 4, 44, 24), P(CUTTERS.x + 18, 424), 'down', {
+    defaultVerb: 'pickup',
+    visible: (state) => !state.getFlag('schereTaken'),
+    on: {
+      lookat: 'Eine Drahtschere. Damit hat die Stadt wohl die Liebesschlösser abgeknipst. Und sie dann liegen lassen.',
+      pickup: async (ctx) => {
+        ctx.setFlag('schereTaken');
+        ctx.addItem('drahtschere');
+        await ctx.repaint();
+        await ctx.playerSay('Eine Drahtschere. Die könnte man bestimmt noch brauchen.');
+      },
+    },
+  }),
+  at('stange', 'Stocherstange', R(POLE.x, POLE.y - 6, 120, 28), JETTY_SPOT, 'down', {
+    defaultVerb: 'pickup',
+    visible: (state) => !!state.getFlag('capAshore') && !state.getFlag('stangeTaken'),
+    on: {
+      lookat: 'Die Stocherstange der Burschen. Sie ist mit der Mütze angetrieben.',
+      pickup: async (ctx) => {
+        ctx.setFlag('stangeTaken');
+        ctx.addItem('stange');
+        await ctx.repaint();
+        await ctx.playerSay('Vier Meter Stange. Passt erstaunlich gut in meine Tasche. Frag nicht.');
+      },
+    },
+  }),
   at('muetze', 'Mütze', R(CAP_SPOT.x - 20, CAP_SPOT.y - 12, 40, 24), JETTY_SPOT, 'down', {
     defaultVerb: 'pickup',
     visible: (state) => !!state.getFlag('capAshore') && !state.getFlag('capTaken'),
@@ -421,7 +459,7 @@ const HOTSPOTS: HotspotDef[] = [
     on: {
       lookat: async (ctx) => {
         await ctx.playerSay('Ein Stocherkahn voller Burschenschaftler. Mützen, Bänder, ein Kasten Bier.');
-        await ctx.playerSay('Der Kahn ist alt. Altes Holz. Sehr altes, sehr trockenes Holz.');
+        if (ctx.easyMode) await ctx.playerSay('Der Kahn ist alt. Altes Holz. Sehr altes, sehr trockenes Holz.');
       },
       talkto: async (ctx) => {
         await ctx.playerSay('Ahoi! Wo geht’s denn hin?');
@@ -454,6 +492,11 @@ export const neckarRoom: RoomDef = {
     { id: 'eckhaus', depth: NK.parapetBase - 1, x: NK.eckhaus.x, y: NK.eckhaus.y, w: NK.eckhaus.w, h: NK.eckhaus.h, svg: eckhausLayer() },
     // After the corner house, so it runs on in front of it.
     { id: 'balustrade', depth: NK.parapetBase, x: 0, y: 160, w: 960, h: 260, svg: `<g transform="translate(0 -160)">${balustrade()}</g>` },
+    // The bus the player arrives on; it drives off in the opening scene.
+    { id: 'bus', depth: 420, x: BUS.x, y: BUS.y, w: 380, h: 150, svg: bus(), visible: (state) => !state.getFlag('busGone') },
+    // Bolt cutters on the deck, the punt pole at the jetty (once the punt has sunk).
+    { id: 'schere', depth: 300, x: CUTTERS.x, y: CUTTERS.y, w: 36, h: 16, svg: cuttersOnDeck(), visible: (state) => !state.getFlag('schereTaken') },
+    { id: 'stange', depth: 300, x: POLE.x, y: POLE.y, w: 120, h: 20, svg: floatingPole(), visible: (state) => !!state.getFlag('capAshore') && !state.getFlag('stangeTaken') },
     // The cap, once it has washed up at the jetty.
     {
       id: 'cap',
@@ -502,6 +545,8 @@ export const neckarRoom: RoomDef = {
     picasso: { x: 930, y: 432, facing: 'left' },
     // Out of the Hölderlinturm, at the end of the promenade.
     turm: { x: TOWER_SPOT.x, y: TOWER_SPOT.y, facing: 'right' },
+    // The start of the game: off the bus.
+    bus: { x: BUS_STOP.x, y: BUS_STOP.y, facing: 'down' },
     // Back from the edge of the forest.
     wald: { x: 40, y: 432, facing: 'right' },
   },
@@ -521,10 +566,21 @@ export const neckarRoom: RoomDef = {
     pass.halted = false;
     pass.t = 0;
     ctx.place('kahn', OFF.x, OFF.y, 'right');
+    // The game starts here: off the bus, onto the bridge.
     await ctx.once('neckarIntro', async () => {
-      await ctx.wait(400);
+      ctx.sfx('open');
+      await ctx.wait(700);
+      await ctx.playerSay('Endstation Neckarbrücke. Alles aussteigen.');
+      ctx.face(ctx.activeCharId, 'right');
+      await ctx.wait(300);
+      ctx.sfx('step');
+      await ctx.tween(ctx.layerObj('bus'), { x: '+=900', ease: 'Quad.easeIn' }, 2200);
+      ctx.setFlag('busGone');
+      await ctx.repaint();
+      ctx.face(ctx.activeCharId, 'down');
       await ctx.playerSay('Der Neckar im Abendrot. Kitschig. Schön.');
-      await ctx.playerSay('Über die Neckarbrücke, und wenn die Sonne weg ist, immer dem Bass nach.');
+      await ctx.playerSay('Heute Nacht steigt irgendwo im Wald eine Goa. Ich muss nur rausfinden, wo.');
+      if (ctx.easyMode) await ctx.playerSay('Wenn das einer weiß, dann Ali. Im Picasso, gleich hinterm Epplehaus.');
     });
   },
 
