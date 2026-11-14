@@ -131,9 +131,21 @@ const useItemOn = async (item, x, y) => {
 };
 
 await settle(); // off the bus on the Neckarbrücke
-// --- to the Picasso: past the Epplehaus and the döner stand
+// --- a full döner stamp card, lost on the bridge
+check('a stamp card lies on the bridge', (await hotspotAt(824, 437)) === 'stempelkarte');
+await click(824, 437); // default verb: take
+await settle();
+check('took the full stamp card', (await inv()).includes('stempelkarte'), JSON.stringify(await inv()));
+
+// --- to the Picasso: past the Epplehaus and the döner stand (a free döner on the way)
 await goTo('epplehaus', 945, 432);
 await goTo('doener', 15, 400);
+await verb('give');
+await click(522 + (await inv()).indexOf('stempelkarte') * 112, 505);
+await page.waitForTimeout(150);
+await click(530, 230); // the döner man
+await settle();
+check('ten stamps: a free döner', (await inv()).includes('doener') && !(await inv()).includes('stempelkarte'), JSON.stringify(await inv()));
 await goTo('picasso', 86, 260);
 check('in the Picasso', (await room()) === 'picasso');
 
@@ -141,7 +153,7 @@ check('in the Picasso', (await room()) === 'picasso');
 check('a bowl of pretzel crumbs on the counter', (await hotspotAt(560, 322)) === 'brezel');
 await click(560, 322); // default verb: take
 await settle();
-check('crumbs can\'t be carried by hand', !(await flag('brezelTaken')) && JSON.stringify(await inv()) === '["euro"]', JSON.stringify(await inv()));
+check('crumbs can\'t be carried by hand', !(await flag('brezelTaken')) && !(await inv()).some((i) => i.startsWith('muetze')), JSON.stringify(await inv()));
 // The cap comes from sinking the punt (covered by verify-goa); here it's handed over directly.
 await ev(() => window.__engine.makeContext().addItem('muetze', { silent: true }));
 await useItemOn('muetze', 560, 322);
@@ -150,11 +162,18 @@ check('the cap makes a crumb bag', (await inv()).includes('muetzekruemel') && !(
 // --- the Epplehaus: Flaschenfloh feeds the pigeons — put, put, put! — and one parrots it
 await goTo('doener', 311, 220, { button: 'right' });
 await goTo('epplehaus', 945, 400);
-await verb('give');
-await click(522 + (await inv()).indexOf('muetzekruemel') * 112, 505);
-await page.waitForTimeout(150);
-await click(556, 300); // Flaschenfloh
-await settle();
+const giveFloh = async (item) => {
+  await verb('give');
+  await click(522 + (await inv()).indexOf(item) * 112, 505);
+  await page.waitForTimeout(150);
+  await click(556, 300); // Flaschenfloh
+  await settle();
+};
+await giveFloh('muetzekruemel');
+check('hungry, Flaschenfloh won\'t feed the pigeons yet', !(await flag('putTaube')) && (await inv()).includes('muetzekruemel'));
+await giveFloh('doener');
+check('he eats the döner', (await flag('flohSatt')) === true && !(await inv()).includes('doener'));
+await giveFloh('muetzekruemel');
 check('Flaschenfloh feeds the pigeons, one starts saying "Put put"', (await flag('putTaube')) === true && (await flag('putHeard')) === true && !(await inv()).includes('muetzekruemel'));
 check('and hands the cap back', (await inv()).includes('muetze'), JSON.stringify(await inv()));
 const putPos = await ev(() => { const a = window.__engine.roomScene.actors.get('taube3'); return { x: a.x, y: a.y, h: a.sprite.displayHeight }; });

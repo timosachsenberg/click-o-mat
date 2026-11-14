@@ -170,9 +170,14 @@ tower. The tower's door at the end of the promenade is locked: Otto R. answers o
 - The bowl on Ali's counter is full of **pretzel crumbs**, but by hand they
   trickle through your fingers: **use the cap with the bowl** (the
   Burschenschaftler's cap from the punt) and you've got a crumb bag.
-- **Give the cap full of crumbs to Flaschenfloh** at the Epplehaus. He feeds
-  the pigeons — *„Put, put, put!“* — and one of them starts parroting
-  **„Put put“**. He hands the cap back.
+- Flaschenfloh at the Epplehaus has two worries: his own stomach first, then
+  his pigeons. On the bridge, by the street lamp, lies a **full stamp card**
+  from the döner stand: **give it to the döner man** for a free **döner** and
+  **give the döner to Flaschenfloh**. (Crumbs before that? *Erst ich, dann die
+  Tauben.*)
+- Then **give him the cap full of crumbs**. He feeds the pigeons —
+  *„Put, put, put!“* — and one of them starts parroting **„Put put“**. He
+  hands the cap back.
 - Say „Put put?“ yourself at the intercom: *hört sich gut an, aber der Klang
   der Stimme passt irgendwie nicht.*
 - While the parroting pigeon is busy with the crumbs, **pick it up**, and

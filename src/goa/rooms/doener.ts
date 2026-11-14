@@ -33,6 +33,17 @@ async function toEpplehaus(ctx: ScriptContext): Promise<void> {
   await ctx.goToRoom('epplehaus', 'doener');
 }
 
+/** Ten stamps, one free döner. */
+async function redeemCard(ctx: ScriptContext): Promise<void> {
+  ctx.removeItem('stempelkarte');
+  await ctx.say('doenermann', 'Zehn Stempel! Voll! Mein Freund, du bist Stammkunde!');
+  await ctx.playerSay('Äh ... ja. Seit Jahren.');
+  await ctx.say('doenermann', 'Einmal Döner gratis. Mit alles? Mit alles.');
+  ctx.sfx('pickup');
+  ctx.addItem('doener');
+  await ctx.say('doenermann', 'Guten Appetit! Und bis zur nächsten Karte!');
+}
+
 const HOTSPOTS: HotspotDef[] = [
   at('haeuser', 'Altstadthäuser', R(0, 0, 960, 120), P(480, 380), 'up', {
     on: { lookat: 'Altstadthäuser. In den Küchen brennt Licht, und keiner kocht. Wozu auch, mit dem Döner unten.' },
@@ -45,6 +56,10 @@ const HOTSPOTS: HotspotDef[] = [
       },
     },
   }),
+  at('theke', 'Theke', R(DB.counter.x - 10, DB.counter.y + DB.counter.h - 8, DB.counter.w + 20, 18), COUNTER_SPOT, 'up', {
+    on: { lookat: 'Die Theke. Blitzblank, bis auf einen einsamen Soßenfleck.' },
+    onItem: { use: { stempelkarte: redeemCard } },
+  }),
   at('spiess', 'Dönerspieß', R(DB.spit.x, DB.spit.y, DB.spit.w, DB.spit.h), COUNTER_SPOT, 'up', {
     on: {
       lookat: 'Der Spieß dreht sich langsam und glänzt. Ich schau lieber nicht zu lange hin, sonst werd ich schwach.',
@@ -56,6 +71,7 @@ const HOTSPOTS: HotspotDef[] = [
       lookat: async (ctx) => {
         await ctx.playerSay('Döner 7,50. Dürüm 8,00. Ayran 2,50.');
         await ctx.playerSay(ctx.hasItem('euro') ? 'Meine zwei Euro reichen nicht mal für den Ayran.' : 'Und ich hab genau gar nichts.');
+        await ctx.playerSay('Ganz unten, klein: „Stempelkarte voll? Döner gratis!“');
       },
     },
   }),
@@ -81,7 +97,9 @@ const HOTSPOTS: HotspotDef[] = [
           await ctx.say('doenermann', 'Zwei Euro? Dafür kriegst du eine Zwiebel. Eine halbe.');
           await ctx.playerSay('Dann behalt ich sie lieber.');
         },
+        stempelkarte: redeemCard,
       },
+      use: { stempelkarte: redeemCard },
     },
   },
   at('tische', 'Stehtische', R(DB.tables[0] - 36, DB.ground - 40, DB.tables[1] - DB.tables[0] + 72, 90), P(760, 380), 'up', {

@@ -871,6 +871,18 @@ export const PUNT_ACTOR: SvgActorAsset = {
 
 // ---- loose props -------------------------------------------------------------------
 
+/** A stamp card lying on the deck (24×14, local coordinates). */
+export function cardOnDeck(): string {
+  return (
+    ellipse(12, 11, 11, 2.4, { fill: '#000000', opacity: 0.3 }) +
+    `<g transform="rotate(-12 12 7)">` +
+    rect(2, 2, 20, 11, { fill: '#f6efe0', stroke: INK, sw: 1.4 }, 1) +
+    rect(2, 2, 20, 3, { fill: '#d8322a' }) +
+    [0, 1, 2, 3].map((k) => circle(6 + k * 4, 9, 1.3, { fill: '#c43a8a' })).join('') +
+    `</g>`
+  );
+}
+
 /** Bolt cutters lying on the deck (36×16, local coordinates). */
 export function cuttersOnDeck(): string {
   return (

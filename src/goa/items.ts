@@ -123,6 +123,25 @@ export const ITEMS: Record<string, ItemDef> = {
       await ctx.playerSay('Genau so. Das muss nur noch jemand hören, der Wert drauf legt.');
     },
   },
+  stempelkarte: {
+    id: 'stempelkarte',
+    name: 'volle Stempelkarte',
+    icon: 'icon-stempelkarte',
+    lookAt: async (ctx) => {
+      await ctx.playerSay('Eine Stempelkarte vom Neckar-Kebap. Zehn Felder, zehn Stempel. Voll!');
+      await ctx.playerSay('„Bei vollen Stempeln: ein Döner gratis.“ Irgendwer hat die verloren. Der Arme. Ich Glücklicher.');
+    },
+  },
+  doener: {
+    id: 'doener',
+    name: 'Döner mit alles',
+    icon: 'icon-doener',
+    lookAt: 'Ein Döner mit alles. Warm, schwer, die Soße tropft schon. Er riecht nach Glück.',
+    use: async (ctx) => {
+      await ctx.playerSay('Ich könnte ... nein.');
+      await ctx.playerSay(ctx.easyMode ? 'Flaschenfloh sah aus, als hätte er seit gestern nichts gegessen. Der braucht ihn dringender.' : 'Irgendwer braucht den dringender als ich.');
+    },
+  },
   // ---- red herrings: each of them looks like a way past the forest barrier
   drahtschere: {
     id: 'drahtschere',

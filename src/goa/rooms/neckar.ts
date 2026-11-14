@@ -2,7 +2,7 @@ import { Layer, type Facing, type HotspotDef, type Rect, type RoomDef, type Vec2
 import type { ScriptContext } from '../../engine/ScriptContext';
 import { OTTO_ACTOR } from '../art/turm';
 import { PIGEON_ACTORS } from '../art/epplehaus';
-import { NK, PUNT_ACTOR, balustrade, bus, cuttersOnDeck, eckhausLayer, floatingPole, floatingCap, flyingLeg, neckarBg, promGap, quayFootY, quayTopY } from '../art/neckar';
+import { NK, PUNT_ACTOR, balustrade, bus, cardOnDeck, cuttersOnDeck, eckhausLayer, floatingPole, floatingCap, flyingLeg, neckarBg, promGap, quayFootY, quayTopY } from '../art/neckar';
 
 // ---- layout ----------------------------------------------------------------------
 // The Neckarbrücke in Tübingen at sunset, looking upstream along the
@@ -67,6 +67,8 @@ const THROW_SPOT = P(680, 420);
 const CAP_SPOT = P(506, 332);
 /** Where the bolt cutters lie on the deck, and where the punt pole washes up. */
 const CUTTERS = P(280, 426);
+/** A full döner stamp card someone lost, by the street lamp. */
+const CARD = P(812, 430);
 const POLE = P(452, 316);
 
 function course(t: number): Vec2 {
@@ -409,6 +411,19 @@ const HOTSPOTS: HotspotDef[] = [
       pickup: 'Die sind zu. Und die Schlüssel liegen im Neckar. So ist das gedacht.',
     },
   }),
+  at('stempelkarte', 'Stempelkarte', R(CARD.x - 6, CARD.y - 6, 36, 24), P(CARD.x + 12, 428), 'down', {
+    defaultVerb: 'pickup',
+    visible: (state) => !state.getFlag('karteTaken'),
+    on: {
+      lookat: 'Ein Kärtchen auf dem Gehweg. Rot-weiß, mit lauter kleinen Stempeln.',
+      pickup: async (ctx) => {
+        ctx.setFlag('karteTaken');
+        ctx.addItem('stempelkarte');
+        await ctx.repaint();
+        await ctx.playerSay('Eine Stempelkarte vom Neckar-Kebap. Und sie ist voll!');
+      },
+    },
+  }),
   at('drahtschere', 'Drahtschere', R(CUTTERS.x - 4, CUTTERS.y - 4, 44, 24), P(CUTTERS.x + 18, 424), 'down', {
     defaultVerb: 'pickup',
     visible: (state) => !state.getFlag('schereTaken'),
@@ -494,6 +509,7 @@ export const neckarRoom: RoomDef = {
     { id: 'balustrade', depth: NK.parapetBase, x: 0, y: 160, w: 960, h: 260, svg: `<g transform="translate(0 -160)">${balustrade()}</g>` },
     // The bus the player arrives on; it drives off in the opening scene.
     { id: 'bus', depth: 420, x: BUS.x, y: BUS.y, w: 380, h: 150, svg: bus(), visible: (state) => !state.getFlag('busGone') },
+    { id: 'karte', depth: 300, x: CARD.x, y: CARD.y, w: 24, h: 14, svg: cardOnDeck(), visible: (state) => !state.getFlag('karteTaken') },
     // Bolt cutters on the deck, the punt pole at the jetty (once the punt has sunk).
     { id: 'schere', depth: 300, x: CUTTERS.x, y: CUTTERS.y, w: 36, h: 16, svg: cuttersOnDeck(), visible: (state) => !state.getFlag('schereTaken') },
     { id: 'stange', depth: 300, x: POLE.x, y: POLE.y, w: 120, h: 20, svg: floatingPole(), visible: (state) => !!state.getFlag('capAshore') && !state.getFlag('stangeTaken') },

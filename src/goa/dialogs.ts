@@ -322,6 +322,14 @@ export const DIALOGS: Record<string, DialogDef> = {
             },
           },
           {
+            text: 'Wie geht’s dir so?',
+            if: (s) => !s.getFlag('flohSatt'),
+            script: async (ctx) => {
+              await ctx.say('floh', 'Hungrig. Pfand macht nicht satt. Man kann es nur gegen Essen tauschen. Wenn genug zusammenkommt.');
+              if (ctx.easyMode) await ctx.say('floh', 'Ein Döner vom Neckar-Kebap, das wär’s. Aber der kostet mehr als hundert Flaschen.');
+            },
+          },
+          {
             text: 'Kennst du die Goa im Wald?',
             if: (s) => !s.getFlag('flohFollows'),
             script: async (ctx) => {
