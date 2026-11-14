@@ -21,7 +21,7 @@ function at(id: string, name: string, r: Rect, walkTo: Vec2, facing: Facing, res
 
 const COUNTER_SPOT = P(480, 356);
 /** Beside the döner man, so the player doesn't stand in front of him. */
-const MAN_SPOT = P(DB.counter.x + 128, 352);
+const MAN_SPOT = P(DB.man.x + 78, 352);
 const pick = <T,>(list: T[]) => list[Math.floor(Math.random() * list.length)];
 
 /** The smell gets you once per visit, not on every step. */
@@ -81,9 +81,9 @@ const HOTSPOTS: HotspotDef[] = [
   {
     id: 'doenermann',
     name: 'Dönermann',
-    rect: R(DB.counter.x + 170, DB.counter.y + 20, 60, 68),
+    rect: R(DB.man.x - 30, DB.counter.y + 20, 60, 68),
     walkTo: MAN_SPOT,
-    facing: 'right',
+    facing: 'left',
     defaultVerb: 'talkto',
     on: {
       lookat: 'Der Dönermann. Weiße Mütze, mächtiger Schnurrbart, das Messer immer in Bewegung.',
@@ -185,7 +185,7 @@ export const doenerRoom: RoomDef = {
 
   actors: [
     // (An invisible voice: its feet are placed so the speech sits just above the drawn man's cap.)
-    { id: 'doenermann', x: DB.counter.x + 200, y: DB.counter.y + 134, facing: 'down' },
+    { id: 'doenermann', x: DB.man.x, y: DB.counter.y + 134, facing: 'down' },
     // A pigeon on the standing table, working on the lonely onion ring.
     { id: 'doenertaube', x: DB.tables[1] + 6, y: DB.ground - 20, facing: 'left' },
   ],

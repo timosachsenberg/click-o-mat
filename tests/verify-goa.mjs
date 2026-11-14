@@ -150,7 +150,7 @@ check('talked to Flaschenfloh (he does not follow yet)', !(await flag('flohFollo
 // --- the döner stand: no puzzle, it just smells good
 await goTo('doener', 945, 400);
 check('past the Epplehaus: the döner stand', (await room()) === 'doener');
-check('stand, spit, döner man and the Picasso stairs are there', (await hotspotAt(480, 100)) === 'bude' && (await hotspotAt(376, 214)) === 'spiess' && (await hotspotAt(530, 230)) === 'doenermann' && (await hotspotAt(863, 260)) === 'toPicasso');
+check('stand, spit, döner man and the Picasso stairs are there', (await hotspotAt(480, 100)) === 'bude' && (await hotspotAt(376, 214)) === 'spiess' && (await hotspotAt(442, 230)) === 'doenermann' && (await hotspotAt(863, 260)) === 'toPicasso');
 const spitFrames = new Set();
 for (let i = 0; i < 6; i++) { spitFrames.add(await ev(() => window.__engine.roomScene.layerObj('spit').frame.texture.key)); await page.waitForTimeout(120); }
 check('the spit turns', spitFrames.size >= 2, [...spitFrames].join(','));
