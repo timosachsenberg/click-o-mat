@@ -5,6 +5,7 @@ import {
   PAL,
   acUnit,
   aliCoaster,
+  brokenStool,
   column,
   discoBall,
   djBooth,
@@ -244,23 +245,34 @@ async function leave(ctx: ScriptContext): Promise<void> {
   await ctx.goToRoom('neckar', 'picasso');
 }
 
-/** The free bar stool's worm-eaten leg: Ali doesn't mind, the Partykiller
- *  would (Sachbeschädigung) — while he's awake. */
-async function takeLeg(ctx: ScriptContext): Promise<void> {
-  if (ctx.flag('legTaken')) {
-    await ctx.playerSay('Ein Bein reicht. Drei braucht der Hocker noch zum Stehen.');
-    return;
-  }
-  if (await anzeige(ctx, 'Sachbeschädigung! Am Mobiliar! Ich zeig das an!')) {
-    await ctx.playerSay('Nicht, solange der hinguckt.');
-    return;
-  }
+/** The rickety stool in front of the jukebox: sit on it and it collapses.
+ *  Among the debris lies its worm-eaten leg. */
+const RICKETY = { x: 350, floor: 392 };
+
+async function sitDown(ctx: ScriptContext): Promise<void> {
+  await ctx.playerSay('Erstmal hinsetzen. Die Nacht wird lang.');
+  ctx.place(ctx.activeCharId, RICKETY.x, RICKETY.floor + 10, 'down');
+  await ctx.wait(500);
+  ctx.setFlag('stoolBroken');
   ctx.sfx('deny');
+  ctx.shake(350, 0.012);
+  await ctx.repaint();
+  await ctx.playerSay('*KRACH!*');
+  await ctx.playerSay('Autsch. Mein Steißbein.');
+  await ctx.walkTo(ctx.activeCharId, RICKETY.x - 58, 406);
+  ctx.face(ctx.activeCharId, 'right');
+  if (!(await anzeige(ctx, 'Sachbeschädigung! Und Ruhestörung! Beides notiert!'))) {
+    await ctx.playerSay('Gut, dass der Partykiller schläft.');
+  }
+  await ctx.say('ali', 'Der war eh nur noch Deko, mein Lieber. Holzwurm.');
+  await ctx.playerSay('Eins der Beine ist ganz durchlöchert. Und es knuspert immer noch.');
+}
+
+async function takeLeg(ctx: ScriptContext): Promise<void> {
   ctx.setFlag('legTaken');
   ctx.addItem('stuhlbein');
   await ctx.repaint();
-  await ctx.playerSay('*Knack.* Das Bein hing eh nur noch aus Gewohnheit dran.');
-  await ctx.say('ali', 'Nimm ruhig mit, mein Lieber. Der Hocker kommt sowieso auf den Sperrmüll.');
+  await ctx.playerSay('Ein wurmstichiges Stuhlbein. Die Würmer darin haben Hunger. Großen Hunger.');
 }
 
 // ---- hotspots --------------------------------------------------------------------
@@ -475,17 +487,37 @@ const HOTSPOTS: HotspotDef[] = [
   }),
   at('stool', 'Barhocker', R(504, 334, 38, 66), P(492, 414), 'up', {
     on: {
-      lookat: async (ctx) => {
-        if (ctx.flag('legTaken')) {
-          await ctx.playerSay('Steht jetzt auf drei Beinen. Wie die meisten Gäste um diese Uhrzeit.');
-          return;
-        }
-        await ctx.playerSay('Ein Hocker mit Herz in der Lehne. Direkt neben dem Partykiller. Kein Zufall.');
-        await ctx.playerSay('Ein Bein ist ganz durchlöchert. Und da drin knuspert was. Holzwürmer!');
-      },
+      lookat: 'Ein Hocker mit Herz in der Lehne. Direkt neben dem Partykiller. Kein Zufall.',
       use: 'Ich setz mich lieber nicht neben ihn. Er nimmt bestimmt Fingerabdrücke.',
+    },
+  }),
+  at('rickety', 'klappriger Barhocker', R(326, 306, 48, 88), P(RICKETY.x + 4, 406), 'up', {
+    defaultVerb: 'use',
+    visible: (state) => !state.getFlag('stoolBroken'),
+    on: {
+      lookat: async (ctx) => {
+        await ctx.playerSay('Ein Barhocker, ein bisschen abseits. Er wackelt schon, wenn man ihn nur anschaut.');
+        await ctx.playerSay('Und irgendwas knuspert darin.');
+      },
+      use: sitDown,
+      pickup: 'Den schlepp ich nicht rum. Der fällt ja schon beim Angucken auseinander.',
+      push: 'Er schwankt bedenklich. Und fängt sich wieder. Knapp.',
+    },
+  }),
+  at('debris', 'Hockertrümmer', R(318, 372, 66, 26), P(RICKETY.x + 4, 406), 'up', {
+    visible: (state) => !!state.getFlag('stoolBroken'),
+    on: {
+      lookat: 'Was vom klapprigen Hocker übrig ist. Ruhe in Spänen.',
+      pickup: 'Brennholz brauch ich nicht. Nur das eine Bein.',
+      use: 'Draufsetzen? Nicht noch mal.',
+    },
+  }),
+  at('leg', 'wurmstichiges Stuhlbein', R(RICKETY.x + 2, RICKETY.floor - 8, 40, 18), P(RICKETY.x + 22, 410), 'up', {
+    defaultVerb: 'pickup',
+    visible: (state) => !!state.getFlag('stoolBroken') && !state.getFlag('legTaken'),
+    on: {
+      lookat: 'Das Bein vom Hocker. Löchrig wie ein Emmentaler. Drinnen knuspert es.',
       pickup: takeLeg,
-      pull: takeLeg,
     },
   }),
   at('ouzo', 'Alis Ouzo', R(758, 314, 28, 30), P(770, 436), 'up', {
@@ -644,15 +676,22 @@ export const picassoRoom: RoomDef = {
       svg: group(refrainBanner(480, 14), 'translate(-220 -8)'),
       visible: (state) => !!state.getFlag('refrain'),
     },
-    // The free stool, with its worm-eaten leg (until the player takes it).
+    roomLayer('stool', 399, 486, 300, 72, 104, heartStool(522, 398, stoolScale(398), true)),
+    // The rickety stool in front of the jukebox — whole, or collapsed.
     {
-      id: 'stool',
-      depth: 399,
-      x: 486,
-      y: 300,
-      w: 72,
+      id: 'rickety',
+      depth: RICKETY.floor,
+      x: RICKETY.x - 50,
+      y: RICKETY.floor - 90,
+      w: 100,
       h: 104,
-      svg: (state) => group(heartStool(522, 398, stoolScale(398), true, state.getFlag('legTaken') ? 'gone' : 'worms'), 'translate(-486 -300)'),
+      svg: (state) =>
+        group(
+          state.getFlag('stoolBroken')
+            ? brokenStool(RICKETY.x, RICKETY.floor, stoolScale(RICKETY.floor), !state.getFlag('legTaken'))
+            : heartStool(RICKETY.x, RICKETY.floor, stoolScale(RICKETY.floor), false, true),
+          `translate(${50 - RICKETY.x} ${90 - RICKETY.floor})`
+        ),
     },
     // He sits facing the counter, so his stool's backrest is in front of him.
     roomLayer('copStool', 414, 600, 300, 82, 118, heartStool(640, 413, stoolScale(413), true)),
@@ -678,6 +717,7 @@ export const picassoRoom: RoomDef = {
   holes: [
     box(100, 414, 144, 430), // front column
     box(14, 434, 126, 446), // front table + stool
+    box(332, 386, 368, 398), // the rickety stool (and later its debris)
     box(504, 390, 540, 404), // stools at the counter
     box(618, 402, 662, 420),
     box(788, 428, 828, 446),

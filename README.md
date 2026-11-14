@@ -132,8 +132,8 @@ talk while he does.
 6. Three refrains, three ouzos: *Trink!* — *Trinkytrinky* — *Und jetzt
    tanzt!* He dances (traffic duty, then the disco finger) and falls asleep.
 7. Ask Ali again: the password is **Chakabunga**.
-8. Now that nobody reports you for *Sachbeschädigung*: **pick up the bar stool**
-   next to the sleeping Partykiller — its worm-eaten leg comes right off. Leave
+8. **Sit on the rickety bar stool** in front of the jukebox (any time): it
+   collapses under you. **Take the worm-eaten leg** from the debris and leave
    through the door.
 9. Out on the **Neckarbrücke** a Stocherkahn full of Burschenschaftler comes down
    the river every few seconds. When one is close enough, **use the chair leg

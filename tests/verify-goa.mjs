@@ -6,7 +6,8 @@ import { chromium } from 'playwright';
 // drink in stock, drink it, swap the can for 25 cents, jam the coin in the
 // jukebox, play Ali's song, and during three refrains slide Ali's ouzo in
 // front of the Partykiller — he dances himself to sleep, Ali gives up the
-// password. Then the worm-eaten leg of the free bar stool, out onto the
+// password. Sit on the rickety stool and it collapses: its worm-eaten leg
+// comes along out onto the
 // Neckarbrücke, and into the next punt full of Burschenschaftler with it:
 // the woodworms sink it, and a cap floats ashore.
 
@@ -236,9 +237,13 @@ await page.keyboard.press('F5');
 await page.waitForTimeout(300);
 check('quick save lands in the game\'s own slot', await ev(() => !!localStorage.getItem('pnc-save-goa-0') && !localStorage.getItem('pnc-save-0')));
 
-// --- the free stool's worm-eaten leg: only while the Partykiller sleeps
-await verb('pickup', 175); // "Nimm"
-await click(522, 370);
+// --- the rickety stool in front of the jukebox: sit down, it collapses
+check('the rickety stool stands in front of the jukebox', (await hotspotAt(350, 350)) === 'rickety');
+await click(350, 350); // default verb: sit on it
+await settle();
+check('it collapsed under me', (await flag('stoolBroken')) === true && (await hotspotAt(350, 350)) !== 'rickety');
+await page.screenshot({ path: `${SHOT}/goa-04b-stool.png` });
+await click(372, 392); // the worm-eaten leg among the debris (default verb: take)
 await settle();
 check('took the worm-eaten chair leg', JSON.stringify(await inv()) === '["stuhlbein"]' && (await flag('legTaken')) === true, JSON.stringify(await inv()));
 

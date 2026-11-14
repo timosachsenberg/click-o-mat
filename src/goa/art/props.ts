@@ -133,21 +133,17 @@ export function slotMachine(x: number, y: number, w: number, h: number, body: st
 /** Wooden bar stool with a heart cut out of its backrest.
  *  `back`: we see the backrest from behind (stool faces away from us); else
  *  the stool faces us and the backrest is behind the seat. s = scale. */
-export function heartStool(cx: number, floor: number, s: number, back: boolean, wormLeg?: 'worms' | 'gone'): string {
+export function heartStool(cx: number, floor: number, s: number, back: boolean, wormy = false): string {
   const seatY = floor - 62 * s;
   const out: string[] = [];
   const legs = () => {
     const l: string[] = [];
     l.push(ellipse(cx, floor + 1, 26 * s, 5 * s, { fill: '#000000', opacity: 0.3 }));
     for (const [x0, x1, shade] of [[-14, -20, false], [14, 20, true], [-7, -9, true], [7, 9, false]] as Array<[number, number, boolean]>) {
-      // The outer left leg may be worm-eaten (holes, a worm) or gone (a stump).
-      const worm = x0 === -14 ? wormLeg : undefined;
-      if (worm === 'gone') {
-        l.push(inked(poly([[cx + x0 * s - 3 * s, seatY + 4 * s], [cx + x0 * s + 3 * s, seatY + 4 * s], [cx + x0 * s + 2.6 * s, seatY + 10 * s], [cx + x0 * s - 3.2 * s, seatY + 9 * s]]), PAL.woodLight, 2));
-        continue;
-      }
+      // The rickety one: the outer left leg is worm-eaten (holes, a worm).
+      const worm = wormy && x0 === -14;
       l.push(inked(poly([[cx + x0 * s - 3 * s, seatY + 4 * s], [cx + x0 * s + 3 * s, seatY + 4 * s], [cx + x1 * s + 3 * s, floor], [cx + x1 * s - 3 * s, floor]]), shade ? PAL.wood : PAL.woodLight, 2));
-      if (worm === 'worms') {
+      if (worm) {
         for (const t of [0.22, 0.4, 0.55, 0.72, 0.86]) {
           const x = cx + (x0 + (x1 - x0) * t) * s + (t * 7 % 2 - 1) * s;
           l.push(circle(x, seatY + 4 * s + (floor - seatY - 4 * s) * t, 0.9 * s + 0.4, { fill: '#2a140a' }));
@@ -177,6 +173,40 @@ export function heartStool(cx: number, floor: number, s: number, back: boolean, 
   };
   if (back) out.push(legs(), seat(), backrest());
   else out.push(backrest(), legs(), seat());
+  return out.join('');
+}
+
+/** The rickety stool after someone sat on it: seat and backrest on the
+ *  floor, legs scattered — and, until taken, the worm-eaten leg lying in
+ *  front (at cx+8…cx+40, floor+2). */
+export function brokenStool(cx: number, floor: number, s: number, withLeg: boolean): string {
+  const out: string[] = [];
+  out.push(ellipse(cx, floor + 1, 34 * s, 6 * s, { fill: '#000000', opacity: 0.3 }));
+  // Legs, scattered.
+  for (const [x, y, a] of [[-26, -2, -20], [-6, -6, 70], [16, -3, 160]] as Array<[number, number, number]>) {
+    out.push(
+      `<g transform="translate(${cx + x * s} ${floor + y * s}) rotate(${a})">` +
+        inked(poly([[-3 * s, -24 * s], [3 * s, -24 * s], [3.6 * s, 0], [-3.6 * s, 0]]), PAL.wood, 2) +
+        `</g>`
+    );
+  }
+  // The backrest, keeled over backwards.
+  out.push(
+    `<g transform="translate(${cx - 16 * s} ${floor - 4 * s}) rotate(-72)">` +
+      inked(`M${-9 * s} 0L${-10 * s} ${-24 * s}Q${-22 * s} ${-34 * s} ${-12 * s} ${-44 * s}Q0 ${-46 * s} 0 ${-40 * s}Q0 ${-46 * s} ${12 * s} ${-44 * s}Q${22 * s} ${-34 * s} ${10 * s} ${-24 * s}L${9 * s} 0Z`, PAL.woodLight, 2.4) +
+      inked(`M0 ${-26 * s}Q${-8 * s} ${-32 * s} ${-6 * s} ${-36 * s}Q${-3 * s} ${-40 * s} 0 ${-36 * s}Q${3 * s} ${-40 * s} ${6 * s} ${-36 * s}Q${8 * s} ${-32 * s} 0 ${-26 * s}Z`, '#2a1208', 1.8) +
+      `</g>`
+  );
+  // The seat, tilted on the floor, with splinters.
+  out.push(inked(`M${cx - 8 * s} ${floor - 2 * s}Q${cx + 6 * s} ${floor - 16 * s} ${cx + 26 * s} ${floor - 8 * s}L${cx + 24 * s} ${floor - 2 * s}Q${cx + 8 * s} ${floor + 2 * s} ${cx - 8 * s} ${floor - 2 * s}Z`, PAL.woodLight, 2.2));
+  out.push(path(`M${cx - 30 * s} ${floor - 2 * s}l3 -5M${cx + 30 * s} ${floor}l4 -4l1 4M${cx - 4 * s} ${floor + 3 * s}l3 -3`, { stroke: PAL.woodHi, sw: 1.6 }));
+  if (withLeg) {
+    const x0 = cx + 8 * s;
+    const y0 = floor + 2 * s;
+    out.push(inked(poly([[x0, y0 - 3 * s], [x0 + 32 * s, y0 - 4 * s], [x0 + 32 * s, y0 + 2 * s], [x0, y0 + 3 * s]]), PAL.woodLight, 2));
+    for (const t of [0.2, 0.4, 0.6, 0.8]) out.push(circle(x0 + 32 * s * t, y0 - 0.5 * s + (t * 10 % 2) * s, 0.9 * s + 0.4, { fill: '#2a140a' }));
+    out.push(path(`M${x0 + 14 * s} ${y0 - 1 * s}q-2 -4 -5 -5`, { stroke: '#f0a0b8', sw: 1.6 * s + 0.4 }));
+  }
   return out.join('');
 }
 
