@@ -23,10 +23,10 @@ import {
 import { band } from './neckar';
 
 /**
- * The street between the Picasso and the Epplehaus at sunset: on the right
+ * The street between the Picasso and the Epplehaus at sunset: on the left
  * the stairs down into the Picasso under its flickering neon, in the middle
  * a döner stand — Neckar-Kebap, a spit turning in the window, steam and a
- * smell you can see — with two standing tables, on the left the street on
+ * smell you can see — with two standing tables, on the right the street on
  * to the Epplehaus. No puzzle here. It just smells good.
  *
  * All functions draw in room coordinates (960×450) and return SVG markup.
@@ -34,14 +34,14 @@ import { band } from './neckar';
 
 export const DB = {
   ground: 304,
-  cellar: { x: 824, y: 204, w: 78, h: 100 },
+  cellar: { x: 46, y: 204, w: 78, h: 100 },
   kiosk: { x: 300, y: 118, w: 360, h: 186 },
   /** The window with the spit (an animation layer). */
   spit: { x: 344, y: 168, w: 64, h: 92 },
   counter: { x: 330, y: 168, w: 300, h: 88 },
   /** The döner man stands right beside the spit, so he can carve it. */
   man: { x: 442 },
-  tables: [120, 236],
+  tables: [700, 820],
 };
 
 const LIT = '#ffd870';
@@ -173,8 +173,8 @@ function tables(): string {
     s.push(inked(`M${tx - 6} ${DB.ground - 20}v-12h12v12z`, '#d8d8e0', 1.4));
     s.push(path(`M${tx - 3} ${DB.ground - 32}v-4h6v4`, { stroke: '#ffffff', sw: 1.6 }));
   }
-  s.push(inked('M40 300h30l-4 44h-22z', '#3a6a4a', 2));
-  s.push(path('M42 300h26', { stroke: '#2a4a3a', sw: 4 }));
+  s.push(inked('M890 300h30l-4 44h-22z', '#3a6a4a', 2));
+  s.push(path('M892 300h26', { stroke: '#2a4a3a', sw: 4 }));
   return s.join('');
 }
 

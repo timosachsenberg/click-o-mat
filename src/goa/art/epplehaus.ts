@@ -51,11 +51,6 @@ const LIT = '#ffd870';
 const DARK_PANE = '#3a3258';
 const SPRAY = ['#ff4a8a', '#4ae8ff', '#ffd34a', '#8aff5a', '#b06aff', '#ff7a2a', '#ffffff'];
 
-/** The house stands in the middle; the street's two ends are drawn for the
- *  other way round and mirrored (text is flipped back). */
-const mirrored = (markup: string) => `<g transform="translate(960 0) scale(-1 1)">${markup}</g>`;
-const unflip = (cx: number, markup: string) => `<g transform="translate(${2 * cx} 0) scale(-1 1)">${markup}</g>`;
-
 function sky(): string {
   return [
     rect(0, 0, 960, 310, { fill: 'url(#epSky)' }),
@@ -82,9 +77,9 @@ function street(): string {
   const { x, y } = EP.sign;
   s.push(inked(`M${x - 2.5} ${y}V${EP.ground + 28}h5V${y}Z`, '#4a4a5a', 1.6));
   s.push(inked(`M${x - 4} ${y + 6}h78l12 9l-12 9h-78z`, '#f2c230', 2));
-  s.push(unflip(x + 36, text(x + 36, y + 19, 'NECKARBRÜCKE', { size: 8.4, fill: INK, weight: 700 })));
+  s.push(text(x + 36, y + 19, 'NECKARBRÜCKE', { size: 8.4, fill: INK, weight: 700 }));
   s.push(inked(`M${x - 4} ${y + 30}h60v14h-60z`, '#f4efe4', 1.6));
-  s.push(unflip(x + 26, text(x + 26, y + 40.5, 'Wald 4 km', { size: 8, fill: '#2a6a3a', weight: 700 })));
+  s.push(text(x + 26, y + 40.5, 'Wald 4 km', { size: 8, fill: '#2a6a3a', weight: 700 }));
   return s.join('');
 }
 
@@ -105,11 +100,11 @@ function neighbour(): string {
   // A shuttered shop front, sprayed over, and a street sign pointing left.
   s.push(inked('M30 206H150V304H30Z', '#5a4a5e', 2.4));
   for (let yy = 214; yy < 300; yy += 8) s.push(line([32, yy], [148, yy], '#3e3044', 1.4));
-  s.push(unflip(90, text(90, 262, 'PUT PUT', { size: 15, fill: '#4ae8ff', stroke: INK, sw: 3, rotate: -3 })));
+  s.push(text(90, 262, 'PUT PUT', { size: 15, fill: '#4ae8ff', stroke: INK, sw: 3, rotate: -3 }));
   s.push(path('M44 236q10 -12 22 -2t20 -4M100 284q8 -10 18 0', { stroke: '#ff4a8a', sw: 2.2 }));
   s.push(inked('M54 150V200h4V150z', '#4a4a5a', 1.4));
   s.push(inked('M18 150h76l-10 9l10 9h-76z', '#f4efe4', 1.8));
-  s.push(unflip(56, text(56, 163, 'DÖNER →', { size: 9, fill: INK, weight: 900 })));
+  s.push(text(56, 163, '← DÖNER', { size: 9, fill: INK, weight: 900 }));
   // Warm light and a whiff of grilled meat from round the corner.
   s.push(glow('epDoenerGlow', -10, 270, 90, '#ffb050', 0.4, 50));
   return s.join('');
@@ -254,7 +249,7 @@ function house(): string {
   return s.join('');
 }
 
-/** A string of coloured bulbs from the corner to the signpost (drawn mirrored). */
+/** A string of coloured bulbs from the corner to the signpost. */
 function lightString(): string {
   const s: string[] = [];
   const x1 = EP.x1;
@@ -355,7 +350,7 @@ export function lightStringGlow(): string {
   const s: string[] = [];
   for (let i = 1; i < 10; i++) {
     const t = i / 10;
-    const bx = 960 - (EP.x1 + (EP.sign.x - EP.x1) * t);
+    const bx = EP.x1 + (EP.sign.x - EP.x1) * t;
     const by = 108 + 90 * t + Math.sin(t * Math.PI) * 26 + 4;
     s.push(circle(bx, by, 11, { fill: SPRAY[i % 6], opacity: 0.4 }) + circle(bx, by, 2, { fill: '#ffffff', opacity: 0.9 }));
   }
@@ -405,10 +400,10 @@ export function epplehausBg(): string {
       ])
     ),
     sky(),
-    mirrored(street()),
-    mirrored(neighbour()),
+    street(),
+    neighbour(),
     house(),
-    mirrored(lightString()),
+    lightString(),
     ground(),
     bikes(),
     bottleBanks(),

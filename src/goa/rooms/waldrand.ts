@@ -6,7 +6,7 @@ import { portalArt } from '../art/goaeingang';
 
 // ---- layout ----------------------------------------------------------------------
 // The edge of the forest, past the Neckarbrücke's left end, at dusk: the
-// path from the bridge (right) runs into the woods — and right there it's
+// path from the bridge (left) runs into the woods — and right there it's
 // closed for tree felling. Behind the trees the Goa's lights throb with a
 // bass you can only just hear (the room's music is nothing but that bass;
 // an ambient pulses the glow layer in time). The only way to the Goa is
@@ -283,7 +283,7 @@ const HOTSPOTS: HotspotDef[] = [
       pickup: 'Jetzt, wo es aufgespannt ist, krieg ich es nicht mehr in die Tasche. Es will benutzt werden.',
     },
   }),
-  at('toNeckar', 'Zur Neckarbrücke', R(900, 300, 60, 146), P(936, 420), 'right', {
+  at('toNeckar', 'Zur Neckarbrücke', R(0, 300, 60, 146), P(36, 404), 'left', {
     defaultVerb: 'use',
     on: {
       lookat: 'Zurück zur Neckarbrücke. Und zur Zivilisation. Oder zu dem, was Tübingen dafür hält.',
@@ -323,11 +323,11 @@ export const waldrandRoom: RoomDef = {
   music: 'wald-wummern',
 
   entries: {
-    neckar: { x: 900, y: 420, facing: 'left' },
+    neckar: { x: 270, y: 412, facing: 'right' },
     // Back out of the wormhole.
     portal: { x: PORTAL_SPOT.x, y: PORTAL_SPOT.y, facing: 'down' },
     // On foot from the Goa's entrance, through the woods on the other side.
-    wald: { x: 140, y: 420, facing: 'right' },
+    wald: { x: 500, y: 386, facing: 'down' },
   },
 
   // A pigeon that only turns up to pop the balloon.

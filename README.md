@@ -117,7 +117,7 @@ hints) or *Einfach* (characters spell out much more).
 
 <details><summary>Solution</summary>
 
-**The password (the Picasso).** From the bridge, the right end leads to the
+**The password (the Picasso).** From the bridge, the left end leads to the
 **Epplehaus** (Flaschenfloh, the bottle collector; pigeons everywhere), its left
 side to the **döner stand** (it smells good — and it takes stamp cards), and the stairs there
 down into the **Picasso**, Ali's basement bar. Ali knows where the party is — but
@@ -155,7 +155,7 @@ a **cap** floats away — to the jetty at the **Hölderlinturm**. Walk there alo
 the Neckarfront (round the corner house at the right end of the bridge, then
 along the top of the quay wall) and take the cap.
 
-**The forest is closed.** Over the bridge to the left you reach the **edge of the
+**The forest is closed.** Over the bridge to the right you reach the **edge of the
 forest**: the Goa's lights pulse behind the trees and you can hear the bass — but
 the path is closed for *Baumfällarbeiten*. Two things lying around look like a
 way past the barrier, and neither is: the **pogo stick** in the Picasso (you
