@@ -36,7 +36,6 @@ import { NEON, crowdStrip, glowShroom, stringFan } from './goa';
 export const GE = {
   ground: 318,
   gate: { x0: 430, x1: 690, top: 96 },
-  portal: { x: 110, y: 300, rx: 60, ry: 84 },
 };
 
 const UV = ['#ff5ab4', '#5ad8ff', '#8aff5a', '#ffd34a', '#b06aff', '#ff7a2a'];
@@ -202,16 +201,16 @@ export function goaEingangBg(): string {
   ].join('');
 }
 
-/** The wormhole, still swirling where the player came out (its own layer so
- *  an ambient can turn it). */
-export function portal(): string {
-  const { x, y, rx, ry } = GE.portal;
+/** One end of the wormhole pair, drawn into a 2rx × 2ry box (its own layer:
+ *  the forest edge stands it upright, the dance floor lays it flat). */
+export function portalArt(rx: number, ry: number, id = 'gePortal'): string {
+  const [x, y] = [rx, ry];
   const s: string[] = [];
-  s.push(`<defs>${radial('gePortal', x, y, rx, [[0, '#000000', 1], [0.55, '#2a0a4a', 1], [0.8, '#b06aff', 0.6], [1, '#4ae8ff', 0]], ry)}</defs>`);
-  s.push(ellipse(x, y, rx, ry, { fill: 'url(#gePortal)' }));
+  s.push(`<defs>${radial(id, x, y, rx, [[0, '#000000', 1], [0.55, '#2a0a4a', 1], [0.8, '#b06aff', 0.6], [1, '#4ae8ff', 0]], ry)}</defs>`);
+  s.push(ellipse(x, y, rx, ry, { fill: `url(#${id})` }));
   for (let k = 0; k < 5; k++) {
     const a = (k / 5) * Math.PI * 2;
-    s.push(path(`M${x + Math.cos(a) * rx * 0.2} ${y + Math.sin(a) * ry * 0.2}Q${x + Math.cos(a + 1) * rx * 0.7} ${y + Math.sin(a + 1) * ry * 0.7} ${x + Math.cos(a + 2) * rx * 0.95} ${y + Math.sin(a + 2) * ry * 0.95}`, { stroke: k % 2 ? '#4ae8ff' : '#ff5ab4', sw: 2.4, opacity: 0.8 }));
+    s.push(path(`M${x + Math.cos(a) * rx * 0.2} ${y + Math.sin(a) * ry * 0.2}Q${x + Math.cos(a + 1) * rx * 0.7} ${y + Math.sin(a + 1) * ry * 0.7} ${x + Math.cos(a + 2) * rx * 0.95} ${y + Math.sin(a + 2) * ry * 0.95}`, { stroke: k % 2 ? '#4ae8ff' : '#ff5ab4', sw: 2, opacity: 0.8 }));
   }
   return group(s);
 }

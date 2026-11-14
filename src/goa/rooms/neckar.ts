@@ -2,7 +2,7 @@ import { Layer, type Facing, type HotspotDef, type Rect, type RoomDef, type Vec2
 import type { ScriptContext } from '../../engine/ScriptContext';
 import { VOICE_ACTOR } from '../art/turm';
 import { PIGEON_ACTORS } from '../art/epplehaus';
-import { NK, PUNT_ACTOR, balustrade, bus, cardOnDeck, cuttersOnDeck, swallows, swan, waterShimmer, eckhausLayer, floatingPole, floatingCap, flyingLeg, neckarBg, promGap, quayFootY, quayTopY } from '../art/neckar';
+import { NK, PUNT_ACTOR, balustrade, bus, cardOnDeck, swallows, swan, waterShimmer, eckhausLayer, floatingCap, flyingLeg, neckarBg, promGap, quayFootY, quayTopY } from '../art/neckar';
 
 // ---- layout ----------------------------------------------------------------------
 // The Neckarbrücke in Tübingen at sunset, looking upstream along the
@@ -61,11 +61,8 @@ const OFF = P(-400, 300);
 /** Where the player throws from, and where the cap washes up. */
 const THROW_SPOT = P(680, 420);
 const CAP_SPOT = P(506, 332);
-/** Where the bolt cutters lie on the deck, and where the punt pole washes up. */
-const CUTTERS = P(280, 426);
 /** A full döner stamp card someone lost, by the street lamp. */
 const CARD = P(812, 430);
-const POLE = P(452, 316);
 
 function course(t: number): Vec2 {
   const n = COURSE.length - 1;
@@ -420,32 +417,6 @@ const HOTSPOTS: HotspotDef[] = [
       },
     },
   }),
-  at('drahtschere', 'Drahtschere', R(CUTTERS.x - 4, CUTTERS.y - 4, 44, 24), P(CUTTERS.x + 18, 424), 'down', {
-    defaultVerb: 'pickup',
-    visible: (state) => !state.getFlag('schereTaken'),
-    on: {
-      lookat: 'Eine Drahtschere. Damit hat die Stadt wohl die Liebesschlösser abgeknipst. Und sie dann liegen lassen.',
-      pickup: async (ctx) => {
-        ctx.setFlag('schereTaken');
-        ctx.addItem('drahtschere');
-        await ctx.repaint();
-        await ctx.playerSay('Eine Drahtschere. Mal sehen, wofür die gut ist.');
-      },
-    },
-  }),
-  at('stange', 'Stocherstange', R(POLE.x, POLE.y - 6, 120, 28), JETTY_SPOT, 'down', {
-    defaultVerb: 'pickup',
-    visible: (state) => !!state.getFlag('capAshore') && !state.getFlag('stangeTaken'),
-    on: {
-      lookat: 'Die Stocherstange der Burschen. Sie ist mit der Mütze angetrieben.',
-      pickup: async (ctx) => {
-        ctx.setFlag('stangeTaken');
-        ctx.addItem('stange');
-        await ctx.repaint();
-        await ctx.playerSay('Vier Meter Stange. Passt erstaunlich gut in meine Tasche. Frag nicht.');
-      },
-    },
-  }),
   at('muetze', 'Mütze', R(CAP_SPOT.x - 20, CAP_SPOT.y - 12, 40, 24), JETTY_SPOT, 'down', {
     defaultVerb: 'pickup',
     visible: (state) => !!state.getFlag('capAshore') && !state.getFlag('capTaken'),
@@ -513,8 +484,6 @@ export const neckarRoom: RoomDef = {
     { id: 'bus', depth: 420, x: BUS.x, y: BUS.y, w: 380, h: 150, svg: bus(), visible: (state) => !state.getFlag('busGone') },
     { id: 'karte', depth: 300, x: CARD.x, y: CARD.y, w: 24, h: 14, svg: cardOnDeck(), visible: (state) => !state.getFlag('karteTaken') },
     // Bolt cutters on the deck, the punt pole at the jetty (once the punt has sunk).
-    { id: 'schere', depth: 300, x: CUTTERS.x, y: CUTTERS.y, w: 36, h: 16, svg: cuttersOnDeck(), visible: (state) => !state.getFlag('schereTaken') },
-    { id: 'stange', depth: 300, x: POLE.x, y: POLE.y, w: 120, h: 20, svg: floatingPole(), visible: (state) => !!state.getFlag('capAshore') && !state.getFlag('stangeTaken') },
     // The cap, once it has washed up at the jetty.
     {
       id: 'cap',

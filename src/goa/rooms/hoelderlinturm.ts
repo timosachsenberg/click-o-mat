@@ -54,31 +54,6 @@ const ATTRACTOR_SPOT = on(STUBE, TM.pedestal.x);
 const RUG_SPOT = on(STUBE, TM.rug.cx - TM.rug.rx - 12);
 const WALL_SPOT = on(KELLER, 600);
 const OTTO_HOME = on(KELLER, 760);
-/** The folding spade leaning against the cellar wall, by the barrels. */
-const SPADE = { x: 318, foot: FLOORS[1].back + 2 };
-
-/** The spade in each time layer's look (room coordinates). */
-function spadeArt(e: Era): string {
-  const { x, foot } = SPADE;
-  if (e === 1) {
-    // 1987: chunky blocks, EGA colours.
-    const b = (bx: number, by: number, c: string) => `<rect x="${bx}" y="${by}" width="5" height="5" fill="${c}"/>`;
-    const s: string[] = [];
-    for (let k = 0; k < 8; k++) s.push(b(x - 2 + Math.round(k * 0.6), foot - 55 + k * 5, '#aa5500'));
-    for (let dx = -5; dx <= 5; dx += 5) for (let dy = 0; dy < 15; dy += 5) s.push(b(x + 4 + dx, foot - 15 + dy, '#55aa55'));
-    s.push(b(x - 7, foot - 55, '#555555') + b(x - 2, foot - 55, '#555555') + b(x + 3, foot - 55, '#555555'));
-    return s.join('');
-  }
-  const ink = e === 2 ? 5 : 3;
-  const handle = e === 2 ? '#ff9a3a' : '#8a6a3a';
-  const blade = e === 2 ? '#7aff5a' : '#6a7a4a';
-  return (
-    `<path d="M${x - 2} ${foot - 54}L${x + 4} ${foot - 16}" fill="none" stroke="#1e1424" stroke-width="${ink + 3}" stroke-linecap="round"/>` +
-    `<path d="M${x - 2} ${foot - 54}L${x + 4} ${foot - 16}" fill="none" stroke="${handle}" stroke-width="${ink}" stroke-linecap="round"/>` +
-    `<path d="M${x - 8} ${foot - 56}H${x + 4}" fill="none" stroke="#1e1424" stroke-width="${ink + 2}" stroke-linecap="round"/>` +
-    `<path d="M${x - 6} ${foot - 18}H${x + 14}L${x + 12} ${foot - 4}Q${x + 4} ${foot + 2} ${x - 4} ${foot - 4}Z" fill="${blade}" stroke="#1e1424" stroke-width="2" stroke-linejoin="round"/>`
-  );
-}
 
 /** Hölderlin's portrait above the desk, in each time layer's look — and, in
  *  the present, the museum's rope and plaque in front of the desk. */
@@ -362,24 +337,6 @@ const HOTSPOTS: HotspotDef[] = [
       use: 'Hinsetzen? Dann steh ich nie wieder auf. Das Sofa hat Gravitation.',
     },
   }),
-  at('spaten', 'Klappspaten', R(SPADE.x - 12, SPADE.foot - 56, 26, 58), on(KELLER, SPADE.x + 22), 'up', {
-    defaultVerb: 'pickup',
-    visible: (state) => !state.getFlag('spatenTaken'),
-    on: {
-      lookat: (ctx) =>
-        byEra(ctx, [
-          'Ein alter Klappspaten, an die Kellerwand gelehnt. Hat Hölderlin damit nach Reimen gegraben?',
-          'Ein brauner Strich mit grünem Ende. Ein Spaten, sagt der Parser.',
-          'Ein Klappspaten mit Glanzstrich. Im Trickfilm gräbt man damit in drei Sekunden bis nach China.',
-        ]),
-      pickup: async (ctx) => {
-        ctx.setFlag('spatenTaken');
-        ctx.addItem('klappspaten');
-        await ctx.repaint();
-        await ctx.playerSay('Ein Klappspaten. Damit könnte man sich irgendwo drunter durchgraben.');
-      },
-    },
-  }),
   at('faesser', 'Fässer', R(TM.barrels.x, TM.barrels.foot - 52, TM.barrels.w, 52), on(KELLER, TM.barrels.x + 66), 'up', {
     on: {
       lookat: (ctx) =>
@@ -540,7 +497,6 @@ export const hoelderlinturmRoom: RoomDef = {
     { id: 'portrait', depth: Layer.BEHIND, svg: (state) => filmed(era(state), portraitArt(era(state))) },
     // 1987: the parser prompt's cursor blinks after PUT PUT.
     { id: 'cursor', depth: Layer.BEHIND, x: TM.graffiti.x + TM.graffiti.w - 6, y: TM.graffiti.y + TM.graffiti.h - 14, w: 10, h: 10, svg: '<rect width="10" height="10" fill="#55ffff"/>', visible: (state) => era(state) === 1 },
-    { id: 'spaten', depth: Layer.BEHIND, svg: (state) => filmed(era(state), spadeArt(era(state))), visible: (state) => !state.getFlag('spatenTaken') },
     { id: 'wallhole', depth: Layer.BEHIND, svg: (state) => wallHoleArt(era(state)), visible: (state) => !!state.getFlag('wallHole') && !state.getFlag('wallHoleTaken') },
     {
       id: 'hole',

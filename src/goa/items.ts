@@ -1,3 +1,4 @@
+import { throwWormhole } from './rooms/waldrand';
 import type { ScriptContext } from '../engine/ScriptContext';
 import type { ItemDef } from '../engine/types';
 
@@ -142,14 +143,7 @@ export const ITEMS: Record<string, ItemDef> = {
       await ctx.playerSay(ctx.easyMode ? 'Flaschenfloh sah aus, als hätte er seit gestern nichts gegessen. Der braucht ihn dringender.' : 'Irgendwer braucht den dringender als ich.');
     },
   },
-  // ---- red herrings: each of them looks like a way past the forest barrier
-  drahtschere: {
-    id: 'drahtschere',
-    name: 'Drahtschere',
-    icon: 'icon-drahtschere',
-    lookAt: 'Eine Drahtschere mit roten Griffen. Damit kriegt man so ziemlich jede Kette durch. Theoretisch.',
-    use: 'Ich knips mal probehalber in die Luft. Schnapp. Ja, die schneidet.',
-  },
+  // ---- red herrings: both look like a way past the forest barrier
   pogostick: {
     id: 'pogostick',
     name: 'Pogo-Stick',
@@ -164,27 +158,13 @@ export const ITEMS: Record<string, ItemDef> = {
     lookAt: 'Ein pinker Herzballon mit Helium. Er zieht ganz schön an der Schnur. Ob der mich trägt?',
     use: 'Helium einatmen und mit Micky-Maus-Stimme reden? Später. Der Ballon hat Größeres vor.',
   },
-  stange: {
-    id: 'stange',
-    name: 'Stocherstange',
-    icon: 'icon-stange',
-    lookAt: 'Die Stocherstange der Burschen. Vier Meter lang, biegsam, leicht. Perfekt für Stabhochsprung.',
-    use: 'Hier ist kein Platz für Anlauf.',
-  },
-  klappspaten: {
-    id: 'klappspaten',
-    name: 'Klappspaten',
-    icon: 'icon-klappspaten',
-    lookAt: 'Ein alter Klappspaten. Etwas rostig, aber man könnte sich damit irgendwo durchgraben.',
-    use: 'Einfach so ein Loch graben? Ich bräuchte einen Grund. Und eine Stelle.',
-  },
   wurmloch: {
     id: 'wurmloch',
-    name: 'Wurmloch',
+    name: 'Wurmloch-Paar',
     icon: 'icon-wurmloch',
     lookAt: async (ctx) => {
-      await ctx.playerSay('Ein schwarzes Loch, um das der Taschen-Attraktor kreist. Es wummert.');
-      await ctx.playerSay('Wenn ich reinhorche: Bass. Viel Bass. Es zeigt direkt auf die Goa.');
+      await ctx.playerSay('Der Taschen-Attraktor hat das Loch in zwei Hälften gedreht. Zwei Enden, ein Tunnel: ein Wurmloch-Paar.');
+      await ctx.playerSay('Was ins eine reinfällt, kommt beim anderen raus. Ich müsste nur ein Ende dahin kriegen, wo ich hinwill.');
     },
     use: useWormhole,
   },
@@ -199,26 +179,16 @@ export async function makeWormhole(ctx: ScriptContext): Promise<void> {
   ctx.addItem('wurmloch', { silent: true });
   await ctx.playerSay('Ich leg den Taschen-Attraktor aufs Loch ...');
   await ctx.playerSay('Die Spirale fängt an zu kreisen, schneller und schneller, und das Loch kreist mit.');
-  await ctx.playerSay('Ein Wurmloch! Und es wummert. Im Takt.');
+  await ctx.playerSay('Und dann teilt es sich. Zwei Löcher, ein Tunnel dazwischen. Ein Wurmloch-Paar! Und es wummert. Im Takt.');
 }
 
-/** Through the wormhole, straight to the Goa's entrance in the forest. The
- *  wormhole stays open, so the item stays in the pocket: there and back. */
+/** The wormhole pair is used at the edge of the forest: one end over the
+ *  barrier, the other stays. Anywhere else there's nowhere to throw it. */
 async function useWormhole(ctx: ScriptContext): Promise<void> {
-  if (ctx.state.currentRoom === 'goaeingang') {
-    await ctx.playerSay('Ich bin doch schon da.');
+  if (ctx.state.currentRoom === 'waldrand') {
+    await throwWormhole(ctx);
     return;
   }
-  await ctx.playerSay('Wurmloch auf, Augen zu, und ...');
-  ctx.sfx('zap');
-  ctx.shake(700, 0.02);
-  ctx.flash(0xff5ab4, 400);
-  await ctx.wait(500);
-  // ... and gone, sucked through.
-  const me = ctx.player;
-  ctx.place(ctx.activeCharId, -400, me.y);
-  ctx.flash(0x4ae8ff, 400);
-  ctx.setFlag('wormholeUsed');
-  await ctx.wait(400);
-  await ctx.goToRoom('goaeingang', 'wurmloch');
+  await ctx.playerSay('Zwei Enden. Eins hier, eins da, wo ich hinwill. Nur: Von hier aus kann ich die Goa nicht mal sehen.');
+  await ctx.playerSay(ctx.easyMode ? 'Am Waldrand, an der Absperrung: Da könnte ich ein Ende einfach rüberwerfen.' : 'Ich müsste näher ran. So nah, dass ich ein Ende rüberwerfen kann.');
 }

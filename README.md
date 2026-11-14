@@ -157,12 +157,10 @@ along the top of the quay wall) and take the cap.
 
 **The forest is closed.** Over the bridge to the left you reach the **edge of the
 forest**: the Goa's lights pulse behind the trees and you can hear the bass — but
-the path is closed for *Baumfällarbeiten*. Five things lying around look like a
-way past the barrier, and none of them is: the **bolt cutters** on the bridge
-(they break), the **pogo stick** in the Picasso (you crash into the barrier), the
-**heart balloon** at the Epplehaus (a pigeon pecks it), the punt's **pole**,
-washed up at the jetty (too bendy for a pole vault) and the **folding spade** in
-the tower's cellar (a root, and your fingers).
+the path is closed for *Baumfällarbeiten*. Two things lying around look like a
+way past the barrier, and neither is: the **pogo stick** in the Picasso (you
+crash into the barrier) and the **heart balloon** at the Epplehaus (a pigeon
+pecks it).
 
 **The Hölderlinturm.** The way into the forest is closed for tree felling, so the only way to the Goa is through Otto R.'s wormhole in the
 tower. The tower's door at the end of the promenade (its own close-up scene) is locked: Otto R. answers on the intercom — a piece of 1987 in the wall, the one thing that still reaches into his time layer — and wants the password.
@@ -209,13 +207,18 @@ hand-painted → **1987** (sixteen colours, chunky pixels) → a **1930s cartoon
 5. Once Otto is out, the hole in the wall is just a hole again — and in the
    **cartoon** layer it peels off like a sticker. **Take it**, then **use the
    hole with the Taschen-Attraktor**: the spiral circles the black hole and
-   you get a **Wurmloch**. **Use the wormhole** (anywhere): you come out at the
-   **Goa's entrance** in the forest, past the forestry barrier. Flaschenfloh is
-   already there, collecting empties. The **bouncer** — a Goazwerg in a felt sauna hat — wants the password: say
-   **Chakabunga** (from Ali), and through the gate onto **the Goa**: a stage
-   with a huge mandala, a canopy of blacklight threads, giant glowing
-   mushrooms, lasers, and dancers everywhere. **Use the dance floor** — to be
-   continued. The wormhole stays open: there's a way back to the tower.
+   you get a **Wurmloch-Paar** — two ends, one tunnel. Take it to the **edge
+   of the forest** and **use it on the barrier**: one end flies over towards
+   the lights, the other stands beside the barrier. **Step into the portal**
+   and you fall out in the **middle of the Goa's dance floor** — a stage with
+   a huge mandala, a canopy of blacklight threads, giant glowing mushrooms,
+   lasers, and dancers everywhere. Everything in your pockets is lost on the
+   way. The **bouncer** — a Goazwerg in a felt sauna hat — comes over from the
+   gate and wants the password anyway: say **Chakabunga** (from Ali) and you
+   may stay; without it you're thrown out to the **Goa's entrance**, where
+   Flaschenfloh is collecting empties, and get in through the gate once you
+   know it. **Use the dance floor** — to be continued. The portal stays open
+   both ways.
 
 </details>
 
@@ -570,7 +573,7 @@ src/
     rooms/waldrand.ts  The edge of the forest (closed for tree felling; distant bass)
     art/turmtuer.ts    The Hölderlinturm's door close up, with the 1987 intercom
     rooms/turmtuer.ts  In front of the tower: door, intercom, the password
-    art/goaeingang.ts  The Goa's entrance at night: gate, mandala, lasers, the wormhole
+    art/goaeingang.ts  The Goa's entrance at night: gate, mandala, lasers; the portal art
     rooms/goaeingang.ts The Goa's entrance (the bouncer wants Chakabunga)
     art/goa.ts         The Goa: stage, UV string art, glowing mushrooms, dancer frames
     rooms/goa.ts       The dance floor (animated dancers as occluder layers; dance)

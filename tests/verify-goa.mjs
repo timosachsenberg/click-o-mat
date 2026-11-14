@@ -340,7 +340,8 @@ await page.screenshot({ path: `${SHOT}/goa-06b-turm.png` });
 check('took the cap', JSON.stringify(await inv()) === '["muetze"]', JSON.stringify(await inv()));
 
 // --- on towards the forest? Closed for tree felling, password or not —
-// the way to the Goa is Otto R.'s wormhole (verify-hoelderlin plays it).
+// the way to the Goa is Otto R.'s wormhole pair, thrown over the barrier
+// (verify-hoelderlin plays it).
 await goTo('waldrand', 15, 432);
 check('the bridge leads on to the edge of the forest', (await room()) === 'waldrand');
 check('the barrier, the sign and the felled trunks are there', (await hotspotAt(420, 330)) === 'absperrung' && (await hotspotAt(580, 270)) === 'schild' && (await hotspotAt(200, 320)) === 'baumstaemme');
@@ -350,17 +351,15 @@ for (let i = 0; i < 6; i++) { glowA.push(await ev(() => window.__engine.roomScen
 check('the Goa\'s lights throb behind the trees', Math.max(...glowA) - Math.min(...glowA) > 0.15, glowA.map((a) => a.toFixed(2)).join(','));
 await page.screenshot({ path: `${SHOT}/goa-03a-waldrand.png` });
 
-// --- the red herrings: the bolt cutters break, the pogo stick bends
-await goTo('neckar', 936, 400);
-await click(298, 434); // the bolt cutters on the deck (default verb: take)
-await settle();
-check('picked up the bolt cutters on the bridge', (await inv()).includes('drahtschere'), JSON.stringify(await inv()));
-await goTo('waldrand', 15, 432);
-await click(522 + (await inv()).indexOf('drahtschere') * 112, 505);
+// --- a red herring: the pogo stick (from the Picasso) bends on the barrier
+await ev(() => window.__engine.makeContext().addItem('pogostick', { silent: true }));
+await click(522 + (await inv()).indexOf('pogostick') * 112, 505);
 await page.waitForTimeout(150);
 await click(420, 330);
+await waitFor(async () => !(await inv()).includes('pogostick'), 20000, 'pogo');
 await settle();
-check('the bolt cutters break on the chain', !(await inv()).includes('drahtschere') && (await room()) === 'waldrand');
+check('the pogo stick loses against the barrier', !(await inv()).includes('pogostick') && (await room()) === 'waldrand');
+check('the removed red herrings are gone from the game', await ev(() => !window.__engine.items.drahtschere && !window.__engine.items.stange && !window.__engine.items.klappspaten));
 await click(420, 330, { button: 'right' });
 await settle();
 check('even with the password, the forest stays closed', (await flag('password')) === 'Chakabunga' && !(await flag('chapterDone')) && (await flag('once:forestClosed')) === true);

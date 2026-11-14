@@ -97,7 +97,7 @@ const HOTSPOTS: HotspotDef[] = [
       use: 'Stochern? Ich? Ich würd mich im Kreis drehen, bis mir schlecht ist. Und die Kähne sind angekettet.',
       pickup: 'Einen ganzen Kahn? Der passt nicht mal in meine Vorstellung, geschweige denn in die Tasche.',
     },
-    onItem: { use: { drahtschere: 'Einen Kahn losknipsen und damit zur Goa? Der Neckar fließt in die falsche Richtung.', stuhlbein: 'Noch einen Kahn versenken? Einer am Abend reicht.' } },
+    onItem: { use: { stuhlbein: 'Noch einen Kahn versenken? Einer am Abend reicht.' } },
   }),
   at('pflanzen', 'Efeu', R(TT.wall.x0, 0, 46, TT.ground), P(300, 366), 'up', {
     on: {
@@ -147,8 +147,7 @@ const HOTSPOTS: HotspotDef[] = [
         taube: async (ctx) => {
           await ctx.playerSay('Die Tür hört nicht zu. Die Sprechanlage schon.');
         },
-        drahtschere: 'An der Tür ist nichts zum Durchknipsen.',
-        klappspaten: 'Mich unter einem Turm durchgraben, der im Wasser steht? Nein.',
+        pogostick: 'Über den Turm hüpfen? Der ist dreimal so hoch wie das Absperrgitter im Wald.',
       },
     },
   }),

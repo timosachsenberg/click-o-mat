@@ -333,18 +333,34 @@ await page.waitForTimeout(200);
 check('no quick save mid-scene', (await ev(() => localStorage.getItem('pnc-save-goa-0'))) === savesBefore && (await ev(() => window.__engine.busy)) === true);
 await settle();
 
-// --- through the wormhole: out at the Goa's entrance in the forest
-const useWormhole = async () => {
-  await verb('use');
-  await click(522 + (await inv()).indexOf('wurmloch') * 112, 505);
-  await waitFor(async () => (await room()) === 'goaeingang', 15000, 'the Goa');
-  await settle();
-};
-await useWormhole();
-check('the wormhole leads to the Goa\'s entrance', (await room()) === 'goaeingang' && (await flag('wormholeUsed')) === true);
-check('and stays in the pocket (there and back)', (await inv()).includes('wurmloch'));
-check('bouncer, Flaschenfloh, gate and the wormhole back are there',
-  (await hotspotAt(560, 334)) === 'tuersteher' && (await hotspotAt(790, 300)) === 'floh' && (await hotspotAt(560, 160)) === 'tor' && (await hotspotAt(110, 300)) === 'wurmloch');
+// --- the wormhole pair: useless here, it wants throwing at the forest's barrier
+await verb('use');
+await click(522 + (await inv()).indexOf('wurmloch') * 112, 505);
+await settle();
+check('on the bridge the wormhole pair stays in the pocket', (await room()) === 'neckar' && (await inv()).includes('wurmloch') && !(await flag('portalOpen')));
+await goTo('waldrand', 15, 432);
+await useItemOn('wurmloch', 420, 330);
+await waitFor(async () => (await flag('portalOpen')) === true, 20000, 'the throw');
+await settle();
+check('one end thrown over the barrier: a portal stands at the forest\'s edge', (await flag('portalOpen')) === true && !(await inv()).includes('wurmloch') && (await hotspotAt(724, 326)) === 'portal');
+await page.screenshot({ path: `${SHOT}/hoel-07-portal.png` });
+const pocketsBefore = (await inv()).length;
+await click(724, 326); // the portal (default verb: use)
+await waitFor(async () => (await room()) === 'goa', 20000, 'the dance floor');
+// The landing is a cutscene that ends in the Goazwerg's question.
+await waitFor(async () => { if (await ev(() => window.__engine.choicesShowing)) return true; await page.keyboard.press('Escape'); return false; }, 40000, 'the Goazwerg');
+check('out of the portal: in the middle of the dance floor', (await room()) === 'goa' && (await flag('wormholeUsed')) === true);
+const landed = await ev(() => { const a = window.__engine.roomScene.actors.get('player'); return { x: a.x, y: a.y }; });
+check('the player landed on the floor, by the portal', Math.abs(landed.x - 384) < 30 && Math.abs(landed.y - 404) < 20, JSON.stringify(landed));
+check('everything in the pockets is lost on the way', pocketsBefore > 0 && (await inv()).length === 0, JSON.stringify(await inv()));
+said = (await choices()).map((c) => c.text);
+check('the Goazwerg wants the password on the dance floor — and there is no Chakabunga to say', !said.some((t) => t.startsWith('Chakabunga')), said.join(' | '));
+await pick('Ich komm gleich');
+await waitFor(async () => (await room()) === 'goaeingang', 20000, 'thrown out');
+await settle();
+check('without the password: thrown out, in front of the gate', (await room()) === 'goaeingang' && !(await flag('goaEntered')));
+check('bouncer, Flaschenfloh and the gate are there',
+  (await hotspotAt(560, 334)) === 'tuersteher' && (await hotspotAt(790, 300)) === 'floh' && (await hotspotAt(560, 160)) === 'tor' && (await hotspotAt(110, 300)) !== 'wurmloch');
 await page.screenshot({ path: `${SHOT}/hoel-07-goa.png` });
 
 // --- the gate: not without the bouncer's say-so
@@ -379,8 +395,8 @@ const dancing = new Set();
 for (let i = 0; i < 6; i++) { dancing.add(await ev(() => window.__engine.roomScene.layerObj('dancer3').frame.texture.key + '|' + window.__engine.roomScene.layerObj('far').frame.texture.key)); await page.waitForTimeout(130); }
 check('the crowd dances (animated dancers near and far)', dancing.size >= 2, String(dancing.size));
 check('eighteen dancers to walk among', await ev(() => { let n = 0; for (let i = 0; i < 40; i++) { try { window.__engine.roomScene.layerObj('dancer' + i); n++; } catch { break; } } return n; }) === 18);
-check('mushrooms, threads, mandala, DJ and the dance floor are there',
-  (await hotspotAt(230, 220)) === 'pilze' && (await hotspotAt(200, 60)) === 'faeden' && (await hotspotAt(480, 140)) === 'mandala' && (await hotspotAt(480, 240)) === 'dj' && (await hotspotAt(480, 394)) === 'tanzflaeche');
+check('the portal back, mushrooms, threads, mandala, DJ and the dance floor are there',
+  (await hotspotAt(384, 402)) === 'portal' && (await hotspotAt(230, 220)) === 'pilze' && (await hotspotAt(200, 60)) === 'faeden' && (await hotspotAt(480, 140)) === 'mandala' && (await hotspotAt(480, 240)) === 'dj' && (await hotspotAt(480, 394)) === 'tanzflaeche');
 await page.screenshot({ path: `${SHOT}/hoel-08-goa.png` });
 
 // --- dance: the chapter ends on the dance floor

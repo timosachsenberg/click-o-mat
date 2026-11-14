@@ -934,25 +934,6 @@ export function cardOnDeck(): string {
   );
 }
 
-/** Bolt cutters lying on the deck (36×16, local coordinates). */
-export function cuttersOnDeck(): string {
-  return (
-    ellipse(18, 13, 17, 3, { fill: '#000000', opacity: 0.3 }) +
-    path('M2 10L20 7M2 14L20 7', { stroke: INK, sw: 5 }) +
-    path('M2 10L20 7M2 14L20 7', { stroke: '#d8322a', sw: 3 }) +
-    path('M19 7L32 3L34 6L22 9Z', { fill: '#a8a8b8', stroke: INK, sw: 1.4 })
-  );
-}
-
-/** The punt pole, floating along the jetty (120×20, local coordinates). */
-export function floatingPole(): string {
-  return (
-    ellipse(60, 12, 58, 4, { fill: '#fff0d0', opacity: 0.35 }) +
-    path('M4 14L116 6', { stroke: INK, sw: 5 }) +
-    path('M4 14L116 6', { stroke: '#c8a060', sw: 3 })
-  );
-}
-
 /** The cap that floats to the jetty (32×20 box). */
 export function floatingCap(): string {
   return group(ellipse(20, 18, 17, 4, { fill: '#fff0d0', opacity: 0.5 }) + couleurCap(20, 18, 1.6, -14), 'scale(0.8)');

@@ -2,6 +2,7 @@ import { Layer, type Facing, type HotspotDef, type LayerDef, type Rect, type Roo
 import type { ScriptContext } from '../../engine/ScriptContext';
 import { DANCER_FRAMES, DANCER_SIZES, DH, DW, FAR, FAR_FRAMES, GO, LOOKS, dancerAnim, dancerKey, foregroundShrooms, goaBg, lasers, type DancerSize } from '../art/goa';
 import { VOICE_ACTOR } from '../art/turm';
+import { portalArt } from '../art/goaeingang';
 
 // ---- layout ----------------------------------------------------------------------
 // The Goa: the dance floor in the forest, behind the gate. Blacklight, a
@@ -62,6 +63,57 @@ async function dance(ctx: ScriptContext): Promise<void> {
     return;
   }
   await ctx.playerSay(pick(['Noch eine Runde!', 'Ich könnte ewig so weitermachen.', 'Die Magic Woman wirkt immer noch.']));
+}
+
+/** The far end of the wormhole pair: it came down on the dance floor. */
+const PORTAL = { x: GO.floor.cx - 96, y: GO.floor.cy + 8, rx: 48, ry: 15 };
+const LANDING = P(PORTAL.x, PORTAL.y + 2);
+
+async function backThroughPortal(ctx: ScriptContext): Promise<void> {
+  await ctx.playerSay('Zurück zum Waldrand? Na gut. Festhalten.');
+  ctx.sfx('zap');
+  ctx.flash(0xb06aff, 300);
+  const lost = [...ctx.state.inventory];
+  for (const id of lost) ctx.removeItem(id);
+  await ctx.goToRoom('waldrand', 'portal');
+}
+
+/** First arrival: out of the hole, in the middle of the dance floor, with
+ *  empty pockets — and the Goazwerg wants the password anyway. */
+async function landing(ctx: ScriptContext): Promise<void> {
+  const sprite = ctx.player.sprite;
+  const y = sprite.y;
+  sprite.y = y - 420;
+  ctx.flash(0xb06aff, 400);
+  await ctx.tween(sprite, { y, ease: 'Bounce.easeOut' }, 900);
+  // (A skipped cutscene must not leave the player hanging in the air.)
+  sprite.y = y;
+  ctx.shake(300, 0.012);
+  await ctx.playerSay('Uff.');
+  await ctx.playerSay('Leuchtende Pilze. Fäden aus Licht bis in die Baumkronen. Und alle tanzen. Um mich rum.');
+  await ctx.playerSay('Ich bin mitten auf der Tanzfläche gelandet!');
+  if (ctx.flag('pocketsLost')) {
+    await ctx.playerSay('Moment. Meine Taschen. Leer! Alles weg.');
+    await ctx.playerSay('Das Wurmloch hat Zoll kassiert. Egal. Hier brauch ich nur noch Beine.');
+  }
+  // The bouncer has seen it. He comes over from the gate.
+  ctx.place('tuersteher', 20, 420, 'right');
+  await ctx.walkTo('tuersteher', LANDING.x - 70, LANDING.y + 14);
+  ctx.face(ctx.activeCharId, 'left');
+  await ctx.say('tuersteher', 'Halt! Stopp! Musik ... nein, Musik bleibt an.');
+  await ctx.playerSay('Und wer bist du? Ein ... Gartenzwerg?');
+  await ctx.say('tuersteher', 'Goazwerg. Türsteher. Und das ist eine Saunamütze, bevor du fragst.');
+  await ctx.say('tuersteher', 'Du bist nicht durchs Tor gekommen. Du bist aus einem Loch im Boden gefallen. Respekt. Trotzdem: Parole?');
+  await ctx.dialog('tuersteher');
+  if (ctx.flag('goaEntered')) {
+    await ctx.say('tuersteher', 'Dann tanz. Ich muss zurück ans Tor. Und nächstes Mal vorne rum.');
+    await ctx.walkTo('tuersteher', 34, 420);
+    ctx.place('tuersteher', -300, 420);
+    return;
+  }
+  await ctx.say('tuersteher', 'Ohne Parole wird hier nicht getanzt. Hausordnung. Raus mit dir, vors Tor.');
+  ctx.place('tuersteher', -300, 420);
+  await ctx.goToRoom('goaeingang', 'tor');
 }
 
 async function toEntrance(ctx: ScriptContext): Promise<void> {
@@ -171,10 +223,17 @@ const HOTSPOTS: HotspotDef[] = [
       use: dance,
     },
   },
+  at('portal', 'Wurmloch', R(PORTAL.x - PORTAL.rx, PORTAL.y - PORTAL.ry - 4, PORTAL.rx * 2, PORTAL.ry * 2 + 8), P(PORTAL.x + 50, PORTAL.y + 6), 'left', {
+    on: {
+      lookat: 'Das andere Ende von meinem Wurmloch-Paar. Liegt flach auf der Tanzfläche. Die anderen tanzen einfach drum herum.',
+      use: backThroughPortal,
+      pickup: 'Das klebt am Boden wie Kaugummi. Kosmischer Kaugummi.',
+    },
+  }),
   at('toEingang', 'Zum Eingang', R(0, 250, 40, 196), P(40, 410), 'left', {
     defaultVerb: 'use',
     on: {
-      lookat: 'Da geht’s zurück zum Tor. Zum Goazwerg. Und zum Wurmloch.',
+      lookat: 'Da geht’s zurück zum Tor. Und zum Goazwerg.',
       use: toEntrance,
       open: toEntrance,
     },
@@ -187,6 +246,7 @@ export const goaRoom: RoomDef = {
 
   layers: [
     { id: 'bg', depth: Layer.BEHIND, svg: goaBg() },
+    { id: 'portal', depth: Layer.BEHIND, x: PORTAL.x - PORTAL.rx, y: PORTAL.y - PORTAL.ry, w: PORTAL.rx * 2, h: PORTAL.ry * 2, svg: portalArt(PORTAL.rx, PORTAL.ry, 'goPortal') },
     { id: 'lasers', depth: Layer.BEHIND, x: 0, y: 0, w: 960, h: 450, svg: lasers(), alpha: 0.8 },
     { id: 'far', depth: Layer.BEHIND, x: FAR.x, y: FAR.y, anim: 'goa-far' },
     ...dancerLayers,
@@ -217,18 +277,19 @@ export const goaRoom: RoomDef = {
 
   entries: {
     eingang: { x: 124, y: 412, facing: 'right' },
+    // Out of the wormhole, in the middle of the floor.
+    portal: { x: LANDING.x, y: LANDING.y, facing: 'down' },
   },
 
   // The DJ is drawn into the stage; this is his voice.
-  actors: [{ id: 'dj', x: 480, y: 262, facing: 'down' }],
+  actors: [
+    { id: 'dj', x: 480, y: 262, facing: 'down' },
+    // The Goazwerg: off stage, until somebody falls out of a hole in the floor.
+    { id: 'tuersteher', x: -300, y: 420, facing: 'right' },
+  ],
 
   async onEnter(ctx) {
-    await ctx.once('goaIntro', async () => {
-      await ctx.wait(600);
-      await ctx.playerSay('Oh.');
-      await ctx.playerSay('Leuchtende Pilze. Fäden aus Licht bis in die Baumkronen. Und alle tanzen.');
-      await ctx.playerSay('Ich bin angekommen.');
-    });
+    await ctx.once('goaIntro', () => landing(ctx));
   },
 
   ambients: [
