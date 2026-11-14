@@ -174,6 +174,12 @@ collage with photo textures) → hand-painted.
    Otto walks out through the wall and leaves you his **Taschen-Attraktor**
    (which hums along to the bass on the way to the forest). Putting the hole
    up in another layer doesn't help him — he's only in 1987.
+5. Once Otto is out, the hole in the wall is just a hole again — and in the
+   **modern** layer it peels off like a sticker. **Take it**, then **use the
+   hole with the Taschen-Attraktor**: the spiral circles the black hole and
+   you get a **Wurmloch**. With the password, **use the wormhole** (anywhere)
+   and you're through, straight to the Goa in the forest — a shortcut to the
+   chapter's end, no cap needed.
 
 </details>
 
