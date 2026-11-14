@@ -51,6 +51,14 @@ export const GOA_MUSIC: Record<string, MusicTrack> = {
     bass: [-24, null, -24, -12, null, -17, -19, null, -20, null, -20, -8, null, -15, -17, null],
     lead: [0, 2, 3, 5, 7, null, 6, 7, 12, null, 11, 10, 9, null, 7, null],
   },
+  // The edge of the forest: nothing but the Goa's bass, far off behind the trees.
+  'wald-wummern': {
+    bpm: 128,
+    bassType: 'sine',
+    leadType: 'sine',
+    bass: [-36, null, -36, null, -36, null, -36, null, -36, null, -36, null, -36, null, -36, -24],
+    lead: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+  },
   // ---- the jukebox -----------------------------------------------------------------
   // "Du hast mein Herz am Pfandautomat vergessen": slow, heartbroken, in C.
   'song-pfand': {

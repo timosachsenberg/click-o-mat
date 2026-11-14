@@ -146,9 +146,18 @@ await pick('Mach');
 check('talked to Flaschenfloh (he does not follow yet)', !(await flag('flohFollows')));
 await goTo('neckar', 932, 380); // on to the bridge
 check('the street leads on to the Neckarbrücke', (await room()) === 'neckar');
-await click(40, 420); // towards the forest
+await goTo('waldrand', 15, 432); // over the bridge, towards the forest
+check('the bridge leads on to the edge of the forest', (await room()) === 'waldrand');
+check('the barrier, the sign and the felled trunks are there', (await hotspotAt(420, 330)) === 'absperrung' && (await hotspotAt(580, 270)) === 'schild' && (await hotspotAt(200, 320)) === 'baumstaemme');
+check('only the bass, far away', (await ev(() => window.__audio.currentMusic ?? window.__audio.pendingMusic)) === 'wald-wummern', String(await ev(() => window.__audio.currentMusic)));
+const glowA = [];
+for (let i = 0; i < 6; i++) { glowA.push(await ev(() => window.__engine.roomScene.layerObj('goa').alpha)); await page.waitForTimeout(110); }
+check('the Goa\'s lights throb behind the trees', Math.max(...glowA) - Math.min(...glowA) > 0.15, glowA.map((a) => a.toFixed(2)).join(','));
+await click(420, 330, { button: 'right' }); // the barrier (default verb: use)
 await settle();
-check('the way to the forest is closed (forestry work)', !(await flag('chapterDone')) && (await hotspotAt(40, 420)) === 'toForest');
+check('the way into the forest is closed (tree felling)', (await room()) === 'waldrand' && !(await flag('chapterDone')));
+await page.screenshot({ path: `${SHOT}/goa-03a-waldrand.png` });
+await goTo('neckar', 936, 400); // back to the bridge
 await goTo('epplehaus', 945, 432); // back to the Epplehaus
 await goTo('picasso', 86, 260); // and down the cellar stairs
 check('and back into the Picasso', (await room()) === 'picasso');
@@ -320,9 +329,10 @@ check('walked along the Neckarfront to the jetty at the Hölderlinturm, smaller 
 await page.screenshot({ path: `${SHOT}/goa-06b-turm.png` });
 check('took the cap', JSON.stringify(await inv()) === '["muetze"]', JSON.stringify(await inv()));
 
-// --- on towards the forest? Closed for forestry work, password or not —
+// --- on towards the forest? Closed for tree felling, password or not —
 // the way to the Goa is Otto R.'s wormhole (verify-hoelderlin plays it).
-await click(40, 420);
+await goTo('waldrand', 15, 432);
+await click(420, 330, { button: 'right' });
 await settle();
 check('even with the password, the forest stays closed', (await flag('password')) === 'Chakabunga' && !(await flag('chapterDone')) && (await flag('once:forestClosed')) === true);
 await page.screenshot({ path: `${SHOT}/goa-07-closed.png` });

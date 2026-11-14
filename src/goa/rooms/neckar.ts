@@ -2,7 +2,7 @@ import { Layer, type Facing, type HotspotDef, type Rect, type RoomDef, type Vec2
 import type { ScriptContext } from '../../engine/ScriptContext';
 import { OTTO_ACTOR } from '../art/turm';
 import { PIGEON_ACTORS } from '../art/epplehaus';
-import { NK, PUNT_ACTOR, balustrade, eckhausLayer, forestBarrier, floatingCap, flyingLeg, neckarBg, promGap, quayFootY, quayTopY } from '../art/neckar';
+import { NK, PUNT_ACTOR, balustrade, eckhausLayer, floatingCap, flyingLeg, neckarBg, promGap, quayFootY, quayTopY } from '../art/neckar';
 
 // ---- layout ----------------------------------------------------------------------
 // The Neckarbrücke in Tübingen at sunset, looking upstream along the
@@ -245,25 +245,9 @@ async function pigeonPassword(ctx: ScriptContext): Promise<void> {
   await ctx.playerSay('Die Tür ist auf.');
 }
 
-/** The way to the forest is closed: forestry work. The only way to the Goa
- *  is Otto R.'s wormhole (see the Hölderlinturm and items.ts). */
+/** Over the bridge to the edge of the forest. */
 async function toForest(ctx: ScriptContext): Promise<void> {
-  ctx.sfx('deny');
-  await ctx.playerSay('„Waldarbeiten. Durchgang gesperrt.“ Ausgerechnet heute.');
-  if (!ctx.flag('password')) {
-    await ctx.playerSay('Wobei: Ich weiß ja noch nicht mal, wo im Wald die Goa steigt. Ali weiß es.');
-    return;
-  }
-  await ctx.once('forestClosed', async () => {
-    await ctx.playerSay('Ich weiß, wo die Goa ist. Ich hab das Passwort. Und jetzt steht da ein Absperrgitter.');
-  });
-  if (ctx.hasItem('wurmloch')) {
-    await ctx.playerSay('Brauch ich auch nicht. Ich hab ein Wurmloch in der Tasche.');
-  } else if (ctx.flag('ottoFree')) {
-    await ctx.playerSay('Otto meinte, sein Taschen-Attraktor zeigt, wo das Chaos am schönsten ist. Vielleicht gibt’s eine Abkürzung.');
-  } else {
-    await ctx.playerSay('Es muss einen anderen Weg geben. Einen sehr anderen.');
-  }
+  await ctx.goToRoom('waldrand', 'neckar');
 }
 
 const HOTSPOTS: HotspotDef[] = [
@@ -405,18 +389,12 @@ const HOTSPOTS: HotspotDef[] = [
       open: toPicasso,
     },
   }),
-  at('toForest', 'Absperrung', R(0, 340, 108, 110), P(126, 432), 'left', {
+  at('toForest', 'Richtung Wald', R(0, 408, 30, 42), P(12, 432), 'left', {
     defaultVerb: 'use',
     on: {
-      lookat: async (ctx) => {
-        await ctx.playerSay('Ein Absperrgitter, ein Warnlicht, ein Hütchen. „WALDARBEITEN – GESPERRT“.');
-        await ctx.playerSay('Dahinter ginge es über die Brücke in den Wald. Ginge.');
-      },
+      lookat: 'Über die Brücke, dann den Weg hoch zum Waldrand. Irgendwo da draußen wummert der Bass.',
       use: toForest,
       open: toForest,
-      push: 'Das Gitter ist festgekettet. Die Forstverwaltung kennt ihre Pappenheimer.',
-      pull: 'Das Gitter ist festgekettet. Die Forstverwaltung kennt ihre Pappenheimer.',
-      pickup: 'Das Hütchen? Nee. Ich bin Raver, kein Student im ersten Semester.',
     },
   }),
   at('muetze', 'Mütze', R(CAP_SPOT.x - 20, CAP_SPOT.y - 12, 40, 24), JETTY_SPOT, 'down', {
@@ -488,16 +466,14 @@ export const neckarRoom: RoomDef = {
       visible: (state) => !!state.getFlag('capAshore') && !state.getFlag('capTaken'),
     },
     // The chair leg in flight (shown only while it flies).
-    // The barrier across the bridge's left end (in front of anyone walking up to it).
-    { id: 'barrier', depth: 447, x: 0, y: 330, w: 116, h: 120, svg: `<g transform="translate(0 -330)">${forestBarrier()}</g>` },
     { id: 'leg', depth: Layer.FRONT, x: 0, y: 0, w: 36, h: 14, svg: flyingLeg(), visible: () => false },
   ],
 
   // The bridge deck, a passage round the back of the corner house, and the
   // promenade on top of the quay wall, out to the Hölderlinturm.
   walkArea: [
-    P(116, 448),
-    P(116, 414),
+    P(0, 448),
+    P(0, 414),
     P(880, 414),
     P(PROM.x1 + 8, quayTopY(PROM.x1 + 8) - 1),
     // ... the stairs down the wall, the jetty, and back up ...
@@ -526,6 +502,8 @@ export const neckarRoom: RoomDef = {
     picasso: { x: 930, y: 432, facing: 'left' },
     // Out of the Hölderlinturm, at the end of the promenade.
     turm: { x: TOWER_SPOT.x, y: TOWER_SPOT.y, facing: 'right' },
+    // Back from the edge of the forest.
+    wald: { x: 40, y: 432, facing: 'right' },
   },
 
   actors: [

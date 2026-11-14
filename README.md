@@ -148,11 +148,11 @@ talk while he does.
    waist-deep). Only a **cap** floats away — to the jetty at the
    **Hölderlinturm**. Walk there along the Neckarfront (round the corner house
    at the right end of the bridge, then along the top of the quay wall), take
-   the cap. Over the bridge to the left lies the forest — but the way is
-   closed for *Waldarbeiten*. On to the tower:
+   the cap. Over the bridge to the left you reach the **edge of the forest**:
+   the Goa's lights pulse behind the trees and you can hear the bass — but
+   the path is closed for *Baumfällarbeiten*. On to the tower:
 
-**The Hölderlinturm.** The way over the bridge into the forest is closed —
-*Waldarbeiten* — so the only way to the Goa is through Otto R.'s wormhole in the
+**The Hölderlinturm.** The way into the forest is closed for tree felling, so the only way to the Goa is through Otto R.'s wormhole in the
 tower. The tower's door at the end of the promenade is locked: Otto R. answers on the intercom and wants the password.
 
 - The bowl on Ali's counter is full of **pretzel crumbs**, but by hand they
@@ -536,6 +536,8 @@ src/
     rooms/picasso.ts   The Picasso, Ali's basement bar
     art/epplehaus.ts   The Epplehaus forecourt, and the pigeons
     rooms/epplehaus.ts The Epplehaus (Flaschenfloh, a flock of pigeon actors)
+    art/waldrand.ts    The edge of the forest at dusk, the barrier, the Goa's glow
+    rooms/waldrand.ts  The edge of the forest (closed for tree felling; distant bass)
     rooms/neckar.ts    The Neckarbrücke (a punt passes regularly; sink it)
     art/turm.ts        The Hölderlinturm as a cut-open doll's house, in three
                        time layers (toon, an EGA pixel grid, a photo-textured
