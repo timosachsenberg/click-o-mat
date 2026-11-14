@@ -488,11 +488,13 @@ export const DIALOGS: Record<string, DialogDef> = {
             if: (s) => !!s.getFlag('ottoExplained') && !s.getFlag('holeTaken'),
             script: async (ctx) => {
               if (!ctx.easyMode) {
-                await ctx.say('otto', 'Irgendwo hier im Haus liegt eins. Ein kleines schwarzes Loch. Ich hab’s versteckt, als es noch ganz jung war.');
+                await ctx.say('otto', 'Irgendwo hier im Haus liegt eins. Ein kleines schwarzes Loch. Hab ich beim CERN mitgehen lassen, als es noch ganz klein war.');
+                await ctx.say('otto', 'Die haben’s nie vermisst. Passte in die Brotdose. Inzwischen ist es ein bisschen gewachsen.');
                 await ctx.say('otto', 'Wo genau? Hab ich vergessen. Genies haben Wichtigeres im Kopf.');
                 return;
               }
-              await ctx.say('otto', 'Oben in der Turmstube, unterm Teppich, liegt eins. Ein kleines schwarzes Loch, ich hab’s da versteckt, als es noch ganz jung war.');
+              await ctx.say('otto', 'Oben in der Turmstube, unterm Teppich, liegt eins. Ein kleines schwarzes Loch. Hab ich beim CERN mitgehen lassen, als es noch ganz klein war.');
+              await ctx.say('otto', 'Die haben’s nie vermisst. Passte in die Brotdose. Inzwischen ist es ein bisschen gewachsen.');
               await ctx.say('otto', 'Hier in 1987 ist es Teil vom Boden, das kriegst du nicht hoch.');
               await ctx.say('otto', 'Aber in der modernen Ebene ... da gelten Zeichentrick-Gesetze. Da sind Löcher tragbar.');
             },
