@@ -334,6 +334,8 @@ const HOTSPOTS: HotspotDef[] = [
       lookat: async (ctx) => {
         await ctx.playerSay('Der Hölderlinturm. Hier hat Hölderlin sechsunddreißig Jahre gewohnt.');
         await ctx.playerSay('Gedichtet, aufs Wasser geschaut, Besuch verwirrt. Klingt nach einem guten Leben.');
+        await ctx.playerSay('Unten an die Turmwand hat jemand „PUT PUT“ gesprüht. Sogar hier.');
+        ctx.setFlag('putSeen');
         if (ctx.flag('ottoFree')) await ctx.playerSay('Und oben drin dreht sich eine Spirale durch drei Zeitebenen. Kein Witz.');
       },
       open: toTower,

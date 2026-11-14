@@ -237,6 +237,7 @@ const HOTSPOTS: HotspotDef[] = [
       lookat: async (ctx) => {
         await ctx.playerSay('Graffiti vom Gehweg bis in den ersten Stock. „EPPLE“, „GOA“, „BASS“, „1972“, „PLENUM!“.');
         await ctx.playerSay('Und dazwischen überall „PUT PUT“. Wer schreibt das bloß? Und warum?');
+        ctx.setFlag('putSeen');
         if (ctx.flag('knowsPartykiller')) await ctx.playerSay('Und „KEIN BASS IST ILLEGAL“. Das sollte man dem Partykiller mal zeigen.');
       },
       use: 'Ohne Sprühdose? Ich könnte höchstens was mit dem Finger in den Dreck malen.',

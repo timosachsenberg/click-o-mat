@@ -434,6 +434,10 @@ function hoelderlinturm(): string {
     path(`M${x - 24} ${base + 2}h48l-6 44h-34z`, { fill: '#ffd070', opacity: 0.28 }),
     willow(x - 56, base - 36, 2.2, 85),
     group(tower, `translate(${x} ${base}) scale(2.2)`),
+    // Sprayed across the tower's foot, as on every other wall in town: PUT PUT.
+    text(x - 1, base - 13, 'PUT PUT', { size: 10.5, fill: '#4ae8ff', stroke: INK, sw: 2.6, rotate: -5 }),
+    path(`M${x - 22} ${base - 9}q8 -4 16 0t16 -1`, { stroke: '#ff4a8a', sw: 1.6 }),
+    path(`M${x + 14} ${base - 12}v7`, { stroke: '#4ae8ff', sw: 1.2, opacity: 0.8 }),
   ].join('');
 }
 

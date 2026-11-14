@@ -314,7 +314,7 @@ export const DIALOGS: Record<string, DialogDef> = {
           },
           {
             text: 'Put put?',
-            if: (s) => !!s.getFlag('putHeard'),
+            if: (s) => !!s.getFlag('putHeard') || !!s.getFlag('putSeen'),
             script: async (ctx) => {
               await ctx.say('ottoTuer', 'Put put ... Hört sich gut an.');
               await ctx.say('ottoTuer', 'Aber der Klang der Stimme passt irgendwie nicht.');
