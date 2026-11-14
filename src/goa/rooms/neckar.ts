@@ -294,6 +294,8 @@ const HOTSPOTS: HotspotDef[] = [
     on: { lookat: 'Der Weg oben auf der Ufermauer, die Neckarfront entlang bis zum Hölderlinturm.' },
   },
   at('turm', 'Hölderlinturm', R(408, 132, 64, 166), TOWER_SPOT, 'left', {
+    // A plain click walks over and on to the door's close-up (double-click: at a run).
+    defaultVerb: 'use',
     on: {
       lookat: async (ctx) => {
         await ctx.playerSay('Der Hölderlinturm. Hier hat Hölderlin sechsunddreißig Jahre gewohnt.');
