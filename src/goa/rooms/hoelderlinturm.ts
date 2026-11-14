@@ -261,7 +261,7 @@ async function toNeckar(ctx: ScriptContext): Promise<void> {
     await ctx.playerSay('In 1987 ist die Tür nur gemalt. Aber für mich geht sie auf: Vorteile der Auflösung.');
   });
   ctx.sfx('open');
-  await ctx.goToRoom('neckar', 'turm');
+  await ctx.goToRoom('turmtuer', 'tuer');
 }
 
 // ---- hotspots --------------------------------------------------------------------

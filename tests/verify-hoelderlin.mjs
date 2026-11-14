@@ -176,7 +176,7 @@ await giveFloh('doener');
 check('he eats the döner', (await flag('flohSatt')) === true && !(await inv()).includes('doener'));
 await giveFloh('muetzekruemel');
 check('Flaschenfloh feeds the pigeons, one starts saying "Put put"', (await flag('putTaube')) === true && (await flag('putHeard')) === true && !(await inv()).includes('muetzekruemel'));
-check('and hands the cap back', (await inv()).includes('muetze'), JSON.stringify(await inv()));
+check('and keeps the cap', !(await inv()).some((i) => i.startsWith('muetze')), JSON.stringify(await inv()));
 const putPos = await ev(() => { const a = window.__engine.roomScene.actors.get('taube3'); return { x: a.x, y: a.y, h: a.sprite.displayHeight }; });
 check('the parroting pigeon pecks crumbs by Flaschenfloh', Math.abs(putPos.x - 506) < 6 && Math.abs(putPos.y - 376) < 6, JSON.stringify(putPos));
 await page.waitForTimeout(2500);
@@ -192,22 +192,22 @@ check('on the Neckarbrücke', (await room()) === 'neckar');
 
 // --- the tower's door: Otto R. on the intercom wants the password
 check('the Hölderlinturm is a hotspot on the bridge', (await hotspotAt(440, 200)) === 'turm');
-await verb('open');
-await click(440, 200);
+await goTo('turmtuer', 458, 284); // the tower's door (default verb): on to the close-up
+check('a close-up of the door: door, intercom and graffiti', (await hotspotAt(480, 250)) === 'tuer' && (await hotspotAt(630, 235)) === 'sprechanlage' && (await hotspotAt(322, 250)) === 'putput');
+await click(480, 250); // default verb: open — locked, so the intercom
 await waitFor(() => ev(() => window.__engine.choicesShowing), 25000, 'the intercom');
-check('the door is locked: Otto asks for the password', (await room()) === 'neckar' && (await flag('turmAsked')) === true);
+check('the door is locked: Otto asks for the password', (await room()) === 'turmtuer' && (await flag('turmAsked')) === true);
 said = (await choices()).map((c) => c.text);
 check('no Chakabunga at the intercom before Ali said it', !said.some((t) => t.startsWith('Chakabunga')), said.join(' | '));
 await pick('Put put?');
 check('saying "Put put" yourself: the voice is wrong', (await flag('putTried')) === true && !(await flag('turmOpen')));
 await pick('Schon gut');
-check('still outside', (await room()) === 'neckar');
+check('still outside', (await room()) === 'turmtuer');
 
 // --- the pigeon says it, in the right voice: the door opens
-await useItemOn('taube', 440, 200);
+await useItemOn('taube', 630, 235);
 check('the pigeon says the password: the door is open', (await flag('turmOpen')) === true && !(await inv()).includes('taube'));
-await verb('open');
-await click(440, 200);
+await click(480, 250);
 await waitFor(async () => (await room()) === 'hoelderlinturm', 25000, 'the tower');
 await settle();
 check('opening the Hölderlinturm leads inside', (await room()) === 'hoelderlinturm');
@@ -312,11 +312,15 @@ await page.screenshot({ path: `${SHOT}/hoel-06-toon-after.png` });
 // --- out through the door, back on the promenade by the tower
 await camSettle();
 await clickW(122, 214);
-await waitFor(async () => (await room()) === 'neckar', 15000, 'neckar');
+await waitFor(async () => (await room()) === 'turmtuer', 15000, 'the door');
 // No clicking to skip lines here: a stray click would walk the player off.
 await waitFor(async () => !(await ev(() => window.__engine.busy)), 8000, 'arrival');
 const out = await ev(() => { const a = window.__engine.roomScene.actors.get('player'); return { x: a.x, y: a.y }; });
-check('out of the door: back at the tower on the promenade', (await room()) === 'neckar' && Math.abs(out.x - 478) < 12 && Math.abs(out.y - 304) < 12, JSON.stringify(out));
+check('out of the door: in front of it, in the close-up', (await room()) === 'turmtuer' && Math.abs(out.x - 479) < 12 && Math.abs(out.y - 366) < 12, JSON.stringify(out));
+check('the door stands ajar now', await ev(() => window.__engine.roomScene.layerObj('ajar').visible === true));
+await goTo('neckar', 930, 400);
+const back = await ev(() => { const a = window.__engine.roomScene.actors.get('player'); return { x: a.x, y: a.y }; });
+check('along the promenade: back at the tower on the bridge scene', Math.abs(back.x - 478) < 12 && Math.abs(back.y - 304) < 12, JSON.stringify(back));
 
 // --- saving is refused while a scene is running
 await click(440, 200, { button: 'right' }); // look at the tower: a line starts

@@ -11,6 +11,7 @@ import { waldrandRoom } from './rooms/waldrand';
 import { doenerRoom } from './rooms/doener';
 import { goaEingangRoom } from './rooms/goaeingang';
 import { goaRoom } from './rooms/goa';
+import { turmtuerRoom } from './rooms/turmtuer';
 import { hoelderlinturmRoom } from './rooms/hoelderlinturm';
 import { GOA_CAST } from './art/cast';
 import { GOA_ICONS } from './art/icons';
@@ -35,6 +36,7 @@ export const CONTENT: GameContent = {
     epplehaus: epplehausRoom,
     waldrand: waldrandRoom,
     neckar: neckarRoom,
+    turmtuer: turmtuerRoom,
     hoelderlinturm: hoelderlinturmRoom,
   },
   items: ITEMS,

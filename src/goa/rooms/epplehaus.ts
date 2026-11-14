@@ -136,8 +136,8 @@ async function feedPigeons(ctx: ScriptContext): Promise<void> {
   await ctx.say('floh', 'Die da? Die plappert alles nach. Wie ein Papagei. Nur grauer.');
   await ctx.say(PUT_TAUBE, 'Put put! Put put!');
   await ctx.say('floh', 'Und jetzt ist sie so mit den Krümeln beschäftigt, die merkt nicht mal, wenn die Welt untergeht.');
-  ctx.addItem('muetze', { silent: true });
-  await ctx.say('floh', 'Hier, deine Mütze. Riecht jetzt nach Bier UND Brezel. Ein Upgrade.');
+  await ctx.say('floh', 'Die Mütze behalt ich, wenn’s recht ist. Als Futtersack. Riecht nach Bier UND Brezel, die Kollegen lieben das.');
+  await ctx.playerSay('Behalt sie. Steht dir besser als den Burschen.');
 }
 
 /** Catch the parroting pigeon — only while it's busy with the crumbs. */

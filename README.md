@@ -165,7 +165,7 @@ washed up at the jetty (too bendy for a pole vault) and the **folding spade** in
 the tower's cellar (a root, and your fingers).
 
 **The Hölderlinturm.** The way into the forest is closed for tree felling, so the only way to the Goa is through Otto R.'s wormhole in the
-tower. The tower's door at the end of the promenade is locked: Otto R. answers on the intercom and wants the password.
+tower. The tower's door at the end of the promenade (its own close-up scene) is locked: Otto R. answers on the intercom — a piece of 1987 in the wall, the one thing that still reaches into his time layer — and wants the password.
 
 - The bowl on Ali's counter is full of **pretzel crumbs**, but by hand they
   trickle through your fingers: **use the cap with the bowl** (the
@@ -177,7 +177,7 @@ tower. The tower's door at the end of the promenade is locked: Otto R. answers o
   Tauben.*)
 - Then **give him the cap full of crumbs**. He feeds the pigeons —
   *„Put, put, put!“* — and one of them starts parroting **„Put put“**. He
-  hands the cap back.
+  keeps the cap as a feed bag.
 - Say „Put put?“ yourself at the intercom: *hört sich gut an, aber der Klang
   der Stimme passt irgendwie nicht.*
 - While the parroting pigeon is busy with the crumbs, **pick it up**, and
@@ -568,6 +568,8 @@ src/
     rooms/doener.ts    The döner stand between the Picasso and the Epplehaus
     art/waldrand.ts    The edge of the forest at dusk, the barrier, the Goa's glow
     rooms/waldrand.ts  The edge of the forest (closed for tree felling; distant bass)
+    art/turmtuer.ts    The Hölderlinturm's door close up, with the 1987 intercom
+    rooms/turmtuer.ts  In front of the tower: door, intercom, the password
     art/goaeingang.ts  The Goa's entrance at night: gate, mandala, lasers, the wormhole
     rooms/goaeingang.ts The Goa's entrance (the bouncer wants Chakabunga)
     art/goa.ts         The Goa: stage, UV string art, glowing mushrooms, dancer frames
