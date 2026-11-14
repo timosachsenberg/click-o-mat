@@ -192,6 +192,11 @@ check('on the Neckarbrücke', (await room()) === 'neckar');
 
 // --- the tower's door: Otto R. on the intercom wants the password
 check('the Hölderlinturm is a hotspot on the bridge', (await hotspotAt(440, 200)) === 'turm');
+await click(440, 200); // a plain click on the tower (its default verb) leads to the door too
+await waitFor(async () => (await room()) === 'turmtuer', 25000, 'the door');
+await settle();
+check('a click on the tower itself leads to its door', (await room()) === 'turmtuer');
+await goTo('neckar', 930, 400);
 await goTo('turmtuer', 458, 284); // the tower's door (default verb): on to the close-up
 check('a close-up of the door: door, intercom and graffiti', (await hotspotAt(480, 250)) === 'tuer' && (await hotspotAt(630, 235)) === 'sprechanlage' && (await hotspotAt(322, 250)) === 'putput');
 await click(480, 250); // default verb: open — locked, so the intercom
@@ -325,7 +330,8 @@ const back = await ev(() => { const a = window.__engine.roomScene.actors.get('pl
 check('along the promenade: back at the tower on the bridge scene', Math.abs(back.x - 478) < 12 && Math.abs(back.y - 304) < 12, JSON.stringify(back));
 
 // --- saving is refused while a scene is running
-await click(440, 200, { button: 'right' }); // look at the tower: a line starts
+await verb('lookat');
+await click(440, 200); // look at the tower: a line starts
 await page.waitForTimeout(250);
 const savesBefore = await ev(() => localStorage.getItem('pnc-save-goa-0'));
 await page.keyboard.press('F5');
