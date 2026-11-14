@@ -883,71 +883,94 @@ function flohCoatFront(top: number, back: boolean, clip: string): string {
   return group(s, undefined, `clip-path="url(#${clip})"`);
 }
 
-// ---- der Türsteher ---------------------------------------------------------------
-// The bouncer at the Goa: shaved head, round sunglasses (at night), a goatee,
-// a black shirt with a glowing fractal print, an earpiece.
+// ---- der Goazwerg ----------------------------------------------------------------
+// The Goa's bouncer is a gnome: knee-high to a raver (the actor is scaled
+// down), a felt sauna hat pulled low — tall, bell-shaped, a loop on top, a
+// mushroom stitched on —, a huge white beard, round sunglasses at night, a
+// tie-dye shirt, baggy trousers.
 
-const TUER: HumanLook = {
-  skin: '#c88a5e',
-  skinShade: '#9a6440',
-  hair: '#2a1a14',
-  hairShade: '#120a08',
-  top: '#1e1a2a',
-  topShade: '#100e18',
-  legs: '#3a4a3a',
-  legsShade: '#263226',
-  shoes: '#2a2a2a',
-  shoeTrim: '#5ad8ff',
+const ZWERG: HumanLook = {
+  skin: '#e8a888',
+  skinShade: '#c07a5e',
+  hair: '#f4f0e6',
+  hairShade: '#c8c0b0',
+  top: '#b06aff',
+  topShade: '#7a3ac8',
+  legs: '#d8782a',
+  legsShade: '#a8521a',
+  shoes: '#6a4426',
+  shoeTrim: '#2a1a10',
   style: 'custom',
-  head: { front: tuerHeadFront, side: tuerHeadSide },
-  torso: { front: tuerShirtFront },
+  head: { front: zwergHeadFront, side: zwergHeadSide },
+  torso: { front: zwergShirtFront },
 };
 
-function tuerHeadFront(r: Rig, back: boolean): string {
-  const L = TUER;
+const FELT = '#b8ac98';
+const FELT_SHADE = '#8a7e6c';
+
+/** The sauna hat: thick grey felt, bell-shaped, a rolled brim, a loop to hang it up by. */
+function saunaHat(cx = 0): string {
+  return (
+    path(`M${cx - 1.5} -33q1.5 -5 3 0`, { stroke: INK, sw: 3 }) +
+    path(`M${cx - 1.5} -33q1.5 -5 3 0`, { stroke: FELT, sw: 1.4 }) +
+    path(`M${cx - 17} -6Q${cx - 15} -26 ${cx - 5} -32Q${cx} -34 ${cx + 5} -32Q${cx + 15} -26 ${cx + 17} -6Z`, { fill: FELT, stroke: INK, sw: OUT }) +
+    path(`M${cx + 4} -31Q${cx + 13} -25 ${cx + 15} -8L${cx + 9} -8Q${cx + 9} -22 ${cx + 4} -31Z`, { fill: FELT_SHADE }) +
+    // Stitching along the seam, and a little fly agaric embroidered on.
+    path(`M${cx} -32V-12`, { stroke: FELT_SHADE, sw: 1, extra: 'stroke-dasharray="2 2"' }) +
+    path(`M${cx - 10} -15q4 -6 8 0z`, { fill: '#d8322a', stroke: INK, sw: 0.9 }) +
+    rect(cx - 7, -15, 2, 4, { fill: '#f4efe4', stroke: INK, sw: 0.7 }) +
+    circle(cx - 7.4, -17, 0.6, { fill: '#ffffff' }) +
+    circle(cx - 5, -17.4, 0.6, { fill: '#ffffff' }) +
+    // The rolled brim.
+    path(`M${cx - 19} -9Q${cx} -13 ${cx + 19} -9L${cx + 19} -4Q${cx} -8 ${cx - 19} -4Z`, { fill: '#cfc4b0', stroke: INK, sw: OUT })
+  );
+}
+
+function zwergHeadFront(r: Rig, back: boolean): string {
+  const L = ZWERG;
   const s: string[] = [ear(L, -14), ear(L, 14)];
   if (back) {
-    s.push(path(blob([[-14.5, 8], [-15, -8], [0, -18], [15, -8], [14.5, 8], [7, 14], [-7, 14]]), { fill: L.skin, stroke: INK, sw: OUT }));
-    s.push(path('M-6 -12Q0 -15 6 -12', { stroke: '#e8b088', sw: 1.6 }));
+    s.push(path(blob([[-15, 10], [-15, -5], [0, -8], [15, -5], [15, 10], [8, 17], [-8, 17]]), { fill: L.hair, stroke: INK, sw: OUT }));
+    s.push(saunaHat());
     return s.join('');
   }
   s.push(shadedHead(L, FACE_FRONT, 'faceF', 3));
-  s.push(path('M-7 -13Q0 -17 7 -13', { stroke: '#e8b088', sw: 1.8 }));
-  // Round dark sunglasses, at night. Of course.
-  for (const x of [-5.6, 5.6]) s.push(circle(x, -1.5, 4.6, { fill: '#1a1a2a', stroke: INK, sw: 1.6 }) + circle(x - 1.5, -3, 1.1, { fill: '#5ad8ff', opacity: 0.7 }));
-  s.push(path('M-1 -1.5H1', { stroke: INK, sw: 1.6 }));
-  s.push(ellipse(0, 5, 3.6, 3.6, { fill: L.skin, stroke: INK, sw: 1.6 }));
-  s.push(mouthFront(r.mouth, 11.2, 3.2));
-  s.push(path(blob([[-4, 13], [4, 13], [3, 19], [0, 21], [-3, 19]]), { fill: L.hair, stroke: INK, sw: 1.2 }));
-  // The earpiece and its curly cable.
-  s.push(circle(14.5, 2, 2, { fill: '#2a2a2a', stroke: INK, sw: 1 }) + path('M14 4q3 4 0 6t1 6', { stroke: '#2a2a2a', sw: 1.2 }));
+  // The beard: wide, white, down to the chest.
+  s.push(path(blob([[-15, 2], [-9, 6], [0, 7], [9, 6], [15, 2], [16, 14], [10, 26], [0, 31], [-10, 26], [-16, 14]]), { fill: L.hair, stroke: INK, sw: 1.8 }));
+  s.push(path('M-8 14q1 8 -1 12M0 13v15M8 14q-1 8 1 12', { stroke: L.hairShade, sw: 1.2 }));
+  // Round dark glasses, at night. Of course.
+  for (const x of [-5.6, 5.6]) s.push(circle(x, -1, 4.4, { fill: '#1a1a2a', stroke: INK, sw: 1.6 }) + circle(x - 1.5, -2.5, 1.1, { fill: '#5ad8ff', opacity: 0.7 }));
+  s.push(path('M-1.2 -1H1.2', { stroke: INK, sw: 1.6 }));
+  // A big red gnome nose, moustache, the mouth somewhere in the beard.
+  s.push(ellipse(0, 5, 4.6, 4.2, { fill: '#e8705a', stroke: INK, sw: 1.8 }));
+  s.push(circle(-1.4, 3.6, 1, { fill: '#ffffff', opacity: 0.7 }));
+  s.push(path('M-9 10Q-4 7 0 10Q4 7 9 10', { stroke: L.hairShade, sw: 1.6 }));
+  s.push(mouthFront(r.mouth, 13.6, 3));
+  s.push(saunaHat());
   return s.join('');
 }
 
-function tuerHeadSide(r: Rig): string {
-  const L = TUER;
+function zwergHeadSide(r: Rig): string {
+  const L = ZWERG;
   const s: string[] = [shadedHead(L, SKULL_SIDE, 'faceS', -3)];
-  s.push(path('M-6 -14Q2 -18 8 -12', { stroke: '#e8b088', sw: 1.6 }));
-  s.push(circle(8.6, -1.8, 4, { fill: '#1a1a2a', stroke: INK, sw: 1.5 }));
-  s.push(path('M4.6 -2L-4 -1', { stroke: INK, sw: 1.4 }));
-  s.push(path(blob([[12, -0.5], [15.5, 2.2], [15, 5.6], [11.6, 5.4]]), { fill: L.skin, stroke: INK, sw: 1.5 }));
-  s.push(mouthSide(r.mouth, 10, 11));
-  s.push(path(blob([[7, 13], [12, 13], [11, 19], [8, 19]]), { fill: L.hair, stroke: INK, sw: 1.1 }));
+  s.push(path(blob([[2, 5], [14, 6], [17, 14], [13, 26], [5, 28], [-2, 20], [-4, 10]]), { fill: L.hair, stroke: INK, sw: 1.7 }));
+  s.push(circle(8.6, -1.4, 4, { fill: '#1a1a2a', stroke: INK, sw: 1.5 }));
+  s.push(path('M4.6 -1.6L-4 -0.8', { stroke: INK, sw: 1.4 }));
+  s.push(path(blob([[12, 0], [18, 3], [17.4, 7.4], [12, 6.6]]), { fill: '#e8705a', stroke: INK, sw: 1.5 }));
+  s.push(mouthSide(r.mouth, 11, 12.6));
+  s.push(saunaHat(-1));
   return s.join('');
 }
 
-/** A glowing fractal on the black shirt. */
-function tuerShirtFront(top: number, back: boolean, clip: string): string {
-  if (back) return '';
+/** Tie-dye: rings of colour spreading from the chest. */
+function zwergShirtFront(top: number, back: boolean, clip: string): string {
   const cx = 32;
   const cy = top + 14;
-  const rings = [7, 5, 3].map((r, i) => circle(cx, cy, r, { stroke: ['#ff5ab4', '#5ad8ff', '#8aff5a'][i], sw: 1.4 })).join('');
-  const petals = [0, 1, 2, 3, 4, 5].map((k) => {
-    const a = (k / 6) * Math.PI * 2;
-    return path(`M${cx} ${cy}L${cx + Math.cos(a) * 10} ${cy + Math.sin(a) * 10}`, { stroke: '#ffd34a', sw: 1 });
-  }).join('');
-  return group(rings + petals, undefined, `clip-path="url(#${clip})"`);
+  const rings = [15, 11, 7, 3].map((r, i) => circle(cx, cy, r, { stroke: ['#ff5ab4', '#ffd34a', '#5ad8ff', '#8aff5a'][i], sw: 3, opacity: back ? 0.6 : 0.9 })).join('');
+  return group(rings, undefined, `clip-path="url(#${clip})"`);
 }
+
+const ZWERG_DRAW = humanDraw(ZWERG);
 
 export const GOA_CAST: SvgActorAsset[] = [
   { key: 'raver', width: 64, height: 120, poses: POSES, draw: humanDraw(RAVER) },
@@ -965,7 +988,8 @@ export const GOA_CAST: SvgActorAsset[] = [
   },
   { key: 'cop', width: COP_W, height: COP_H, poses: COP_POSES, draw: copDraw },
   { key: 'floh', width: 64, height: 120, poses: POSES, draw: humanDraw(FLOH) },
-  { key: 'tuersteher', width: 64, height: 120, poses: POSES, draw: humanDraw(TUER) },
+  // Extra rows above the head for the sauna hat (actor headroom: 18).
+  { key: 'tuersteher', width: 64, height: 138, poses: POSES, draw: (v, pose, f) => group(ZWERG_DRAW(v, pose as ActorPose, f), 'translate(0 18)') },
   {
     key: 'hilde',
     width: 64,

@@ -5,7 +5,7 @@ import { GE, goaEingangBg, portal } from '../art/goaeingang';
 // ---- layout ----------------------------------------------------------------------
 // The Goa's entrance, deep in the forest: the wormhole spits the player out
 // on the left (and stays open — the way back to the Hölderlinturm). In the
-// middle the gate, the bouncer in front of it: here the password Chakabunga
+// middle the gate, the bouncer — a Goazwerg in a felt sauna hat — in front of it: here the password Chakabunga
 // is finally needed. Flaschenfloh is already here, collecting empties. Past
 // the bouncer and through the gate, the party goes on — in the next chapter.
 //
@@ -68,13 +68,16 @@ const HOTSPOTS: HotspotDef[] = [
   }),
   {
     id: 'tuersteher',
-    name: 'Türsteher',
+    name: 'Goazwerg',
     actor: 'tuersteher',
     walkTo: BOUNCER_SPOT,
     facing: 'right',
     defaultVerb: 'talkto',
     on: {
-      lookat: 'Der Türsteher. Breit wie das Tor, Sonnenbrille bei Nacht, ein fraktales Muster auf dem Shirt. Er sieht alles.',
+      lookat: async (ctx) => {
+        await ctx.playerSay('Der Türsteher ist ein Goazwerg. Geht mir bis zum Knie. Rauschebart, Batikhemd, Sonnenbrille bei Nacht.');
+        await ctx.playerSay('Und eine Saunamütze aus Filz, tief ins Gesicht gezogen. Mit aufgesticktem Fliegenpilz.');
+      },
       talkto: async (ctx) => {
         if (ctx.flag('goaEntered')) {
           await ctx.say('tuersteher', 'Na los, rein mit dir. Der Bass wartet nicht.');
@@ -83,16 +86,19 @@ const HOTSPOTS: HotspotDef[] = [
         await ctx.say('tuersteher', 'Abend. Parole?');
         await ctx.dialog('tuersteher');
       },
-      push: 'Den? Eher schiebe ich den Hölderlinturm.',
-      pickup: 'Der wiegt mehr als der ganze Stocherkahn. Mit Besatzung.',
+      push: 'Einen Goazwerg schubst man nicht. Der steht fester als das Tor.',
+      pickup: 'Einstecken? Er ist klein genug. Aber er guckt, als hätte das schon mal einer versucht. Und bereut.',
     },
     onItem: {
       give: {
         euro: async (ctx) => {
           await ctx.say('tuersteher', 'Zwei Euro? Hier kommt man mit Parole rein, nicht mit Kleingeld.');
         },
+        doener: async (ctx) => {
+          await ctx.say('tuersteher', 'Bestechung mit Döner? Fast. Aber Zwerge essen nur Pilze.');
+        },
         muetze: async (ctx) => {
-          await ctx.say('tuersteher', 'Eine Burschenmütze? Auf der Goa? Mutig. Behalt sie.');
+          await ctx.say('tuersteher', 'Eine Burschenmütze? Nee. Ich trag nur Filz. Saunamütze. Hält den Kopf kühl, wenn der Bass heiß läuft.');
         },
       },
     },
@@ -161,6 +167,8 @@ export const goaEingangRoom: RoomDef = {
       await ctx.playerSay('Uff. Das war ... schnell.');
       await ctx.playerSay('Bass! Lichter! Laser! Ich bin da. Ich bin wirklich da.');
       await ctx.say('floh', ctx.flag('flohFollows') ? 'Da bist du ja endlich! Klirr.' : 'Na, auch hier? Klirr.');
+      await ctx.playerSay('Und wer bist du? Ein ... Gartenzwerg?');
+      await ctx.say('tuersteher', 'Goazwerg. Türsteher. Und das ist eine Saunamütze, bevor du fragst.');
       await ctx.say('tuersteher', 'Du kommst aus einem Wurmloch. Respekt. Trotzdem: ohne Parole kein Einlass.');
     });
   },

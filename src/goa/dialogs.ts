@@ -220,7 +220,7 @@ export const DIALOGS: Record<string, DialogDef> = {
     },
   },
 
-  // The bouncer at the Goa: here the password finally counts.
+  // The Goazwerg, bouncer at the Goa: here the password finally counts.
   tuersteher: {
     id: 'tuersteher',
     start: 'root',
@@ -251,6 +251,14 @@ export const DIALOGS: Record<string, DialogDef> = {
             text: 'Ali schickt mich.',
             script: async (ctx) => {
               await ctx.say('tuersteher', 'Ali schickt jeden. Parole?');
+            },
+          },
+          {
+            text: 'Was ist das für eine Mütze?',
+            once: true,
+            script: async (ctx) => {
+              await ctx.say('tuersteher', 'Saunamütze. Reiner Filz. Schützt vor Hitze, Kälte, Regen und schlechtem Techno.');
+              await ctx.say('tuersteher', 'Jeder Goazwerg hat eine. Ohne Mütze kein Zwerg. Ohne Parole kein Einlass.');
             },
           },
           {
