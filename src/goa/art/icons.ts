@@ -263,9 +263,11 @@ function taube(): string {
   return [
     shadow(32, 14),
     path('M18 30L8 36L18 37Z', { fill: '#6e6e86', stroke: INK, sw: 1.6 }),
+    path('M17 28L3 25L16 32Z', { fill: '#e8323a', stroke: INK, sw: 1.2 }) + path('M17 31L2 33L16 35Z', { fill: '#ffd23a', stroke: INK, sw: 1.2 }) + path('M17 34L4 41L17 37.6Z', { fill: '#2a8ae8', stroke: INK, sw: 1.2 }),
     ellipse(30, 30, 15, 10, { fill: '#9a9aae', stroke: INK, sw: 2 }),
     path('M18 29Q28 19 41 28Q31 37 18 33Z', { fill: '#6e6e86', stroke: INK, sw: 1.6 }),
     path('M38 23Q40 15 44 13L48 15Q46 22 42 27Z', { fill: '#4a9a8a', stroke: INK, sw: 1.6 }),
+    path('M42 9q-3 -6 2 -7q-1 3.4 1 5.4zM45 8q0 -6 4.6 -6q-2.4 3 -1.4 5.6z', { fill: '#ffd23a', stroke: INK, sw: 1 }),
     circle(46, 13, 5.6, { fill: '#5a6a80', stroke: INK, sw: 1.8 }),
     path('M51 12l6 2l-6 2z', { fill: '#f0b040', stroke: INK, sw: 1 }),
     circle(47.5, 12, 1.6, { fill: '#ff8a3a', stroke: INK, sw: 0.8 }),

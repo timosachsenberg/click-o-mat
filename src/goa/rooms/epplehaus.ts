@@ -133,7 +133,9 @@ async function feedPigeons(ctx: ScriptContext): Promise<void> {
   ctx.setFlag('putHeard');
   await ctx.say(PUT_TAUBE, 'Put put!');
   await ctx.playerSay('Hat die Taube gerade „Put put“ gesagt?');
-  await ctx.say('floh', 'Die da? Die plappert alles nach. Wie ein Papagei. Nur grauer.');
+  await ctx.say('floh', 'Die da? Die plappert alles nach. Wie ein Papagei.');
+  await ctx.say('floh', 'Ich kenne ihre Mutter ... die hatte mal was mit ’nem Papagei. Aus der Zoohandlung in der Neckargasse. Großer Skandal auf dem Dach.');
+  await ctx.playerSay('Daher die bunten Federn.');
   await ctx.say(PUT_TAUBE, 'Put put! Put put!');
   await ctx.say('floh', 'Und jetzt ist sie so mit den Krümeln beschäftigt, die merkt nicht mal, wenn die Welt untergeht.');
   await ctx.say('floh', 'Die Mütze behalt ich, wenn’s recht ist. Als Futtersack. Riecht nach Bier UND Brezel, die Kollegen lieben das.');
@@ -169,6 +171,11 @@ const pigeonHotspot = (id: string): HotspotDef => ({
     lookat: async (ctx) => {
       if (id === PUT_TAUBE && pecking(ctx.state)) {
         await ctx.playerSay('Die Put-Put-Taube. Pickt Brezelkrümel und plappert dabei Flaschenflohs Lockruf nach.');
+        return;
+      }
+      if (id === PUT_TAUBE) {
+        await ctx.playerSay('Die hier ist anders. Grau wie die anderen, aber mit einem gelben Schopf und drei bunten Schwanzfedern. Rot, gelb, blau.');
+        await ctx.playerSay('Als hätte jemand eine Taube mit einem Papagei gekreuzt.');
         return;
       }
       await ctx.playerSay(
