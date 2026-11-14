@@ -166,7 +166,10 @@ async function takeHole(ctx: ScriptContext): Promise<void> {
 
 /** Put the portable hole on the wall, where PUT PUT says. */
 async function putHole(ctx: ScriptContext): Promise<void> {
-  if (ctx.flag('wallHole')) return;
+  if (ctx.flag('wallHole')) {
+    await ctx.playerSay('Noch mal an die Wand? Otto ist längst durch. Das Loch hat hier ausgedient.');
+    return;
+  }
   const e = era(ctx.state);
   if (e !== 1) {
     if (ctx.flag('ottoMet')) {
@@ -224,7 +227,9 @@ async function takeWallHole(ctx: ScriptContext): Promise<void> {
 }
 
 async function toNeckar(ctx: ScriptContext): Promise<void> {
-  if (era(ctx.state) === 1) await ctx.playerSay('In 1987 ist die Tür nur gemalt. Aber für mich geht sie auf: Vorteile der Auflösung.');
+  if (era(ctx.state) === 1) await ctx.once('paintedDoor', async () => {
+    await ctx.playerSay('In 1987 ist die Tür nur gemalt. Aber für mich geht sie auf: Vorteile der Auflösung.');
+  });
   ctx.sfx('open');
   await ctx.goToRoom('neckar', 'turm');
 }
@@ -290,8 +295,8 @@ const HOTSPOTS: HotspotDef[] = [
         }
         await byEra(ctx, [
           'PUT PUT. Steht in Tübingen an jeder zweiten Wand. Jetzt also auch im Hölderlinturm.',
-          'PUT PUT, als Foto von echtem Sprühlack. Man riecht es fast.',
           'PUT PUT',
+          'PUT PUT, als Foto von echtem Sprühlack. Man riecht es fast.',
         ]);
         await ctx.playerSay('Ein Pfeil zeigt nach unten auf einen gestrichelten Bogen, so groß wie eine Tür.');
       },
@@ -515,8 +520,8 @@ export const hoelderlinturmRoom: RoomDef = {
       run: async (ctx) => {
         const g = ctx.layerObj('glow');
         if (!g) return;
-        await ctx.tween(g, { alpha: 0.25, ease: 'Sine.easeInOut' }, 1400);
-        await ctx.tween(g, { alpha: 1, ease: 'Sine.easeInOut' }, 1400);
+        await ctx.tween(g, { alpha: 0.25, ease: 'Sine.easeInOut' }, 1400, { skippable: false });
+        await ctx.tween(g, { alpha: 1, ease: 'Sine.easeInOut' }, 1400, { skippable: false });
       },
     },
   ],

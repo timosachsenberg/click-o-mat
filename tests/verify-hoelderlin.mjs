@@ -338,7 +338,7 @@ await useWormhole();
 check('the wormhole leads to the Goa\'s entrance', (await room()) === 'goaeingang' && (await flag('wormholeUsed')) === true);
 check('and stays in the pocket (there and back)', (await inv()).includes('wurmloch'));
 check('bouncer, Flaschenfloh, gate and the wormhole back are there',
-  (await hotspotAt(560, 300)) === 'tuersteher' && (await hotspotAt(790, 300)) === 'floh' && (await hotspotAt(560, 160)) === 'tor' && (await hotspotAt(110, 300)) === 'wurmloch');
+  (await hotspotAt(560, 334)) === 'tuersteher' && (await hotspotAt(790, 300)) === 'floh' && (await hotspotAt(560, 160)) === 'tor' && (await hotspotAt(110, 300)) === 'wurmloch');
 await page.screenshot({ path: `${SHOT}/hoel-07-goa.png` });
 
 // --- the gate: not without the bouncer's say-so
@@ -347,7 +347,7 @@ await settle();
 check('no way past the bouncer yet', (await room()) === 'goaeingang' && !(await flag('chapterDone')));
 
 // --- the bouncer wants the password; without it there's no Chakabunga to say
-await click(560, 300, { button: 'right' }); // talk to him
+await click(560, 334, { button: 'right' }); // talk to him
 await waitFor(() => ev(() => window.__engine.choicesShowing), 8000, 'bouncer');
 said = (await choices()).map((c) => c.text);
 check('without the password, no Chakabunga', !said.some((t) => t.startsWith('Chakabunga')), said.join(' | '));
@@ -356,7 +356,7 @@ await pick('Ich komm gleich');
 
 // --- with the password (from Ali, set directly here): in
 await ev(() => window.__engine.state.setFlag('password', 'Chakabunga'));
-await click(560, 300, { button: 'right' });
+await click(560, 334, { button: 'right' });
 await waitFor(() => ev(() => window.__engine.choicesShowing), 8000, 'bouncer');
 await pick('Chakabunga');
 check('Chakabunga: the bouncer lets you in', (await flag('goaEntered')) === true);

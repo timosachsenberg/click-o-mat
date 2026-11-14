@@ -198,7 +198,7 @@ function pretzelBits(): string {
 /** By hand it's hopeless: the crumbs trickle through your fingers. */
 async function takeCrumbs(ctx: ScriptContext): Promise<void> {
   await ctx.playerSay('Ich greif rein ... und die Krümel rieseln mir durch die Finger.');
-  await ctx.playerSay('Ich bräuchte irgendwas zum Reinfüllen.');
+  await ctx.playerSay('Ich bräuchte irgendwas zum Reinfüllen. Eine Tüte, einen Hut, irgendwas.');
   if (!ctx.hasItem('muetze')) await ctx.say('ali', 'Eine Tüte hab ich nicht, mein Lieber. Wir sind hier kein Bäcker.');
 }
 
@@ -357,7 +357,7 @@ const HOTSPOTS: HotspotDef[] = [
     on: { lookat: 'Zwei Stufen. Der Höhepunkt jeder Nacht im Picasso.' },
   }),
   at('clock', 'Uhr', R(40, 70, 40, 40), P(60, 338), 'up', {
-    on: { lookat: 'Kurz vor neun. Im Wald geht’s erst los, wenn die Sonne weg ist.' },
+    on: { lookat: 'Kurz vor neun. Im Wald wummert es bestimmt schon.' },
   }),
   at('flyer', 'Flyer', R(166, 124, 56, 68), P(194, 326), 'up', {
     on: {
@@ -373,7 +373,7 @@ const HOTSPOTS: HotspotDef[] = [
     },
   }),
   at('discoball', 'Discokugel', R(176, 54, 36, 44), P(194, 326), 'up', {
-    on: { lookat: 'Eine Discokugel. Dreht sich nur, wenn jemand tanzt. Also nie.' },
+    on: { lookat: 'Eine Discokugel. Dreht sich nur, wenn jemand tanzt. Also nur für Hilde.' },
   }),
   at('pogo', 'Pogo-Stick', R(232, 226, 30, 80), P(240, 328), 'up', {
     defaultVerb: 'pickup',
@@ -393,7 +393,7 @@ const HOTSPOTS: HotspotDef[] = [
     on: {
       lookat: 'Zwei Plattenspieler, ein Mischpult, Kopfhörer. Hier legte DJ Ali auf. 1994.',
       use: async (ctx) => {
-        if (!(await anzeige(ctx, 'Musik nach 22 Uhr? Ruhestörung!'))) {
+        if (!(await anzeige(ctx, 'Musik? Um diese Uhrzeit? Ruhestörung!'))) {
           await ctx.playerSay('Ohne Platte keine Party. Und die Party ist eh im Wald.');
         }
       },
@@ -441,7 +441,7 @@ const HOTSPOTS: HotspotDef[] = [
       lookat: 'Die Treppe rauf, raus auf die Straße. Da vorne die Dönerbude, dann das Epplehaus, dann der Neckar.',
       open: leave,
       use: leave,
-      close: 'Sie ist zu. Noch.',
+      close: 'Die Tür oben ist zu. Ich bin ja noch hier unten.',
     },
   }),
   at('jukebox', 'Jukebox', R(348, 180, 60, 120), P(376, 324), 'up', {
@@ -814,7 +814,6 @@ export const picassoRoom: RoomDef = {
   ],
 
   entries: {
-    start: { x: 300, y: 420, facing: 'right' },
     door: { x: 362, y: 326, facing: 'down' },
   },
 
@@ -847,7 +846,7 @@ export const picassoRoom: RoomDef = {
       run: async (ctx) => {
         if (ctx.busy || ctx.flag('copAsleep') || ctx.flag('song')) return;
         const lines = [
-          'Ruhestörung ab 22 Uhr. Ich notier mir das.',
+          'Ruhestörung. Schon vor 22 Uhr. Ich notier mir das trotzdem.',
           'Die Automaten da hängen nicht ordnungsgemäß.',
           'Falsch geparkt, draußen. Ich hab’s im Gefühl.',
           'Ich hab mehr Partys beendet als ihr besucht habt.',

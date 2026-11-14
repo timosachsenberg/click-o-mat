@@ -334,6 +334,8 @@ const HOTSPOTS: HotspotDef[] = [
       lookat: async (ctx) => {
         await ctx.playerSay('Der Hölderlinturm. Hier hat Hölderlin sechsunddreißig Jahre gewohnt.');
         await ctx.playerSay('Gedichtet, aufs Wasser geschaut, Besuch verwirrt. Klingt nach einem guten Leben.');
+        await ctx.playerSay('Unten an die Turmwand hat jemand „PUT PUT“ gesprüht. Sogar hier.');
+        ctx.setFlag('putSeen');
         if (ctx.flag('ottoFree')) await ctx.playerSay('Und oben drin dreht sich eine Spirale durch drei Zeitebenen. Kein Witz.');
       },
       open: toTower,
@@ -361,7 +363,7 @@ const HOTSPOTS: HotspotDef[] = [
     on: {
       lookat: async (ctx) => {
         await ctx.playerSay('Die Sonne geht gleich unter. Genau über der Flussbiegung, wie bestellt.');
-        await ctx.playerSay('Wenn sie weg ist, fängt im Wald der Bass an.');
+        await ctx.playerSay('Bis ich im Wald bin, ist es dunkel. Genau richtig für eine Goa.');
       },
       pickup: 'Die ist in ein paar Minuten sowieso weg.',
     },
@@ -395,7 +397,7 @@ const HOTSPOTS: HotspotDef[] = [
   at('toPicasso', 'Zum Epplehaus', R(930, 408, 30, 42), P(948, 432), 'right', {
     defaultVerb: 'use',
     on: {
-      lookat: 'Da geht’s zurück zum Epplehaus. Dahinter die Dönerbude und die Treppe runter ins Picasso.',
+      lookat: 'Da geht’s in die Stadt, zum Epplehaus. Dahinter die Dönerbude und die Treppe runter ins Picasso.',
       use: toPicasso,
       open: toPicasso,
     },

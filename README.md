@@ -211,7 +211,7 @@ collage with photo textures) → hand-painted.
    hole with the Taschen-Attraktor**: the spiral circles the black hole and
    you get a **Wurmloch**. **Use the wormhole** (anywhere): you come out at the
    **Goa's entrance** in the forest, past the forestry barrier. Flaschenfloh is
-   already there, collecting empties. The **bouncer** wants the password: say
+   already there, collecting empties. The **bouncer** — a Goazwerg in a felt sauna hat — wants the password: say
    **Chakabunga** (from Ali), and through the gate — to be continued. The
    wormhole stays open: there's a way back to the tower.
 

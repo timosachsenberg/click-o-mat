@@ -96,7 +96,7 @@ export const ITEMS: Record<string, ItemDef> = {
       await ctx.playerSay('Ich dreh an der Spirale ...');
       ctx.sfx('zap');
       await ctx.playerSay('Nichts. Die Spirale dreht sich, aber ins Leere.');
-      if (ctx.easyMode) await ctx.playerSay('Oder irgendwas Dunkles, Rundes, um das sie kreisen kann.');
+      if (ctx.easyMode) await ctx.playerSay('Ihr fehlt was Dunkles, Rundes, um das sie kreisen kann.');
     },
   },
   muetzekruemel: {
@@ -155,7 +155,7 @@ export const ITEMS: Record<string, ItemDef> = {
     name: 'Pogo-Stick',
     icon: 'icon-pogostick',
     lookAt: 'Ein Pogo-Stick aus den Neunzigern. Die Feder ist noch voll gespannt. Wie ich, eigentlich.',
-    use: 'Hier drin? Ich würde mir den Kopf an der Decke stoßen. Oder an Ali.',
+    use: (ctx) => ctx.playerSay(ctx.state.currentRoom === 'picasso' ? 'Hier drin? Ich würde mir den Kopf an der Decke stoßen. Oder an Ali.' : 'Einfach so loshüpfen? Ich heb mir die Sprungkraft für was Hohes auf.'),
   },
   ballon: {
     id: 'ballon',

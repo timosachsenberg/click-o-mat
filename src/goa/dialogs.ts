@@ -121,7 +121,7 @@ export const DIALOGS: Record<string, DialogDef> = {
             text: 'Was ist das für ein Glas neben dir?',
             script: async (ctx) => {
               await ctx.say('ali', 'Mein Feierabend-Ouzo. Finger weg, mein Lieber.');
-              await ctx.say('cop', 'Ich hab ein Auge drauf.');
+              if (!ctx.flag('copAsleep')) await ctx.say('cop', 'Ich hab ein Auge drauf.');
               if (ctx.easyMode) await ctx.say('ali', 'Außer bei meinem Lied. Da singen wir alle mit. Mit geschlossenen Augen.');
             },
           },
@@ -220,7 +220,7 @@ export const DIALOGS: Record<string, DialogDef> = {
     },
   },
 
-  // The bouncer at the Goa: here the password finally counts.
+  // The Goazwerg, bouncer at the Goa: here the password finally counts.
   tuersteher: {
     id: 'tuersteher',
     start: 'root',
@@ -251,6 +251,14 @@ export const DIALOGS: Record<string, DialogDef> = {
             text: 'Ali schickt mich.',
             script: async (ctx) => {
               await ctx.say('tuersteher', 'Ali schickt jeden. Parole?');
+            },
+          },
+          {
+            text: 'Was ist das für eine Mütze?',
+            once: true,
+            script: async (ctx) => {
+              await ctx.say('tuersteher', 'Saunamütze. Reiner Filz. Schützt vor Hitze, Kälte, Regen und schlechtem Techno.');
+              await ctx.say('tuersteher', 'Jeder Goazwerg hat eine. Ohne Mütze kein Zwerg. Ohne Parole kein Einlass.');
             },
           },
           {
@@ -306,7 +314,7 @@ export const DIALOGS: Record<string, DialogDef> = {
           },
           {
             text: 'Put put?',
-            if: (s) => !!s.getFlag('putHeard'),
+            if: (s) => !!s.getFlag('putHeard') || !!s.getFlag('putSeen'),
             script: async (ctx) => {
               await ctx.say('ottoTuer', 'Put put ... Hört sich gut an.');
               await ctx.say('ottoTuer', 'Aber der Klang der Stimme passt irgendwie nicht.');

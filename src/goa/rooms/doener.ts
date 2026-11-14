@@ -5,8 +5,8 @@ import { OTTO_ACTOR } from '../art/turm';
 
 // ---- layout ----------------------------------------------------------------------
 // The street between the Picasso (stairs down on the left) and the
-// Epplehaus (right). In the middle: a döner stand. It has no puzzle — it's
-// there to smell good when you walk past (an ambient notices the player in
+// Epplehaus (right). In the middle: a döner stand. It redeems the full stamp
+// card for a döner; otherwise it's there to smell good when you walk past (an ambient notices the player in
 // front of the counter and says a line in passing).
 // The döner man is a voice behind the counter (drawn into the backdrop; an
 // invisible actor speaks for him).
@@ -173,8 +173,8 @@ export const doenerRoom: RoomDef = {
           pick([
             'Mmmh. Dieser Duft. Knoblauchsoße, gegrilltes Fleisch, frisches Fladenbrot.',
             'Oh nein. Der Döner-Geruch. Nicht hinschauen. Weitergehen.',
-            'Riecht das gut. Mein Magen knurrt lauter als der Bass im Wald.',
-            'Ich könnte jetzt ... nein. Zwei Euro. Konzentration.',
+            'Riecht das gut. Mein Magen meldet sich. Lautstark.',
+            'Ich könnte jetzt ... nein. Konzentration.',
           ])
         );
       },

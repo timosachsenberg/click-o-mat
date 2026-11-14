@@ -264,7 +264,7 @@ export const waldrandRoom: RoomDef = {
     await ctx.once('waldrandIntro', async () => {
       await ctx.wait(500);
       await ctx.playerSay('Der Waldrand. Und da hinten ... hörst du das? Bumm. Bumm. Bumm.');
-      await ctx.playerSay('Der Bass! Die Goa ist ganz nah!');
+      await ctx.playerSay('Der Bass! Die Goa ist ganz nah! Und hier draußen ist es schon fast Nacht.');
       await ctx.wait(300);
       await ctx.playerSay('Und davor: ein Absperrgitter. Natürlich.');
     });
