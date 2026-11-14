@@ -86,9 +86,11 @@ export class UIScene extends Phaser.Scene {
     engine.events.on('ui', () => this.refresh());
 
     this.input.keyboard?.on('keydown-F5', () => {
+      if (!engine.canSaveOrLoadNow) return this.toast(engine.strings.notNow);
       this.toast(engine.save() ? engine.strings.quickSaved : engine.strings.saveFailed);
     });
     this.input.keyboard?.on('keydown-F9', () => {
+      if (!engine.canSaveOrLoadNow) return this.toast(engine.strings.notNow);
       if (!engine.canLoad()) {
         this.toast(engine.strings.noQuickSave);
         return;
@@ -394,6 +396,7 @@ export class UIScene extends Phaser.Scene {
     };
 
     const doSave = () => {
+      if (!engine.canSaveOrLoadNow) return this.toast(str.notNow);
       this.toast(engine.save(slot) ? str.savedTo(name) : str.saveFailed);
       this.refreshOptions();
     };
@@ -405,6 +408,7 @@ export class UIScene extends Phaser.Scene {
     });
     const load = btn(628, str.load, '#8f7fd4', () => {
       this.pendingConfirm = null;
+      if (!engine.canSaveOrLoadNow) return this.toast(str.notNow);
       if (!engine.hasSave(slot)) {
         this.toast(str.slotEmpty);
         this.refreshOptions();

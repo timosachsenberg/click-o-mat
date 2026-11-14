@@ -94,7 +94,25 @@ async function pigeonLife(ctx: ScriptContext): Promise<void> {
 
 /** Feed the pigeons: Flaschenfloh crumbles the pretzel and calls them —
  *  "Put, put, put!" — and one of them starts saying it too. */
+/** Flaschenfloh's two worries: his own stomach first, then his pigeons. */
+async function feedFloh(ctx: ScriptContext): Promise<void> {
+  ctx.removeItem('doener');
+  ctx.setFlag('flohSatt');
+  await ctx.say('floh', 'Ein Döner? Für mich? Mit alles?');
+  await ctx.say('floh', 'Junge. Seit gestern früh nix im Magen außer Pfandquittungen.');
+  ctx.face('floh', 'down');
+  await ctx.wait(600);
+  await ctx.say('floh', 'Mmmpf. Mmmh. Mmmmmh!');
+  await ctx.say('floh', 'Das war der beste Döner seit der Einführung des Dosenpfands. Danke.');
+  await ctx.say('floh', 'Jetzt fehlt nur noch was für meine Kollegen. Die gucken schon ganz neidisch.');
+}
+
 async function feedPigeons(ctx: ScriptContext): Promise<void> {
+  if (!ctx.flag('flohSatt')) {
+    await ctx.say('floh', 'Krümel für die Tauben? Schön und gut.');
+    await ctx.say('floh', 'Aber erst ich, dann die Tauben. Mit leerem Magen ruf ich kein Put put.');
+    return;
+  }
   ctx.removeItem('muetzekruemel');
   // From now on the parroting pigeon only has eyes for the crumbs (no fleeing).
   ctx.setFlag('putTaube');
@@ -134,7 +152,7 @@ async function catchPutTaube(ctx: ScriptContext): Promise<void> {
   ctx.place(PUT_TAUBE, -200, 400);
   await ctx.repaint();
   await ctx.playerSay('Sie pickt so konzentriert, dass sie mich gar nicht kommen sieht. Hab dich!');
-  await ctx.say('floh', 'Na, die passt aber auf dich auf. Füttern nicht vergessen!');
+  await ctx.say('floh', 'Na, die mag dich. Füttern nicht vergessen!');
 }
 
 const pigeonHotspot = (id: string): HotspotDef => ({
@@ -218,7 +236,8 @@ const HOTSPOTS: HotspotDef[] = [
     on: {
       lookat: async (ctx) => {
         await ctx.playerSay('Graffiti vom Gehweg bis in den ersten Stock. „EPPLE“, „GOA“, „BASS“, „1972“, „PLENUM!“.');
-        await ctx.playerSay('Und „KEIN BASS IST ILLEGAL“. Das sollte man dem Partykiller mal zeigen.');
+        await ctx.playerSay('Und dazwischen überall „PUT PUT“. Wer schreibt das bloß? Und warum?');
+        if (ctx.flag('knowsPartykiller')) await ctx.playerSay('Und „KEIN BASS IST ILLEGAL“. Das sollte man dem Partykiller mal zeigen.');
       },
       use: 'Ohne Sprühdose? Ich könnte höchstens was mit dem Finger in den Dreck malen.',
       pickup: 'Das ist drangesprüht. Und Kulturgut.',
@@ -259,7 +278,7 @@ const HOTSPOTS: HotspotDef[] = [
   at('raeder', 'Fahrräder', R(EP.bikes.x, EP.bikes.y, EP.bikes.w, EP.bikes.h), P(310, 346), 'up', {
     on: {
       lookat: 'Zwei Fahrräder am Ständer. Beide mit drei Schlössern. Wir sind hier schließlich in Tübingen.',
-      pickup: 'Fahrraddiebstahl? Dann hab ich den Partykiller für immer am Hals.',
+      pickup: 'Fahrraddiebstahl? Nicht mit mir. Und nicht mit drei Schlössern.',
       use: 'Sind abgeschlossen. Dreifach.',
     },
   }),
@@ -355,6 +374,7 @@ const HOTSPOTS: HotspotDef[] = [
           await ctx.say('floh', 'Holz? Da ist kein Pfand drauf. Und es knuspert. Nimm das weg.');
         },
         muetzekruemel: feedPigeons,
+        doener: feedFloh,
         taube: async (ctx) => {
           await ctx.say('floh', 'Behalt sie. Die mag dich. Und sie hält mir keine Vorträge über Mehrweg.');
         },
@@ -422,6 +442,7 @@ export const epplehausRoom: RoomDef = {
             'Pfand gehört daneben!',
             'Ksch! Weg von meinen Flaschen, ihr Ratten der Lüfte!',
             'Nach dem Plenum gibt’s Leergut. Ich kann warten.',
+            ...(ctx.flag('flohSatt') ? ['Satt und zufrieden. Jetzt fehlt nur noch Leergut.'] : ['Mein Magen knurrt lauter als der Glascontainer.', 'Riecht ihr das? Der Neckar-Kebap. Grausam.']),
           ])
         );
       },

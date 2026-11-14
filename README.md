@@ -119,7 +119,7 @@ hints) or *Einfach* (characters spell out much more).
 
 **The password (the Picasso).** From the bridge, the right end leads to the
 **Epplehaus** (Flaschenfloh, the bottle collector; pigeons everywhere), its left
-side to the **döner stand** (no puzzle — it just smells good), and the stairs there
+side to the **döner stand** (it smells good — and it takes stamp cards), and the stairs there
 down into the **Picasso**, Ali's basement bar. Ali knows where the party is — but
 the only other guest, a retired cop known as *der Partykiller*, is listening, and
 Ali won't talk while he does. (Mind the Wilde Hilde, dancing in front of the DJ
@@ -170,9 +170,14 @@ tower. The tower's door at the end of the promenade is locked: Otto R. answers o
 - The bowl on Ali's counter is full of **pretzel crumbs**, but by hand they
   trickle through your fingers: **use the cap with the bowl** (the
   Burschenschaftler's cap from the punt) and you've got a crumb bag.
-- **Give the cap full of crumbs to Flaschenfloh** at the Epplehaus. He feeds
-  the pigeons — *„Put, put, put!“* — and one of them starts parroting
-  **„Put put“**. He hands the cap back.
+- Flaschenfloh at the Epplehaus has two worries: his own stomach first, then
+  his pigeons. On the bridge, by the street lamp, lies a **full stamp card**
+  from the döner stand: **give it to the döner man** for a free **döner** and
+  **give the döner to Flaschenfloh**. (Crumbs before that? *Erst ich, dann die
+  Tauben.*)
+- Then **give him the cap full of crumbs**. He feeds the pigeons —
+  *„Put, put, put!“* — and one of them starts parroting **„Put put“**. He
+  hands the cap back.
 - Say „Put put?“ yourself at the intercom: *hört sich gut an, aber der Klang
   der Stimme passt irgendwie nicht.*
 - While the parroting pigeon is busy with the crumbs, **pick it up**, and
@@ -204,9 +209,11 @@ collage with photo textures) → hand-painted.
 5. Once Otto is out, the hole in the wall is just a hole again — and in the
    **modern** layer it peels off like a sticker. **Take it**, then **use the
    hole with the Taschen-Attraktor**: the spiral circles the black hole and
-   you get a **Wurmloch**. With the password, **use the wormhole** (anywhere)
-   and you're through, straight to the Goa in the forest, past the forestry
-   barrier — the end of the chapter.
+   you get a **Wurmloch**. **Use the wormhole** (anywhere): you come out at the
+   **Goa's entrance** in the forest, past the forestry barrier. Flaschenfloh is
+   already there, collecting empties. The **bouncer** wants the password: say
+   **Chakabunga** (from Ali), and through the gate — to be continued. The
+   wormhole stays open: there's a way back to the tower.
 
 </details>
 
@@ -552,6 +559,8 @@ src/
     rooms/doener.ts    The döner stand between the Picasso and the Epplehaus
     art/waldrand.ts    The edge of the forest at dusk, the barrier, the Goa's glow
     rooms/waldrand.ts  The edge of the forest (closed for tree felling; distant bass)
+    art/goaeingang.ts  The Goa's entrance at night: gate, mandala, lasers, the wormhole
+    rooms/goaeingang.ts The Goa's entrance (the bouncer wants Chakabunga)
     rooms/neckar.ts    The Neckarbrücke (a punt passes regularly; sink it)
     art/turm.ts        The Hölderlinturm as a cut-open doll's house, in three
                        time layers (toon, an EGA pixel grid, a photo-textured
@@ -614,6 +623,10 @@ export const CONTENT: GameContent = {
   page load and sets `engine.launcher` (`{ current, games, select }`); the
   title screen then shows a picker, and picking another game reloads with
   `?game=<id>`. Give each game an `id` so their saves don't collide.
+- **Saving mid-scene is refused.** F5/F9 and the menu's save/load buttons only
+  work between scenes (`engine.canSaveOrLoadNow`: not busy, no dialog) — a
+  running script holds half-applied state and would keep writing into a
+  freshly loaded game. The toast text is `UIStrings.notNow`.
 - **Easy mode.** With `easyMode: true` the options panel gets a switch between
   the normal mode (default) and an easy one, remembered per game. Scripts read
   it as `ctx.easyMode` and give more explicit hints when it's on — the adventure
@@ -1043,7 +1056,7 @@ Every handler and cutscene receives a `ctx`. The essentials:
 | `ctx.hasItem(id)` / `ctx.addItem(id)` / `ctx.removeItem(id)` | Inventory |
 | `ctx.repaint()` | Redraw paint/svg layers, re-check layer visibility, rebuild walk area (await it to wait for new SVG variants) |
 | `ctx.layerObj(id)` | Live Phaser object of a layer (transient cutscene tweens only) |
-| `ctx.tween(obj, props, ms?)` | Tween any game object and await completion |
+| `ctx.tween(obj, props, ms?, { skippable? })` | Tween any game object and await completion; ambient motion passes `skippable: false` so a fast-forward elsewhere doesn't snap it |
 | `ctx.sfx(name)` | Play a sound effect (loaded key, or a built-in bleep: `pickup`/`open`/`zap`/`deny`/`win`/`step`) |
 | `ctx.playMusic(key)` / `ctx.stopMusic()` | Start/switch or fade out background music |
 | `ctx.flash(color?, ms?)` / `ctx.shake(ms?, intensity?)` | Camera effects |

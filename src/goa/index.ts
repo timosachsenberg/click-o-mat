@@ -9,6 +9,7 @@ import { neckarRoom } from './rooms/neckar';
 import { epplehausRoom } from './rooms/epplehaus';
 import { waldrandRoom } from './rooms/waldrand';
 import { doenerRoom } from './rooms/doener';
+import { goaEingangRoom } from './rooms/goaeingang';
 import { hoelderlinturmRoom } from './rooms/hoelderlinturm';
 import { GOA_CAST } from './art/cast';
 import { GOA_ICONS } from './art/icons';
@@ -28,6 +29,7 @@ export const CONTENT: GameContent = {
   rooms: {
     picasso: picassoRoom,
     doener: doenerRoom,
+    goaeingang: goaEingangRoom,
     epplehaus: epplehausRoom,
     waldrand: waldrandRoom,
     neckar: neckarRoom,

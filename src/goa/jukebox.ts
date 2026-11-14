@@ -51,6 +51,8 @@ export async function resetJukebox(ctx: ScriptContext): Promise<void> {
   ctx.setFlag('song', null);
   if (ctx.hasItem('ouzo')) ctx.removeItem('ouzo');
   if (ctx.flag('ouzoAt') !== 'coaster') ctx.setFlag('ouzoAt', 'coaster');
+  // Ali always has a full glass when a new evening (visit) starts.
+  ctx.setFlag('ouzoEmpty', false);
   await ctx.repaint();
 }
 
@@ -67,7 +69,8 @@ async function songLoop(ctx: ScriptContext, gen: number): Promise<void> {
   const alive = () => gen === generation && ctx.state.currentRoom === 'picasso';
   try {
     while (alive()) {
-      await sleep(VERSE_MS);
+      // Once the trick has started, the verse is shorter: less waiting.
+      await sleep((ctx.flag<number>('ouzoCount') ?? 0) >= 1 ? VERSE_MS / 2 : VERSE_MS);
       if (!alive()) return;
       await refrain(ctx, alive);
     }
@@ -154,7 +157,12 @@ async function copDrinks(ctx: ScriptContext): Promise<void> {
     await ctx.say('cop', 'Trinkytrinky.');
     turnCop(ctx, false);
   } else {
-    await ctx.cutscene(danceToSleep);
+    try {
+      await ctx.cutscene(danceToSleep);
+    } catch {
+      // Left the bar mid-dance: he still ends up asleep.
+      ctx.setFlag('copAsleep');
+    }
     return;
   }
   void ctx.animate('cop', 'reach');

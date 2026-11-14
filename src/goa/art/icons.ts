@@ -277,6 +277,33 @@ function klappspaten(): string {
   ].join('');
 }
 
+/** The full stamp card: ten little döner stamps. */
+function stempelkarte(): string {
+  const s: string[] = [shadow(32, 20)];
+  s.push(group([
+    rect(-20, -13, 40, 26, { fill: '#f6efe0', stroke: INK, sw: 2 }, 2),
+    rect(-20, -13, 40, 7, { fill: '#d8322a' }, 2),
+    text(0, -7.5, 'NECKAR-KEBAP', { size: 4.6, fill: '#ffd34a', weight: 900 }),
+    ...[0, 1, 2, 3, 4].flatMap((k) => [circle(-15 + k * 7.5, 0, 2.6, { fill: '#c43a8a', opacity: 0.85 }), circle(-15 + k * 7.5, 7, 2.6, { fill: '#c43a8a', opacity: 0.85 })]),
+  ], 'translate(32 23) rotate(-8)'));
+  return s.join('');
+}
+
+/** A döner in its paper, sauce dripping. */
+function doener(): string {
+  return [
+    shadow(32, 18),
+    group([
+      path('M-18 -6Q0 -20 18 -6L12 14H-12Z', { fill: '#e8c890', stroke: INK, sw: 2.2 }),
+      path('M-14 -6Q0 -14 14 -6', { fill: 'none', stroke: '#a85a2a', sw: 5 }),
+      path('M-10 -9l3 -4M-2 -12l2 -4M6 -11l3 -3', { stroke: '#3a8a3a', sw: 2.4 }),
+      path('M-6 -10l2 -3M3 -11l1 -3', { stroke: '#d8322a', sw: 2.4 }),
+      path('M-13 2H13L11 14H-11Z', { fill: '#f4efe4', stroke: INK, sw: 1.8 }),
+      path('M8 -4q2 6 0 9', { stroke: '#ffffff', sw: 2.2 }),
+    ], 'translate(32 26)'),
+  ].join('');
+}
+
 /** The Put-Put pigeon, sitting pretty. */
 function taube(): string {
   return [
@@ -300,6 +327,8 @@ export const GOA_ICONS: SvgImageAsset[] = [
   { key: 'icon-muetzekruemel', width: 64, height: 48, svg: muetzeKruemel() },
   { key: 'icon-taube', width: 64, height: 48, svg: taube() },
   { key: 'icon-drahtschere', width: 64, height: 48, svg: drahtschere() },
+  { key: 'icon-stempelkarte', width: 64, height: 48, svg: stempelkarte() },
+  { key: 'icon-doener', width: 64, height: 48, svg: doener() },
   { key: 'icon-pogostick', width: 64, height: 48, svg: pogostick() },
   { key: 'icon-ballon', width: 64, height: 48, svg: ballon() },
   { key: 'icon-stange', width: 64, height: 48, svg: stange() },

@@ -69,6 +69,7 @@ export const DE_STRINGS: Partial<UIStrings> = {
   loadFailed: 'Laden fehlgeschlagen.',
   slotEmpty: 'Der Platz ist leer.',
   quickSaved: 'Schnell gespeichert.',
+  notNow: 'Nicht jetzt – erst die Szene zu Ende schauen.',
   quickLoaded: 'Schnellspeicherstand geladen.',
   noQuickSave: 'Kein Schnellspeicherstand.',
   locale: 'de-DE',

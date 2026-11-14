@@ -59,6 +59,14 @@ export const GOA_MUSIC: Record<string, MusicTrack> = {
     bass: [-36, null, -36, null, -36, null, -36, null, -36, null, -36, null, -36, null, -36, -24],
     lead: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
   },
+  // The Goa itself: rolling psytrance bass, a squelchy arpeggio.
+  'goa-theme': {
+    bpm: 140,
+    bassType: 'square',
+    leadType: 'sawtooth',
+    bass: [-33, -21, -21, -21, -33, -21, -21, -21, -31, -19, -19, -19, -36, -24, -24, -24],
+    lead: [3, 10, 15, 10, 3, 10, 17, 10, 5, 12, 15, 12, 0, 7, 12, 7],
+  },
   // ---- the jukebox -----------------------------------------------------------------
   // "Du hast mein Herz am Pfandautomat vergessen": slow, heartbroken, in C.
   'song-pfand': {
