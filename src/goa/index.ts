@@ -5,6 +5,7 @@ import { DIALOGS } from './dialogs';
 import { DE_STRINGS } from './strings';
 import { GOA_MUSIC } from './music';
 import { picassoRoom } from './rooms/picasso';
+import { neckarRoom } from './rooms/neckar';
 import { GOA_CAST } from './art/cast';
 import { GOA_ICONS } from './art/icons';
 import { UI_IMAGES, UI_THEME } from '../game/art/ui';
@@ -22,6 +23,7 @@ export const CONTENT: GameContent = {
   id: 'goa',
   rooms: {
     picasso: picassoRoom,
+    neckar: neckarRoom,
   },
   items: ITEMS,
   actors: ACTORS,

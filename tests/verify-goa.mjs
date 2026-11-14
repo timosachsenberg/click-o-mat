@@ -6,7 +6,10 @@ import { chromium } from 'playwright';
 // drink in stock, drink it, swap the can for 25 cents, jam the coin in the
 // jukebox, play Ali's song, and during three refrains slide Ali's ouzo in
 // front of the Partykiller — he dances himself to sleep, Ali gives up the
-// password.
+// password. Sit on the rickety stool and it collapses: its worm-eaten leg
+// comes along out onto the
+// Neckarbrücke, and into the next punt full of Burschenschaftler with it:
+// the woodworms sink it, and a cap floats ashore.
 
 const BASE = process.env.BASE_URL ?? 'http://localhost:5173';
 const SHOT = process.env.SHOT_DIR ?? '.';
@@ -234,11 +237,54 @@ await page.keyboard.press('F5');
 await page.waitForTimeout(300);
 check('quick save lands in the game\'s own slot', await ev(() => !!localStorage.getItem('pnc-save-goa-0') && !localStorage.getItem('pnc-save-0')));
 
-// --- leave
+// --- the rickety stool in front of the jukebox: sit down, it collapses
+check('the rickety stool stands in front of the jukebox', (await hotspotAt(350, 350)) === 'rickety');
+await click(350, 350); // default verb: sit on it
+await settle();
+check('it collapsed under me', (await flag('stoolBroken')) === true && (await hotspotAt(350, 350)) !== 'rickety');
+await page.screenshot({ path: `${SHOT}/goa-04b-stool.png` });
+await click(372, 392); // the worm-eaten leg among the debris (default verb: take)
+await settle();
+check('took the worm-eaten chair leg', JSON.stringify(await inv()) === '["stuhlbein"]' && (await flag('legTaken')) === true, JSON.stringify(await inv()));
+
+// --- leave: up the stairs, out onto the Neckarbrücke
 await click(311, 220, { button: 'right' }); // open the door
+await waitFor(async () => (await ev(() => window.__engine.state.currentRoom)) === 'neckar', 8000, 'the bridge');
+await settle();
+check('the door leads to the Neckarbrücke', (await ev(() => window.__engine.state.currentRoom)) === 'neckar');
+await page.screenshot({ path: `${SHOT}/goa-05-neckar.png` });
+
+// --- a punt full of Burschenschaftler comes down the river, again and again
+const punt = () => ev(() => { const a = window.__engine.roomScene.actors.get('kahn'); return { x: a.x, y: a.y, h: a.sprite.displayHeight, s: a.sprite.scale }; });
+await click(330, 430); // to the balustrade
+await settle();
+const seenAt = [];
+const nearby = await waitFor(async () => {
+  const p = await punt();
+  seenAt.push(Math.round(p.x));
+  return p.x > 420 && p.x < 600 && p.y > 322;
+}, 40000, 'a punt within reach');
+check('a punt comes down the river', nearby, seenAt.slice(-4).join(','));
+const p1 = await punt();
+check('it shrinks into the distance (perspective)', p1.s > 0.5, `(scale ${p1.s.toFixed(2)})`);
+check('its hotspot follows it', (await hotspotAt(p1.x, p1.y - p1.h * 0.4)) === 'kahn');
+
+// --- throw the chair leg in: the woodworms eat the punt, a cap floats ashore
+await useItemOn(p1.x, p1.y - p1.h * 0.4);
+check('the punt sank', (await flag('puntSunk')) === true && (await inv()).length === 0);
+check('only a cap washed up at the jetty', (await flag('capAshore')) === true && (await hotspotAt(208, 364)) === 'muetze');
+await page.screenshot({ path: `${SHOT}/goa-06-sunk.png` });
+await waitFor(async () => (await punt()).x < 0, 4000, 'punt gone');
+check('no more punts after that', (await punt()).x < 0);
+await click(208, 364); // pick up the cap (default verb)
+await settle();
+check('took the cap', JSON.stringify(await inv()) === '["muetze"]', JSON.stringify(await inv()));
+
+// --- on towards the forest
+await click(945, 432); // the way on (default verb)
 await settle();
 check('chapter done', (await flag('chapterDone')) === true);
-await page.screenshot({ path: `${SHOT}/goa-05-end.png` });
+await page.screenshot({ path: `${SHOT}/goa-07-end.png` });
 
 // --- the picker switches to the demo (reload with ?game=demo)
 await page.goto(withGame('goa'));

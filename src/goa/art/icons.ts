@@ -102,10 +102,55 @@ function ouzo(): string {
   ].join('');
 }
 
+/** The worm-eaten chair leg: turned wood, full of holes, one worm peeking out. */
+function stuhlbein(): string {
+  return [
+    shadow(32, 22),
+    group(
+      [
+        path('M-24 -3Q-26 -7 -22 -8L-14 -6Q-11 -9 -8 -6L18 -4Q24 -6 26 -2Q27 3 22 4L-8 6Q-11 9 -14 6L-22 8Q-26 7 -24 3Z', {
+          fill: '#b07a3a',
+          stroke: INK,
+          sw: 2.2,
+        }),
+        path('M-20 -5L-14 -4M-6 -3L20 -1', { stroke: '#e0a862', sw: 1.8 }),
+        path('M-8 5L20 3', { stroke: '#7a4a1e', sw: 1.6 }),
+        ...[[-18, 1], [-4, -1], [3, 2], [9, -1], [15, 1], [21, 0]].map(([x, y]) => circle(x, y, 1.3, { fill: '#2a140a' })),
+        path('M4 2Q6 -6 10 -7Q13 -7 13 -4', { stroke: INK, sw: 4 }),
+        path('M4 2Q6 -6 10 -7Q13 -7 13 -4', { stroke: '#f0a0b8', sw: 2.4 }),
+        circle(11.5, -6.2, 0.8, { fill: INK }),
+      ],
+      'translate(32 24) rotate(-18)'
+    ),
+  ].join('');
+}
+
+/** The Burschenschaftler's cap: green, with the colours round the band. */
+function muetze(): string {
+  return [
+    shadow(32, 18),
+    group(
+      [
+        path('M-17 6L-15 -10H15L17 6Z', { fill: '#2f7a3a', stroke: INK, sw: 2.4 }),
+        path('M-16.5 2H16.5', { stroke: '#ffffff', sw: 2.4 }),
+        path('M-16 -1.5H16', { stroke: '#c43a2a', sw: 2.4 }),
+        path('M5 -10L14 -10L16 4L8 4Z', { fill: '#000000', opacity: 0.18 }),
+        ellipse(0, -10, 15, 4, { fill: '#3e9a4a', stroke: INK, sw: 2 }),
+        path('M-8 -11Q0 -14 8 -11', { stroke: '#8ad08a', sw: 1.6 }),
+        path('M2 6Q16 5 20 11H2Z', { fill: '#1a1a1a', stroke: INK, sw: 1.8 }),
+        path('M-12 7Q-10 12 -6 12', { stroke: '#7ad0e8', sw: 1.6, opacity: 0.8 }),
+      ],
+      'translate(31 25) rotate(-8)'
+    ),
+  ].join('');
+}
+
 export const GOA_ICONS: SvgImageAsset[] = [
   { key: 'icon-dose', width: 64, height: 48, svg: emptyCan() },
   { key: 'icon-cent25', width: 64, height: 48, svg: cent25() },
   { key: 'icon-ouzo', width: 64, height: 48, svg: ouzo() },
   { key: 'icon-euro', width: 64, height: 48, svg: euro() },
   { key: 'icon-magicwoman', width: 64, height: 48, svg: magicWoman() },
+  { key: 'icon-stuhlbein', width: 64, height: 48, svg: stuhlbein() },
+  { key: 'icon-muetze', width: 64, height: 48, svg: muetze() },
 ];

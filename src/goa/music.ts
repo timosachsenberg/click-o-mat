@@ -10,6 +10,14 @@ export const GOA_MUSIC: Record<string, MusicTrack> = {
     bass: [-28, null, -21, null, -26, null, -21, null, -31, null, -24, null, -26, null, -24, null],
     lead: [8, null, 7, 8, 12, null, 10, 8, 7, null, 5, 3, 5, null, null, null],
   },
+  // The Neckarbrücke: a lazy Sunday barcarole in D, swaying like a punt.
+  'neckar-theme': {
+    bpm: 92,
+    bassType: 'triangle',
+    leadType: 'triangle',
+    bass: [-19, null, -12, -7, -14, null, -7, -2, -12, null, -5, 0, -17, null, -12, -5],
+    lead: [9, null, 7, 9, 12, null, null, 10, 9, null, 7, 5, 7, null, null, null],
+  },
   // ---- the jukebox -----------------------------------------------------------------
   // "Du hast mein Herz am Pfandautomat vergessen": slow, heartbroken, in C.
   'song-pfand': {
