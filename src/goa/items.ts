@@ -67,7 +67,7 @@ export const ITEMS: Record<string, ItemDef> = {
     name: 'Burschenschaftsmütze',
     icon: 'icon-muetze',
     lookAt: async (ctx) => {
-      await ctx.playerSay('Eine grüne Couleurmütze, grün-weiß-rot. Noch ein bisschen nass.');
+      await ctx.playerSay('Eine Couleurmütze, grün-weiß-rot. Noch ein bisschen nass.');
       await ctx.playerSay('Innen eingestickt: „Eigentum der Verbindung. Finder bitte Bier zurückbringen.“');
     },
     use: (ctx) => ctx.playerSay(ctx.easyMode ? 'Aufsetzen? Über meine Mütze? Nee. Aber als Beutel taugt sie bestimmt.' : 'Aufsetzen? Über meine Mütze? Nee.'),
@@ -95,7 +95,7 @@ export const ITEMS: Record<string, ItemDef> = {
     use: async (ctx) => {
       await ctx.playerSay('Ich dreh an der Spirale ...');
       ctx.sfx('zap');
-      await ctx.playerSay('Nichts. Otto meinte, hier draußen braucht es dafür mehr Chaos.');
+      await ctx.playerSay('Nichts. Die Spirale dreht sich, aber ins Leere.');
       if (ctx.easyMode) await ctx.playerSay('Oder irgendwas Dunkles, Rundes, um das sie kreisen kann.');
     },
   },
@@ -202,26 +202,23 @@ async function makeWormhole(ctx: ScriptContext): Promise<void> {
   await ctx.playerSay('Ein Wurmloch! Und es wummert. Im Takt.');
 }
 
-/** Through the wormhole, straight to the Goa in the forest. */
+/** Through the wormhole, straight to the Goa's entrance in the forest. The
+ *  wormhole stays open, so the item stays in the pocket: there and back. */
 async function useWormhole(ctx: ScriptContext): Promise<void> {
-  if (!ctx.flag('password')) {
-    await ctx.playerSay('Da drüben wartet die Goa. Aber am Eingang wollen sie ein Passwort.');
-    await ctx.playerSay('Erst Ali fragen. Sonst steh ich im Wald und komm nicht rein.');
+  if (ctx.state.currentRoom === 'goaeingang') {
+    await ctx.playerSay('Ich bin doch schon da.');
     return;
   }
-  await ctx.playerSay('Wurmloch auf, Augen zu, und: Chakabunga!');
-  ctx.removeItem('wurmloch');
+  await ctx.playerSay('Wurmloch auf, Augen zu, und ...');
   ctx.sfx('zap');
   ctx.shake(700, 0.02);
   ctx.flash(0xff5ab4, 400);
   await ctx.wait(500);
-  // ... and gone, sucked through (staging: the title card ends the chapter).
+  // ... and gone, sucked through.
   const me = ctx.player;
   ctx.place(ctx.activeCharId, -400, me.y);
   ctx.flash(0x4ae8ff, 400);
-  await ctx.wait(500);
   ctx.setFlag('wormholeUsed');
-  ctx.setFlag('chapterDone');
-  ctx.sfx('win');
-  ctx.showTitle('FORTSETZUNG FOLGT …');
+  await ctx.wait(400);
+  await ctx.goToRoom('goaeingang', 'wurmloch');
 }

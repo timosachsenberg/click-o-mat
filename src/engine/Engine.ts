@@ -389,6 +389,13 @@ export class Engine {
     this.events.emit('ui');
   }
 
+  /** Saving or loading is only safe between scenes: a script that is still
+   *  running holds half-applied state (an item taken, its result not yet
+   *  given) and would keep writing into a freshly loaded game. */
+  get canSaveOrLoadNow(): boolean {
+    return !this.busy && !this.dialogMode;
+  }
+
   clearSelection(): void {
     this.selectedVerb = null;
     this.pendingItem = null;

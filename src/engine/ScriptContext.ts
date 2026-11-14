@@ -207,17 +207,21 @@ export class ScriptContext {
 
   /** Tween any game object's properties and await completion. Skip-aware:
    *  during a cutscene fast-forward the tween jumps straight to its end. */
-  tween(targets: unknown, props: Record<string, unknown>, duration = 400): Promise<void> {
+  tween(targets: unknown, props: Record<string, unknown>, duration = 400, opts: { skippable?: boolean } = {}): Promise<void> {
+    // Ambient motion (a passing boat, drifting smoke) passes skippable: false
+    // so a fast-forwarded cutscene elsewhere doesn't snap it to its end.
+    const skippable = opts.skippable ?? true;
     return new Promise((resolve) => {
       const t = this.eng.roomScene.tweens.add({
         targets,
         duration,
         ...props,
         onComplete: () => {
-          this.eng.untrackTween(t);
+          if (skippable) this.eng.untrackTween(t);
           resolve();
         },
       } as Phaser.Types.Tweens.TweenBuilderConfig);
+      if (!skippable) return;
       this.eng.trackTween(t);
       if (this.eng.skipping) t.complete();
     });

@@ -225,6 +225,16 @@ function pogoArt(): string {
   ].join('');
 }
 
+/** In goes the 25-cent coin — and stays stuck, the credit with it. */
+async function insertCoin(ctx: ScriptContext): Promise<void> {
+  ctx.removeItem('cent25');
+  ctx.setFlag('jukeboxCredit');
+  ctx.sfx('deny');
+  await ctx.playerSay('Ich werf die 25 Cent ein ... und die Münze steckt fest.');
+  await ctx.say('ali', 'Dann gehört dir jetzt die Musik.');
+  await ctx.dialog('jukebox');
+}
+
 /** Where Ali's ouzo stands: on his coaster, or in front of the Partykiller. */
 const OUZO = { coaster: { x: 772, y: 338 }, cop: { x: 684, y: 332 } };
 
@@ -416,13 +426,13 @@ const HOTSPOTS: HotspotDef[] = [
       },
     },
   },
-  at('column', 'Säule', R(100, 0, 46, 410), P(170, 420), 'left', {
+  at('column', 'Säule', R(100, 0, 46, 410), P(160, 404), 'left', {
     on: {
       lookat: 'Eine Säule. Antik, sagt Ali. Baumarkt, sagt die Säule.',
       push: 'Die trägt das Haus. Lassen wir das.',
     },
   }),
-  at('table', 'Stehtisch', R(0, 330, 96, 118), P(170, 436), 'left', {
+  at('table', 'Stehtisch', R(0, 330, 96, 118), P(120, 404), 'left', {
     on: { lookat: 'Ein Stehtisch. Für die, die nicht am Tresen sitzen wollen. Also für niemanden.' },
   }),
   at('door', 'Ausgang', R(280, 142, 62, 158), P(311, 322), 'up', {
@@ -444,7 +454,7 @@ const HOTSPOTS: HotspotDef[] = [
         if (ctx.flag('jukeboxCredit')) {
           await ctx.dialog('jukebox');
         } else if (ctx.hasItem('cent25')) {
-          await ctx.playerSay('Ein Lied kostet 25 Cent. Die hätte ich ja.');
+          await insertCoin(ctx);
         } else {
           await ctx.playerSay('Ein Lied: 25 Cent. Hab ich nicht.');
         }
@@ -453,14 +463,7 @@ const HOTSPOTS: HotspotDef[] = [
     },
     onItem: {
       use: {
-        cent25: async (ctx) => {
-          ctx.removeItem('cent25');
-          ctx.setFlag('jukeboxCredit');
-          ctx.sfx('deny');
-          await ctx.playerSay('Die Münze steckt fest.');
-          await ctx.say('ali', 'Dann gehört dir jetzt die Musik.');
-          await ctx.dialog('jukebox');
-        },
+        cent25: insertCoin,
         euro: 'Die nimmt nur 25 Cent. Und die zwei Euro sind eh verplant.',
       },
     },
@@ -494,7 +497,7 @@ const HOTSPOTS: HotspotDef[] = [
       },
       pickup: async (ctx) => {
         if (!(await anzeige(ctx, 'Kunstraub! Unter meinen Augen!'))) {
-          await ctx.playerSay('Ich bin Raver, kein Kunsträuber.');
+          await ctx.playerSay('Ich klau doch keinen Picasso. Nicht mal einen falschen.');
         }
       },
     },
@@ -820,6 +823,13 @@ export const picassoRoom: RoomDef = {
     { id: 'cop', x: 640, y: 413, facing: 'up' },
     { id: 'hilde', x: HILDE.x, y: HILDE.y, facing: 'down' },
   ],
+
+  // Nobody walks off with Ali's ouzo: leaving mid-refrain puts it back.
+  async onExit(ctx) {
+    if (ctx.hasItem('ouzo')) ctx.removeItem('ouzo');
+    if (ctx.flag('ouzoAt') !== 'coaster') ctx.setFlag('ouzoAt', 'coaster');
+    ctx.setFlag('refrain', false);
+  },
 
   async onEnter(ctx) {
     await resetJukebox(ctx);

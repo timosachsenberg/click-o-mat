@@ -111,7 +111,8 @@ async function shiftEra(ctx: ScriptContext, dir: 1 | -1): Promise<void> {
     if (!ctx.flag('ottoFree') && !ctx.flag('ottoMet')) {
       ctx.setFlag('ottoMet');
       ctx.face('otto', 'left');
-      await ctx.say('otto', 'Besuch! Endlich! Und so hochauflösend!');
+      await ctx.say('otto', 'Besuch! Endlich! Du bist der mit dem Sänger, oder? Die Taube hatte Timbre.');
+      await ctx.say('otto', 'Und du bist so ... hochauflösend!');
       await ctx.say('otto', 'Otto R., sehr erfreut. Ich würde dir die Hand geben, aber die besteht aus vier Pixeln.');
     }
   } else if (next === 2) {
@@ -188,6 +189,7 @@ async function putHole(ctx: ScriptContext): Promise<void> {
   await ctx.say('otto', 'Danke, Hochauflösender. Hier, nimm meinen Taschen-Attraktor.');
   ctx.addItem('taschenattraktor');
   await ctx.say('otto', 'Wenn du dem Bass folgst: Der zeigt dir, wo das Chaos am schönsten ist.');
+  await ctx.say('otto', 'Aber denk dran: Ein Attraktor braucht was, um das er kreisen kann. Was Schweres. Was Schwarzes.');
   await ctx.playerSay('Und wohin gehst du?');
   await ctx.say('otto', 'Ich nehme die Abkürzung durch die Wand. Irgendwo da draußen gibt’s eine Ebene mit mehr als sechzehn Farben.');
   await ctx.walkTo('otto', HOLE_DOOR.x, HOLE_DOOR.y);
@@ -348,6 +350,7 @@ const HOTSPOTS: HotspotDef[] = [
     on: {
       lookat: async (ctx) => {
         await ctx.playerSay('Das Loch, durch das Otto verschwunden ist. Dahinter: Abendhimmel und eine Ahnung von sehr viel mehr Farben.');
+        await ctx.playerSay('Seine Kante wellt sich ein bisschen. Wie ein alter Aufkleber.');
         if (ctx.easyMode && era(ctx.state) === 2) await ctx.playerSay('In dieser Ebene sieht es aus, als könnte man es einfach wieder abziehen.');
       },
       use: 'Da durch? Dafür bin ich zu hochauflösend. Ich nehm die Tür.',
@@ -434,7 +437,7 @@ const HOTSPOTS: HotspotDef[] = [
     on: {
       lookat: async (ctx) => {
         await ctx.playerSay('Otto R. Weiße Haare in alle Richtungen, Laborkittel, Brille. Ganz aus Pixeln.');
-        await ctx.playerSay('Er wirkt sehr zufrieden für jemanden, der seit 1987 in einem Turmzimmer feststeckt.');
+        await ctx.playerSay('Er wirkt sehr zufrieden für jemanden, der seit 1987 in einem Gewölbekeller feststeckt.');
       },
       talkto: async (ctx) => {
         ctx.setFlag('ottoMet');

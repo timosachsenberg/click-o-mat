@@ -152,7 +152,7 @@ async function catchPutTaube(ctx: ScriptContext): Promise<void> {
   ctx.place(PUT_TAUBE, -200, 400);
   await ctx.repaint();
   await ctx.playerSay('Sie pickt so konzentriert, dass sie mich gar nicht kommen sieht. Hab dich!');
-  await ctx.say('floh', 'Na, die passt aber auf dich auf. Füttern nicht vergessen!');
+  await ctx.say('floh', 'Na, die mag dich. Füttern nicht vergessen!');
 }
 
 const pigeonHotspot = (id: string): HotspotDef => ({
@@ -236,7 +236,8 @@ const HOTSPOTS: HotspotDef[] = [
     on: {
       lookat: async (ctx) => {
         await ctx.playerSay('Graffiti vom Gehweg bis in den ersten Stock. „EPPLE“, „GOA“, „BASS“, „1972“, „PLENUM!“.');
-        await ctx.playerSay('Und „KEIN BASS IST ILLEGAL“. Das sollte man dem Partykiller mal zeigen.');
+        await ctx.playerSay('Und dazwischen überall „PUT PUT“. Wer schreibt das bloß? Und warum?');
+        if (ctx.flag('knowsPartykiller')) await ctx.playerSay('Und „KEIN BASS IST ILLEGAL“. Das sollte man dem Partykiller mal zeigen.');
       },
       use: 'Ohne Sprühdose? Ich könnte höchstens was mit dem Finger in den Dreck malen.',
       pickup: 'Das ist drangesprüht. Und Kulturgut.',
@@ -277,7 +278,7 @@ const HOTSPOTS: HotspotDef[] = [
   at('raeder', 'Fahrräder', R(EP.bikes.x, EP.bikes.y, EP.bikes.w, EP.bikes.h), P(310, 346), 'up', {
     on: {
       lookat: 'Zwei Fahrräder am Ständer. Beide mit drei Schlössern. Wir sind hier schließlich in Tübingen.',
-      pickup: 'Fahrraddiebstahl? Dann hab ich den Partykiller für immer am Hals.',
+      pickup: 'Fahrraddiebstahl? Nicht mit mir. Und nicht mit drei Schlössern.',
       use: 'Sind abgeschlossen. Dreifach.',
     },
   }),

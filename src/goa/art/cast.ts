@@ -883,6 +883,72 @@ function flohCoatFront(top: number, back: boolean, clip: string): string {
   return group(s, undefined, `clip-path="url(#${clip})"`);
 }
 
+// ---- der Türsteher ---------------------------------------------------------------
+// The bouncer at the Goa: shaved head, round sunglasses (at night), a goatee,
+// a black shirt with a glowing fractal print, an earpiece.
+
+const TUER: HumanLook = {
+  skin: '#c88a5e',
+  skinShade: '#9a6440',
+  hair: '#2a1a14',
+  hairShade: '#120a08',
+  top: '#1e1a2a',
+  topShade: '#100e18',
+  legs: '#3a4a3a',
+  legsShade: '#263226',
+  shoes: '#2a2a2a',
+  shoeTrim: '#5ad8ff',
+  style: 'custom',
+  head: { front: tuerHeadFront, side: tuerHeadSide },
+  torso: { front: tuerShirtFront },
+};
+
+function tuerHeadFront(r: Rig, back: boolean): string {
+  const L = TUER;
+  const s: string[] = [ear(L, -14), ear(L, 14)];
+  if (back) {
+    s.push(path(blob([[-14.5, 8], [-15, -8], [0, -18], [15, -8], [14.5, 8], [7, 14], [-7, 14]]), { fill: L.skin, stroke: INK, sw: OUT }));
+    s.push(path('M-6 -12Q0 -15 6 -12', { stroke: '#e8b088', sw: 1.6 }));
+    return s.join('');
+  }
+  s.push(shadedHead(L, FACE_FRONT, 'faceF', 3));
+  s.push(path('M-7 -13Q0 -17 7 -13', { stroke: '#e8b088', sw: 1.8 }));
+  // Round dark sunglasses, at night. Of course.
+  for (const x of [-5.6, 5.6]) s.push(circle(x, -1.5, 4.6, { fill: '#1a1a2a', stroke: INK, sw: 1.6 }) + circle(x - 1.5, -3, 1.1, { fill: '#5ad8ff', opacity: 0.7 }));
+  s.push(path('M-1 -1.5H1', { stroke: INK, sw: 1.6 }));
+  s.push(ellipse(0, 5, 3.6, 3.6, { fill: L.skin, stroke: INK, sw: 1.6 }));
+  s.push(mouthFront(r.mouth, 11.2, 3.2));
+  s.push(path(blob([[-4, 13], [4, 13], [3, 19], [0, 21], [-3, 19]]), { fill: L.hair, stroke: INK, sw: 1.2 }));
+  // The earpiece and its curly cable.
+  s.push(circle(14.5, 2, 2, { fill: '#2a2a2a', stroke: INK, sw: 1 }) + path('M14 4q3 4 0 6t1 6', { stroke: '#2a2a2a', sw: 1.2 }));
+  return s.join('');
+}
+
+function tuerHeadSide(r: Rig): string {
+  const L = TUER;
+  const s: string[] = [shadedHead(L, SKULL_SIDE, 'faceS', -3)];
+  s.push(path('M-6 -14Q2 -18 8 -12', { stroke: '#e8b088', sw: 1.6 }));
+  s.push(circle(8.6, -1.8, 4, { fill: '#1a1a2a', stroke: INK, sw: 1.5 }));
+  s.push(path('M4.6 -2L-4 -1', { stroke: INK, sw: 1.4 }));
+  s.push(path(blob([[12, -0.5], [15.5, 2.2], [15, 5.6], [11.6, 5.4]]), { fill: L.skin, stroke: INK, sw: 1.5 }));
+  s.push(mouthSide(r.mouth, 10, 11));
+  s.push(path(blob([[7, 13], [12, 13], [11, 19], [8, 19]]), { fill: L.hair, stroke: INK, sw: 1.1 }));
+  return s.join('');
+}
+
+/** A glowing fractal on the black shirt. */
+function tuerShirtFront(top: number, back: boolean, clip: string): string {
+  if (back) return '';
+  const cx = 32;
+  const cy = top + 14;
+  const rings = [7, 5, 3].map((r, i) => circle(cx, cy, r, { stroke: ['#ff5ab4', '#5ad8ff', '#8aff5a'][i], sw: 1.4 })).join('');
+  const petals = [0, 1, 2, 3, 4, 5].map((k) => {
+    const a = (k / 6) * Math.PI * 2;
+    return path(`M${cx} ${cy}L${cx + Math.cos(a) * 10} ${cy + Math.sin(a) * 10}`, { stroke: '#ffd34a', sw: 1 });
+  }).join('');
+  return group(rings + petals, undefined, `clip-path="url(#${clip})"`);
+}
+
 export const GOA_CAST: SvgActorAsset[] = [
   { key: 'raver', width: 64, height: 120, poses: POSES, draw: humanDraw(RAVER) },
   {
@@ -899,6 +965,7 @@ export const GOA_CAST: SvgActorAsset[] = [
   },
   { key: 'cop', width: COP_W, height: COP_H, poses: COP_POSES, draw: copDraw },
   { key: 'floh', width: 64, height: 120, poses: POSES, draw: humanDraw(FLOH) },
+  { key: 'tuersteher', width: 64, height: 120, poses: POSES, draw: humanDraw(TUER) },
   {
     key: 'hilde',
     width: 64,

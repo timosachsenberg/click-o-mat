@@ -94,6 +94,8 @@ const SHOUTS = [
   'Ad fundum, Bundesbrüder!',
   'Ahoi, ihr Landratten da oben!',
   'An der Brücke wird gewendet! Das ist Tradition!',
+  'He, du da oben! Was ist das auf deinem Kopf? DAS hier ist eine Mütze!',
+  'Schau mal, der Raver! Ohne Couleur, ohne Kahn, ohne Bier!',
 ];
 const pick = <T,>(list: T[]) => list[Math.floor(Math.random() * list.length)];
 
@@ -129,7 +131,8 @@ async function puntPass(ctx: ScriptContext): Promise<void> {
           }
         },
       },
-      PASS_MS
+      PASS_MS,
+      { skippable: false }
     );
   } finally {
     if (alive()) {
@@ -268,7 +271,7 @@ const HOTSPOTS: HotspotDef[] = [
     on: {
       lookat: async (ctx) => {
         await ctx.playerSay('Der Neckar im Abendrot. Rosa, orange, gemütlich, voller Stocherkähne.');
-        if (!ctx.flag('puntSunk')) await ctx.playerSay('Alle paar Minuten kommt einer vorbei und wendet vor der Brücke. Mit Burschenschaftlern drin.');
+        if (!ctx.flag('puntSunk')) await ctx.playerSay('Alle naslang kommt einer vorbei und wendet vor der Brücke. Mit Burschenschaftlern drin.');
         else await ctx.playerSay('Jetzt mit einem Kahn weniger. Und einem Schwarm satter Holzwürmer.');
       },
       use: 'Baden? Ohne Badehose? Doch nicht vor der ganzen Altstadt.',
@@ -392,7 +395,7 @@ const HOTSPOTS: HotspotDef[] = [
   at('toPicasso', 'Zum Epplehaus', R(930, 408, 30, 42), P(948, 432), 'right', {
     defaultVerb: 'use',
     on: {
-      lookat: 'Da geht’s zurück zum Epplehaus. Und von dort die Treppe runter ins Picasso.',
+      lookat: 'Da geht’s zurück zum Epplehaus. Dahinter die Dönerbude und die Treppe runter ins Picasso.',
       use: toPicasso,
       open: toPicasso,
     },
@@ -433,7 +436,7 @@ const HOTSPOTS: HotspotDef[] = [
         ctx.setFlag('schereTaken');
         ctx.addItem('drahtschere');
         await ctx.repaint();
-        await ctx.playerSay('Eine Drahtschere. Die könnte man bestimmt noch brauchen.');
+        await ctx.playerSay('Eine Drahtschere. Mal sehen, wofür die gut ist.');
       },
     },
   }),
@@ -474,7 +477,8 @@ const HOTSPOTS: HotspotDef[] = [
     on: {
       lookat: async (ctx) => {
         await ctx.playerSay('Ein Stocherkahn voller Burschenschaftler. Mützen, Bänder, ein Kasten Bier.');
-        if (ctx.easyMode) await ctx.playerSay('Der Kahn ist alt. Altes Holz. Sehr altes, sehr trockenes Holz.');
+        await ctx.playerSay('Ein Holzkahn, der schon bessere Jahrzehnte gesehen hat.');
+        if (ctx.easyMode) await ctx.playerSay('Altes Holz. Sehr altes, sehr trockenes Holz.');
       },
       talkto: async (ctx) => {
         await ctx.playerSay('Ahoi! Wo geht’s denn hin?');
@@ -582,6 +586,11 @@ export const neckarRoom: RoomDef = {
     pass.halted = false;
     pass.t = 0;
     ctx.place('kahn', OFF.x, OFF.y, 'right');
+    // A save from mid-intro (older builds) must not strand the bus here.
+    if (ctx.flag('once:neckarIntro') && !ctx.flag('busGone')) {
+      ctx.setFlag('busGone');
+      await ctx.repaint();
+    }
     // The game starts here: off the bus, onto the bridge.
     await ctx.once('neckarIntro', async () => {
       ctx.sfx('open');
@@ -595,7 +604,7 @@ export const neckarRoom: RoomDef = {
       await ctx.repaint();
       ctx.face(ctx.activeCharId, 'down');
       await ctx.playerSay('Der Neckar im Abendrot. Kitschig. Schön.');
-      await ctx.playerSay('Heute Nacht steigt irgendwo im Wald eine Goa. Ich muss nur rausfinden, wo.');
+      await ctx.playerSay('Heute Nacht steigt im Wald eine Goa. Und ohne Passwort kommt da keiner rein.');
       if (ctx.easyMode) await ctx.playerSay('Wenn das einer weiß, dann Ali. Im Picasso, gleich hinterm Epplehaus.');
     });
   },

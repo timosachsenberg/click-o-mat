@@ -32,7 +32,7 @@ async function tryBarrier(ctx: ScriptContext): Promise<void> {
   ctx.sfx('deny');
   await ctx.playerSay('„Baumfällarbeiten. Durchgang verboten.“ Ausgerechnet heute.');
   if (!ctx.flag('password')) {
-    await ctx.playerSay('Wobei: Ich weiß ja noch nicht mal, wo im Wald die Goa steigt. Ali weiß es.');
+    await ctx.playerSay('Wobei: Ohne Passwort käm ich da eh nicht rein.');
     return;
   }
   await ctx.once('forestClosed', async () => {
@@ -57,6 +57,13 @@ async function hop(ctx: ScriptContext, height: number, ms: number): Promise<void
   await ctx.tween(sprite, { y, ease: 'Quad.easeIn' }, ms / 2);
 }
 
+/** After the first failed attempt: a nudge away from tools. */
+async function afterFail(ctx: ScriptContext): Promise<void> {
+  await ctx.once('herringHint', async () => {
+    await ctx.playerSay('Mit Werkzeug komm ich an diesem Gitter nicht vorbei. Ich bräuchte eher eine Abkürzung.');
+  });
+}
+
 async function cutChain(ctx: ScriptContext): Promise<void> {
   await ctx.playerSay('Die Kette am Gitter einfach durchknipsen. Ganz leise.');
   ctx.sfx('step');
@@ -66,6 +73,7 @@ async function cutChain(ctx: ScriptContext): Promise<void> {
   ctx.removeItem('drahtschere');
   await ctx.playerSay('*KNACK.*');
   await ctx.playerSay('Das war nicht die Kette. Das war die Schere. Die ist stumpfer als Alis Witze.');
+  await afterFail(ctx);
 }
 
 async function pogo(ctx: ScriptContext): Promise<void> {
@@ -81,6 +89,7 @@ async function pogo(ctx: ScriptContext): Promise<void> {
   ctx.removeItem('pogostick');
   await ctx.playerSay('*BOING. BOING. KLONK.*');
   await ctx.playerSay('Ich hab das Gitter getroffen. Das Gitter hat gewonnen. Und der Pogo-Stick ist jetzt ein Pogo-Knick.');
+  await afterFail(ctx);
 }
 
 async function balloon(ctx: ScriptContext): Promise<void> {
@@ -104,6 +113,7 @@ async function balloon(ctx: ScriptContext): Promise<void> {
   ctx.place('waldtaube', -200, 300);
   await ctx.playerSay('Eine Taube. Bis hier draußen. Hat meinen Ballon zerpickt und ist einfach weitergeflogen.');
   await ctx.playerSay('Die Tauben in dieser Stadt haben was gegen mich.');
+  await afterFail(ctx);
 }
 
 async function poleVault(ctx: ScriptContext): Promise<void> {
@@ -118,6 +128,7 @@ async function poleVault(ctx: ScriptContext): Promise<void> {
   ctx.removeItem('stange');
   await ctx.playerSay('*SCHWUNG ... KNACK.*');
   await ctx.playerSay('Die Stange war zu biegsam. Sie hat mich nicht rüber-, sondern zurückkatapultiert. Und ist dann zerbrochen.');
+  await afterFail(ctx);
 }
 
 async function dig(ctx: ScriptContext): Promise<void> {
@@ -130,6 +141,7 @@ async function dig(ctx: ScriptContext): Promise<void> {
   ctx.removeItem('klappspaten');
   await ctx.playerSay('*KLONK.* Eine Wurzel. So dick wie ich.');
   await ctx.playerSay('Und der Klappspaten ist zusammengeklappt. Mit meinen Fingern drin. Autsch.');
+  await afterFail(ctx);
 }
 
 const HOTSPOTS: HotspotDef[] = [
@@ -162,7 +174,7 @@ const HOTSPOTS: HotspotDef[] = [
         await ctx.playerSay('Frisch gefällt und ordentlich gestapelt. Mit pinker Sprühfarbe nummeriert.');
         await ctx.playerSay('Riecht nach Harz. Und ein bisschen nach Kettensägenabgasen.');
       },
-      pickup: 'Einen ganzen Baumstamm? Ich bin Raver, kein Holzfäller.',
+      pickup: 'Einen ganzen Baumstamm? Mit diesen Armen?',
       push: 'Der rührt sich keinen Millimeter. Holz hat Gewicht. Wer hätte das gedacht.',
       use: 'Draufklettern und rüber? Dahinter ist es noch dichter. Und noch dunkler.',
     },
@@ -172,15 +184,15 @@ const HOTSPOTS: HotspotDef[] = [
   }),
   at('stumpf', 'Baumstumpf', R(616, 316, 52, 26), P(640, 372), 'up', {
     on: {
-      lookat: 'Ein frischer Baumstumpf. Ich zähl die Jahresringe ... zu viele. Älter als der Partykiller.',
-      use: 'Hinsetzen? Nach dem Zocker-Hocker trau ich keinem Holz mehr.',
+      lookat: 'Ein frischer Baumstumpf. Ich zähl die Jahresringe ... zu viele. Älter als Ali.',
+      use: (ctx) => ctx.playerSay(ctx.flag('stoolBroken') ? 'Hinsetzen? Nach dem Zocker-Hocker trau ich keinem Holz mehr.' : 'Hinsetzen? Nee. Ich will nicht sitzen, ich will tanzen.'),
     },
   }),
   at('schild', 'Schild', R(WR.sign.x - 2, WR.sign.y - 32, 138, 100), P(580, 380), 'up', {
     on: {
       lookat: async (ctx) => {
         await ctx.playerSay('„BAUMFÄLLARBEITEN. Durchgang verboten! Lebensgefahr. Forstamt Tübingen.“');
-        await ctx.playerSay('Heute. Am Abend der Goa. Das ist kein Zufall. Das riecht nach Partykiller.');
+        await ctx.playerSay(ctx.flag('knowsPartykiller') ? 'Heute. Am Abend der Goa. Das ist kein Zufall. Das riecht nach Partykiller.' : 'Heute. Am Abend der Goa. Das ist doch kein Zufall.');
       },
       pickup: 'Das Schild ist einbetoniert. Das Forstamt kennt seine Pappenheimer.',
     },
@@ -265,8 +277,8 @@ export const waldrandRoom: RoomDef = {
       run: async (ctx) => {
         const glowLayer = ctx.layerObj('goa');
         for (let i = 0; i < 4; i++) {
-          await ctx.tween(glowLayer, { alpha: 0.95, ease: 'Quad.easeOut' }, 90);
-          await ctx.tween(glowLayer, { alpha: 0.45, ease: 'Quad.easeIn' }, BEAT - 90);
+          await ctx.tween(glowLayer, { alpha: 0.95, ease: 'Quad.easeOut' }, 90, { skippable: false });
+          await ctx.tween(glowLayer, { alpha: 0.45, ease: 'Quad.easeIn' }, BEAT - 90, { skippable: false });
         }
       },
     },

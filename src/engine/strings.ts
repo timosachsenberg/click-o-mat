@@ -67,6 +67,8 @@ export interface UIStrings {
   loadFailed: string;
   slotEmpty: string;
   quickSaved: string;
+  /** Saving/loading refused while a cutscene or dialog is running. */
+  notNow: string;
   quickLoaded: string;
   noQuickSave: string;
   /** BCP 47 locale for save timestamps (undefined = the browser's). */
@@ -143,6 +145,7 @@ export const DEFAULT_STRINGS: UIStrings = {
   loadFailed: 'Load failed.',
   slotEmpty: 'That slot is empty.',
   quickSaved: 'Quick-saved.',
+  notNow: 'Not now — let the scene finish first.',
   quickLoaded: 'Quick save loaded.',
   noQuickSave: 'No quick save.',
   moreChoices: (page, pages) => `▾ More choices  (${page}/${pages})`,

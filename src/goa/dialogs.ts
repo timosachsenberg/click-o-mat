@@ -119,7 +119,6 @@ export const DIALOGS: Record<string, DialogDef> = {
           },
           {
             text: 'Was ist das für ein Glas neben dir?',
-            once: true,
             script: async (ctx) => {
               await ctx.say('ali', 'Mein Feierabend-Ouzo. Finger weg, mein Lieber.');
               await ctx.say('cop', 'Ich hab ein Auge drauf.');
@@ -221,6 +220,58 @@ export const DIALOGS: Record<string, DialogDef> = {
     },
   },
 
+  // The bouncer at the Goa: here the password finally counts.
+  tuersteher: {
+    id: 'tuersteher',
+    start: 'root',
+    nodes: {
+      root: {
+        choices: [
+          {
+            text: 'Chakabunga!',
+            if: (s) => !!s.getFlag('password'),
+            end: true,
+            script: async (ctx) => {
+              await ctx.say('tuersteher', 'Chakabunga. Korrekt.');
+              await ctx.say('tuersteher', 'Eine Frage noch: Hast du Energie? Die Nacht ist lang. Wer hier schlappmacht, liegt um drei im Moos.');
+              await ctx.playerSay('Ich hatte eine Magic Woman. Ali meinte, die Energie brauch ich später noch.');
+              await ctx.say('tuersteher', 'Ali weiß Bescheid. Dann rein mit dir. Folge dem Bass.');
+              ctx.setFlag('goaEntered');
+              ctx.sfx('open');
+            },
+          },
+          {
+            text: 'Put put?',
+            if: (s) => !!s.getFlag('putHeard'),
+            script: async (ctx) => {
+              await ctx.say('tuersteher', 'Das ist die Parole vom Hölderlinturm, Kollege. Hier ist Wald.');
+            },
+          },
+          {
+            text: 'Ali schickt mich.',
+            script: async (ctx) => {
+              await ctx.say('tuersteher', 'Ali schickt jeden. Parole?');
+            },
+          },
+          {
+            text: 'Ich steh auf der Gästeliste.',
+            once: true,
+            script: async (ctx) => {
+              await ctx.say('tuersteher', 'Hier gibt’s keine Liste. Hier gibt’s nur die Parole.');
+            },
+          },
+          {
+            text: 'Ich komm gleich wieder.',
+            end: true,
+            script: async (ctx) => {
+              await ctx.say('tuersteher', 'Ich steh hier die ganze Nacht.');
+            },
+          },
+        ],
+      },
+    },
+  },
+
   // Otto R. on the Hölderlinturm's intercom: he wants the password.
   turmtuer: {
     id: 'turmtuer',
@@ -230,17 +281,18 @@ export const DIALOGS: Record<string, DialogDef> = {
         choices: [
           {
             text: 'Wer ist da überhaupt?',
-            once: true,
             script: async (ctx) => {
               await ctx.say('ottoTuer', 'Otto R. Chaosforscher. Ich hüte den Turm. Und den Attraktor.');
               await ctx.say('ottoTuer', 'Ich steck in einer anderen Zeitebene fest. Deshalb klinge ich so blechern.');
               await ctx.playerSay('Wie komm ich rein?');
               await ctx.say('ottoTuer', 'Mit der Parole. Und die verrat ich nicht.');
+              await ctx.say('ottoTuer', 'Ich lass nur rein, wer die Sprache von 1987 spricht. Sicherheitsprotokoll. Sonst latscht mir jeder durch die Zeitebenen.');
               if (ctx.easyMode) await ctx.say('ottoTuer', 'Steht aber eh an jeder zweiten Wand in Tübingen.');
             },
           },
           {
             text: 'Chakabunga?',
+            if: (s) => !!s.getFlag('password'),
             script: async (ctx) => {
               await ctx.say('ottoTuer', 'Das ist die Parole für den Wald. Hier ist der Turm. Andere Party.');
             },
@@ -260,7 +312,7 @@ export const DIALOGS: Record<string, DialogDef> = {
               await ctx.say('ottoTuer', 'Aber der Klang der Stimme passt irgendwie nicht.');
               await ctx.playerSay('Was stimmt nicht mit meiner Stimme?');
               if (ctx.easyMode) await ctx.say('ottoTuer', 'Zu menschlich. Zu wenig Gurr. Die Parole muss klingen wie das Original.');
-              else await ctx.say('ottoTuer', 'Kann ich nicht erklären. Ich weiß es, wenn ich es höre.');
+              else await ctx.say('ottoTuer', 'Zu hochauflösend. Meine Anlage ist von 1987, die mag es körnig. Fast schon ... gurrend.');
               ctx.setFlag('putTried');
             },
           },
@@ -311,7 +363,6 @@ export const DIALOGS: Record<string, DialogDef> = {
           },
           {
             text: 'Du und die Tauben, ihr seid Freunde?',
-            once: true,
             script: async (ctx) => {
               await ctx.say('floh', 'Freunde? Kollegen. Ich füttere sie, sie lassen meine Flaschen in Ruhe. Meistens.');
               await ctx.say('floh', 'Aber heute hab ich nix für sie.');
@@ -419,7 +470,7 @@ export const DIALOGS: Record<string, DialogDef> = {
             script: async (ctx) => {
               if (!ctx.easyMode) {
                 await ctx.say('otto', 'Irgendwo hier im Haus liegt eins. Ein kleines schwarzes Loch. Ich hab’s versteckt, als es noch ganz jung war.');
-                await ctx.say('otto', 'Wo genau? Vergessen. Vergesslich, wir Genies.');
+                await ctx.say('otto', 'Wo genau? Hab ich vergessen. Genies haben Wichtigeres im Kopf.');
                 return;
               }
               await ctx.say('otto', 'Oben in der Turmstube, unterm Teppich, liegt eins. Ein kleines schwarzes Loch, ich hab’s da versteckt, als es noch ganz jung war.');

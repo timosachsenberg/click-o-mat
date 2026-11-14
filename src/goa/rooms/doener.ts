@@ -185,8 +185,8 @@ export const doenerRoom: RoomDef = {
       run: async (ctx) => {
         const s = ctx.layerObj('smell');
         s.setPosition(0, 10).setAlpha(0);
-        await ctx.tween(s, { y: -18, alpha: 0.7, ease: 'Sine.easeOut' }, 1400);
-        await ctx.tween(s, { y: -40, alpha: 0, ease: 'Sine.easeIn' }, 1400);
+        await ctx.tween(s, { y: -18, alpha: 0.7, ease: 'Sine.easeOut' }, 1400, { skippable: false });
+        await ctx.tween(s, { y: -40, alpha: 0, ease: 'Sine.easeIn' }, 1400, { skippable: false });
       },
     },
   ],
