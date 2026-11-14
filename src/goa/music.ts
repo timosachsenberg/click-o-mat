@@ -43,13 +43,13 @@ export const GOA_MUSIC: Record<string, MusicTrack> = {
     bass: [-24, -12, -24, -12, -26, -14, -26, -14, -29, -17, -29, -17, -22, -10, -22, -10],
     lead: [12, 15, 19, 24, 22, 19, 17, 15, 14, 15, 17, 14, 15, null, 12, null],
   },
-  // Now: cartoon chase music, sawtooth and all.
+  // The cartoon reel: a silent-film piano rag, oom-pah bass and all.
   'turm-modern': {
-    bpm: 132,
-    bassType: 'sawtooth',
-    leadType: 'square',
-    bass: [-24, null, -24, -12, null, -17, -19, null, -20, null, -20, -8, null, -15, -17, null],
-    lead: [0, 2, 3, 5, 7, null, 6, 7, 12, null, 11, 10, 9, null, 7, null],
+    bpm: 168,
+    bassType: 'triangle',
+    leadType: 'triangle',
+    bass: [-24, null, -12, null, -17, null, -12, null, -22, null, -10, null, -19, null, -12, null],
+    lead: [0, 4, 7, 12, null, 9, 7, null, 5, 9, 12, null, 11, 7, 4, null],
   },
   // The edge of the forest: nothing but the Goa's bass, far off behind the trees.
   'wald-wummern': {

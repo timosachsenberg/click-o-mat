@@ -1,7 +1,7 @@
 import { Layer, type Facing, type HotspotDef, type Rect, type RoomDef, type Vec2 } from '../../engine/types';
 import type { ScriptContext } from '../../engine/ScriptContext';
 import type { GameState } from '../../engine/GameState';
-import { FLOORS, OTTO_ACTOR, TM, blackHoleArt, rugArt, spiralGlow, turmBg, wallHoleArt, type Era } from '../art/turm';
+import { FLOORS, OTTO_ACTOR, TM, blackHoleArt, film, filmOverlay, rugArt, spiralGlow, turmBg, wallHoleArt, type Era } from '../art/turm';
 
 // ---- layout ----------------------------------------------------------------------
 // The Hölderlinturm as a doll's house, seen from the Neckar with its front
@@ -14,11 +14,11 @@ import { FLOORS, OTTO_ACTOR, TM, blackHoleArt, rugArt, spiralGlow, turmBg, wallH
 //
 //   0  the house style, like everywhere else
 //   1  a 1987 pixel adventure (sixteen colours) — where Otto R. is stuck
-//   2  a modern cartoon collage with photo textures — where holes are portable
+//   2  a 1930s cartoon reel, black and white — where holes are portable
 //
 // The riddle: Otto R. sits in the cellar on his own strange attractor in
 // 1987 and needs a way out. Under the rug upstairs there's a black hole; only
-// in the modern layer can it be picked up (cartoon physics). Put it on the
+// in the cartoon layer can it be picked up (cartoon physics). Put it on the
 // cellar wall where his graffiti says PUT PUT — in 1987, where Otto is — and
 // he walks out through it, leaving his pocket attractor behind.
 //
@@ -30,12 +30,14 @@ const P = (x: number, y: number): Vec2 => ({ x, y });
 const R = (x: number, y: number, w: number, h: number): Rect => ({ x, y, w, h });
 
 export const era = (state: GameState): Era => (state.getFlag<number>('turmEra') ?? 0) as Era;
+/** The third layer is an old film: its overlays go through the film filter too. */
+const filmed = (e: Era, markup: string) => (e === 2 ? film(markup) : markup);
 
 const ERA_TRACK = ['turm-toon', 'turm-pixel', 'turm-modern'] as const;
 const ERA_NAME = [
   'Zeitebene: handgemalt, 256 Farben',
   'Zeitebene: 1987, 16 Farben',
-  'Zeitebene: heute, Fotos und Zeichentrick',
+  'Zeitebene: Zeichentrick, schwarz-weiß',
 ];
 
 /** One line per time layer. */
@@ -78,7 +80,7 @@ function spadeArt(e: Era): string {
 }
 
 /** Hölderlin's portrait above the desk, in each time layer's look — and, in
- *  the modern one, the museum's rope and plaque in front of the desk. */
+ *  the present, the museum's rope and plaque in front of the desk. */
 const PORTRAIT = { x: 226, y: 138, w: 34, h: 44 };
 function portraitArt(e: Era): string {
   const { x, y, w, h } = PORTRAIT;
@@ -86,14 +88,15 @@ function portraitArt(e: Era): string {
     const b = (bx: number, by: number, bw: number, bh: number, c: string) => `<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" fill="${c}"/>`;
     return b(x, y, 35, 45, '#aa5500') + b(x + 5, y + 5, 25, 35, '#0000aa') + b(x + 10, y + 10, 15, 15, '#ffff55') + b(x + 10, y + 25, 15, 15, '#aaaaaa') + b(x + 15, y + 15, 5, 5, '#000000');
   }
-  const frame = e === 2 ? '#ffffff' : '#c8a040';
+  const museum = e === 0;
+  const frame = museum ? '#c8a040' : '#ffffff';
   const s =
-    `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${frame}" stroke="#1e1424" stroke-width="${e === 2 ? 3.4 : 2.2}"/>` +
-    `<rect x="${x + 4}" y="${y + 4}" width="${w - 8}" height="${h - (e === 2 ? 14 : 8)}" fill="#4a3a5a"/>` +
+    `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${frame}" stroke="#1e1424" stroke-width="${museum ? 2.2 : 3.4}"/>` +
+    `<rect x="${x + 4}" y="${y + 4}" width="${w - 8}" height="${h - (museum ? 14 : 8)}" fill="#4a3a5a"/>` +
     `<circle cx="${x + w / 2}" cy="${y + 17}" r="7" fill="#e8c8a8" stroke="#1e1424" stroke-width="1.2"/>` +
     `<path d="M${x + 9} ${y + 16}q8 -16 16 0" fill="#f4efe4" stroke="#1e1424" stroke-width="1"/>` +
-    `<path d="M${x + 8} ${y + h - (e === 2 ? 10 : 4)}q9 -12 18 0z" fill="#2a2a4a"/>`;
-  if (e !== 2) return s;
+    `<path d="M${x + 8} ${y + h - (museum ? 10 : 4)}q9 -12 18 0z" fill="#2a2a4a"/>`;
+  if (!museum) return s;
   // Today: a museum. A rope on brass posts, a plaque, an audio guide's number.
   const fy = FLOORS[0].back + 2;
   const post = (px: number) => `<path d="M${px} ${fy}v-24" stroke="#1e1424" stroke-width="6" stroke-linecap="round"/><path d="M${px} ${fy}v-24" stroke="#e8c040" stroke-width="3" stroke-linecap="round"/><circle cx="${px}" cy="${fy - 26}" r="3.4" fill="#e8c040" stroke="#1e1424" stroke-width="1.2"/>`;
@@ -147,8 +150,9 @@ async function shiftEra(ctx: ScriptContext, dir: 1 | -1): Promise<void> {
     }
   } else if (next === 2) {
     await ctx.once('turmModernSeen', async () => {
-      await ctx.playerSay('Jetzt sieht alles aus wie ein Zeichentrickfilm, in den jemand Fotos geklebt hat.');
-      await ctx.playerSay('Die Wand ist ein Foto von einer Wand. Mit Umriss. Ich hab Angst, dass gleich ein Amboss runterfällt.');
+      await ctx.playerSay('Schwarz-weiß! Alles wackelt, alles flimmert, und das Sofa hat ... Augen?');
+      await ctx.playerSay('Ein Zeichentrickfilm von neunzehnhundertdreißig. Ich hab Angst, dass gleich ein Amboss runterfällt.');
+      await ctx.playerSay('Nur ich bin noch in Farbe. Typisch.');
     });
   } else {
     await ctx.once('turmToonBack', async () => {
@@ -235,7 +239,7 @@ async function putHole(ctx: ScriptContext): Promise<void> {
   await ctx.playerSay('Ich schreib das nicht in meinen Lebenslauf.');
 }
 
-/** After Otto has gone: in the modern layer the hole comes off the wall
+/** After Otto has gone: in the cartoon layer the hole comes off the wall
  *  again, as portable as it was on the floor. */
 async function takeWallHole(ctx: ScriptContext): Promise<void> {
   const e = era(ctx.state);
@@ -277,7 +281,7 @@ const sideWindow = (id: string, w: (typeof TM.windows)[number]): HotspotDef =>
         byEra(ctx, [
           'Draußen die Altstadt im Abendrot, Giebel an Giebel. Hölderlin hat hier sechsunddreißig Jahre rausgeschaut. Ich versteh’s.',
           'Fünf Farbstreifen, ein schwarzer Balken, Türkis. Sonnenuntergang in EGA. Rührend.',
-          'Ein Foto vom Sonnenuntergang, ins Fenster geklebt. Die Wolken sind echt. Der Rahmen ist gemalt.',
+          'Ein Sonnenuntergang in Grau. Die Wolken ruckeln von links nach rechts, immer dieselben drei.',
         ]),
       open: 'Lieber nicht. Sonst weht der Abend die Manuskripte weg.',
     },
@@ -292,7 +296,7 @@ const HOTSPOTS: HotspotDef[] = [
         byEra(ctx, [
           'Die Tür, durch die ich reingekommen bin. Dahinter die Treppe und der Neckar.',
           'Eine braune Tür mit einem gelben Pixel als Klinke.',
-          'Eine Tür aus Foto-Holz. Mit einem Umriss so dick wie mein Daumen.',
+          'Eine Tür mit einem Umriss so dick wie mein Daumen. Wenn man sie zuknallt, wackelt bestimmt das ganze Bild.',
         ]),
       use: toNeckar,
       open: toNeckar,
@@ -302,9 +306,9 @@ const HOTSPOTS: HotspotDef[] = [
     on: {
       lookat: (ctx) =>
         byEra(ctx, [
-          'Ein Porträt. Friedrich Hölderlin, jung, mit weißem Kragen. Er schaut, als hätte er gerade einen Hexameter verloren.',
+          'Ein Porträt. Friedrich Hölderlin, jung, mit weißem Kragen. Darunter ein Museumsschildchen: „F. H. 1770–1843“. Und Audioguide Nummer 17.',
           'Fünfzehn gelbe Pixel auf blauem Grund. Laut Parser: „ein Bild“.',
-          'Das Porträt, jetzt mit Museumsschildchen: „F. H. 1770–1843“. Und Audioguide Nummer 17.',
+          'Hölderlin als Trickfilmfigur. Ich könnte schwören, er hat mir gerade zugezwinkert.',
         ]),
       pickup: 'Kunstraub im Hölderlinturm? Dafür käme sogar der Partykiller aus dem Ruhestand zurück.',
     },
@@ -337,7 +341,7 @@ const HOTSPOTS: HotspotDef[] = [
         await byEra(ctx, [
           'PUT PUT. Steht in Tübingen an jeder zweiten Wand. Jetzt also auch im Hölderlinturm.',
           'PUT PUT',
-          'PUT PUT, als Foto von echtem Sprühlack. Man riecht es fast.',
+          'PUT PUT, in Grau auf Grau. Im Stummfilm wäre das eine Texttafel.',
         ]);
         await ctx.playerSay('Ein Pfeil zeigt nach unten auf einen gestrichelten Bogen, so groß wie eine Tür.');
       },
@@ -365,7 +369,7 @@ const HOTSPOTS: HotspotDef[] = [
         byEra(ctx, [
           'Ein alter Klappspaten, an die Kellerwand gelehnt. Hat Hölderlin damit nach Reimen gegraben?',
           'Ein brauner Strich mit grünem Ende. Ein Spaten, sagt der Parser.',
-          'Das Foto eines echten Bundeswehr-Klappspatens. Mit Comic-Glanz.',
+          'Ein Klappspaten mit Glanzstrich. Im Trickfilm gräbt man damit in drei Sekunden bis nach China.',
         ]),
       pickup: async (ctx) => {
         ctx.setFlag('spatenTaken');
@@ -381,7 +385,7 @@ const HOTSPOTS: HotspotDef[] = [
         byEra(ctx, [
           'Fässer im Gewölbe. Ich klopfe: hohl. Hölderlin hat seinen Wein offenbar ernst genommen.',
           'Braune Ovale mit schwarzen Streifen. Fässer, sagt der Parser.',
-          'Fotos von echten Eichenfässern. Mit Comic-Umriss. Riecht trotzdem nach Wein.',
+          'Drei Fässer mit Kulleraugen. Sie grinsen. Sie wissen, was drin ist.',
         ]),
       open: 'Leer. Alle. Der letzte Schluck ist wohl schon zweihundert Jahre her.',
     },
@@ -411,7 +415,7 @@ const HOTSPOTS: HotspotDef[] = [
         await byEra(ctx, [
           'Eine Drahtspirale auf einem Sockel. Sie kreist und kreist, kommt nie zweimal an dieselbe Stelle — und doch nie davon los.',
           'Gelbe Pixel, die eine Spirale bilden. Wenn man blinzelt, sieht man einen Tornado.',
-          'Eine Neonspirale, die summt. Pink und Türkis. Sehr 2026.',
+          'Die Spirale, schneeweiß und zittrig, mit Bewegungsstrichen dran. Sie dreht sich im Takt der Klaviermusik.',
         ]);
         await ctx.playerSay('Am Sockel ein Drehknopf mit drei Stellungen und ein Messingschild: „O. R.“');
       },
@@ -440,7 +444,7 @@ const HOTSPOTS: HotspotDef[] = [
         await byEra(ctx, [
           'Ein alter Teppich. In der Mitte wölbt er sich ein bisschen. Und er zieht nach unten. Teppiche sollten nicht ziehen.',
           'Ein rotes Oval mit gelbem Rand. In der Mitte ein Pixel, der dunkler ist als die anderen.',
-          'Ein Teppich mit Foto-Fransen. In der Mitte eine Beule.',
+          'Ein Teppich in fünf Grautönen. In der Mitte eine Beule.',
         ]);
       },
       pull: moveRug,
@@ -517,10 +521,10 @@ export const hoelderlinturmRoom: RoomDef = {
   layers: [
     { id: 'bg', depth: Layer.BEHIND, svg: (state) => turmBg(era(state)) },
     { id: 'glow', depth: Layer.BEHIND, svg: (state) => spiralGlow(era(state)) },
-    { id: 'portrait', depth: Layer.BEHIND, svg: (state) => portraitArt(era(state)) },
+    { id: 'portrait', depth: Layer.BEHIND, svg: (state) => filmed(era(state), portraitArt(era(state))) },
     // 1987: the parser prompt's cursor blinks after PUT PUT.
     { id: 'cursor', depth: Layer.BEHIND, x: TM.graffiti.x + TM.graffiti.w - 6, y: TM.graffiti.y + TM.graffiti.h - 14, w: 10, h: 10, svg: '<rect width="10" height="10" fill="#55ffff"/>', visible: (state) => era(state) === 1 },
-    { id: 'spaten', depth: Layer.BEHIND, svg: (state) => spadeArt(era(state)), visible: (state) => !state.getFlag('spatenTaken') },
+    { id: 'spaten', depth: Layer.BEHIND, svg: (state) => filmed(era(state), spadeArt(era(state))), visible: (state) => !state.getFlag('spatenTaken') },
     { id: 'wallhole', depth: Layer.BEHIND, svg: (state) => wallHoleArt(era(state)), visible: (state) => !!state.getFlag('wallHole') && !state.getFlag('wallHoleTaken') },
     {
       id: 'hole',
@@ -528,7 +532,9 @@ export const hoelderlinturmRoom: RoomDef = {
       svg: (state) => blackHoleArt(era(state)),
       visible: (state) => !!state.getFlag('rugMoved') && !state.getFlag('holeTaken'),
     },
-    { id: 'rug', depth: Layer.BEHIND, svg: (state) => rugArt(era(state), !!state.getFlag('rugMoved')) },
+    { id: 'rug', depth: Layer.BEHIND, svg: (state) => filmed(era(state), rugArt(era(state), !!state.getFlag('rugMoved'))) },
+    // The third layer is an old reel: grain, scratches, an iris — over everything.
+    { id: 'film', depth: Layer.FRONT, svg: filmOverlay(), visible: (state) => era(state) === 2 },
   ],
 
   // The floor of the round room, in front of the back wall.
@@ -558,6 +564,16 @@ export const hoelderlinturmRoom: RoomDef = {
   },
 
   ambients: [
+    {
+      // The old reel flickers.
+      every: [60, 220],
+      run: async (ctx) => {
+        if (era(ctx.state) !== 2) return;
+        const f = ctx.layerObj('film');
+        f.setAlpha(0.75 + Math.random() * 0.25);
+        await ctx.wait(70);
+      },
+    },
     {
       // The cursor of the 1987 parser prompt blinks.
       every: [10, 20],

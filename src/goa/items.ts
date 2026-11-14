@@ -78,7 +78,7 @@ export const ITEMS: Record<string, ItemDef> = {
     icon: 'icon-loch',
     lookAt: async (ctx) => {
       await ctx.playerSay('Ein tragbares schwarzes Loch. Dünn wie ein Pfannkuchen, tief wie das Weltall.');
-      await ctx.playerSay('In der modernen Zeitebene gelten offenbar Zeichentrick-Gesetze. Ich frag lieber nicht, wie.');
+      await ctx.playerSay('In der Zeichentrick-Ebene gelten offenbar Trickfilm-Gesetze. Ich frag lieber nicht, wie.');
     },
     use: 'Auf den Boden legen und reinspringen? Nein. Ich weiß nicht, wo das rauskommt.',
     // A black hole plus a strange attractor: a wormhole that knows where the chaos is.

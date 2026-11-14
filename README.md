@@ -20,7 +20,7 @@ nothing but a two-euro coin, need the password for tonight's Goa party from Ali 
 the **Picasso** basement bar (past the Epplehaus and a döner stand), find the way
 into the forest closed for tree felling, and go up into the **Hölderlinturm** — a cut-open doll's house — where a
 Rössler attractor throws the picture between three time layers (hand-painted,
-1987 pixels, modern cartoon collage). The
+1987 pixels, a black-and-white 1930s cartoon reel). The
 **title screen picks between the two** (SPIEL · DEMO); `?game=goa` /
 `?game=demo` select one directly, and the last pick is remembered.
 
@@ -189,8 +189,8 @@ upstairs the Turmstube with Hölderlin's desk, a sofa and his bed (the door
 opens onto it), downstairs the vaulted cellar at the river's level, joined
 by stairs. In the Turmstube stands Otto R.'s **Rössler attractor**. *Use* (or *push*) it
 to throw the whole picture into the next time layer, *pull* it to go back:
-hand-painted → **1987** (sixteen colours, chunky pixels) → **today** (cartoon
-collage with photo textures) → hand-painted.
+hand-painted → **1987** (sixteen colours, chunky pixels) → a **1930s cartoon reel**
+(black and white, film grain, furniture with pie eyes) → hand-painted.
 
 1. Turn the attractor once: in 1987 **Otto R.**, chaos researcher, is stuck in
    the cellar on his own strange attractor. Talk to him: the door is only
@@ -207,7 +207,7 @@ collage with photo textures) → hand-painted.
    (which hums along to the bass on the way to the forest). Putting the hole
    up in another layer doesn't help him — he's only in 1987.
 5. Once Otto is out, the hole in the wall is just a hole again — and in the
-   **modern** layer it peels off like a sticker. **Take it**, then **use the
+   **cartoon** layer it peels off like a sticker. **Take it**, then **use the
    hole with the Taschen-Attraktor**: the spiral circles the black hole and
    you get a **Wurmloch**. **Use the wormhole** (anywhere): you come out at the
    **Goa's entrance** in the forest, past the forestry barrier. Flaschenfloh is
@@ -576,8 +576,8 @@ src/
     rooms/goa.ts       The dance floor (animated dancers as occluder layers; dance)
     rooms/neckar.ts    The Neckarbrücke (a punt passes regularly; sink it)
     art/turm.ts        The Hölderlinturm as a cut-open doll's house, in three
-                       time layers (toon, an EGA pixel grid, a photo-textured
-                       cartoon collage), the Rössler attractor (integrated,
+                       time layers (toon, an EGA pixel grid, a black-and-white
+                       cartoon reel), the Rössler attractor (integrated,
                        not drawn), Otto R.
     rooms/hoelderlinturm.ts  Turmstube and cellar joined by stairs (a side
                        view): switch time layers, free Otto R.

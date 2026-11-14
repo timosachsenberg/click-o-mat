@@ -496,7 +496,7 @@ export const DIALOGS: Record<string, DialogDef> = {
               await ctx.say('otto', 'Oben in der Turmstube, unterm Teppich, liegt eins. Ein kleines schwarzes Loch. Hab ich beim CERN mitgehen lassen, als es noch ganz klein war.');
               await ctx.say('otto', 'Die haben’s nie vermisst. Passte in die Brotdose. Inzwischen ist es ein bisschen gewachsen.');
               await ctx.say('otto', 'Hier in 1987 ist es Teil vom Boden, das kriegst du nicht hoch.');
-              await ctx.say('otto', 'Aber in der modernen Ebene ... da gelten Zeichentrick-Gesetze. Da sind Löcher tragbar.');
+              await ctx.say('otto', 'Aber in der Zeichentrick-Ebene, der schwarz-weißen ... da gelten Trickfilm-Gesetze. Da sind Löcher tragbar.');
             },
           },
           {
