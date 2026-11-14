@@ -212,8 +212,10 @@ collage with photo textures) → hand-painted.
    you get a **Wurmloch**. **Use the wormhole** (anywhere): you come out at the
    **Goa's entrance** in the forest, past the forestry barrier. Flaschenfloh is
    already there, collecting empties. The **bouncer** — a Goazwerg in a felt sauna hat — wants the password: say
-   **Chakabunga** (from Ali), and through the gate — to be continued. The
-   wormhole stays open: there's a way back to the tower.
+   **Chakabunga** (from Ali), and through the gate onto **the Goa**: a stage
+   with a huge mandala, a canopy of blacklight threads, giant glowing
+   mushrooms, lasers, and dancers everywhere. **Use the dance floor** — to be
+   continued. The wormhole stays open: there's a way back to the tower.
 
 </details>
 
@@ -561,6 +563,8 @@ src/
     rooms/waldrand.ts  The edge of the forest (closed for tree felling; distant bass)
     art/goaeingang.ts  The Goa's entrance at night: gate, mandala, lasers, the wormhole
     rooms/goaeingang.ts The Goa's entrance (the bouncer wants Chakabunga)
+    art/goa.ts         The Goa: stage, UV string art, glowing mushrooms, dancer frames
+    rooms/goa.ts       The dance floor (animated dancers as occluder layers; dance)
     rooms/neckar.ts    The Neckarbrücke (a punt passes regularly; sink it)
     art/turm.ts        The Hölderlinturm as a cut-open doll's house, in three
                        time layers (toon, an EGA pixel grid, a photo-textured

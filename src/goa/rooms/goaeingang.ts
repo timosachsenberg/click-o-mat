@@ -1,6 +1,6 @@
 import { Layer, type Facing, type HotspotDef, type Rect, type RoomDef, type Vec2 } from '../../engine/types';
 import type { ScriptContext } from '../../engine/ScriptContext';
-import { GE, goaEingangBg, portal } from '../art/goaeingang';
+import { GATE_CROWD, GATE_CROWD_FRAMES, GE, goaEingangBg, portal } from '../art/goaeingang';
 
 // ---- layout ----------------------------------------------------------------------
 // The Goa's entrance, deep in the forest: the wormhole spits the player out
@@ -28,10 +28,10 @@ async function throughTheGate(ctx: ScriptContext): Promise<void> {
     await ctx.say('tuersteher', 'Moment, Kollege. Erst die Parole.');
     return;
   }
-  await ctx.playerSay('Folge dem Bass.');
-  ctx.sfx('win');
-  ctx.setFlag('chapterDone');
-  ctx.showTitle('FORTSETZUNG FOLGT …');
+  await ctx.once('throughGate', async () => {
+    await ctx.playerSay('Folge dem Bass.');
+  });
+  await ctx.goToRoom('goa', 'eingang');
 }
 
 async function backThroughWormhole(ctx: ScriptContext): Promise<void> {
@@ -44,6 +44,18 @@ async function backThroughWormhole(ctx: ScriptContext): Promise<void> {
 const HOTSPOTS: HotspotDef[] = [
   at('wald', 'Wald', R(0, 60, 960, 250), P(480, 400), 'up', {
     on: { lookat: 'Tiefer Wald, Vollmond, und überall wummert es. Genau so hab ich mir das vorgestellt.' },
+  }),
+  at('pilze', 'Leuchtpilze', R(296, 228, 110, 96), P(350, 352), 'up', {
+    on: {
+      lookat: 'Pilze, so groß wie Stehlampen. Und sie leuchten auch so. Schon der Eingang ist ein Versprechen.',
+      pickup: 'Die stehen hier als Wegbeleuchtung. Und der Goazwerg guckt.',
+    },
+  }),
+  at('faeden', 'Schwarzlicht-Fäden', R(262, 20, 160, 200), P(350, 352), 'up', {
+    on: { lookat: 'Leuchtende Fäden, vom Baum zum Tor gespannt. Jeder einzelne gerade, alle zusammen eine Kurve.' },
+  }),
+  at('wegweiser', 'Wegweiser', R(662, 258, 92, 44), P(700, 352), 'up', {
+    on: { lookat: '„MAINFLOOR“ geradeaus. „CHAI · CHILL“ irgendwo links. Erst mal Mainfloor.' },
   }),
   at('mond', 'Mond', R(786, 36, 70, 70), P(700, 400), 'up', {
     on: { lookat: 'Vollmond. Wie auf dem Flyer versprochen. Die Goa hält, was sie verspricht.' },
@@ -133,6 +145,8 @@ export const goaEingangRoom: RoomDef = {
 
   layers: [
     { id: 'bg', depth: Layer.BEHIND, svg: goaEingangBg() },
+    // The party, glimpsed through the gate: dancers stomping in time.
+    { id: 'gatecrowd', depth: Layer.BEHIND, x: GATE_CROWD.x, y: GATE_CROWD.y, anim: 'goa-gatecrowd' },
     {
       id: 'portal',
       depth: Layer.BEHIND,
@@ -150,8 +164,15 @@ export const goaEingangRoom: RoomDef = {
 
   music: 'goa-theme',
 
+  assets: {
+    svgImages: GATE_CROWD_FRAMES,
+    anims: [{ key: 'goa-gatecrowd', textures: GATE_CROWD_FRAMES.map((f) => f.key), frameRate: 4000 / 856 }],
+  },
+
   entries: {
     wurmloch: { x: 200, y: 392, facing: 'right' },
+    // Back out of the Goa, through the gate.
+    tor: { x: 560, y: 342, facing: 'down' },
   },
 
   actors: [

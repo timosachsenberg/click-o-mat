@@ -20,6 +20,8 @@ import {
   vignette,
   type Pt,
 } from '../../game/art/toon';
+import type { SvgImageAsset } from '../../engine/types';
+import { NEON, crowdStrip, glowShroom, stringFan } from './goa';
 
 /**
  * The Goa's entrance, deep in the forest at night: a clearing under the full
@@ -141,6 +143,39 @@ function ground(): string {
   return s.join('');
 }
 
+/** UV threads fanned from two painted trunks to the gate's posts, and glowing
+ *  mushrooms either side of the path: a first taste of what's behind the gate. */
+function uvDeco(): string {
+  const { x0, x1, top } = GE.gate;
+  const s: string[] = [];
+  for (const [tx, c] of [[262, NEON[1]], [858, NEON[2]]] as Array<[number, string]>) {
+    s.push(inked(poly([[tx - 11, GE.ground + 4], [tx - 8, -10], [tx + 8, -10], [tx + 11, GE.ground + 4]]), '#0a0c1c', 2.4));
+    for (let y = 30; y < GE.ground - 10; y += 28) s.push(path(`M${tx - 9} ${y + 12}Q${tx} ${y} ${tx + 9} ${y + 12}`, { stroke: c, sw: 2, opacity: 0.85 }));
+  }
+  s.push(stringFan([262, 24], [262, 290], [x0 - 7, GE.ground - 10], [x0 - 7, top + 4], 20, NEON[0]));
+  s.push(stringFan([858, 24], [858, 290], [x1 + 7, GE.ground - 10], [x1 + 7, top + 4], 20, NEON[4]));
+  s.push(stringFan([262, 24], [(x0 + x1) / 2, top - 60], [858, 24], [(x0 + x1) / 2, top - 60], 12, NEON[3]));
+  s.push(glowShroom('geSh1', 330, GE.ground + 8, 96, NEON[0], -5));
+  s.push(glowShroom('geSh2', 384, GE.ground + 6, 52, NEON[1], 7));
+  s.push(glowShroom('geSh3', 742, GE.ground + 8, 110, NEON[2], 4));
+  s.push(glowShroom('geSh4', 900, GE.ground + 10, 74, NEON[5], -8));
+  s.push(glowShroom('geSh5', 218, GE.ground + 8, 44, NEON[3], 6));
+  // A hand-painted signpost.
+  s.push(inked(`M704 ${GE.ground + 6}v-58h5v58z`, '#6a4a2a', 1.6));
+  s.push(inked('M690 262h52l8 8l-8 8h-52z', '#160a2a', 1.8) + text(716, 274, 'MAINFLOOR', { size: 7.4, fill: NEON[2], weight: 900 }));
+  s.push(inked('M724 282h-52l-8 8l8 8h52z', '#160a2a', 1.8) + text(698, 294, 'CHAI · CHILL', { size: 7, fill: NEON[3], weight: 900 }));
+  return s.join('');
+}
+
+/** The dancers you can see through the gate: a 4-frame strip. */
+export const GATE_CROWD = { x: GE.gate.x0 + 12, y: GE.ground - 64, w: GE.gate.x1 - GE.gate.x0 - 24, h: 66 };
+export const GATE_CROWD_FRAMES: SvgImageAsset[] = [0, 1, 2, 3].map((f) => ({
+  key: `goa-gatecrowd-${f}`,
+  width: GATE_CROWD.w,
+  height: GATE_CROWD.h,
+  svg: crowdStrip(GATE_CROWD.w, GATE_CROWD.h, 16, 77, f, 0.3, 0.42),
+}));
+
 export function goaEingangBg(): string {
   return [
     defs(
@@ -160,6 +195,7 @@ export function goaEingangBg(): string {
     forest(),
     gate(),
     lights(),
+    uvDeco(),
     ground(),
     vignette('geVig', 960, 450, 0.5, '#04020c'),
     grainOverlay(960, 450, 0.32, 0.25),

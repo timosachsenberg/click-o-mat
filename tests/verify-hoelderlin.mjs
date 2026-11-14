@@ -360,11 +360,29 @@ await click(560, 334, { button: 'right' });
 await waitFor(() => ev(() => window.__engine.choicesShowing), 8000, 'bouncer');
 await pick('Chakabunga');
 check('Chakabunga: the bouncer lets you in', (await flag('goaEntered')) === true);
+const gateFrames = new Set();
+for (let i = 0; i < 6; i++) { gateFrames.add(await ev(() => window.__engine.roomScene.layerObj('gatecrowd').frame.texture.key)); await page.waitForTimeout(130); }
+check('dancers are visible through the gate', gateFrames.size >= 2, [...gateFrames].join(','));
 await click(560, 160);
-await waitFor(async () => (await flag('chapterDone')) === true, 15000, 'gate');
+await waitFor(async () => (await room()) === 'goa', 15000, 'the dance floor');
 await settle();
-check('through the gate: to be continued', (await flag('chapterDone')) === true);
-await page.screenshot({ path: `${SHOT}/hoel-08-end.png` });
+check('through the gate: the Goa', (await room()) === 'goa' && !(await flag('chapterDone')));
+
+// --- the Goa: dancers everywhere, stomping; mushrooms, threads, the DJ
+const dancing = new Set();
+for (let i = 0; i < 6; i++) { dancing.add(await ev(() => window.__engine.roomScene.layerObj('dancer3').frame.texture.key + '|' + window.__engine.roomScene.layerObj('far').frame.texture.key)); await page.waitForTimeout(130); }
+check('the crowd dances (animated dancers near and far)', dancing.size >= 2, String(dancing.size));
+check('eighteen dancers to walk among', await ev(() => { let n = 0; for (let i = 0; i < 40; i++) { try { window.__engine.roomScene.layerObj('dancer' + i); n++; } catch { break; } } return n; }) === 18);
+check('mushrooms, threads, mandala, DJ and the dance floor are there',
+  (await hotspotAt(230, 220)) === 'pilze' && (await hotspotAt(200, 60)) === 'faeden' && (await hotspotAt(480, 140)) === 'mandala' && (await hotspotAt(480, 240)) === 'dj' && (await hotspotAt(480, 394)) === 'tanzflaeche');
+await page.screenshot({ path: `${SHOT}/hoel-08-goa.png` });
+
+// --- dance: the chapter ends on the dance floor
+await click(480, 394); // the dance floor (default verb: use)
+await waitFor(async () => (await flag('chapterDone')) === true, 30000, 'dance');
+await settle();
+check('danced: to be continued', (await flag('goaDanced')) === true && (await flag('chapterDone')) === true);
+await page.screenshot({ path: `${SHOT}/hoel-09-end.png` });
 
 console.log('ERRORS:', errors.length ? '\n' + errors.slice(0, 8).join('\n') : 'none');
 if (errors.length) process.exitCode = 1;

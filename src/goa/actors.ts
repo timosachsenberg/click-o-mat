@@ -62,6 +62,8 @@ export const ACTORS: Record<string, ActorDef> = {
   },
   // The döner man behind his counter: drawn into the backdrop, this is his voice.
   doenermann: { id: 'doenermann', name: 'Dönermann', talkColor: '#ffc07a', textureSet: 'otto', stance: () => 'gone' },
+  // The DJ on the Goa's stage: drawn into the backdrop, this is his voice.
+  dj: { id: 'dj', name: 'DJ', talkColor: '#ffe23a', textureSet: 'otto', stance: () => 'gone' },
   // The Goa's bouncer: a gnome in a felt sauna hat, knee-high to a raver.
   tuersteher: { id: 'tuersteher', name: 'Goazwerg', talkColor: '#8ae8ff', textureSet: 'tuersteher', baseScale: 0.6, headroom: 18 },
   // Otto R.'s voice on the tower's intercom, out on the promenade: never seen.
