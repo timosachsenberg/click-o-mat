@@ -232,16 +232,14 @@ async function serveOuzo(ctx: ScriptContext): Promise<void> {
   await ctx.playerSay('Direkt vor die Nase.');
 }
 
+/** Out of the door, any time: the password only matters at the forest. */
 async function leave(ctx: ScriptContext): Promise<void> {
-  if (!ctx.flag('password')) {
-    await ctx.playerSay('Ohne zu wissen, wo die Goa steigt, bringt mir der Wald nichts.');
-    await ctx.playerSay('Ali weiß es. Ali weiß alles.');
-    return;
-  }
   ctx.sfx('open');
-  await ctx.once('leftPicasso', async () => {
-    await ctx.playerSay('Folge dem Bass. Chakabunga. Los geht’s!');
-  });
+  if (ctx.flag('password')) {
+    await ctx.once('leftPicasso', async () => {
+      await ctx.playerSay('Folge dem Bass. Chakabunga. Los geht’s!');
+    });
+  }
   await ctx.goToRoom('neckar', 'picasso');
 }
 
@@ -374,7 +372,7 @@ const HOTSPOTS: HotspotDef[] = [
   at('door', 'Ausgang', R(280, 142, 62, 158), P(311, 322), 'up', {
     defaultVerb: 'open',
     on: {
-      lookat: 'Die Treppe rauf, raus in die Nacht. Irgendwo da draußen ist ein Wald.',
+      lookat: 'Die Treppe rauf, raus an den Neckar. Irgendwo dahinter ist ein Wald.',
       open: leave,
       use: leave,
       close: 'Sie ist zu. Noch.',
