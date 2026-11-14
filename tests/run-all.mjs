@@ -24,6 +24,7 @@ const ALL_SUITES = [
   'verify-title.mjs',
   'smoke.mjs',
   'verify-goa.mjs',
+  'verify-hoelderlin.mjs',
   'verify-renderer.mjs',
   'verify-continue.mjs',
   'verify-slotmgmt.mjs',

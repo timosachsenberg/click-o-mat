@@ -1,5 +1,6 @@
 import type { SvgImageAsset } from '../../engine/types';
 import { INK, circle, ellipse, group, path, rect, text } from '../../game/art/toon';
+import { miniSpiral } from './turm';
 
 /** Inventory icons (64×48), in the demo's inked, cel-shaded style. */
 
@@ -145,7 +146,37 @@ function muetze(): string {
   ].join('');
 }
 
+/** The portable hole: a black disc, thin as a pancake, one edge curling up. */
+function loch(): string {
+  return [
+    shadow(32, 20),
+    group(
+      [
+        ellipse(0, 0, 21, 9, { fill: '#000000', stroke: INK, sw: 2.4 }),
+        ellipse(-2, 1, 15, 5.5, { fill: '#1a0a2a' }),
+        path('M10 -7Q20 -16 24 -4Q17 -2 10 -7Z', { fill: '#3a3048', stroke: INK, sw: 1.8 }),
+        path('M14 -10Q19 -12 21 -8', { stroke: '#ffffff', sw: 1.4, opacity: 0.8 }),
+        circle(-8, 0, 0.9, { fill: '#e8d0ff' }),
+        circle(3, 2, 0.7, { fill: '#e8d0ff' }),
+      ],
+      'translate(30 28) rotate(-6)'
+    ),
+  ].join('');
+}
+
+/** The pocket attractor: the Rössler spiral on a little brass foot. */
+function taschenattraktor(): string {
+  return [
+    shadow(32, 14),
+    path('M22 41H42L39 36H25Z', { fill: '#c8964a', stroke: INK, sw: 2 }),
+    path('M32 36V30', { stroke: INK, sw: 2.4 }),
+    miniSpiral(),
+  ].join('');
+}
+
 export const GOA_ICONS: SvgImageAsset[] = [
+  { key: 'icon-loch', width: 64, height: 48, svg: loch() },
+  { key: 'icon-taschenattraktor', width: 64, height: 48, svg: taschenattraktor() },
   { key: 'icon-dose', width: 64, height: 48, svg: emptyCan() },
   { key: 'icon-cent25', width: 64, height: 48, svg: cent25() },
   { key: 'icon-ouzo', width: 64, height: 48, svg: ouzo() },

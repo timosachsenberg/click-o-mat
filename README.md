@@ -17,7 +17,9 @@ sources), the whole thing is code.
 Next to the demo lives the start of an actual adventure, **„Folge dem Bass“**
 (German, `src/goa/`): you begin in the **Picasso**, Ali's basement bar, with nothing but a
 two-euro coin and need the password for tonight's Goa party in the forest — then
-out onto the **Neckarbrücke** in Tübingen, where the Stocherkähne pass by. The
+out onto the **Neckarbrücke** in Tübingen, where the Stocherkähne pass by, and up
+into the **Hölderlinturm**, where a Rössler attractor throws the room between three
+time layers (hand-painted, 1987 pixels, modern cartoon collage). The
 **title screen picks between the two** (SPIEL · DEMO); `?game=goa` /
 `?game=demo` select one directly, and the last pick is remembered.
 
@@ -489,6 +491,10 @@ src/
     art/epplehaus.ts   The Epplehaus forecourt, and the pigeons
     rooms/epplehaus.ts The Epplehaus (Flaschenfloh, a flock of pigeon actors)
     rooms/neckar.ts    The Neckarbrücke (a punt passes regularly; sink it)
+    art/turm.ts        The Hölderlinturm inside, in three time layers (toon,
+                       an EGA pixel grid, a photo-textured cartoon collage),
+                       the Rössler attractor (integrated, not drawn), Otto R.
+    rooms/hoelderlinturm.ts  The tower room: switch time layers, free Otto R.
 public/
   img/                 PNG assets (served verbatim, copied into dist/)
 tools/
@@ -1166,8 +1172,9 @@ Bring Ned the Tentacle something *warm, fuzzy, and radioactive*:
 
 ## Testing
 
-The engine ships with an end-to-end Playwright harness (25 suites in
-`tests/`): the full demo puzzle, the adventure's pub riddle and game picker, layers/occlusion, SVG layers and their
+The engine ships with an end-to-end Playwright harness (26 suites in
+`tests/`): the full demo puzzle, the adventure's pub riddle and game picker,
+the Hölderlinturm's time layers and riddle (`verify-hoelderlin`), layers/occlusion, SVG layers and their
 texture cache, renderer transparency, scrolling +
 world-coordinate input, ambients/scale-map/zoom, regions + cutscene skip,
 NPC-bound hotspots, ink dialogs (including save/load persistence), audio
@@ -1186,7 +1193,7 @@ The runner starts its own Vite dev server (suites need the dev-only
 `window.__engine` debug hook) and writes failure screenshots to
 `tests/screenshots/` (git-ignored). The same suite runs in CI on every push
 (`.github/workflows/test.yml`). The suites drive the demo, so their URL
-carries `?game=demo` (`verify-goa` switches to the adventure itself). To
+carries `?game=demo` (`verify-goa` and `verify-hoelderlin` switch to the adventure themselves). To
 smoke-test a deployed build: `BASE_URL='https://your-site/?game=demo' node tests/smoke.mjs`.
 
 `tools/gen-assets.mjs` regenerates the PNGs in `public/img` from their SVG

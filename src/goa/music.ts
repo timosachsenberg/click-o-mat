@@ -26,6 +26,31 @@ export const GOA_MUSIC: Record<string, MusicTrack> = {
     bass: [-24, null, -12, null, -24, null, -12, -14, -19, null, -7, null, -21, null, -9, -12],
     lead: [null, 7, null, 7, 10, null, 7, 3, null, 5, null, 5, 8, 7, 3, null],
   },
+  // ---- the Hölderlinturm: one tune, three time layers -------------------------------
+  // The house style: a dreamy waltz-ish air in A minor, Hölderlin at the window.
+  'turm-toon': {
+    bpm: 80,
+    bassType: 'triangle',
+    leadType: 'triangle',
+    bass: [-24, null, -17, null, -20, null, -17, null, -26, null, -19, null, -22, null, -19, null],
+    lead: [0, null, 3, 7, 12, null, 10, 7, 5, null, 3, 2, 3, null, null, null],
+  },
+  // 1987: the same tune, as a beepy square-wave chiptune, twice as fast.
+  'turm-pixel': {
+    bpm: 150,
+    bassType: 'square',
+    leadType: 'square',
+    bass: [-24, -12, -24, -12, -26, -14, -26, -14, -29, -17, -29, -17, -22, -10, -22, -10],
+    lead: [12, 15, 19, 24, 22, 19, 17, 15, 14, 15, 17, 14, 15, null, 12, null],
+  },
+  // Now: cartoon chase music, sawtooth and all.
+  'turm-modern': {
+    bpm: 132,
+    bassType: 'sawtooth',
+    leadType: 'square',
+    bass: [-24, null, -24, -12, null, -17, -19, null, -20, null, -20, -8, null, -15, -17, null],
+    lead: [0, 2, 3, 5, 7, null, 6, 7, 12, null, 11, 10, 9, null, 7, null],
+  },
   // ---- the jukebox -----------------------------------------------------------------
   // "Du hast mein Herz am Pfandautomat vergessen": slow, heartbroken, in C.
   'song-pfand': {

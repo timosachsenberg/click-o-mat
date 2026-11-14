@@ -51,6 +51,15 @@ export const ACTORS: Record<string, ActorDef> = {
     talkColor: '#c4ec7a',
     textureSet: 'floh',
   },
+  otto: {
+    id: 'otto',
+    name: 'Otto R.',
+    talkColor: '#55ffff',
+    textureSet: 'otto',
+    speed: 150,
+    // Otto lives in the pixel layer only (turmEra 1) — until he's out.
+    stance: (state) => ((state.getFlag<number>('turmEra') ?? 0) !== 1 || state.getFlag('ottoFree') ? 'gone' : undefined),
+  },
   // The pigeons in front of the Epplehaus: eight of them, two plumages.
   ...Object.fromEntries(
     [1, 2, 3, 4, 5, 6, 7, 8].map((n): [string, ActorDef] => [

@@ -7,6 +7,7 @@ import { GOA_MUSIC } from './music';
 import { picassoRoom } from './rooms/picasso';
 import { neckarRoom } from './rooms/neckar';
 import { epplehausRoom } from './rooms/epplehaus';
+import { hoelderlinturmRoom } from './rooms/hoelderlinturm';
 import { GOA_CAST } from './art/cast';
 import { GOA_ICONS } from './art/icons';
 import { UI_IMAGES, UI_THEME } from '../game/art/ui';
@@ -26,6 +27,7 @@ export const CONTENT: GameContent = {
     picasso: picassoRoom,
     epplehaus: epplehausRoom,
     neckar: neckarRoom,
+    hoelderlinturm: hoelderlinturmRoom,
   },
   items: ITEMS,
   actors: ACTORS,

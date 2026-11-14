@@ -290,4 +290,74 @@ export const DIALOGS: Record<string, DialogDef> = {
       },
     },
   },
+  // Otto R., chaos researcher, stuck in the pixel layer of the Hölderlinturm.
+  otto: {
+    id: 'otto',
+    start: 'root',
+    nodes: {
+      root: {
+        choices: [
+          {
+            text: 'Wer bist du?',
+            once: true,
+            script: async (ctx) => {
+              await ctx.say('otto', 'Otto R., Chaosforscher. Der Attraktor da ist von mir. Rössler-System, drei Gleichungen, unendlich viel Ärger.');
+              await ctx.say('otto', 'Hölderlin hatte nichts dagegen. Der wohnt ja nicht mehr hier.');
+              await ctx.playerSay('Und warum bist du so ... pixelig?');
+              await ctx.say('otto', 'Das bin nicht ich, das ist die Epoche. 1987: sechzehn Farben, 320 mal 200 Bildpunkte.');
+              await ctx.say('otto', 'Du dagegen bist unverschämt hochauflösend. Das ist in dieser Ebene fast schon unhöflich.');
+            },
+          },
+          {
+            text: 'Warum gehst du nicht einfach raus?',
+            script: async (ctx) => {
+              ctx.setFlag('ottoExplained');
+              await ctx.say('otto', 'Weil ich auf einem seltsamen Attraktor sitze! Egal, wie oft ich drehe: Mein Orbit kommt immer wieder in 1987 vorbei.');
+              await ctx.say('otto', 'Und die Tür ist in meiner Ebene nur gemalt. Begehbare Türen waren damals Speicherluxus.');
+              await ctx.say('otto', 'Ich bräuchte ein Loch. Ein richtiges. In der Wand, da wo ich PUT PUT hingeschrieben hab.');
+            },
+          },
+          {
+            text: 'Was heißt PUT PUT?',
+            once: true,
+            script: async (ctx) => {
+              await ctx.say('otto', 'Mein Merkzettel! Im Parser-Dialekt. Damals hat man Adventures noch getippt: PUT irgendwas, PUT hierhin.');
+              await ctx.say('otto', 'Ich wusste nur nie, WAS ich da hinlegen soll. Vergesslich, wir Genies.');
+            },
+          },
+          {
+            text: 'Wo krieg ich ein Loch her?',
+            if: (s) => !!s.getFlag('ottoExplained') && !s.getFlag('holeTaken'),
+            script: async (ctx) => {
+              await ctx.say('otto', 'Unterm Teppich liegt eins. Ein kleines schwarzes Loch, ich hab’s da versteckt, als es noch ganz jung war.');
+              await ctx.say('otto', 'Hier in 1987 ist es Teil vom Boden, das kriegst du nicht hoch.');
+              await ctx.say('otto', 'Aber in der modernen Ebene ... da gelten Zeichentrick-Gesetze. Da sind Löcher tragbar.');
+            },
+          },
+          {
+            text: 'Ich hab das Loch!',
+            if: (s) => !!s.getFlag('holeTaken') && !s.getFlag('wallHole'),
+            script: async (ctx) => {
+              await ctx.say('otto', 'Wunderbar! Dann PUT es an die Wand. PUT PUT! Da, wo der Pfeil hinzeigt!');
+            },
+          },
+          {
+            text: 'Kennst du die Goa im Wald?',
+            once: true,
+            script: async (ctx) => {
+              await ctx.say('otto', 'Natürlich. Was ist Goa anderes als ein sehr ordentlich getaktetes Chaos?');
+              await ctx.say('otto', 'Hundertvierzig Schläge pro Minute, und keine Tanzbewegung kommt zweimal gleich. Ein Attraktor mit Bass.');
+            },
+          },
+          {
+            text: 'Bis später, Otto.',
+            end: true,
+            script: async (ctx) => {
+              await ctx.say('otto', 'Ich lauf nicht weg. Kann ich ja nicht.');
+            },
+          },
+        ],
+      },
+    },
+  },
 };
