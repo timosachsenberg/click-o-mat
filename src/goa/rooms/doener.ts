@@ -5,8 +5,8 @@ import { PIGEON_ACTORS } from '../art/epplehaus';
 import { VOICE_ACTOR } from '../art/turm';
 
 // ---- layout ----------------------------------------------------------------------
-// The street between the Picasso (stairs down on the right) and the
-// Epplehaus (left). In the middle: a döner stand. It redeems the full stamp
+// The street between the Picasso (stairs down on the left) and the
+// Epplehaus (right). In the middle: a döner stand. It redeems the full stamp
 // card for a döner; otherwise it's there to smell good when you walk past (an ambient notices the player in
 // front of the counter and says a line in passing).
 // The döner man is a voice behind the counter (drawn into the backdrop; an
@@ -21,7 +21,7 @@ function at(id: string, name: string, r: Rect, walkTo: Vec2, facing: Facing, res
 
 const COUNTER_SPOT = P(480, 356);
 /** Beside the döner man, so the player doesn't stand in front of him. */
-const MAN_SPOT = P(DB.counter.x + 128, 352);
+const MAN_SPOT = P(DB.man.x + 78, 352);
 const pick = <T,>(list: T[]) => list[Math.floor(Math.random() * list.length)];
 
 /** The smell gets you once per visit, not on every step. */
@@ -81,9 +81,9 @@ const HOTSPOTS: HotspotDef[] = [
   {
     id: 'doenermann',
     name: 'Dönermann',
-    rect: R(DB.counter.x + 170, DB.counter.y + 20, 60, 68),
+    rect: R(DB.man.x - 30, DB.counter.y + 20, 60, 68),
     walkTo: MAN_SPOT,
-    facing: 'right',
+    facing: 'left',
     defaultVerb: 'talkto',
     on: {
       lookat: 'Der Dönermann. Weiße Mütze, mächtiger Schnurrbart, das Messer immer in Bewegung.',
@@ -105,7 +105,7 @@ const HOTSPOTS: HotspotDef[] = [
       use: { stempelkarte: redeemCard },
     },
   },
-  at('tische', 'Stehtische', R(DB.tables[0] - 36, DB.ground - 40, DB.tables[1] - DB.tables[0] + 72, 90), P(180, 380), 'up', {
+  at('tische', 'Stehtische', R(DB.tables[0] - 36, DB.ground - 40, DB.tables[1] - DB.tables[0] + 72, 90), P(760, 380), 'up', {
     on: {
       lookat: 'Stehtische mit Serviettenspendern. Und einem einsamen Zwiebelring.',
       pickup: 'Der Zwiebelring hat schon bessere Zeiten gesehen. Und mehrere Tauben.',
@@ -115,8 +115,8 @@ const HOTSPOTS: HotspotDef[] = [
     id: 'doenertaube',
     name: 'Taube',
     actor: 'doenertaube',
-    walkTo: P(DB.tables[1] + 56, 372),
-    facing: 'left',
+    walkTo: P(DB.tables[0] - 50, 372),
+    facing: 'right',
     on: {
       lookat: 'Eine Taube auf dem Stehtisch. Sie arbeitet sich an einem Zwiebelring ab. Mit Hingabe.',
       talkto: async (ctx) => {
@@ -140,7 +140,7 @@ const HOTSPOTS: HotspotDef[] = [
       open: toPicasso,
     },
   }),
-  at('toEpplehaus', 'Zum Epplehaus', R(0, 140, 70, 306), P(22, 400), 'left', {
+  at('toEpplehaus', 'Zum Epplehaus', R(890, 140, 70, 306), P(940, 400), 'right', {
     defaultVerb: 'use',
     on: {
       lookat: 'Da lang geht’s zum Epplehaus.',
@@ -180,14 +180,14 @@ export const doenerRoom: RoomDef = {
 
   entries: {
     picasso: { x: DB.cellar.x + 39, y: 354, facing: 'down' },
-    epplehaus: { x: 44, y: 400, facing: 'right' },
+    epplehaus: { x: 916, y: 400, facing: 'left' },
   },
 
   actors: [
     // (An invisible voice: its feet are placed so the speech sits just above the drawn man's cap.)
-    { id: 'doenermann', x: DB.counter.x + 200, y: DB.counter.y + 134, facing: 'down' },
+    { id: 'doenermann', x: DB.man.x, y: DB.counter.y + 134, facing: 'down' },
     // A pigeon on the standing table, working on the lonely onion ring.
-    { id: 'doenertaube', x: DB.tables[1] + 6, y: DB.ground - 20, facing: 'left' },
+    { id: 'doenertaube', x: DB.tables[0] + 6, y: DB.ground - 20, facing: 'left' },
   ],
 
   async onEnter() {

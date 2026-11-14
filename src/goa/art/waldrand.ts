@@ -380,9 +380,9 @@ export function waldrandBg(): string {
     }
   }
   // The way back, signposted.
-  s.push(inked('M912 330L918 330L920 392L910 392Z', '#5a4030', 2.2));
-  s.push(inked(wobble([[870, 334], [936, 330], [946, 342], [936, 354], [872, 356]], { seed: 71, wobble: 1 }), '#8a6440', 2.2));
-  s.push(text(906, 348, 'NECKAR →', { size: 8, fill: '#2a1a10', rotate: -2 }));
+  s.push(inked('M248 372L254 372L256 432L246 432Z', '#5a4030', 2.2));
+  s.push(inked(wobble([[296, 376], [230, 372], [220, 384], [230, 396], [294, 398]], { seed: 71, wobble: 1 }), '#8a6440', 2.2));
+  s.push(text(260, 390, '← NECKAR', { size: 8, fill: '#2a1a10', rotate: 2 }));
   s.push(vignette('wrVig', 960, 450, 0.5, '#0a0618'));
   s.push(grainOverlay(960, 450, 0.38, 0.3));
   return s.join('');

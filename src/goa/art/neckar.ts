@@ -628,14 +628,14 @@ export function balustrade(): string {
   s.push(text(hx, top - 106, 'H', { size: 17, fill: '#f2c230', weight: 900 }));
   s.push(inked(`M${hx + 4} ${top - 84}h26v36h-26z`, '#f4efe4', 1.4));
   for (let k = 0; k < 5; k++) s.push(line([hx + 8, top - 78 + k * 6], [hx + 26 - (k % 2) * 6, top - 78 + k * 6], '#5a5a6a', 1.4));
-  // Signposts at both ends of the bridge: the forest one way, the town the other.
+  // Signposts at both ends of the bridge: the town one way, the forest the other.
   const signpost = (px: number, label: string, dir: 1 | -1, col: string) =>
     inked(`M${px - 2.5} ${top + 34}V${top - 52}h5V${top + 34}Z`, '#5a5a6a', 1.6) +
     inked(`M${px - 30} ${top - 50}h60v18h-60z`, col, 1.8) +
     inked(dir > 0 ? `M${px + 30} ${top - 54}l14 13l-14 13z` : `M${px - 30} ${top - 54}l-14 13l14 13z`, col, 1.8) +
     text(px, top - 37, label, { size: 8.6, fill: INK, weight: 900 });
-  s.push(signpost(46, 'WALD', -1, '#8ad070'));
-  s.push(signpost(914, 'EPPLEHAUS', 1, '#f2c230'));
+  s.push(signpost(58, 'EPPLEHAUS', -1, '#f2c230'));
+  s.push(signpost(900, 'WALD', 1, '#8ad070'));
   // The street lamp on the right.
   const lx = 862;
   s.push(inked(`M${lx - 7} ${top + 2}h14l-3 -14h-8z`, '#2a3a3a', 2));

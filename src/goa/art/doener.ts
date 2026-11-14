@@ -23,10 +23,10 @@ import {
 import { band } from './neckar';
 
 /**
- * The street between the Picasso and the Epplehaus at sunset: on the right
+ * The street between the Picasso and the Epplehaus at sunset: on the left
  * the stairs down into the Picasso under its flickering neon, in the middle
  * a döner stand — Neckar-Kebap, a spit turning in the window, steam and a
- * smell you can see — with two standing tables, on the left the street on
+ * smell you can see — with two standing tables, on the right the street on
  * to the Epplehaus. No puzzle here. It just smells good.
  *
  * All functions draw in room coordinates (960×450) and return SVG markup.
@@ -34,12 +34,14 @@ import { band } from './neckar';
 
 export const DB = {
   ground: 304,
-  cellar: { x: 824, y: 204, w: 78, h: 100 },
+  cellar: { x: 46, y: 204, w: 78, h: 100 },
   kiosk: { x: 300, y: 118, w: 360, h: 186 },
   /** The window with the spit (an animation layer). */
   spit: { x: 344, y: 168, w: 64, h: 92 },
   counter: { x: 330, y: 168, w: 300, h: 88 },
-  tables: [120, 236],
+  /** The döner man stands right beside the spit, so he can carve it. */
+  man: { x: 442 },
+  tables: [700, 820],
 };
 
 const LIT = '#ffd870';
@@ -118,7 +120,7 @@ function kiosk(): string {
   for (let k = 0; k < 7; k++) s.push(inked(`M${c.x + 120 + k * 22} ${c.y + 30}h12v-18h-12z`, ['#d8322a', '#3a8a4a', '#2a6ad8', '#f2c230'][k % 4], 1.2));
   s.push(path(`M${c.x + 110} ${c.y + 32}H${c.x + 290}`, { stroke: '#8a5a2a', sw: 3 }));
   // The man: white cap, moustache, apron — a big grin.
-  const mx = c.x + 200;
+  const mx = DB.man.x;
   const my = c.y + 64;
   s.push(inked(`M${mx - 22} ${c.y + c.h}V${my + 4}Q${mx} ${my - 8} ${mx + 22} ${my + 4}V${c.y + c.h}Z`, '#f4efe4', 2));
   s.push(circle(mx, my - 14, 13, { fill: '#e0a878', stroke: INK, sw: 2 }));
@@ -132,8 +134,8 @@ function kiosk(): string {
     s.push(path(`M${tx + 2} ${c.y + c.h - 12}q7 -6 14 0z`, { fill: col, stroke: INK, sw: 0.9 }));
   });
   // The neon tube sign in the window's corner (its glow blinks: own layer).
-  s.push(rect(c.x + 86, c.y + 40, 54, 20, { fill: '#1e1838', stroke: INK, sw: 1.4 }, 3));
-  s.push(text(c.x + 113, c.y + 55, 'OPEN', { size: 12, fill: '#ff5ab4', stroke: '#7a1a5a', sw: 1 }));
+  s.push(rect(c.x + 173, c.y + 40, 54, 20, { fill: '#1e1838', stroke: INK, sw: 1.4 }, 3));
+  s.push(text(c.x + 200, c.y + 55, 'OPEN', { size: 12, fill: '#ff5ab4', stroke: '#7a1a5a', sw: 1 }));
   // The counter's front, the awning, the sign.
   s.push(inked(poly([[c.x - 10, c.y + c.h - 4], [c.x + c.w + 10, c.y + c.h - 4], [c.x + c.w + 10, c.y + c.h + 6], [c.x - 10, c.y + c.h + 6]]), '#b8b8c8', 2));
   for (const [cx, col] of [[c.x + 236, '#d8322a'], [c.x + 252, '#f2c230'], [c.x + 268, '#3a8a4a']] as Array<[number, string]>) s.push(inked(`M${cx - 5} ${c.y + c.h - 4}v-14h10v14z`, col, 1.2));
@@ -171,8 +173,8 @@ function tables(): string {
     s.push(inked(`M${tx - 6} ${DB.ground - 20}v-12h12v12z`, '#d8d8e0', 1.4));
     s.push(path(`M${tx - 3} ${DB.ground - 32}v-4h6v4`, { stroke: '#ffffff', sw: 1.6 }));
   }
-  s.push(inked('M40 300h30l-4 44h-22z', '#3a6a4a', 2));
-  s.push(path('M42 300h26', { stroke: '#2a4a3a', sw: 4 }));
+  s.push(inked('M890 300h30l-4 44h-22z', '#3a6a4a', 2));
+  s.push(path('M892 300h26', { stroke: '#2a4a3a', sw: 4 }));
   return s.join('');
 }
 
@@ -248,27 +250,30 @@ export const SPIT_FRAMES: SvgImageAsset[] = [0, 1, 2, 3].map((f) => {
 });
 
 /** The döner man's arm, sharpening his long knife: two frames. */
-export const KNIFE = { x: DB.counter.x + 204, y: DB.counter.y + 40, w: 54, h: 46 };
+/** The döner man's carving arm: from his shoulder (right of the box) to the
+ *  spit beside him, the knife shaving down the cone. */
+export const KNIFE = { x: DB.man.x - 62, y: DB.counter.y + 22, w: 52, h: 64 };
 export const KNIFE_FRAMES: SvgImageAsset[] = [0, 1].map((f) => {
-  const hx = 30 + f * 8;
-  const hy = 22 - f * 10;
+  const sx = KNIFE.w - 8;
+  const hx = 12 + f * 4;
+  const hy = 18 + f * 20;
   return {
     key: `doener-knife-${f}`,
     width: KNIFE.w,
     height: KNIFE.h,
     svg:
-      path(`M6 34Q18 34 ${hx} ${hy}`, { stroke: INK, sw: 8 }) +
-      path(`M6 34Q18 34 ${hx} ${hy}`, { stroke: '#f4efe4', sw: 5 }) +
+      path(`M${sx} 56Q${sx - 10} 34 ${hx} ${hy}`, { stroke: INK, sw: 8 }) +
+      path(`M${sx} 56Q${sx - 10} 34 ${hx} ${hy}`, { stroke: '#f4efe4', sw: 5 }) +
       circle(hx, hy, 4, { fill: '#e0a878', stroke: INK, sw: 1.4 }) +
-      path(`M${hx} ${hy}L${hx + 18} ${hy - 16}`, { stroke: INK, sw: 4 }) +
-      path(`M${hx} ${hy}L${hx + 18} ${hy - 16}`, { stroke: '#d8e0e8', sw: 2 }),
+      path(`M${hx} ${hy}L${hx - 8} ${hy + 18}`, { stroke: INK, sw: 4 }) +
+      path(`M${hx} ${hy}L${hx - 8} ${hy + 18}`, { stroke: '#d8e0e8', sw: 2 }),
   };
 });
 
 /** The OPEN sign's neon glow (an ambient lets it flicker). */
 export function openGlow(): string {
   const c = DB.counter;
-  return ellipse(c.x + 113, c.y + 50, 44, 22, { fill: '#ff5ab4', opacity: 0.35 }) + text(c.x + 113, c.y + 55, 'OPEN', { size: 12, fill: '#ffd0f0' });
+  return ellipse(c.x + 200, c.y + 50, 44, 22, { fill: '#ff5ab4', opacity: 0.35 }) + text(c.x + 200, c.y + 55, 'OPEN', { size: 12, fill: '#ffd0f0' });
 }
 
 /** Steam and the smell rising from the stand, as wavy lines (its own layer,

@@ -367,7 +367,7 @@ const HOTSPOTS: HotspotDef[] = [
   at('laterne', 'Laterne', R(850, 180, 44, 196), P(862, 424), 'up', {
     on: { lookat: 'Eine alte Laterne. Brennt schon. Feierabend für die Sonne, Schichtbeginn für die Laterne.' },
   }),
-  at('toPicasso', 'Zum Epplehaus', R(880, 330, 80, 120), P(948, 432), 'right', {
+  at('toPicasso', 'Zum Epplehaus', R(0, 330, 80, 120), P(12, 432), 'left', {
     defaultVerb: 'use',
     on: {
       lookat: 'Da geht’s in die Stadt, zum Epplehaus. Dahinter die Dönerbude und die Treppe runter ins Picasso.',
@@ -375,7 +375,7 @@ const HOTSPOTS: HotspotDef[] = [
       open: toPicasso,
     },
   }),
-  at('toForest', 'Richtung Wald', R(0, 330, 80, 120), P(12, 432), 'left', {
+  at('toForest', 'Richtung Wald', R(880, 330, 80, 120), P(948, 432), 'right', {
     defaultVerb: 'use',
     on: {
       lookat: 'Über die Brücke, dann den Weg hoch zum Waldrand. Irgendwo da draußen wummert der Bass.',
@@ -529,13 +529,13 @@ export const neckarRoom: RoomDef = {
   assets: { svgActors: [PUNT_ACTOR, VOICE_ACTOR, ...PIGEON_ACTORS] },
 
   entries: {
-    picasso: { x: 930, y: 432, facing: 'left' },
+    picasso: { x: 40, y: 432, facing: 'right' },
     // Out of the Hölderlinturm, at the end of the promenade.
     turm: { x: TOWER_SPOT.x, y: TOWER_SPOT.y, facing: 'right' },
     // The start of the game: off the bus.
     bus: { x: BUS_STOP.x, y: BUS_STOP.y, facing: 'down' },
     // Back from the edge of the forest.
-    wald: { x: 40, y: 432, facing: 'right' },
+    wald: { x: 930, y: 432, facing: 'left' },
   },
 
   actors: [
