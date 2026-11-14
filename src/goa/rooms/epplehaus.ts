@@ -350,7 +350,7 @@ const HOTSPOTS: HotspotDef[] = [
   at('lichterkette', 'Lichterkette', R(960 - EP.x1 - 74, 110, 70, 84), P(140, 348), 'up', {
     on: { lookat: 'Eine Lichterkette, vom Haus zum Wegweiser gespannt. Jede zweite Birne brennt. Reicht.' },
   }),
-  at('toDoener', 'Zur Dönerbude', R(930, 140, 30, 306), P(936, 400), 'right', {
+  at('toDoener', 'Zur Dönerbude', R(890, 140, 70, 306), P(936, 400), 'right', {
     defaultVerb: 'use',
     on: {
       lookat: 'Da lang geht’s zur Dönerbude. Und dahinter die Treppe runter ins Picasso. Es riecht bis hierher.',
@@ -358,7 +358,7 @@ const HOTSPOTS: HotspotDef[] = [
       open: toDoener,
     },
   }),
-  at('toNeckar', 'Zur Neckarbrücke', R(0, 250, 60, 196), P(28, 400), 'left', {
+  at('toNeckar', 'Zur Neckarbrücke', R(0, 250, 70, 196), P(28, 400), 'left', {
     defaultVerb: 'use',
     on: {
       lookat: 'Da vorne ist die Neckarbrücke. Dahinter irgendwo: der Wald.',

@@ -285,6 +285,8 @@ await page.screenshot({ path: `${SHOT}/hoel-05-free.png` });
 // --- the hole stays in the wall in 1987; in the modern layer it peels off again
 await doVerb('pickup', 671, 340);
 check('in 1987 the hole is stuck in the wall', (await flag('wallHoleTaken')) !== true && (await hotspotAt(671, 340)) === 'mauerloch');
+await useItemOn('taschenattraktor', 671, 340);
+check('the pocket attractor on the stuck hole: no wormhole yet', !(await inv()).includes('wurmloch') && (await inv()).includes('taschenattraktor'), JSON.stringify(await inv()));
 await clickW(382, 164);
 await settle();
 check('on to the modern layer', (await era()) === 2);

@@ -191,7 +191,7 @@ export const ITEMS: Record<string, ItemDef> = {
 };
 
 /** Black hole + Otto's pocket attractor = a wormhole to where the chaos is. */
-async function makeWormhole(ctx: ScriptContext): Promise<void> {
+export async function makeWormhole(ctx: ScriptContext): Promise<void> {
   ctx.removeItem('loch');
   ctx.removeItem('taschenattraktor');
   ctx.sfx('zap');

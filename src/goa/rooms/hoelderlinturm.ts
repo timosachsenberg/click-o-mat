@@ -1,4 +1,5 @@
 import { Layer, type Facing, type HotspotDef, type Rect, type RoomDef, type Vec2 } from '../../engine/types';
+import { makeWormhole } from '../items';
 import type { ScriptContext } from '../../engine/ScriptContext';
 import type { GameState } from '../../engine/GameState';
 import { FLOORS, OTTO_ACTOR, TM, blackHoleArt, film, filmOverlay, rugArt, spiralGlow, turmBg, wallHoleArt, type Era } from '../art/turm';
@@ -406,6 +407,21 @@ const HOTSPOTS: HotspotDef[] = [
       use: 'Da durch? Dafür bin ich zu hochauflösend. Ich nehm die Tür.',
       pickup: takeWallHole,
       pull: takeWallHole,
+    },
+    onItem: {
+      // The pocket attractor straight onto the hole in the wall: in the cartoon
+      // layer it comes off and the two become the wormhole in one go.
+      use: {
+        taschenattraktor: async (ctx) => {
+          if (era(ctx.state) !== 2) {
+            await ctx.playerSay('Die Spirale will um das Loch kreisen, das merk ich. Aber hier sitzt es fest in der Wand.');
+            await ctx.playerSay(ctx.easyMode ? 'In der Zeichentrick-Ebene krieg ich es bestimmt wieder ab.' : 'Erst muss ich es da irgendwie abkriegen.');
+            return;
+          }
+          await takeWallHole(ctx);
+          await makeWormhole(ctx);
+        },
+      },
     },
   },
   at('attraktor', 'Rössler-Attraktor', R(TM.spiral.cx - TM.spiral.w / 2 - 6, TM.spiral.cy - TM.spiral.h / 2 - 8, TM.spiral.w + 12, TM.pedestal.foot - TM.spiral.cy + TM.spiral.h / 2 + 8), ATTRACTOR_SPOT, 'up', {

@@ -140,7 +140,7 @@ const HOTSPOTS: HotspotDef[] = [
       open: toPicasso,
     },
   }),
-  at('toEpplehaus', 'Zum Epplehaus', R(0, 140, 30, 306), P(22, 400), 'left', {
+  at('toEpplehaus', 'Zum Epplehaus', R(0, 140, 70, 306), P(22, 400), 'left', {
     defaultVerb: 'use',
     on: {
       lookat: 'Da lang geht’s zum Epplehaus.',

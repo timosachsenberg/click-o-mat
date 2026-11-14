@@ -370,7 +370,7 @@ const HOTSPOTS: HotspotDef[] = [
   at('laterne', 'Laterne', R(850, 180, 44, 196), P(862, 424), 'up', {
     on: { lookat: 'Eine alte Laterne. Brennt schon. Feierabend für die Sonne, Schichtbeginn für die Laterne.' },
   }),
-  at('toPicasso', 'Zum Epplehaus', R(930, 408, 30, 42), P(948, 432), 'right', {
+  at('toPicasso', 'Zum Epplehaus', R(880, 330, 80, 120), P(948, 432), 'right', {
     defaultVerb: 'use',
     on: {
       lookat: 'Da geht’s in die Stadt, zum Epplehaus. Dahinter die Dönerbude und die Treppe runter ins Picasso.',
@@ -378,7 +378,7 @@ const HOTSPOTS: HotspotDef[] = [
       open: toPicasso,
     },
   }),
-  at('toForest', 'Richtung Wald', R(0, 408, 30, 42), P(12, 432), 'left', {
+  at('toForest', 'Richtung Wald', R(0, 330, 80, 120), P(12, 432), 'left', {
     defaultVerb: 'use',
     on: {
       lookat: 'Über die Brücke, dann den Weg hoch zum Waldrand. Irgendwo da draußen wummert der Bass.',
