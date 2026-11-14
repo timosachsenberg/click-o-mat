@@ -431,7 +431,7 @@ interface Plumage {
   neck: string;
 }
 
-function pigeonFrame(c: Plumage, o: { peck: number; step: number; bob: number }): string {
+function pigeonFrame(c: Plumage & { parrot?: boolean }, o: { peck: number; step: number; bob: number }): string {
   const s: string[] = [];
   const gy = 30;
   // Legs: two pink sticks, alternating.
@@ -442,21 +442,29 @@ function pigeonFrame(c: Plumage, o: { peck: number; step: number; bob: number })
   }
   // Tail, body, folded wing.
   s.push(path('M9 18L1 23L8 25Z', { fill: c.wing, stroke: INK, sw: 1.4 }));
+  // Her mother had a thing with a parrot: three tail feathers that give it away.
+  if (c.parrot) {
+    s.push(path('M9 16L0.8 11.5L8 19.5Z', { fill: '#e8323a', stroke: INK, sw: 1 }));
+    s.push(path('M9 18.5L0.6 18.5L8 22Z', { fill: '#ffd23a', stroke: INK, sw: 1 }));
+    s.push(path('M9 21L1 27.5L9 24.5Z', { fill: '#2a8ae8', stroke: INK, sw: 1 }));
+  }
   s.push(ellipse(17, 18, 10.5, 7.2, { fill: c.body, stroke: INK, sw: 1.6 }));
   s.push(path('M9 17Q16 10 25 17Q18 23 9 21Z', { fill: c.wing, stroke: INK, sw: 1.2 }));
   s.push(path('M12 19h9M13 16.6h7', { stroke: INK, sw: 0.8, opacity: 0.6 }));
+  if (c.parrot) s.push(path('M11 20.4Q17 23.4 23 18.6', { stroke: '#3ac85a', sw: 2 }) + path('M12 18Q17 20.6 22 17', { stroke: '#ffd23a', sw: 1.4 }));
   // Neck and head: up, or down pecking.
   const hx = 27 + o.bob + o.peck * 3;
   const hy = 9 + o.peck * 13;
   s.push(path(`M22 13Q${(22 + hx) / 2 + 2} ${(13 + hy) / 2 - 2} ${hx - 2} ${hy + 2}L${hx + 2} ${hy + 3}Q${(26 + hx) / 2 + 3} ${(18 + hy) / 2 + 2} 26 19Z`, { fill: c.neck, stroke: INK, sw: 1.4 }));
   s.push(circle(hx, hy, 4.2, { fill: c.head, stroke: INK, sw: 1.5 }));
+  if (c.parrot) s.push(path(`M${hx - 2.6} ${hy - 3.4}q-2.4 -4.6 1.2 -5.4q-0.8 2.6 0.6 4.2zM${hx - 0.4} ${hy - 4}q0 -4.8 3.4 -4.6q-1.8 2.2 -1 4.4z`, { fill: '#ffd23a', stroke: INK, sw: 0.8 }));
   const down = o.peck > 0.5;
   s.push(path(down ? `M${hx + 2} ${hy + 3}l3 5l-5 -2z` : `M${hx + 3.6} ${hy - 0.6}l4.6 1.4l-4.6 1.6z`, { fill: '#f0b040', stroke: INK, sw: 0.9 }));
   s.push(circle(hx + 1.2, hy - 0.8, 1.3, { fill: '#ff8a3a', stroke: INK, sw: 0.7 }) + circle(hx + 1.4, hy - 0.8, 0.5, { fill: INK }));
   return s.join('');
 }
 
-function pigeonDraw(c: Plumage) {
+function pigeonDraw(c: Plumage & { parrot?: boolean }) {
   return (_variant: ActorVariant, pose: string, f: number): string => {
     if (pose === 'walk') return pigeonFrame(c, { peck: 0, step: [1, 0, -1, 0][f % 4], bob: [2, 0, -1.5, 0][f % 4] });
     if (pose === 'talk') return pigeonFrame(c, { peck: 0, step: 0, bob: f % 2 ? 1.5 : 0 });
@@ -475,4 +483,6 @@ const PIGEON_POSES = {
 export const PIGEON_ACTORS: SvgActorAsset[] = [
   { key: 'taube', width: PW, height: PH, poses: PIGEON_POSES, draw: pigeonDraw({ body: '#9a9aae', wing: '#6e6e86', head: '#5a6a80', neck: '#4a9a8a' }) },
   { key: 'taube2', width: PW, height: PH, poses: PIGEON_POSES, draw: pigeonDraw({ body: '#e8e2da', wing: '#a87a5a', head: '#8a5a4a', neck: '#b06a9a' }) },
+  // The Put-Put pigeon: half parrot, on her mother's side.
+  { key: 'taubepapagei', width: PW, height: PH, poses: PIGEON_POSES, draw: pigeonDraw({ body: '#9a9aae', wing: '#6e6e86', head: '#5a6a80', neck: '#3ab88a', parrot: true }) },
 ];

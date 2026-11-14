@@ -78,12 +78,12 @@ export const ACTORS: Record<string, ActorDef> = {
   // A pigeon at the edge of the forest that pops the balloon.
   waldtaube: { id: 'waldtaube', name: 'Taube', talkColor: '#d8d8ea', textureSet: 'taube', baseScale: 0.9 },
   // The Put-Put pigeon at the tower's door (the Epplehaus pigeon, on loan).
-  taubeTuer: { id: 'taubeTuer', name: 'Put-Put-Taube', talkColor: '#d8d8ea', textureSet: 'taube2', baseScale: 0.9 },
+  taubeTuer: { id: 'taubeTuer', name: 'Put-Put-Taube', talkColor: '#d8d8ea', textureSet: 'taubepapagei', baseScale: 0.9 },
   // The pigeons in front of the Epplehaus: eight of them, two plumages.
   ...Object.fromEntries(
     [1, 2, 3, 4, 5, 6, 7, 8].map((n): [string, ActorDef] => [
       `taube${n}`,
-      { id: `taube${n}`, name: 'Taube', talkColor: '#d8d8ea', textureSet: n % 3 === 0 ? 'taube2' : 'taube', speed: 90, baseScale: 0.9 },
+      { id: `taube${n}`, name: 'Taube', talkColor: '#d8d8ea', textureSet: n === 3 ? 'taubepapagei' : n % 3 === 0 ? 'taube2' : 'taube', speed: 90, baseScale: 0.9 },
     ])
   ),
 };
