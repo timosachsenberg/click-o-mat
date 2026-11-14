@@ -99,6 +99,30 @@ export const ITEMS: Record<string, ItemDef> = {
       await ctx.playerSay('Oder irgendwas Dunkles, Rundes, um das sie kreisen kann.');
     },
   },
+  brezel: {
+    id: 'brezel',
+    name: 'alte Brezel',
+    icon: 'icon-brezel',
+    lookAt: async (ctx) => {
+      await ctx.playerSay('Brezelstücke von gestern. Hart wie Granit, salzig wie das Meer.');
+      await ctx.playerSay('Für Menschen ungeeignet. Für Tauben ein Festmahl.');
+    },
+    use: 'Draufbeißen? Meine Zähne brauch ich noch für den Wald.',
+  },
+  taube: {
+    id: 'taube',
+    name: 'Put-Put-Taube',
+    icon: 'icon-taube',
+    lookAt: async (ctx) => {
+      await ctx.playerSay('Die Taube, die alles nachplappert. Sie sitzt erstaunlich zufrieden in meiner Hand.');
+      await ctx.playerSay('Ab und zu sagt sie „Put put“. Mit perfekter Betonung.');
+    },
+    use: async (ctx) => {
+      await ctx.playerSay('Na, sag mal was.');
+      await ctx.playerSay('*Taube:* „Put put.“');
+      await ctx.playerSay('Genau so. Das muss nur noch jemand hören, der Wert drauf legt.');
+    },
+  },
   wurmloch: {
     id: 'wurmloch',
     name: 'Wurmloch',

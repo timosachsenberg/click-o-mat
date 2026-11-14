@@ -219,6 +219,67 @@ export const DIALOGS: Record<string, DialogDef> = {
     },
   },
 
+  // Otto R. on the Hölderlinturm's intercom: he wants the password.
+  turmtuer: {
+    id: 'turmtuer',
+    start: 'root',
+    nodes: {
+      root: {
+        choices: [
+          {
+            text: 'Wer ist da überhaupt?',
+            once: true,
+            script: async (ctx) => {
+              await ctx.say('ottoTuer', 'Otto R. Chaosforscher. Ich hüte den Turm. Und den Attraktor.');
+              await ctx.say('ottoTuer', 'Ich steck in einer anderen Zeitebene fest. Deshalb klinge ich so blechern.');
+              await ctx.playerSay('Wie komm ich rein?');
+              await ctx.say('ottoTuer', 'Mit der Parole. Und die verrat ich nicht. Steht aber eh an jeder zweiten Wand in Tübingen.');
+            },
+          },
+          {
+            text: 'Chakabunga?',
+            script: async (ctx) => {
+              await ctx.say('ottoTuer', 'Das ist die Parole für den Wald. Hier ist der Turm. Andere Party.');
+            },
+          },
+          {
+            text: 'Hölderlin?',
+            once: true,
+            script: async (ctx) => {
+              await ctx.say('ottoTuer', 'Wohnt hier nicht mehr. Schon länger nicht. Seit 1843, um genau zu sein.');
+            },
+          },
+          {
+            text: 'Put put?',
+            if: (s) => !!s.getFlag('putHeard'),
+            script: async (ctx) => {
+              await ctx.say('ottoTuer', 'Put put ... Hört sich gut an.');
+              await ctx.say('ottoTuer', 'Aber der Klang der Stimme passt irgendwie nicht.');
+              await ctx.playerSay('Was stimmt nicht mit meiner Stimme?');
+              await ctx.say('ottoTuer', 'Zu menschlich. Zu wenig Gurr. Die Parole muss klingen wie das Original.');
+              ctx.setFlag('putTried');
+            },
+          },
+          {
+            text: 'Put put. Gurr.',
+            if: (s) => !!s.getFlag('putTried'),
+            once: true,
+            script: async (ctx) => {
+              await ctx.say('ottoTuer', 'Nett versucht. Aber das Gurr war geschauspielert. Ich hör das.');
+            },
+          },
+          {
+            text: 'Schon gut, ich komm wieder.',
+            end: true,
+            script: async (ctx) => {
+              await ctx.say('ottoTuer', 'Mit der richtigen Parole. In der richtigen Stimme.');
+            },
+          },
+        ],
+      },
+    },
+  },
+
   // Flaschenfloh, the bottle collector in front of the Epplehaus.
   floh: {
     id: 'floh',
@@ -242,6 +303,14 @@ export const DIALOGS: Record<string, DialogDef> = {
               await ctx.say('floh', 'Vorm Epplehaus? Goldgrube. Nach jedem Konzert dreißig Euro.');
               await ctx.say('floh', 'Nur die Tauben machen mir Konkurrenz. Die picken die Etiketten ab.');
               await ctx.say('floh', 'Ohne Etikett kein Pfand. Die wissen das. Die machen das mit Absicht.');
+            },
+          },
+          {
+            text: 'Du und die Tauben, ihr seid Freunde?',
+            once: true,
+            script: async (ctx) => {
+              await ctx.say('floh', 'Freunde? Kollegen. Ich füttere sie, sie lassen meine Flaschen in Ruhe. Meistens.');
+              await ctx.say('floh', 'Aber heute hab ich nix für sie. Eine alte Brezel wär schön. Die lieben die.');
             },
           },
           {

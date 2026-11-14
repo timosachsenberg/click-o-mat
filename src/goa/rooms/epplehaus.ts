@@ -36,6 +36,14 @@ const PIGEONS: Array<{ id: string; x: number; y: number; facing: Facing }> = [
   { id: 'taube8', x: 150, y: 428, facing: 'right' },
 ];
 
+/** The pigeon that learns to say "Put put", and where it pecks once fed. */
+const PUT_TAUBE = 'taube3';
+const PUT_SPOT = P(506, 376);
+/** Fed and parroting, not caught yet: it stays put, pecking crumbs. */
+const pecking = (s: { getFlag: (k: string) => unknown }) => !!s.getFlag('putTaube') && !s.getFlag('taubeCaught');
+/** Caught and in the player's pocket (until it opened the tower door and flew home). */
+const pocketed = (s: { getFlag: (k: string) => unknown }) => !!s.getFlag('taubeCaught') && !s.getFlag('turmOpen');
+
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 const pick = <T,>(list: T[]) => list[Math.floor(Math.random() * list.length)];
 
@@ -57,7 +65,14 @@ function flee(ctx: ScriptContext, id: string, from: Vec2): void {
 async function pigeonLife(ctx: ScriptContext): Promise<void> {
   const player = ctx.player;
   let fled = false;
-  for (const p of PIGEONS) {
+  // The parroting pigeon is too busy with its crumbs to run, or gone.
+  const free = PIGEONS.filter((p) => p.id !== PUT_TAUBE || (!pecking(ctx.state) && !pocketed(ctx.state)));
+  if (pecking(ctx.state)) {
+    // Shooed off its crumbs somehow? It comes straight back.
+    const t = ctx.actor(PUT_TAUBE);
+    if (Math.hypot(t.x - PUT_SPOT.x, t.y - PUT_SPOT.y) > 6) send(ctx, PUT_TAUBE, PUT_SPOT.x, PUT_SPOT.y);
+  }
+  for (const p of free) {
     const a = ctx.actor(p.id);
     if (Math.hypot(a.x - player.x, (a.y - player.y) * 1.6) < 62) {
       flee(ctx, p.id, player);
@@ -66,17 +81,65 @@ async function pigeonLife(ctx: ScriptContext): Promise<void> {
   }
   if (fled) return;
   // Otherwise one of them wanders a few steps, pecking its way across the yard.
-  const p = pick(PIGEONS);
+  const p = pick(free);
   const a = ctx.actor(p.id);
   send(ctx, p.id, a.x + (Math.random() - 0.5) * 220, a.y + (Math.random() - 0.5) * 70);
+}
+
+/** Feed the pigeons: Flaschenfloh crumbles the pretzel and calls them —
+ *  "Put, put, put!" — and one of them starts saying it too. */
+async function feedPigeons(ctx: ScriptContext): Promise<void> {
+  ctx.removeItem('brezel');
+  // From now on the parroting pigeon only has eyes for the crumbs (no fleeing).
+  ctx.setFlag('putTaube');
+  await ctx.say('floh', 'Eine Brezel? Die ist selbst für mich zu hart. Aber nicht für meine Kollegen.');
+  await ctx.say('floh', 'Pass auf, so macht man das.');
+  // Crumbs on the cobbles; everybody comes running.
+  // The others peck on Flaschenfloh's right; the parroting one gets its own spot on his left.
+  PIGEONS.filter((p) => p.id !== PUT_TAUBE).forEach((p, i) => {
+    send(ctx, p.id, FLOH.x + 50 + (i % 4) * 34, FLOH.y + 18 + Math.floor(i / 4) * 34);
+  });
+  send(ctx, PUT_TAUBE, PUT_SPOT.x, PUT_SPOT.y);
+  ctx.face('floh', 'down');
+  await ctx.say('floh', 'Put, put, put, put, put!');
+  await ctx.say('floh', 'Put, put, put! Putputputput!');
+  await ctx.wait(600);
+  await ctx.walkTo(PUT_TAUBE, PUT_SPOT.x, PUT_SPOT.y);
+  ctx.place(PUT_TAUBE, PUT_SPOT.x, PUT_SPOT.y, 'right');
+  ctx.setFlag('putHeard');
+  await ctx.say(PUT_TAUBE, 'Put put!');
+  await ctx.playerSay('Hat die Taube gerade „Put put“ gesagt?');
+  await ctx.say('floh', 'Die da? Die plappert alles nach. Wie ein Papagei. Nur grauer.');
+  await ctx.say(PUT_TAUBE, 'Put put! Put put!');
+  await ctx.say('floh', 'Und jetzt ist sie so mit den Krümeln beschäftigt, die merkt nicht mal, wenn die Welt untergeht.');
+}
+
+/** Catch the parroting pigeon — only while it's busy with the crumbs. */
+async function catchPutTaube(ctx: ScriptContext): Promise<void> {
+  if (!pecking(ctx.state)) {
+    flee(ctx, PUT_TAUBE, ctx.player);
+    await ctx.playerSay('Zu schnell. Ohne Ablenkung krieg ich keine Taube zu fassen.');
+    return;
+  }
+  ctx.setFlag('taubeCaught');
+  ctx.addItem('taube');
+  ctx.place(PUT_TAUBE, -200, 400);
+  await ctx.repaint();
+  await ctx.playerSay('Sie pickt so konzentriert, dass sie mich gar nicht kommen sieht. Hab dich!');
+  await ctx.say('floh', 'Na, die passt aber auf dich auf. Füttern nicht vergessen!');
 }
 
 const pigeonHotspot = (id: string): HotspotDef => ({
   id,
   name: 'Taube',
   actor: id,
+  ...(id === PUT_TAUBE ? { visible: (state) => !pocketed(state) } : {}),
   on: {
     lookat: async (ctx) => {
+      if (id === PUT_TAUBE && pecking(ctx.state)) {
+        await ctx.playerSay('Die Put-Put-Taube. Pickt Brezelkrümel und plappert dabei Flaschenflohs Lockruf nach.');
+        return;
+      }
       await ctx.playerSay(
         pick([
           'Eine Taube. Die eigentlichen Hausbesetzer vom Epplehaus.',
@@ -87,9 +150,14 @@ const pigeonHotspot = (id: string): HotspotDef => ({
     },
     talkto: async (ctx) => {
       await ctx.playerSay('Na, du?');
+      if (id === PUT_TAUBE && ctx.flag('putTaube')) {
+        await ctx.say(id, 'Put put!');
+        return;
+      }
       await ctx.say(id, pick(['Gurr.', 'Gurruu.', 'Ruckediguh.']));
     },
     pickup: async (ctx) => {
+      if (id === PUT_TAUBE) return catchPutTaube(ctx);
       flee(ctx, id, ctx.player);
       await ctx.playerSay('Zu schnell. Und will ich die wirklich in der Tasche haben?');
     },
@@ -103,6 +171,9 @@ const pigeonHotspot = (id: string): HotspotDef => ({
       stuhlbein: 'Die Holzwürmer wären ein Festmahl für sie. Aber die Würmer brauch ich noch.',
     },
     give: {
+      brezel: async (ctx) => {
+        await ctx.playerSay('Ich krieg die Brezel nicht klein. Flaschenfloh hat bestimmt Übung mit sowas.');
+      },
       stuhlbein: 'Die Holzwürmer wären ein Festmahl für sie. Aber die Würmer brauch ich noch.',
       magicwoman: 'Energydrink für Tauben? Die sind schon nervös genug.',
     },
@@ -264,6 +335,10 @@ const HOTSPOTS: HotspotDef[] = [
         stuhlbein: async (ctx) => {
           await ctx.say('floh', 'Holz? Da ist kein Pfand drauf. Und es knuspert. Nimm das weg.');
         },
+        brezel: feedPigeons,
+        taube: async (ctx) => {
+          await ctx.say('floh', 'Behalt sie. Die mag dich. Und sie hält mir keine Vorträge über Mehrweg.');
+        },
         muetze: async (ctx) => {
           await ctx.say('floh', 'Eine Burschenmütze! Die Burschen trinken aus Krügen. Kein Pfand. Kulturlos.');
           await ctx.say('floh', 'Behalt sie. Bei mir würde sie nur nach Bier riechen. Also wie vorher.');
@@ -271,7 +346,9 @@ const HOTSPOTS: HotspotDef[] = [
       },
     },
   },
-  ...PIGEONS.map((p) => pigeonHotspot(p.id)),
+  // The parroting pigeon last: on top when pigeons crowd together.
+  ...PIGEONS.filter((p) => p.id !== PUT_TAUBE).map((p) => pigeonHotspot(p.id)),
+  pigeonHotspot(PUT_TAUBE),
 ];
 
 // ---- room ------------------------------------------------------------------------
@@ -298,6 +375,9 @@ export const epplehausRoom: RoomDef = {
   actors: [{ id: 'floh', x: FLOH.x, y: FLOH.y, facing: 'down' }, ...PIGEONS],
 
   async onEnter(ctx) {
+    // The parroting pigeon: pecking crumbs by Flaschenfloh, or in the pocket.
+    if (pocketed(ctx.state)) ctx.place(PUT_TAUBE, -200, 400);
+    else if (pecking(ctx.state)) ctx.place(PUT_TAUBE, PUT_SPOT.x, PUT_SPOT.y, 'right');
     await ctx.once('eppleIntro', async () => {
       await ctx.wait(400);
       await ctx.playerSay('Abendrot? Alis Uhr geht also mal wieder ein paar Stunden vor.');
@@ -329,7 +409,12 @@ export const epplehausRoom: RoomDef = {
       every: [9000, 17000],
       run: async (ctx) => {
         if (ctx.busy) return;
-        await ctx.say(pick(PIGEONS).id, pick(['Gurr.', 'Gurruu.', 'Gurr-gurr.']));
+        if (pecking(ctx.state) && Math.random() < 0.6) {
+          await ctx.say(PUT_TAUBE, pick(['Put put!', 'Put put put!', 'Gurr. Put put.']));
+          return;
+        }
+        const talkers = PIGEONS.filter((p) => p.id !== PUT_TAUBE || !pocketed(ctx.state));
+        await ctx.say(pick(talkers).id, pick(['Gurr.', 'Gurruu.', 'Gurr-gurr.']));
       },
     },
   ],

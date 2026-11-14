@@ -132,13 +132,48 @@ const useItemOn = async (item, x, y) => {
 
 await settle(); // intro lines
 
-// --- out of the Picasso, past the Epplehaus, onto the bridge
+// --- the Picasso: yesterday's pretzels from the bowl on the counter
+check('a bowl of old pretzels on the counter', (await hotspotAt(560, 322)) === 'brezel');
+await click(560, 322); // default verb: take
+await settle();
+check('took the old pretzel', (await inv()).includes('brezel') && (await flag('brezelTaken')) === true, JSON.stringify(await inv()));
+
+// --- the Epplehaus: Flaschenfloh feeds the pigeons — put, put, put! — and one parrots it
 await goTo('epplehaus', 311, 220, { button: 'right' });
+await verb('give');
+await click(522 + (await inv()).indexOf('brezel') * 112, 505);
+await page.waitForTimeout(150);
+await click(556, 300); // Flaschenfloh
+await settle();
+check('Flaschenfloh feeds the pigeons, one starts saying "Put put"', (await flag('putTaube')) === true && (await flag('putHeard')) === true && !(await inv()).includes('brezel'));
+const putPos = await ev(() => { const a = window.__engine.roomScene.actors.get('taube3'); return { x: a.x, y: a.y, h: a.sprite.displayHeight }; });
+check('the parroting pigeon pecks crumbs by Flaschenfloh', Math.abs(putPos.x - 506) < 6 && Math.abs(putPos.y - 376) < 6, JSON.stringify(putPos));
+await page.waitForTimeout(2500);
+const stillThere = await ev(() => { const a = window.__engine.roomScene.actors.get('taube3'); return { x: a.x, y: a.y }; });
+check('busy with its crumbs, it stays put', Math.abs(stillThere.x - 506) < 6, JSON.stringify(stillThere));
+await page.screenshot({ path: `${SHOT}/hoel-00a-feeding.png` });
+await doVerb('pickup', putPos.x, putPos.y - putPos.h * 0.4);
+check('caught the Put-Put pigeon', (await inv()).includes('taube') && (await flag('taubeCaught')) === true, JSON.stringify(await inv()));
+
+// --- on to the bridge
 await goTo('neckar', 932, 380);
 check('on the Neckarbrücke', (await room()) === 'neckar');
 
-// --- along the promenade, and in through the tower's door
+// --- the tower's door: Otto R. on the intercom wants the password
 check('the Hölderlinturm is a hotspot on the bridge', (await hotspotAt(440, 200)) === 'turm');
+await verb('open');
+await click(440, 200);
+await waitFor(() => ev(() => window.__engine.choicesShowing), 25000, 'the intercom');
+check('the door is locked: Otto asks for the password', (await room()) === 'neckar' && (await flag('turmAsked')) === true);
+await pick('Chakabunga');
+await pick('Put put?');
+check('saying "Put put" yourself: the voice is wrong', (await flag('putTried')) === true && !(await flag('turmOpen')));
+await pick('Schon gut');
+check('still outside', (await room()) === 'neckar');
+
+// --- the pigeon says it, in the right voice: the door opens
+await useItemOn('taube', 440, 200);
+check('the pigeon says the password: the door is open', (await flag('turmOpen')) === true && !(await inv()).includes('taube'));
 await verb('open');
 await click(440, 200);
 await waitFor(async () => (await room()) === 'hoelderlinturm', 25000, 'the tower');

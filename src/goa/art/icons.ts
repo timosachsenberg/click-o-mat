@@ -187,10 +187,41 @@ function wurmloch(): string {
   ].join('');
 }
 
+/** A broken-up pretzel: brown, glossy, salt crystals. */
+function brezel(): string {
+  const knot = 'M32 34Q16 34 14 22Q13 11 24 11Q32 12 32 22Q32 12 40 11Q51 11 50 22Q48 34 32 34M22 32L36 18M42 32L28 18';
+  return [
+    shadow(32, 20),
+    path(knot, { stroke: INK, sw: 8 }),
+    path(knot, { stroke: '#a85a22', sw: 5.4 }),
+    path('M17 20Q18 14 24 13M46 20Q45 14 40 13', { stroke: '#e0904a', sw: 1.6 }),
+    ...([[20, 16], [26, 12], [38, 12], [45, 17], [33, 26], [24, 27], [41, 28]] as Array<[number, number]>).map(([x, y]) => rect(x - 1, y - 1, 2, 2, { fill: '#ffffff' })),
+    path('M50 22L56 26', { stroke: '#f4f0e6', sw: 1.4 }),
+  ].join('');
+}
+
+/** The Put-Put pigeon, sitting pretty. */
+function taube(): string {
+  return [
+    shadow(32, 14),
+    path('M18 30L8 36L18 37Z', { fill: '#6e6e86', stroke: INK, sw: 1.6 }),
+    ellipse(30, 30, 15, 10, { fill: '#9a9aae', stroke: INK, sw: 2 }),
+    path('M18 29Q28 19 41 28Q31 37 18 33Z', { fill: '#6e6e86', stroke: INK, sw: 1.6 }),
+    path('M38 23Q40 15 44 13L48 15Q46 22 42 27Z', { fill: '#4a9a8a', stroke: INK, sw: 1.6 }),
+    circle(46, 13, 5.6, { fill: '#5a6a80', stroke: INK, sw: 1.8 }),
+    path('M51 12l6 2l-6 2z', { fill: '#f0b040', stroke: INK, sw: 1 }),
+    circle(47.5, 12, 1.6, { fill: '#ff8a3a', stroke: INK, sw: 0.8 }),
+    path('M26 39v4h4M33 39v4h4', { stroke: '#f08a8a', sw: 2 }),
+    text(56, 8, 'put!', { size: 8, fill: '#ffffff', stroke: INK, sw: 2.4 }),
+  ].join('');
+}
+
 export const GOA_ICONS: SvgImageAsset[] = [
   { key: 'icon-loch', width: 64, height: 48, svg: loch() },
   { key: 'icon-taschenattraktor', width: 64, height: 48, svg: taschenattraktor() },
   { key: 'icon-wurmloch', width: 64, height: 48, svg: wurmloch() },
+  { key: 'icon-brezel', width: 64, height: 48, svg: brezel() },
+  { key: 'icon-taube', width: 64, height: 48, svg: taube() },
   { key: 'icon-dose', width: 64, height: 48, svg: emptyCan() },
   { key: 'icon-cent25', width: 64, height: 48, svg: cent25() },
   { key: 'icon-ouzo', width: 64, height: 48, svg: ouzo() },

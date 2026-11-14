@@ -1,6 +1,6 @@
 import { Layer, type Facing, type HotspotDef, type LayerDef, type Rect, type RoomDef, type SvgImageAsset, type Vec2 } from '../../engine/types';
 import type { ScriptContext } from '../../engine/ScriptContext';
-import { INK, defs, ellipse, glow, grainDefs, grainOverlay, group, inked, line, linear, path, poly, rect, vignette } from '../../game/art/toon';
+import { INK, circle, defs, ellipse, glow, grainDefs, grainOverlay, group, inked, line, linear, path, poly, rect, vignette } from '../../game/art/toon';
 import {
   PAL,
   acUnit,
@@ -172,16 +172,37 @@ function picassoCounter(): string {
   s.push(inked('M402 316Q406 304 430 302L962 330L962 362L408 324Q400 322 402 316Z', 'url(#pcTop)', 3));
   s.push(path('M420 310L940 338', { stroke: '#ffd08a', sw: 3, opacity: 0.6 }));
   s.push(glow('pcCounterGlow', 690, 330, 220, '#ffe0a0', 0.3, 22));
-  // On the counter: glasses, a bowl of peanuts, a bottle.
+  // On the counter: glasses, a bottle (the bowl of old pretzels is its own layer).
   for (const [x, y] of [[860, 344], [874, 346], [888, 347]] as Array<[number, number]>) {
     s.push(inked(`M${x - 4} ${y - 14}h8l-1 14h-6z`, '#d8eef4', 1.4));
   }
   s.push(inked('M926 350V322h8V312h4V322h8V350z', '#8a2a1a', 1.6));
   s.push(rect(927, 330, 18, 8, { fill: '#f4f0e6', stroke: INK, sw: 1 }));
   s.push(ellipse(560, 328, 13, 4, { fill: '#e8dcc0', stroke: INK, sw: 1.4 }));
-  s.push(ellipse(560, 325, 9, 2.5, { fill: '#c89a5a' }));
+  s.push(ellipse(560, 326.5, 9, 2.2, { fill: '#a8988a' }));
   s.push(aliCoaster(OUZO.coaster.x, OUZO.coaster.y));
   return s.join('');
+}
+
+/** Yesterday's pretzels, broken up in the bowl on the counter. */
+function pretzelBits(): string {
+  const s: string[] = [];
+  for (const [x, y, r] of [[553, 324, -20], [560, 322, 15], [567, 325, 40], [557, 326, 70]] as Array<[number, number, number]>) {
+    s.push(`<g transform="rotate(${r} ${x} ${y})">` + path(`M${x - 4} ${y}q2 -4 4 0q2 -4 4 0`, { stroke: INK, sw: 3.4 }) + path(`M${x - 4} ${y}q2 -4 4 0q2 -4 4 0`, { stroke: '#a85a22', sw: 2 }) + `</g>`);
+  }
+  for (const [x, y] of [[554, 322.5], [561, 320.6], [566, 323.5]] as Array<[number, number]>) s.push(circle(x, y, 0.6, { fill: '#ffffff' }));
+  return s.join('');
+}
+
+async function takePretzel(ctx: ScriptContext): Promise<void> {
+  if (ctx.flag('brezelTaken')) {
+    await ctx.playerSay('Leer. Den Rest hat der Holzwurm. Oder Hilde.');
+    return;
+  }
+  ctx.setFlag('brezelTaken');
+  ctx.addItem('brezel');
+  await ctx.repaint();
+  await ctx.say('ali', 'Die Brezel von gestern? Nimm mit, mein Lieber. Die ist härter als der Partykiller.');
 }
 
 /** Where Ali's ouzo stands: on his coaster, or in front of the Partykiller. */
@@ -484,6 +505,15 @@ const HOTSPOTS: HotspotDef[] = [
   at('counter', 'Tresen', R(408, 304, 552, 56), P(500, 404), 'up', {
     on: { lookat: 'Der Tresen. Klebt an genau den richtigen Stellen.' },
   }),
+  at('brezel', 'Brezelschale', R(544, 314, 32, 18), P(560, 412), 'up', {
+    defaultVerb: 'pickup',
+    visible: (state) => !state.getFlag('brezelTaken'),
+    on: {
+      lookat: 'Eine Schale mit Brezelstücken. Von gestern. Oder von 1998. Bei Ali weiß man das nie.',
+      pickup: takePretzel,
+      use: 'Reinbeißen? Damit könnte man Nägel einschlagen.',
+    },
+  }),
   at('rickety', 'Zocker-Hocker', R(504, 334, 38, 66), P(492, 414), 'up', {
     defaultVerb: 'use',
     visible: (state) => !state.getFlag('stoolBroken'),
@@ -636,6 +666,7 @@ export const picassoRoom: RoomDef = {
     { id: 'bg', depth: Layer.BEHIND, svg: picassoBg() },
     { id: 'slots', depth: Layer.BEHIND, x: SLOTS.x, y: SLOTS.y, anim: 'picasso-slots' },
     roomLayer('counter', 375, 396, 296, 566, 154, picassoCounter()),
+    { id: 'brezel', depth: 375, x: 540, y: 310, w: 40, h: 22, svg: group(pretzelBits(), 'translate(-540 -310)'), visible: (state) => !state.getFlag('brezelTaken') },
     // Ali's ouzo: on its coaster (full or empty), or in front of the guest.
     {
       id: 'ouzoCoaster',

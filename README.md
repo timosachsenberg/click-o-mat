@@ -151,8 +151,19 @@ talk while he does.
    the cap, and head left over the bridge, **towards the forest** (you need the
    password and the cap).
 
-**Optional: the Hölderlinturm.** Open the tower's door at the end of the
-promenade. The tower is shown as a doll's house, its front wall cut away:
+**Optional: the Hölderlinturm.** The tower's door at the end of the promenade
+is locked: Otto R. answers on the intercom and wants the password.
+
+- Take the **old pretzel** from the bowl on Ali's counter and **give it to
+  Flaschenfloh** at the Epplehaus. He crumbles it for the pigeons —
+  *„Put, put, put!“* — and one of them starts parroting **„Put put“**.
+- Say „Put put?“ yourself at the intercom: *hört sich gut an, aber der Klang
+  der Stimme passt irgendwie nicht.*
+- While the parroting pigeon is busy with the crumbs, **pick it up**, and
+  **use it with the tower**: it says the password in exactly the right voice,
+  the door opens and the pigeon flies home.
+
+The tower is shown as a doll's house, its front wall cut away:
 upstairs the Turmstube with Hölderlin's desk, a sofa and his bed (the door
 opens onto it), downstairs the vaulted cellar at the river's level, joined
 by stairs. In the Turmstube stands Otto R.'s **Rössler attractor**. *Use* (or *push*) it

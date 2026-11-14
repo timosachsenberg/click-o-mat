@@ -1,5 +1,7 @@
 import { Layer, type Facing, type HotspotDef, type Rect, type RoomDef, type Vec2 } from '../../engine/types';
 import type { ScriptContext } from '../../engine/ScriptContext';
+import { OTTO_ACTOR } from '../art/turm';
+import { PIGEON_ACTORS } from '../art/epplehaus';
 import { NK, PUNT_ACTOR, balustrade, eckhausLayer, floatingCap, flyingLeg, neckarBg, promGap, quayFootY, quayTopY } from '../art/neckar';
 
 // ---- layout ----------------------------------------------------------------------
@@ -41,6 +43,10 @@ function scaling(x: number, y: number): number {
 /** The promenade ends at the Hölderlinturm; stairs lead down to the jetty at its foot. */
 const PROM = NK.prom;
 const TOWER_SPOT = P(478, 304);
+/** Behind the tower's door: Otto R.'s voice on the intercom (an invisible actor). */
+const DOOR_VOICE = P(452, 296);
+/** Where the Put-Put pigeon perches to say the password. */
+const PIGEON_PERCH = P(462, 300);
 const JETTY_SPOT = P(504, 314);
 
 // ---- the punt ------------------------------------------------------------------------
@@ -205,13 +211,38 @@ async function toPicasso(ctx: ScriptContext): Promise<void> {
   await ctx.goToRoom('epplehaus', 'neckar');
 }
 
-/** Into the Hölderlinturm, from the end of the promenade. */
+/** Into the Hölderlinturm, from the end of the promenade — once Otto R.
+ *  has heard the password in the right voice. Until then: the intercom. */
 async function toTower(ctx: ScriptContext): Promise<void> {
-  await ctx.once('turmDoor', async () => {
-    await ctx.playerSay('Die Tür klemmt nur. Hölderlin hatte wohl selten Besuch, der kräftig drücken konnte.');
-  });
+  if (!ctx.flag('turmOpen')) {
+    ctx.sfx('deny');
+    await ctx.playerSay('Zu. Neben der Tür eine uralte Gegensprechanlage. Ich drück mal.');
+    await ctx.say('ottoTuer', ctx.flag('turmAsked') ? 'Schon wieder du? Parole!' : 'Halt! Wer da? Ohne Parole kommt hier keiner rein!');
+    ctx.setFlag('turmAsked');
+    await ctx.dialog('turmtuer');
+    return;
+  }
   ctx.sfx('open');
   await ctx.goToRoom('hoelderlinturm', 'door');
+}
+
+/** The Put-Put pigeon says the password into the intercom — in exactly the
+ *  right voice. The door opens and the pigeon flies home to the Epplehaus. */
+async function pigeonPassword(ctx: ScriptContext): Promise<void> {
+  if (ctx.flag('turmOpen')) return;
+  ctx.removeItem('taube');
+  ctx.place('taubeTuer', PIGEON_PERCH.x, PIGEON_PERCH.y, 'left');
+  await ctx.playerSay('Ich halt die Taube an die Gegensprechanlage. Na los, sag’s ihm.');
+  await ctx.say('ottoTuer', 'Parole?');
+  await ctx.say('taubeTuer', 'Put put!');
+  await ctx.say('ottoTuer', 'PUT PUT! Korrekt! Und diese Stimme ... dieses Timbre ... endlich jemand mit Klangfarbe!');
+  ctx.sfx('open');
+  ctx.setFlag('turmOpen');
+  await ctx.say('ottoTuer', 'Komm rein. Und bring den Sänger nächstes Mal wieder mit.');
+  await ctx.say('taubeTuer', 'Gurr.');
+  ctx.place('taubeTuer', -300, 300);
+  await ctx.playerSay('Und weg ist sie. Zurück zu den Krümeln am Epplehaus, schätze ich.');
+  await ctx.playerSay('Die Tür ist auf.');
 }
 
 async function toForest(ctx: ScriptContext): Promise<void> {
@@ -313,6 +344,11 @@ const HOTSPOTS: HotspotDef[] = [
       },
       open: toTower,
       use: toTower,
+      talkto: toTower,
+    },
+    onItem: {
+      use: { taube: pigeonPassword },
+      give: { taube: pigeonPassword },
     },
   }),
   at('weide', 'Trauerweide', R(346, 216, 62, 86), TOWER_SPOT, 'left', {
@@ -477,7 +513,7 @@ export const neckarRoom: RoomDef = {
 
   music: 'neckar-theme',
 
-  assets: { svgActors: [PUNT_ACTOR] },
+  assets: { svgActors: [PUNT_ACTOR, OTTO_ACTOR, ...PIGEON_ACTORS] },
 
   entries: {
     picasso: { x: 930, y: 432, facing: 'left' },
@@ -485,7 +521,13 @@ export const neckarRoom: RoomDef = {
     turm: { x: TOWER_SPOT.x, y: TOWER_SPOT.y, facing: 'right' },
   },
 
-  actors: [{ id: 'kahn', x: OFF.x, y: OFF.y, facing: 'right' }],
+  actors: [
+    { id: 'kahn', x: OFF.x, y: OFF.y, facing: 'right' },
+    // Otto R. on the tower's intercom: a voice, never seen out here.
+    { id: 'ottoTuer', x: DOOR_VOICE.x, y: DOOR_VOICE.y, facing: 'down' },
+    // The Put-Put pigeon, off screen until it says the password.
+    { id: 'taubeTuer', x: -300, y: 300, facing: 'left' },
+  ],
 
   async onEnter(ctx) {
     // A fresh visit: no pass in flight; the punt waits off screen.
