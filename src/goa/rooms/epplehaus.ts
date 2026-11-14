@@ -270,7 +270,7 @@ const HOTSPOTS: HotspotDef[] = [
       pickup: 'Die kleben hier seit Jahren übereinander. Das ist tragende Bausubstanz.',
     },
   }),
-  at('sofa', 'Sofa', R(516, 262, 80, 44), P(556, 346), 'up', {
+  at('sofa', 'Sofa', R(798, 262, 80, 44), P(838, 346), 'up', {
     on: {
       lookat: 'Ein Sofa vor der Tür. Weinrot, durchgesessen, eine Feder guckt raus. Hier haben schon Generationen den Bus verpasst.',
       use: 'Wenn ich mich da reinsetze, komm ich nie wieder hoch. Das Sofa hat schon ganze Semester verschluckt.',

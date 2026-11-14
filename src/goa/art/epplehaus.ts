@@ -240,11 +240,14 @@ function house(): string {
     `<g transform="rotate(${rot} ${px + 13} ${py + 17})">` + rect(px, py, 26, 34, { fill: col, stroke: INK, sw: 1.4 }) + text(px + 13, py + 12, l1, { size: 4.6, fill: INK, weight: 900 }) + text(px + 13, py + 19, l2, { size: 4.6, fill: INK, weight: 900 }) + path(`M${px + 4} ${py + 24}h18M${px + 6} ${py + 29}h14`, { stroke: INK, sw: 1 }) + `</g>`;
   s.push(poster(374, 204, '#ffd34a', 'PFAND-', 'PIRATEN', -4));
   s.push(poster(402, 212, '#4ae8ff', 'PLENUM', 'OF DOOM', 5));
+  // (It stands at the house's right corner, clear of Flaschenfloh and his trolley.)
+  s.push('<g transform="translate(282 0)">');
   s.push(ellipse(556, ground + 2, 40, 5, { fill: '#000000', opacity: 0.3 }));
   s.push(inked('M524 300V268Q556 258 588 268V300Z', '#7a3048', 2.4));
   s.push(inked('M518 302V280q8 -6 12 0v22zM582 302V280q4 -6 12 0v22z', '#8a3a54', 2.2));
   s.push(inked('M530 302v-14h52v14z', '#a04a64', 2));
   s.push(path('M556 288v14', { stroke: INK, sw: 1.6 }) + path('M568 290q3 -9 6 0q3 -9 6 0', { stroke: '#c8c8d0', sw: 1.6 }));
+  s.push('</g>');
   for (let k = 0; k < 3; k++) s.push(inked(poly([[door.x - 12 - k * 8, ground - 6 + k * 6], [door.x + door.w + 12 + k * 8, ground - 6 + k * 6], [door.x + door.w + 14 + k * 8, ground + k * 6], [door.x - 14 - k * 8, ground + k * 6]]), k % 2 ? '#a89aa4' : '#c0b0b4', 2));
   return s.join('');
 }
