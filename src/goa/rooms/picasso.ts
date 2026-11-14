@@ -239,7 +239,7 @@ async function insertCoin(ctx: ScriptContext): Promise<void> {
   ctx.setFlag('jukeboxCredit');
   ctx.sfx('deny');
   await ctx.playerSay('Ich werf die 25 Cent ein ... und die Münze steckt fest.');
-  await ctx.say('ali', 'Dann gehört dir jetzt die Musik.');
+  await ctx.say('ali', 'Dann gehört dir jetzt die Musik, mein Lieber.');
   await ctx.dialog('jukebox');
 }
 
@@ -532,7 +532,7 @@ const HOTSPOTS: HotspotDef[] = [
     on: {
       lookat: async (ctx) => {
         await ctx.playerSay('Ein Gesicht, von vorne und von der Seite gleichzeitig.');
-        await ctx.say('ali', 'Ein echter Picasso. Deshalb heißt der Laden so.');
+        await ctx.say('ali', 'Ein echter Picasso, mein Lieber. Deshalb heißt der Laden so.');
         await ctx.playerSay('Signiert mit „P.“ in Kugelschreiber.');
       },
       pickup: async (ctx) => {
@@ -665,7 +665,7 @@ const HOTSPOTS: HotspotDef[] = [
         },
         dose: async (ctx) => {
           ctx.removeItem('dose');
-          await ctx.say('ali', 'Leer? Sehr gut. Pfand, wie versprochen.');
+          await ctx.say('ali', 'Leer? Sehr gut, mein Lieber. Pfand, wie versprochen.');
           ctx.addItem('cent25');
         },
         ouzo: async (ctx) => {

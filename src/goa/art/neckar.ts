@@ -428,6 +428,12 @@ function hoelderlinturm(): string {
     lit(-6, -13, false) + lit(1, -13, true),
     // Damp at the waterline.
     path('M-12 -4Q0 -2 12 -4V0H-12Z', { fill: '#3a4a40', opacity: 0.5 }),
+    // The door onto the promenade, a lamp over it, the intercom beside it.
+    inked('M5 0V-9Q7.8 -12 10.6 -9V0Z', '#6a3a1e', 0.8),
+    path('M7.8 -10.6V0', { stroke: '#3a1e0e', sw: 0.5 }),
+    circle(9.6, -4.6, 0.5, { fill: '#f2c24a' }),
+    circle(7.8, -13.4, 2.6, { fill: '#ffe08a', opacity: 0.45 }) + circle(7.8, -13.4, 0.8, { fill: '#fff4c0', stroke: INK, sw: 0.3 }),
+    rect(2.6, -8, 1.6, 2.6, { fill: '#c8c8d0', stroke: INK, sw: 0.4 }),
   ];
   return [
     // Its reflection, and the willow's.
@@ -435,9 +441,8 @@ function hoelderlinturm(): string {
     willow(x - 56, base - 36, 2.2, 85),
     group(tower, `translate(${x} ${base}) scale(2.2)`),
     // Sprayed across the tower's foot, as on every other wall in town: PUT PUT.
-    text(x - 1, base - 13, 'PUT PUT', { size: 10.5, fill: '#4ae8ff', stroke: INK, sw: 2.6, rotate: -5 }),
-    path(`M${x - 22} ${base - 9}q8 -4 16 0t16 -1`, { stroke: '#ff4a8a', sw: 1.6 }),
-    path(`M${x + 14} ${base - 12}v7`, { stroke: '#4ae8ff', sw: 1.2, opacity: 0.8 }),
+    text(x - 9, base - 13, 'PUT PUT', { size: 9, fill: '#4ae8ff', stroke: INK, sw: 2.6, rotate: -5 }),
+    path(`M${x - 26} ${base - 9}q7 -4 14 0t14 -1`, { stroke: '#ff4a8a', sw: 1.6 }),
   ].join('');
 }
 
@@ -616,7 +621,7 @@ export function balustrade(): string {
     s.push(inked(poly([[px - 3, top - 16], [px + 21, top - 16], [px + 21, top - 9], [px - 3, top - 9]]), '#d89c80', 2));
   }
   // The bus stop: the green H on yellow, the timetable.
-  const hx = 586;
+  const hx = 722;
   s.push(inked(`M${hx - 2.5} ${top + 30}V${top - 96}h5V${top + 30}Z`, '#5a5a6a', 1.6));
   s.push(circle(hx, top - 112, 17, { fill: '#f2c230', stroke: INK, sw: 2.2 }));
   s.push(circle(hx, top - 112, 13, { fill: '#2a8a4a', stroke: INK, sw: 1.4 }));

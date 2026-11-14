@@ -155,6 +155,11 @@ async function catchPutTaube(ctx: ScriptContext): Promise<void> {
   await ctx.say('floh', 'Na, die mag dich. Füttern nicht vergessen!');
 }
 
+/** Crumbs straight to the pigeons: not from my hand. */
+async function crumbsNotMe(ctx: ScriptContext): Promise<void> {
+  await ctx.playerSay('Wenn ich die Mütze hinhalte, flattert der ganze Schwarm auf mich drauf. Flaschenfloh hat da mehr Übung.');
+}
+
 const pigeonHotspot = (id: string): HotspotDef => ({
   id,
   name: 'Taube',
@@ -195,11 +200,10 @@ const pigeonHotspot = (id: string): HotspotDef => ({
   onItem: {
     use: {
       stuhlbein: 'Die Holzwürmer wären ein Festmahl für sie. Aber die Würmer brauch ich noch.',
+      muetzekruemel: crumbsNotMe,
     },
     give: {
-      muetzekruemel: async (ctx) => {
-        await ctx.playerSay('Wenn ich die Mütze hinhalte, flattert der ganze Schwarm auf mich drauf. Flaschenfloh hat da mehr Übung.');
-      },
+      muetzekruemel: crumbsNotMe,
       stuhlbein: 'Die Holzwürmer wären ein Festmahl für sie. Aber die Würmer brauch ich noch.',
       magicwoman: 'Energydrink für Tauben? Die sind schon nervös genug.',
     },
@@ -382,6 +386,7 @@ const HOTSPOTS: HotspotDef[] = [
       push: 'Lieber nicht. Wer weiß, was dann alles klirrt.',
     },
     onItem: {
+      use: { muetzekruemel: feedPigeons, doener: feedFloh },
       give: {
         dose: async (ctx) => {
           await ctx.say('floh', 'Magic Woman? Die nimmt kein Automat der Welt. Zu lila.');

@@ -335,12 +335,30 @@ const HOTSPOTS: HotspotDef[] = [
         await ctx.playerSay('Der Hölderlinturm. Hier hat Hölderlin sechsunddreißig Jahre gewohnt.');
         await ctx.playerSay('Gedichtet, aufs Wasser geschaut, Besuch verwirrt. Klingt nach einem guten Leben.');
         await ctx.playerSay('Unten an die Turmwand hat jemand „PUT PUT“ gesprüht. Sogar hier.');
+        if (!ctx.flag('turmOpen')) await ctx.playerSay('Unten ist eine Tür, mit Klingel. Im Turm brennt Licht.');
         ctx.setFlag('putSeen');
         if (ctx.flag('ottoFree')) await ctx.playerSay('Und oben drin dreht sich eine Spirale durch drei Zeitebenen. Kein Witz.');
       },
       open: toTower,
       use: toTower,
       talkto: toTower,
+    },
+    onItem: {
+      use: { taube: pigeonPassword },
+      give: { taube: pigeonPassword },
+    },
+  }),
+  at('turmtuer', 'Turmtür', R(448, 268, 22, 32), TOWER_SPOT, 'left', {
+    defaultVerb: 'open',
+    on: {
+      lookat: async (ctx) => {
+        if (ctx.flag('turmOpen')) await ctx.playerSay('Die Tür zum Hölderlinturm. Seit dem Auftritt der Taube steht sie mir offen.');
+        else await ctx.playerSay('Die Tür zum Hölderlinturm. Zu. Daneben eine uralte Gegensprechanlage, darüber brennt Licht. Da ist wer zu Hause.');
+      },
+      open: toTower,
+      use: toTower,
+      talkto: toTower,
+      push: toTower,
     },
     onItem: {
       use: { taube: pigeonPassword },
@@ -417,7 +435,7 @@ const HOTSPOTS: HotspotDef[] = [
     },
     onItem: { use: { stuhlbein: 'Auf den Schwan? Niemals. Der kann nichts dafür.' } },
   }),
-  at('fahrplan', 'Fahrplan', R(586, 282, 36, 44), P(604, 424), 'up', {
+  at('fahrplan', 'Fahrplan', R(722, 282, 36, 44), P(736, 424), 'up', {
     on: {
       lookat: async (ctx) => {
         await ctx.playerSay('Der Fahrplan. Linie 5: alle dreißig Minuten. Letzter Bus: 23:58 Uhr.');

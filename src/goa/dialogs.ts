@@ -20,7 +20,7 @@ function drinkChoices(back: Partial<DialogChoice>): DialogChoice[] {
     {
       text: 'Eine Magic Woman?',
       script: async (ctx) => {
-        await ctx.say('ali', 'Die haben wir.');
+        await ctx.say('ali', 'Die haben wir, mein Lieber.');
       },
     },
     {
@@ -83,7 +83,7 @@ export const DIALOGS: Record<string, DialogDef> = {
             text: 'Ich suche die Goa im Wald.',
             if: (s) => !s.getFlag('knowsPartykiller') && !s.getFlag('copAsleep'),
             script: async (ctx) => {
-              await ctx.say('ali', 'Nicht so laut. Neben dir sitzt der Partykiller.');
+              await ctx.say('ali', 'Nicht so laut, mein Lieber. Neben dir sitzt der Partykiller.');
               await ctx.playerSay('Ist der nicht im Ruhestand?');
               await ctx.say('ali', 'Er schon. Seine Anzeigen nicht.');
               await ctx.say('cop', 'Ich kann euch übrigens hören.');
@@ -94,7 +94,7 @@ export const DIALOGS: Record<string, DialogDef> = {
             text: 'Und die Goa? Nur ganz leise?',
             if: (s) => !!s.getFlag('knowsPartykiller') && !s.getFlag('copAsleep'),
             script: async (ctx) => {
-              await ctx.say('ali', 'Nicht, solange er zuhört.');
+              await ctx.say('ali', 'Nicht, solange er zuhört, mein Lieber.');
               await ctx.say('cop', 'Ich höre immer zu. Vierzig Jahre Nachtschicht.');
             },
           },
@@ -102,7 +102,7 @@ export const DIALOGS: Record<string, DialogDef> = {
             text: 'Also. Die Party im Wald?',
             if: (s) => !!s.getFlag('copAsleep') && !s.getFlag('password'),
             script: async (ctx) => {
-              await ctx.say('ali', 'Folge dem Bass. Am Eingang sagst du Chakabunga.');
+              await ctx.say('ali', 'Folge dem Bass, mein Lieber. Am Eingang sagst du Chakabunga.');
               await ctx.playerSay('Chakabunga.');
               await ctx.say('ali', 'Genau, mein Lieber. Und jetzt weißt du auch, wofür du die Energie brauchst.');
               ctx.setFlag('password', 'Chakabunga');
@@ -130,7 +130,7 @@ export const DIALOGS: Record<string, DialogDef> = {
             if: (s) => !s.getFlag('boughtDrink'),
             next: 'drinks',
             script: async (ctx) => {
-              await ctx.say('ali', 'Steht alles auf der Karte.');
+              await ctx.say('ali', 'Steht alles auf der Karte, mein Lieber.');
             },
           },
           {
