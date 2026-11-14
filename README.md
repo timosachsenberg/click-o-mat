@@ -148,11 +148,12 @@ talk while he does.
    waist-deep). Only a **cap** floats away — to the jetty at the
    **Hölderlinturm**. Walk there along the Neckarfront (round the corner house
    at the right end of the bridge, then along the top of the quay wall), take
-   the cap, and head left over the bridge, **towards the forest** (you need the
-   password and the cap).
+   the cap. Over the bridge to the left lies the forest — but the way is
+   closed for *Waldarbeiten*. On to the tower:
 
-**Optional: the Hölderlinturm.** The tower's door at the end of the promenade
-is locked: Otto R. answers on the intercom and wants the password.
+**The Hölderlinturm.** The way over the bridge into the forest is closed —
+*Waldarbeiten* — so the only way to the Goa is through Otto R.'s wormhole in the
+tower. The tower's door at the end of the promenade is locked: Otto R. answers on the intercom and wants the password.
 
 - The bowl on Ali's counter is full of **pretzel crumbs**, but by hand they
   trickle through your fingers: **use the cap with the bowl** (the
@@ -192,8 +193,8 @@ collage with photo textures) → hand-painted.
    **modern** layer it peels off like a sticker. **Take it**, then **use the
    hole with the Taschen-Attraktor**: the spiral circles the black hole and
    you get a **Wurmloch**. With the password, **use the wormhole** (anywhere)
-   and you're through, straight to the Goa in the forest — a shortcut to the
-   chapter's end, no cap needed.
+   and you're through, straight to the Goa in the forest, past the forestry
+   barrier — the end of the chapter.
 
 </details>
 

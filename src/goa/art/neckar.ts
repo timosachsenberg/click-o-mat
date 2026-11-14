@@ -19,6 +19,7 @@ import {
   rng,
   vignette,
   wobble,
+  text,
   type Pt,
 } from '../../game/art/toon';
 
@@ -546,6 +547,38 @@ export function eckhausLayer(): string {
     ],
     `translate(${-x} ${-y})`
   );
+}
+
+/** The barrier across the bridge's left end: forestry work, the way to the
+ *  forest is closed. A striped trestle, a sign, a traffic cone, a flashing
+ *  lamp. Drawn in room coordinates (x 0…72, standing on the deck). */
+export function forestBarrier(): string {
+  const s: string[] = [];
+  const stripes = (x0: number, x1: number, y: number, h: number) => {
+    const parts: string[] = [inked(poly([[x0, y], [x1, y], [x1, y + h], [x0, y + h]]), '#f4efe4', 1.8)];
+    for (let x = x0 - h; x < x1; x += 12) {
+      parts.push(path(poly([[Math.max(x0, x), y + h], [Math.max(x0, x + h * 0), y + h], [Math.min(x1, x + h), y], [Math.min(x1, x + h + 6), y], [Math.min(x1, x + 6), y + h]].map(([px, py]) => [Math.max(x0, Math.min(x1, px)), py] as Pt)), { fill: '#d8322a' }));
+    }
+    parts.push(path(poly([[x0, y], [x1, y], [x1, y + h], [x0, y + h]]), { stroke: INK, sw: 1.8 }));
+    return parts.join('');
+  };
+  // Trestle legs, then the striped boards.
+  for (const x of [8, 62]) s.push(path(`M${x - 6} 446L${x} 402L${x + 6} 446`, { stroke: INK, sw: 4 }) + path(`M${x - 6} 446L${x} 402L${x + 6} 446`, { stroke: '#e8e2d8', sw: 2 }));
+  s.push(stripes(0, 70, 404, 10));
+  s.push(stripes(0, 70, 424, 9));
+  // The sign on top.
+  s.push(inked(poly([[2, 352], [70, 352], [70, 396], [2, 396]]), '#f2c230', 2.2));
+  s.push(path('M36 396V404', { stroke: INK, sw: 3 }));
+  s.push(text(36, 366, 'WALD-', { size: 9, fill: INK, weight: 900 }));
+  s.push(text(36, 377, 'ARBEITEN', { size: 9, fill: INK, weight: 900 }));
+  s.push(text(36, 390, 'GESPERRT', { size: 8.4, fill: '#c4241a', weight: 900 }));
+  // A flashing lamp and a traffic cone.
+  s.push(glow('nkBlink', 64, 346, 16, '#ffb020', 0.8));
+  s.push(inked('M58 352v-8h12v8z', '#ffb020', 1.6));
+  s.push(inked('M82 446L90 418h6l8 28z', '#f06a2a', 1.8));
+  s.push(path('M86 432h14', { stroke: '#f4efe4', sw: 3 }));
+  s.push(inked('M78 446h30v4h-30z', '#3a3a3a', 1.2));
+  return s.join('');
 }
 
 /** The sandstone balustrade (an occluder) and an old street lamp. Drawn in room coordinates. */

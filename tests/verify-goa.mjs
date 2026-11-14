@@ -146,9 +146,9 @@ await pick('Mach');
 check('talked to Flaschenfloh (he does not follow yet)', !(await flag('flohFollows')));
 await goTo('neckar', 932, 380); // on to the bridge
 check('the street leads on to the Neckarbrücke', (await room()) === 'neckar');
-await click(15, 432); // towards the forest
+await click(40, 420); // towards the forest
 await settle();
-check('but no forest without knowing where the party is', !(await flag('chapterDone')));
+check('the way to the forest is closed (forestry work)', !(await flag('chapterDone')) && (await hotspotAt(40, 420)) === 'toForest');
 await goTo('epplehaus', 945, 432); // back to the Epplehaus
 await goTo('picasso', 86, 260); // and down the cellar stairs
 check('and back into the Picasso', (await room()) === 'picasso');
@@ -320,11 +320,12 @@ check('walked along the Neckarfront to the jetty at the Hölderlinturm, smaller 
 await page.screenshot({ path: `${SHOT}/goa-06b-turm.png` });
 check('took the cap', JSON.stringify(await inv()) === '["muetze"]', JSON.stringify(await inv()));
 
-// --- on towards the forest
-await click(15, 432); // the way on (default verb)
+// --- on towards the forest? Closed for forestry work, password or not —
+// the way to the Goa is Otto R.'s wormhole (verify-hoelderlin plays it).
+await click(40, 420);
 await settle();
-check('chapter done', (await flag('chapterDone')) === true);
-await page.screenshot({ path: `${SHOT}/goa-07-end.png` });
+check('even with the password, the forest stays closed', (await flag('password')) === 'Chakabunga' && !(await flag('chapterDone')) && (await flag('once:forestClosed')) === true);
+await page.screenshot({ path: `${SHOT}/goa-07-closed.png` });
 
 // --- the picker switches to the demo (reload with ?game=demo)
 await page.goto(withGame('goa'));
