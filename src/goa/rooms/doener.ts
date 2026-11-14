@@ -1,6 +1,7 @@
 import { Layer, type Facing, type HotspotDef, type Rect, type RoomDef, type Vec2 } from '../../engine/types';
 import type { ScriptContext } from '../../engine/ScriptContext';
-import { DB, SPIT_FRAMES, doenerBg, smell } from '../art/doener';
+import { DB, KNIFE, KNIFE_FRAMES, SPIT_FRAMES, doenerBg, openGlow, smell } from '../art/doener';
+import { PIGEON_ACTORS } from '../art/epplehaus';
 import { OTTO_ACTOR } from '../art/turm';
 
 // ---- layout ----------------------------------------------------------------------
@@ -108,6 +109,27 @@ const HOTSPOTS: HotspotDef[] = [
       pickup: 'Der Zwiebelring hat schon bessere Zeiten gesehen. Und mehrere Tauben.',
     },
   }),
+  {
+    id: 'doenertaube',
+    name: 'Taube',
+    actor: 'doenertaube',
+    walkTo: P(DB.tables[0] - 50, 372),
+    facing: 'right',
+    on: {
+      lookat: 'Eine Taube auf dem Stehtisch. Sie arbeitet sich an einem Zwiebelring ab. Mit Hingabe.',
+      talkto: async (ctx) => {
+        await ctx.playerSay('Schmeckt’s?');
+        await ctx.say('doenertaube', 'Gurr.');
+      },
+      pickup: 'Die lässt ihren Zwiebelring nicht los. Und ich will keinen Streit.',
+    },
+  },
+  at('katze', 'Katze', R(704, 136, 44, 22), P(760, 380), 'up', {
+    on: { lookat: 'Eine schwarze Katze auf dem Fensterbrett. Sie beobachtet die Taube. Die Taube beobachtet den Zwiebelring. Kreislauf des Lebens.' },
+  }),
+  at('balkon', 'Balkon', R(188, 160, 86, 40), P(240, 380), 'up', {
+    on: { lookat: 'Ein Balkon mit Wäscheleine. Vier Socken, keine zwei gleich. Hier wohnen Studenten.' },
+  }),
   at('toPicasso', 'Treppe zum Picasso', R(DB.cellar.x - 10, DB.cellar.y - 50, DB.cellar.w + 20, DB.cellar.h + 50), P(88, 348), 'up', {
     defaultVerb: 'use',
     on: {
@@ -133,6 +155,9 @@ export const doenerRoom: RoomDef = {
   layers: [
     { id: 'bg', depth: Layer.BEHIND, svg: doenerBg() },
     { id: 'spit', depth: Layer.BEHIND, x: DB.spit.x, y: DB.spit.y, anim: 'doener-spit' },
+    { id: 'knife', depth: Layer.BEHIND, x: KNIFE.x, y: KNIFE.y, anim: 'doener-knife' },
+    { id: 'open', depth: Layer.BEHIND, x: 0, y: 0, w: 960, h: 450, svg: openGlow() },
+    { id: 'light', depth: Layer.FRONT, x: 0, y: 0, w: 960, h: 450, svg: '<rect width="960" height="450" fill="#c0507a"/>', alpha: 0.1 },
     { id: 'smell', depth: Layer.FRONT, x: 0, y: 0, w: 960, h: 450, svg: smell(), alpha: 0.6 },
   ],
 
@@ -143,9 +168,12 @@ export const doenerRoom: RoomDef = {
   music: 'epple-theme',
 
   assets: {
-    svgImages: SPIT_FRAMES,
-    anims: [{ key: 'doener-spit', textures: SPIT_FRAMES.map((f) => f.key), frameRate: 5 }],
-    svgActors: [OTTO_ACTOR],
+    svgImages: [...SPIT_FRAMES, ...KNIFE_FRAMES],
+    anims: [
+      { key: 'doener-spit', textures: SPIT_FRAMES.map((f) => f.key), frameRate: 5 },
+      { key: 'doener-knife', textures: KNIFE_FRAMES.map((f) => f.key), frameRate: 3 },
+    ],
+    svgActors: [OTTO_ACTOR, ...PIGEON_ACTORS],
   },
 
   entries: {
@@ -153,13 +181,25 @@ export const doenerRoom: RoomDef = {
     epplehaus: { x: 920, y: 400, facing: 'left' },
   },
 
-  actors: [{ id: 'doenermann', x: DB.counter.x + 200, y: DB.counter.y + 62, facing: 'down' }],
+  actors: [
+    { id: 'doenermann', x: DB.counter.x + 200, y: DB.counter.y + 62, facing: 'down' },
+    // A pigeon on the standing table, working on the lonely onion ring.
+    { id: 'doenertaube', x: DB.tables[0] + 6, y: DB.ground - 20, facing: 'left' },
+  ],
 
   async onEnter() {
     sniffed = false;
   },
 
   ambients: [
+    {
+      // The OPEN sign's neon flickers, as neon does.
+      every: [1400, 4200],
+      run: async (ctx) => {
+        const o = ctx.layerObj('open');
+        for (const a of [0.2, 1, 0.4, 1]) await ctx.tween(o, { alpha: a }, 70, { skippable: false });
+      },
+    },
     {
       // Walk past the stand and the smell gets you — once per visit, without
       // stopping you (a line said in passing, not a cutscene).

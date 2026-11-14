@@ -875,6 +875,40 @@ export const PUNT_ACTOR: SvgActorAsset = {
 
 // ---- loose props -------------------------------------------------------------------
 
+/** Overlays for the river's life: glitter on the water, swallows, a swan. */
+export function waterShimmer(): string {
+  const r = rng(303);
+  const s: string[] = [];
+  for (let i = 0; i < 70; i++) {
+    const t = r();
+    const y = 262 + t * 104;
+    const xl = Math.max(4, xAt(NK.bankL, y) + 6);
+    const xr = Math.min(950, xAt(NK.quayFoot, y) - 10);
+    if (xr - xl < 20) continue;
+    const x = xl + r() * (xr - xl);
+    const len = 5 + t * 16;
+    s.push(path(`M${x.toFixed(1)} ${y.toFixed(1)}h${len.toFixed(1)}`, { stroke: r() < 0.6 ? '#fff0b0' : '#ffc890', sw: 1 + t * 1.2, opacity: 0.8 }));
+  }
+  return s.join('');
+}
+
+export function swallows(): string {
+  return ([[10, 16, 7], [34, 8, 6], [54, 20, 5]] as Array<[number, number, number]>)
+    .map(([x, y, k]) => path(`M${x - k} ${y - k * 0.5}Q${x - k * 0.4} ${y - k * 0.9} ${x} ${y}Q${x + k * 0.4} ${y - k * 0.9} ${x + k} ${y - k * 0.5}`, { stroke: '#2a1e40', sw: 1.8 }))
+    .join('');
+}
+
+export function swan(): string {
+  return (
+    ellipse(20, 24, 18, 3, { fill: '#fff0d0', opacity: 0.35 }) +
+    inked('M6 22Q4 14 14 13Q26 12 32 18Q30 24 18 24Z', '#f8f4ec', 1.6) +
+    path('M12 16Q20 12 28 17', { stroke: '#d8d0c0', sw: 1.2 }) +
+    path('M30 18Q36 12 32 6Q30 2 34 2', { stroke: INK, sw: 4.2 }) +
+    path('M30 18Q36 12 32 6Q30 2 34 2', { stroke: '#f8f4ec', sw: 2.4 }) +
+    path('M34 2l5 1.6l-5 1z', { fill: '#f08a2a', stroke: INK, sw: 0.8 })
+  );
+}
+
 /** A stamp card lying on the deck (24×14, local coordinates). */
 export function cardOnDeck(): string {
   return (

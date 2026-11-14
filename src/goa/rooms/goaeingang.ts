@@ -156,6 +156,7 @@ export const goaEingangRoom: RoomDef = {
       h: GE.portal.ry * 2,
       svg: `<g transform="translate(${GE.portal.rx - GE.portal.x} ${GE.portal.ry - GE.portal.y})">${portal()}</g>`,
     },
+    { id: 'light', depth: Layer.FRONT, x: 0, y: 0, w: 960, h: 450, svg: '<rect width="960" height="450" fill="#2a1a6a"/>', alpha: 0.2 },
   ],
 
   walkArea: [P(30, 340), P(940, 336), P(940, 446), P(30, 446)],
@@ -202,6 +203,29 @@ export const goaEingangRoom: RoomDef = {
         const p = ctx.layerObj('portal');
         if (p.originX !== 0.5) p.setOrigin(0.5).setPosition(GE.portal.x, GE.portal.y);
         await ctx.tween(p, { angle: p.angle + 360 }, 6000, { skippable: false });
+      },
+    },
+    {
+      // The Goazwerg bobs along with the bass. He'd deny it.
+      every: [30, 90],
+      run: async (ctx) => {
+        const z = ctx.actor('tuersteher').sprite;
+        const y0 = ctx.actor('tuersteher').y;
+        for (let i = 0; i < 4; i++) {
+          await ctx.tween(z, { y: y0 - 3, ease: 'Quad.easeOut' }, 110, { skippable: false });
+          await ctx.tween(z, { y: y0, ease: 'Quad.easeIn' }, 318, { skippable: false });
+        }
+      },
+    },
+    {
+      // Flaschenfloh makes his rounds: from bottle to bottle, and back.
+      every: [5000, 9000],
+      run: async (ctx) => {
+        if (ctx.busy) return;
+        const spots: Array<[number, number]> = [[770, 404], [836, 380], [700, 420], [FLOH.x, FLOH.y]];
+        const [x, y] = spots[Math.floor(Math.random() * spots.length)];
+        await ctx.walkTo('floh', x, y);
+        ctx.face('floh', 'down');
       },
     },
     {

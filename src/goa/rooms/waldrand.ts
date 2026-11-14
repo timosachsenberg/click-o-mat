@@ -1,6 +1,6 @@
 import { Layer, type Facing, type HotspotDef, type Rect, type RoomDef, type Vec2 } from '../../engine/types';
 import type { ScriptContext } from '../../engine/ScriptContext';
-import { WR, foregroundTree, goaGlow, waldrandBg } from '../art/waldrand';
+import { OWL, OWL_FRAMES, WR, fireflies, fog, foregroundTree, goaGlow, lampFlash, waldrandBg } from '../art/waldrand';
 import { PIGEON_ACTORS } from '../art/epplehaus';
 
 // ---- layout ----------------------------------------------------------------------
@@ -197,6 +197,37 @@ const HOTSPOTS: HotspotDef[] = [
       pickup: 'Das Schild ist einbetoniert. Das Forstamt kennt seine Pappenheimer.',
     },
   }),
+  at('zettel', 'Zettel', R(WR.sign.x + 92, WR.sign.y + 40, 40, 34), P(580, 380), 'up', {
+    on: {
+      lookat: async (ctx) => {
+        await ctx.playerSay('Ein Zettel, mit Tesa ans Schild geklebt: „Fällarbeiten beantragt wegen dringendem Verdacht auf Ruhestörung.“');
+        await ctx.playerSay(ctx.flag('knowsPartykiller') ? 'Unterschrift: „Ein besorgter Bürger a. D.“ Der Partykiller. Wusst ich’s doch.' : 'Unterschrift: „Ein besorgter Bürger a. D.“ Wer macht denn sowas?');
+      },
+      pickup: 'Der klebt da gut. Soll ruhig jeder lesen, wer das war.',
+    },
+  }),
+  at('harvester', 'Harvester', R(724, 226, 180, 116), P(760, 392), 'up', {
+    on: {
+      lookat: 'Ein Harvester. Feierabend, Greifarm eingeklappt. Tagsüber frisst der einen Baum in zwanzig Sekunden.',
+      use: 'Der Schlüssel steckt nicht. Und ich hab nicht mal einen Führerschein fürs Fahrrad.',
+      open: 'Abgeschlossen. Das Forstamt kennt seine Pappenheimer.',
+    },
+  }),
+  at('motorsaege', 'Motorsäge', R(WR.logs.x + 90, WR.logs.y - 42, 62, 26), P(250, 380), 'up', {
+    on: {
+      lookat: 'Eine Motorsäge, oben auf dem Stapel vergessen. Die Kette ist abgenommen. Schade. Oder zum Glück.',
+      pickup: 'Ohne Kette ist das nur ein sehr lauter Briefbeschwerer. Und zu hoch liegt sie auch.',
+    },
+  }),
+  at('eule', 'Eule', R(OWL.x - 4, OWL.y - 4, OWL.w + 8, OWL.h + 8), P(600, 380), 'up', {
+    on: {
+      lookat: 'Eine Eule. Sie schaut mich an, als wüsste sie genau, wie man an dem Gitter vorbeikommt. Sagt aber nichts.',
+      talkto: async (ctx) => {
+        await ctx.playerSay('Na? Auch auf dem Weg zur Goa?');
+        await ctx.playerSay('Sie hat geblinzelt. Einmal. Ich zähl das als Ja.');
+      },
+    },
+  }),
   at('absperrung', 'Absperrung', R(WR.barrier.x - 34, WR.barrier.base - 56, 196, 60), BARRIER_SPOT, 'up', {
     defaultVerb: 'use',
     on: {
@@ -240,6 +271,12 @@ export const waldrandRoom: RoomDef = {
     { id: 'bg', depth: Layer.BEHIND, svg: waldrandBg() },
     // The Goa's lights behind the trees: an ambient makes them throb.
     { id: 'goa', depth: Layer.BEHIND, x: 0, y: 0, w: 960, h: 450, svg: goaGlow(), alpha: 0.55 },
+    // Night life: the owl on its branch, the barrier lamp's flash, fireflies, fog.
+    { id: 'owl', depth: Layer.BEHIND, x: OWL.x, y: OWL.y, anim: 'wald-owl' },
+    { id: 'flash', depth: Layer.BEHIND, x: 0, y: 0, w: 960, h: 450, svg: lampFlash(), alpha: 0 },
+    { id: 'light', depth: Layer.FRONT, x: 0, y: 0, w: 960, h: 450, svg: '<rect width="960" height="450" fill="#1a1a5a"/>', alpha: 0.24 },
+    { id: 'fireflies', depth: Layer.FRONT, x: 0, y: 0, w: 960, h: 450, svg: fireflies(), alpha: 0.6 },
+    { id: 'fog', depth: Layer.FRONT, x: 0, y: 0, w: 960, h: 450, svg: fog() },
     // A big fir in front, on the left.
     { id: 'tree', depth: WR.tree.base, x: WR.tree.x, y: WR.tree.y, w: WR.tree.w, h: WR.tree.h, svg: foregroundTree() },
   ],
@@ -257,7 +294,12 @@ export const waldrandRoom: RoomDef = {
   },
 
   // A pigeon that only turns up to pop the balloon.
-  assets: { svgActors: PIGEON_ACTORS },
+  assets: {
+    svgActors: PIGEON_ACTORS,
+    svgImages: OWL_FRAMES,
+    // Mostly staring; now and then a blink, a turn of the head.
+    anims: [{ key: 'wald-owl', textures: [0, 0, 0, 0, 1, 0, 0, 0, 3, 3, 3, 0, 0, 1, 0, 0].map((f) => OWL_FRAMES[f].key), frameRate: 2 }],
+  },
   actors: [{ id: 'waldtaube', x: -200, y: 300, facing: 'left' }],
 
   async onEnter(ctx) {
@@ -271,6 +313,33 @@ export const waldrandRoom: RoomDef = {
   },
 
   ambients: [
+    {
+      // The barrier's warning lamp flashes.
+      every: [900, 900],
+      run: async (ctx) => {
+        const f = ctx.layerObj('flash');
+        await ctx.tween(f, { alpha: 1 }, 60, { skippable: false });
+        await ctx.tween(f, { alpha: 0 }, 240, { skippable: false });
+      },
+    },
+    {
+      // Fireflies drift and glimmer.
+      every: [100, 300],
+      run: async (ctx) => {
+        const f = ctx.layerObj('fireflies');
+        await ctx.tween(f, { alpha: 0.95, x: 6, y: -5, ease: 'Sine.easeInOut' }, 2200, { skippable: false });
+        await ctx.tween(f, { alpha: 0.35, x: -5, y: 4, ease: 'Sine.easeInOut' }, 2600, { skippable: false });
+      },
+    },
+    {
+      // Ground fog creeps across the path.
+      every: [100, 300],
+      run: async (ctx) => {
+        const f = ctx.layerObj('fog');
+        await ctx.tween(f, { x: 40, ease: 'Sine.easeInOut' }, 9000, { skippable: false });
+        await ctx.tween(f, { x: -40, ease: 'Sine.easeInOut' }, 9000, { skippable: false });
+      },
+    },
     {
       // The lights behind the trees throb with the bass: four on the floor.
       every: [50, 120],

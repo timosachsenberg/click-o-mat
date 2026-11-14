@@ -219,6 +219,13 @@ collage with photo textures) → hand-painted.
 
 </details>
 
+The scenes are alive beyond the riddles: the Plenum votes behind a lit window of
+the Epplehaus, a swan patrols the Neckar under hunting swallows, the Picasso's
+neon has a loose contact, an owl watches the forestry barrier, and Hölderlin's
+portrait changes with the tower's time layers. Each outdoor room also carries a
+`light` layer — a flat tint at `Layer.FRONT` — so the figures take on the colour
+of the dusk or the night.
+
 ### Playing the demo
 
 Bring Ned the Tentacle something *warm, fuzzy, and radioactive*:

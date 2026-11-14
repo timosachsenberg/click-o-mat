@@ -1,6 +1,6 @@
 import { Layer, type Facing, type HotspotDef, type Rect, type RoomDef, type Vec2 } from '../../engine/types';
 import type { ScriptContext } from '../../engine/ScriptContext';
-import { EP, PIGEON_ACTORS, epplehausBg } from '../art/epplehaus';
+import { EP, PIGEON_ACTORS, PLENUM, PLENUM_FRAMES, epplehausBg, flyingPigeon, lightStringGlow } from '../art/epplehaus';
 
 // ---- layout ----------------------------------------------------------------------
 // The forecourt of the Epplehaus, between the Picasso and the Neckarbrücke:
@@ -257,6 +257,25 @@ const HOTSPOTS: HotspotDef[] = [
       pickup: 'Das hängt zu hoch. Und irgendwer vermisst es bestimmt als Bettlaken.',
     },
   }),
+  at('plakate', 'Konzertplakate', R(370, 200, 62, 50), P(410, 346), 'up', {
+    on: {
+      lookat: async (ctx) => {
+        await ctx.playerSay('Konzertplakate. „DIE PFANDPIRATEN – Releaseparty“. Flaschenflohs Lieblingsband, wetten?');
+        await ctx.playerSay('Und „PLENUM OF DOOM – Doom Metal, Einlass nach Konsens“.');
+      },
+      pickup: 'Die kleben hier seit Jahren übereinander. Das ist tragende Bausubstanz.',
+    },
+  }),
+  at('sofa', 'Sofa', R(516, 262, 80, 44), P(556, 346), 'up', {
+    on: {
+      lookat: 'Ein Sofa vor der Tür. Weinrot, durchgesessen, eine Feder guckt raus. Hier haben schon Generationen den Bus verpasst.',
+      use: 'Wenn ich mich da reinsetze, komm ich nie wieder hoch. Das Sofa hat schon ganze Semester verschluckt.',
+      pickup: 'Das Sofa gehört zum Haus wie das Plenum.',
+    },
+  }),
+  at('plenum', 'Fenster', R(PLENUM.x - 4, PLENUM.y - 4, PLENUM.w + 8, PLENUM.h + 8), P(345, 346), 'up', {
+    on: { lookat: 'Hinter dem Fenster gehen Hände hoch. Und wieder runter. Und wieder hoch. Das Plenum stimmt ab. Über die Tagesordnung.' },
+  }),
   at('tuer', 'Tür', R(EP.door.x - 8, EP.door.y - 8, EP.door.w + 16, EP.door.h + 24), P(480, 346), 'up', {
     defaultVerb: 'open',
     on: {
@@ -408,6 +427,11 @@ export const epplehausRoom: RoomDef = {
 
   layers: [
     { id: 'bg', depth: Layer.BEHIND, svg: epplehausBg() },
+    // The Plenum's shadows behind a lit window, the fairy lights' flicker, a pigeon off a sill.
+    { id: 'plenum', depth: Layer.BEHIND, x: PLENUM.x, y: PLENUM.y, anim: 'epple-plenum' },
+    { id: 'lichter', depth: Layer.BEHIND, x: 0, y: 0, w: 960, h: 450, svg: lightStringGlow() },
+    { id: 'flieger', depth: Layer.BEHIND, x: 690, y: 68, w: 28, h: 16, svg: flyingPigeon(), alpha: 0 },
+    { id: 'light', depth: Layer.FRONT, x: 0, y: 0, w: 960, h: 450, svg: '<rect width="960" height="450" fill="#c0507a"/>', alpha: 0.1 },
     // A heart balloon from the last concert, tied to the bike rack.
     { id: 'ballon', depth: Layer.BEHIND, x: 206, y: 196, w: 60, h: 140, svg: BALLOON_ART, visible: (state) => !state.getFlag('ballonTaken') },
   ],
@@ -418,7 +442,11 @@ export const epplehausRoom: RoomDef = {
 
   music: 'epple-theme',
 
-  assets: { svgActors: PIGEON_ACTORS },
+  assets: {
+    svgActors: PIGEON_ACTORS,
+    svgImages: PLENUM_FRAMES,
+    anims: [{ key: 'epple-plenum', textures: PLENUM_FRAMES.map((f) => f.key), frameRate: 0.7 }],
+  },
 
   entries: {
     doener: { x: 40, y: 400, facing: 'right' },
@@ -440,6 +468,25 @@ export const epplehausRoom: RoomDef = {
   },
 
   ambients: [
+    {
+      // The fairy lights flicker: every other bulb has a loose contact.
+      every: [900, 2600],
+      run: async (ctx) => {
+        const l = ctx.layerObj('lichter');
+        for (const a of [0.35, 1, 0.6, 1]) await ctx.tween(l, { alpha: a }, 90, { skippable: false });
+      },
+    },
+    {
+      // Now and then a pigeon takes off from a window sill and circles the house.
+      every: [7000, 14000],
+      run: async (ctx) => {
+        const b = ctx.layerObj('flieger');
+        b.setPosition(690, 68).setAlpha(1);
+        await ctx.tween(b, { x: 520, y: 14, ease: 'Sine.easeOut' }, 1500, { skippable: false });
+        await ctx.tween(b, { x: 250, y: 60, ease: 'Sine.easeInOut' }, 1800, { skippable: false });
+        await ctx.tween(b, { x: 230, y: 70, alpha: 0 }, 300, { skippable: false });
+      },
+    },
     { every: [500, 1300], run: pigeonLife },
     {
       // Flaschenfloh, talking shop to himself and to the pigeons.

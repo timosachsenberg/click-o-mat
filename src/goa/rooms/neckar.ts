@@ -2,7 +2,7 @@ import { Layer, type Facing, type HotspotDef, type Rect, type RoomDef, type Vec2
 import type { ScriptContext } from '../../engine/ScriptContext';
 import { OTTO_ACTOR } from '../art/turm';
 import { PIGEON_ACTORS } from '../art/epplehaus';
-import { NK, PUNT_ACTOR, balustrade, bus, cardOnDeck, cuttersOnDeck, eckhausLayer, floatingPole, floatingCap, flyingLeg, neckarBg, promGap, quayFootY, quayTopY } from '../art/neckar';
+import { NK, PUNT_ACTOR, balustrade, bus, cardOnDeck, cuttersOnDeck, swallows, swan, waterShimmer, eckhausLayer, floatingPole, floatingCap, flyingLeg, neckarBg, promGap, quayFootY, quayTopY } from '../art/neckar';
 
 // ---- layout ----------------------------------------------------------------------
 // The Neckarbrücke in Tübingen at sunset, looking upstream along the
@@ -410,6 +410,21 @@ const HOTSPOTS: HotspotDef[] = [
       open: toForest,
     },
   }),
+  at('schwan', 'Schwan', R(180, 276, 170, 40), THROW_SPOT, 'up', {
+    on: {
+      lookat: 'Ein Schwan. Zieht seine Bahn, als gehörte ihm der Neckar. Tut er vermutlich auch.',
+      talkto: 'Er ignoriert mich. Mit Würde.',
+    },
+    onItem: { use: { stuhlbein: 'Auf den Schwan? Niemals. Der kann nichts dafür.' } },
+  }),
+  at('fahrplan', 'Fahrplan', R(586, 282, 36, 44), P(604, 424), 'up', {
+    on: {
+      lookat: async (ctx) => {
+        await ctx.playerSay('Der Fahrplan. Linie 5: alle dreißig Minuten. Letzter Bus: 23:58 Uhr.');
+        await ctx.playerSay('Darunter, mit Edding: „Nachtbus fährt, wenn er Lust hat.“ Zurück komm ich also zu Fuß. Oder gar nicht.');
+      },
+    },
+  }),
   at('schloesser', 'Liebesschlösser', R(262, 372, 92, 24), P(300, 420), 'up', {
     on: {
       lookat: 'Liebesschlösser am Geländer. Die meisten hat die Stadt schon abgezwickt. Die Liebe hält, die Schlösser nicht.',
@@ -509,6 +524,11 @@ export const neckarRoom: RoomDef = {
 
   layers: [
     { id: 'bg', depth: Layer.BEHIND, svg: neckarBg() },
+    // The river's life: glitter on the water, swallows hunting, a swan.
+    { id: 'shimmer', depth: Layer.BEHIND, x: 0, y: 0, w: 960, h: 450, svg: waterShimmer(), alpha: 0.5 },
+    { id: 'schwalben', depth: Layer.BEHIND, x: -120, y: 80, w: 70, h: 30, svg: swallows() },
+    { id: 'schwan', depth: Layer.BEHIND, x: 190, y: 282, w: 42, h: 28, svg: swan() },
+    { id: 'light', depth: Layer.FRONT, x: 0, y: 0, w: 960, h: 450, svg: '<rect width="960" height="450" fill="#c0507a"/>', alpha: 0.1 },
     // The corner house: whoever goes round it to the promenade is behind it.
     { id: 'eckhaus', depth: NK.parapetBase - 1, x: NK.eckhaus.x, y: NK.eckhaus.y, w: NK.eckhaus.w, h: NK.eckhaus.h, svg: eckhausLayer() },
     // After the corner house, so it runs on in front of it.
@@ -612,6 +632,38 @@ export const neckarRoom: RoomDef = {
   },
 
   ambients: [
+    {
+      // The low sun glitters on the water.
+      every: [80, 200],
+      run: async (ctx) => {
+        const w = ctx.layerObj('shimmer');
+        await ctx.tween(w, { alpha: 0.9, x: 5, ease: 'Sine.easeInOut' }, 1300, { skippable: false });
+        await ctx.tween(w, { alpha: 0.3, x: -4, ease: 'Sine.easeInOut' }, 1500, { skippable: false });
+      },
+    },
+    {
+      // Swallows sweep across the evening sky.
+      every: [5000, 11000],
+      run: async (ctx) => {
+        const b = ctx.layerObj('schwalben');
+        const y = 50 + Math.random() * 90;
+        const ltr = Math.random() < 0.5;
+        b.setFlipX(!ltr).setPosition(ltr ? -90 : 1000, y);
+        await ctx.tween(b, { x: 440, y: y + 34, ease: 'Sine.easeIn' }, 1700, { skippable: false });
+        await ctx.tween(b, { x: ltr ? 1000 : -90, y: y - 20, ease: 'Sine.easeOut' }, 1700, { skippable: false });
+      },
+    },
+    {
+      // The swan patrols its stretch of river.
+      every: [300, 900],
+      run: async (ctx) => {
+        const sw = ctx.layerObj('schwan');
+        sw.setFlipX(false);
+        await ctx.tween(sw, { x: 300, y: 300, ease: 'Sine.easeInOut' }, 13000, { skippable: false });
+        sw.setFlipX(true);
+        await ctx.tween(sw, { x: 190, y: 282, ease: 'Sine.easeInOut' }, 13000, { skippable: false });
+      },
+    },
     {
       // The punts come down the river, one after the other.
       every: [2500, 6000],

@@ -77,6 +77,36 @@ function spadeArt(e: Era): string {
   );
 }
 
+/** Hölderlin's portrait above the desk, in each time layer's look — and, in
+ *  the modern one, the museum's rope and plaque in front of the desk. */
+const PORTRAIT = { x: 226, y: 138, w: 34, h: 44 };
+function portraitArt(e: Era): string {
+  const { x, y, w, h } = PORTRAIT;
+  if (e === 1) {
+    const b = (bx: number, by: number, bw: number, bh: number, c: string) => `<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" fill="${c}"/>`;
+    return b(x, y, 35, 45, '#aa5500') + b(x + 5, y + 5, 25, 35, '#0000aa') + b(x + 10, y + 10, 15, 15, '#ffff55') + b(x + 10, y + 25, 15, 15, '#aaaaaa') + b(x + 15, y + 15, 5, 5, '#000000');
+  }
+  const frame = e === 2 ? '#ffffff' : '#c8a040';
+  const s =
+    `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${frame}" stroke="#1e1424" stroke-width="${e === 2 ? 3.4 : 2.2}"/>` +
+    `<rect x="${x + 4}" y="${y + 4}" width="${w - 8}" height="${h - (e === 2 ? 14 : 8)}" fill="#4a3a5a"/>` +
+    `<circle cx="${x + w / 2}" cy="${y + 17}" r="7" fill="#e8c8a8" stroke="#1e1424" stroke-width="1.2"/>` +
+    `<path d="M${x + 9} ${y + 16}q8 -16 16 0" fill="#f4efe4" stroke="#1e1424" stroke-width="1"/>` +
+    `<path d="M${x + 8} ${y + h - (e === 2 ? 10 : 4)}q9 -12 18 0z" fill="#2a2a4a"/>`;
+  if (e !== 2) return s;
+  // Today: a museum. A rope on brass posts, a plaque, an audio guide's number.
+  const fy = FLOORS[0].back + 2;
+  const post = (px: number) => `<path d="M${px} ${fy}v-24" stroke="#1e1424" stroke-width="6" stroke-linecap="round"/><path d="M${px} ${fy}v-24" stroke="#e8c040" stroke-width="3" stroke-linecap="round"/><circle cx="${px}" cy="${fy - 26}" r="3.4" fill="#e8c040" stroke="#1e1424" stroke-width="1.2"/>`;
+  return (
+    s +
+    `<text x="${x + w / 2}" y="${y + h - 3}" font-family="Arial, sans-serif" font-size="4.2" font-weight="700" text-anchor="middle" fill="#1e1424">F. H. 1770–1843</text>` +
+    `<path d="M186 ${fy - 22}Q244 ${fy - 8} 302 ${fy - 22}" fill="none" stroke="#1e1424" stroke-width="5"/><path d="M186 ${fy - 22}Q244 ${fy - 8} 302 ${fy - 22}" fill="none" stroke="#c4243a" stroke-width="3"/>` +
+    post(186) +
+    post(302) +
+    `<rect x="306" y="${fy - 20}" width="20" height="14" fill="#ffffff" stroke="#1e1424" stroke-width="1.4"/><text x="316" y="${fy - 10}" font-family="Arial, sans-serif" font-size="8" font-weight="900" text-anchor="middle" fill="#1e1424">17</text>`
+  );
+}
+
 /** Just in front of the hole in the cellar wall. */
 const HOLE_DOOR = P(TM.arch.x + TM.arch.w / 2, KELLER.back + 3);
 /** The floor a point on the back wall belongs to. */
@@ -266,6 +296,17 @@ const HOTSPOTS: HotspotDef[] = [
         ]),
       use: toNeckar,
       open: toNeckar,
+    },
+  }),
+  at('portrait', 'Porträt', R(PORTRAIT.x - 2, PORTRAIT.y - 2, PORTRAIT.w + 4, PORTRAIT.h + 4), on(STUBE, 244), 'up', {
+    on: {
+      lookat: (ctx) =>
+        byEra(ctx, [
+          'Ein Porträt. Friedrich Hölderlin, jung, mit weißem Kragen. Er schaut, als hätte er gerade einen Hexameter verloren.',
+          'Fünfzehn gelbe Pixel auf blauem Grund. Laut Parser: „ein Bild“.',
+          'Das Porträt, jetzt mit Museumsschildchen: „F. H. 1770–1843“. Und Audioguide Nummer 17.',
+        ]),
+      pickup: 'Kunstraub im Hölderlinturm? Dafür käme sogar der Partykiller aus dem Ruhestand zurück.',
     },
   }),
   at('pult', 'Schreibpult', R(TM.desk.x - 8, TM.desk.top - 36, TM.desk.w + 16, TM.desk.foot - TM.desk.top + 36), on(STUBE, 244), 'up', {
@@ -476,6 +517,9 @@ export const hoelderlinturmRoom: RoomDef = {
   layers: [
     { id: 'bg', depth: Layer.BEHIND, svg: (state) => turmBg(era(state)) },
     { id: 'glow', depth: Layer.BEHIND, svg: (state) => spiralGlow(era(state)) },
+    { id: 'portrait', depth: Layer.BEHIND, svg: (state) => portraitArt(era(state)) },
+    // 1987: the parser prompt's cursor blinks after PUT PUT.
+    { id: 'cursor', depth: Layer.BEHIND, x: TM.graffiti.x + TM.graffiti.w - 6, y: TM.graffiti.y + TM.graffiti.h - 14, w: 10, h: 10, svg: '<rect width="10" height="10" fill="#55ffff"/>', visible: (state) => era(state) === 1 },
     { id: 'spaten', depth: Layer.BEHIND, svg: (state) => spadeArt(era(state)), visible: (state) => !state.getFlag('spatenTaken') },
     { id: 'wallhole', depth: Layer.BEHIND, svg: (state) => wallHoleArt(era(state)), visible: (state) => !!state.getFlag('wallHole') && !state.getFlag('wallHoleTaken') },
     {
@@ -514,6 +558,17 @@ export const hoelderlinturmRoom: RoomDef = {
   },
 
   ambients: [
+    {
+      // The cursor of the 1987 parser prompt blinks.
+      every: [10, 20],
+      run: async (ctx) => {
+        const c = ctx.layerObj('cursor');
+        c.setAlpha(1);
+        await ctx.wait(450);
+        c.setAlpha(0);
+        await ctx.wait(450);
+      },
+    },
     {
       // The attractor breathes.
       every: [0, 200],

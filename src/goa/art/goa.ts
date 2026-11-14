@@ -363,6 +363,34 @@ function shrooms(): string {
   ].join('');
 }
 
+/** The chai stall at the edge of the floor: a striped awning on bamboo
+ *  poles, a steaming kettle, cups, a lantern, a hand-painted sign. */
+function chaiStall(): string {
+  const x = 56;
+  const y = 238;
+  const s: string[] = [];
+  s.push(glow('goChaiGlow', x + 50, y + 50, 90, '#ffb04a', 0.5, 60));
+  for (const px of [x + 4, x + 96]) s.push(inked(`M${px - 3} ${GO.ground + 6}V${y + 16}h6V${GO.ground + 6}Z`, '#c8a060', 1.8));
+  s.push(inked(`M${x - 8} ${y + 22}L${x + 50} ${y - 6}L${x + 108} ${y + 22}Z`, NEON[5], 2.2));
+  for (let k = 0; k < 4; k++) s.push(path(poly([[x + 50, y - 6], [x - 8 + k * 29, y + 22], [x + 6.5 + k * 29, y + 22]]), { fill: NEON[3], opacity: 0.9 }));
+  s.push(path(`M${x - 8} ${y + 22}L${x + 50} ${y - 6}L${x + 108} ${y + 22}Z`, { stroke: INK, sw: 2.2 }));
+  // The counter, the kettle on its burner, cups, the chai woman.
+  s.push(inked(`M${x} ${GO.ground + 4}V${y + 62}H${x + 100}V${GO.ground + 4}Z`, '#3a1e5e', 2.2));
+  s.push(rect(x + 8, y + 68, 84, 12, { fill: '#ffe23a', stroke: INK, sw: 1.4 }));
+  s.push(path(`M${x + 22} ${y + 77}h3M${x + 34} ${y + 71}v6h4v-6M${x + 44} ${y + 77}v-6l2 6l2 -6v6M${x + 58} ${y + 71}v6`, { stroke: INK, sw: 1.6 }));
+  s.push(circle(x + 72, y + 40, 9, { fill: '#8a5a3a', stroke: INK, sw: 1.8 }));
+  s.push(path(`M${x + 63} ${y + 38}Q${x + 72} ${y + 26} ${x + 81} ${y + 38}`, { fill: NEON[0], stroke: INK, sw: 1.4 }));
+  s.push(inked(`M${x + 60} ${y + 62}Q${x + 72} ${y + 44} ${x + 84} ${y + 62}Z`, NEON[2], 1.6));
+  s.push(inked(`M${x + 16} ${y + 62}v-14q10 -6 20 0v14z`, '#c8c8d0', 1.6));
+  s.push(path(`M${x + 36} ${y + 52}q8 -2 8 -8`, { stroke: INK, sw: 2.4 }) + path(`M${x + 26} ${y + 44}v-4`, { stroke: INK, sw: 2 }));
+  s.push(path(`M${x + 22} ${y + 36}q-4 -8 2 -14M${x + 30} ${y + 34}q4 -8 -2 -16`, { stroke: '#fff6e0', sw: 2, opacity: 0.6 }));
+  for (const cx of [x + 44, x + 52]) s.push(inked(`M${cx} ${y + 62}v-7h6v7z`, '#f4efe4', 1));
+  // A lantern.
+  s.push(line([x + 50, y - 4], [x + 50, y + 12], INK, 1.2));
+  s.push(circle(x + 50, y + 17, 6, { fill: '#ffe23a', stroke: INK, sw: 1.2 }) + circle(x + 50, y + 17, 14, { fill: '#ffe23a', opacity: 0.25 }));
+  return s.join('');
+}
+
 export function goaBg(): string {
   return [
     defs(
@@ -381,6 +409,7 @@ export function goaBg(): string {
     forest(),
     stage(),
     canopy(),
+    chaiStall(),
     shrooms(),
     ground(),
     vignette('goVig', 960, 450, 0.42, '#04020c'),

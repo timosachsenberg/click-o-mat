@@ -60,6 +60,8 @@ export const ACTORS: Record<string, ActorDef> = {
     // Otto lives in the pixel layer only (turmEra 1) — until he's out.
     stance: (state) => ((state.getFlag<number>('turmEra') ?? 0) !== 1 || state.getFlag('ottoFree') ? 'gone' : undefined),
   },
+  // The pigeon on the döner stand's table.
+  doenertaube: { id: 'doenertaube', name: 'Taube', talkColor: '#d8d8ea', textureSet: 'taube2', baseScale: 0.85 },
   // The döner man behind his counter: drawn into the backdrop, this is his voice.
   doenermann: { id: 'doenermann', name: 'Dönermann', talkColor: '#ffc07a', textureSet: 'otto', stance: () => 'gone' },
   // The DJ on the Goa's stage: drawn into the backdrop, this is his voice.

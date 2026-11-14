@@ -25,7 +25,7 @@ const FPS = 4000 / (2 * BEAT);
 
 /** The single dancers: feet position, look, size. Kept clear of the floor's centre. */
 const DANCERS: Array<[x: number, y: number, look: number, size: DancerSize]> = [
-  [96, 352, 0, 'm'], [168, 366, 3, 'm'], [250, 350, 5, 'm'], [330, 346, 1, 'm'], [640, 348, 2, 'm'], [716, 352, 6, 'm'], [790, 364, 4, 'm'], [866, 350, 7, 'm'],
+  [176, 366, 3, 'm'], [44, 372, 0, 'm'], [250, 350, 5, 'm'], [330, 346, 1, 'm'], [640, 348, 2, 'm'], [716, 352, 6, 'm'], [790, 364, 4, 'm'], [866, 350, 7, 'm'],
   [60, 400, 2, 'l'], [150, 430, 6, 'l'], [236, 396, 4, 'l'], [300, 436, 7, 'l'], [668, 438, 0, 'l'], [730, 398, 5, 'l'], [820, 428, 1, 'l'], [900, 402, 3, 'l'],
   [398, 344, 7, 'm'], [566, 344, 0, 'm'],
 ];
@@ -94,6 +94,18 @@ const HOTSPOTS: HotspotDef[] = [
       lookat: 'Noch mehr Zauberpilze. Der große grüne pulsiert im Takt. Oder ich.',
       pickup: 'Der kleinste ist größer als ich. Und der Goazwerg zählt bestimmt nach.',
       use: 'Anknabbern? Der Goazwerg sagt, Zwerge essen nur Pilze. Ich lass sie den Zwergen.',
+    },
+  }),
+  at('chai', 'Chai-Stand', R(48, 230, 116, 96), P(150, 350), 'left', {
+    defaultVerb: 'talkto',
+    on: {
+      lookat: 'Ein Chai-Stand unter einem gestreiften Dach. Der Kessel dampft, es riecht nach Zimt und Kardamom.',
+      talkto: async (ctx) => {
+        await ctx.playerSay('EINEN CHAI, BITTE! WAS KOSTET DER?');
+        await ctx.playerSay('Die Chai-Frau zeigt auf ein Schild: „Ein Lächeln. Oder zwei Euro. Lächeln bevorzugt.“');
+        await ctx.playerSay(ctx.hasItem('euro') ? 'Ich lächle. Die zwei Euro behalte ich. Der Chai ist heiß, süß und perfekt.' : 'Ich lächle. Der Chai ist heiß, süß und perfekt.');
+      },
+      use: 'Selber einschenken? Die Chai-Frau hat alles im Griff. Und im Blick.',
     },
   }),
   at('boxen', 'Boxentürme', R(GO.stage.x0 - 64, GO.stage.top + 58, 58, 140), P(310, 346), 'up', {
@@ -178,6 +190,7 @@ export const goaRoom: RoomDef = {
     { id: 'lasers', depth: Layer.BEHIND, x: 0, y: 0, w: 960, h: 450, svg: lasers(), alpha: 0.8 },
     { id: 'far', depth: Layer.BEHIND, x: FAR.x, y: FAR.y, anim: 'goa-far' },
     ...dancerLayers,
+    { id: 'light', depth: Layer.FRONT, x: 0, y: 0, w: 960, h: 450, svg: '<rect width="960" height="450" fill="#3a1a7a"/>', alpha: 0.16 },
     { id: 'frontShrooms', depth: Layer.FRONT, x: 0, y: 0, w: 960, h: 450, svg: foregroundShrooms() },
   ],
 
