@@ -7,7 +7,7 @@ import { NK, PUNT_ACTOR, balustrade, eckhausLayer, floatingCap, flyingLeg, necka
 // Neckarfront: the player walks along the bridge in the foreground, in
 // front of its sandstone balustrade (one occluder, baseline
 // NK.parapetBase). The Altstadt is on the right (so that's the way back to
-// the Picasso), the bridge goes on to the left towards the forest.
+// the Epplehaus and the Picasso), the bridge goes on to the left towards the forest.
 //
 // From the right end of the bridge the player can walk round the back of
 // the corner house (its own occluder layer hides them on the way) onto the
@@ -202,7 +202,7 @@ function at(id: string, name: string, r: Rect, walkTo: Vec2, facing: Facing, res
 }
 
 async function toPicasso(ctx: ScriptContext): Promise<void> {
-  await ctx.goToRoom('picasso', 'door');
+  await ctx.goToRoom('epplehaus', 'neckar');
 }
 
 async function toForest(ctx: ScriptContext): Promise<void> {
@@ -350,10 +350,10 @@ const HOTSPOTS: HotspotDef[] = [
   at('laterne', 'Laterne', R(850, 180, 44, 196), P(862, 424), 'up', {
     on: { lookat: 'Eine alte Laterne. Brennt schon. Feierabend für die Sonne, Schichtbeginn für die Laterne.' },
   }),
-  at('toPicasso', 'Zum Picasso', R(930, 408, 30, 42), P(948, 432), 'right', {
+  at('toPicasso', 'Zum Epplehaus', R(930, 408, 30, 42), P(948, 432), 'right', {
     defaultVerb: 'use',
     on: {
-      lookat: 'Da geht’s zurück in die Altstadt. Und die Treppe runter ins Picasso.',
+      lookat: 'Da geht’s zurück zum Epplehaus. Und von dort die Treppe runter ins Picasso.',
       use: toPicasso,
       open: toPicasso,
     },
@@ -482,8 +482,8 @@ export const neckarRoom: RoomDef = {
     ctx.place('kahn', OFF.x, OFF.y, 'right');
     await ctx.once('neckarIntro', async () => {
       await ctx.wait(400);
-      await ctx.playerSay('Abendrot über dem Neckar. Alis Uhr geht also mal wieder ein paar Stunden vor.');
-      await ctx.playerSay('Umso besser: Über die Neckarbrücke, und wenn die Sonne weg ist, immer dem Bass nach.');
+      await ctx.playerSay('Der Neckar im Abendrot. Kitschig. Schön.');
+      await ctx.playerSay('Über die Neckarbrücke, und wenn die Sonne weg ist, immer dem Bass nach.');
     });
   },
 

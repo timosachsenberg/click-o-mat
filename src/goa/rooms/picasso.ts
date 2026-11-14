@@ -240,7 +240,7 @@ async function leave(ctx: ScriptContext): Promise<void> {
       await ctx.playerSay('Folge dem Bass. Chakabunga. Los geht’s!');
     });
   }
-  await ctx.goToRoom('neckar', 'picasso');
+  await ctx.goToRoom('epplehaus', 'picasso');
 }
 
 /** The Zocker-Hocker: the rickety stool at the counter, right in front of
@@ -373,7 +373,7 @@ const HOTSPOTS: HotspotDef[] = [
   at('door', 'Ausgang', R(280, 142, 62, 158), P(311, 322), 'up', {
     defaultVerb: 'open',
     on: {
-      lookat: 'Die Treppe rauf, raus an den Neckar. Irgendwo dahinter ist ein Wald.',
+      lookat: 'Die Treppe rauf, raus vors Epplehaus. Dahinter der Neckar, und irgendwo dahinter ein Wald.',
       open: leave,
       use: leave,
       close: 'Sie ist zu. Noch.',

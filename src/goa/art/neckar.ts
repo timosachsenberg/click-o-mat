@@ -79,7 +79,7 @@ const xAt = (e: [Pt, Pt], y: number) => e[0][0] + ((y - e[0][1]) / (e[1][1] - e[
 // ---- sky: Abendrot -------------------------------------------------------------------
 
 /** A long cloud band, purple above, glowing where the low sun hits it from below. */
-function band(x0: number, x1: number, y: number, th: number, seed: number): string {
+export function band(x0: number, x1: number, y: number, th: number, seed: number): string {
   const r = rng(seed);
   const top: Pt[] = [];
   const bot: Pt[] = [];
