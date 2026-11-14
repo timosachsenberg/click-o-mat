@@ -286,14 +286,14 @@ check('its hotspot follows it', (await hotspotAt(p1.x, p1.y - p1.h * 0.4)) === '
 // --- throw the chair leg in: the woodworms eat the punt, a cap floats ashore
 await useItemOn(p1.x, p1.y - p1.h * 0.4);
 check('the punt sank', (await flag('puntSunk')) === true && (await inv()).length === 0);
-check('only a cap washed up at the jetty by the Hölderlinturm', (await flag('capAshore')) === true && (await hotspotAt(232, 262)) === 'muetze');
+check('only a cap washed up at the jetty by the Hölderlinturm', (await flag('capAshore')) === true && (await hotspotAt(506, 332)) === 'muetze');
 await page.screenshot({ path: `${SHOT}/goa-06-sunk.png` });
 await waitFor(async () => (await punt()).x < 0, 4000, 'punt gone');
 check('no more punts after that', (await punt()).x < 0);
-await click(232, 262); // pick up the cap (default verb): along the whole Neckarfront
+await click(506, 332); // pick up the cap (default verb): along the Neckarfront, down to the jetty
 await settle();
 const far = await ev(() => { const a = window.__engine.roomScene.actors.get('player'); return { x: a.x, y: a.y, s: a.sprite.scale }; });
-check('walked along the Neckarfront to the Hölderlinturm, small in the distance', far.x < 320 && far.y < 250 && far.s < 0.4, JSON.stringify(far));
+check('walked along the Neckarfront to the jetty at the Hölderlinturm, smaller with the distance', far.x < 560 && far.y < 330 && far.s < 0.7, JSON.stringify(far));
 await page.screenshot({ path: `${SHOT}/goa-06b-turm.png` });
 check('took the cap', JSON.stringify(await inv()) === '["muetze"]', JSON.stringify(await inv()));
 

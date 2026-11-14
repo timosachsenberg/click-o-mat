@@ -26,12 +26,12 @@ import {
  * The Neckarfront in Tübingen at sunset, seen from the Neckarbrücke: the
  * Altstadt's gabled houses run along the quay wall from the big corner
  * house close by on the right into the distance on the left, where the
- * Hölderlinturm stands among the willows and the river comes round the
- * bend — right there the sun is about to go down. Behind the roofs the
+ * river comes round the bend — right there the sun is about to go down. Behind the roofs the
  * Stiftskirche and, on the hill, the Schloss; on the far left the dark
  * trees of the Neckarinsel. In the foreground the bridge's sandstone
- * balustrade. A promenade runs along the top of the quay wall to a little
- * jetty at the Hölderlinturm.
+ * balustrade. Halfway along, the Hölderlinturm stands in the water in
+ * front of the wall; a promenade runs along the top of the wall to it,
+ * with stairs down to a jetty at its foot.
  *
  * All functions draw in room coordinates (960×450) and return SVG markup.
  */
@@ -53,9 +53,13 @@ export const NK = {
   parapetBase: 408,
   /** The promenade on top of the quay wall runs from the corner house (x1)
    *  to the Hölderlinturm (x0); the houses stand back from the edge by promGap(x). */
-  prom: { x0: 288, x1: 742 },
-  /** The little jetty in front of the Hölderlinturm, far away. */
-  jetty: [[204, 251], [252, 252], [254, 258], [202, 258]] as Pt[],
+  prom: { x0: 480, x1: 742 },
+  /** The Hölderlinturm, standing in the water in front of the wall: centre x, waterline y. */
+  turm: { x: 440, base: 298 },
+  /** The jetty next to it, along the foot of the wall (back edge first), and
+   *  the stairs down the wall to it: x of their top / bottom ends. */
+  jetty: [[466, 298], [546, 316], [541, 328], [460, 308]] as Pt[],
+  stairs: { top: [512, 526], bottom: [486, 500] } as { top: Pt; bottom: Pt },
   /** The corner house at the bridge, as its own occluder layer. */
   eckhaus: { x: 736, y: 0, w: 224, h: 410 },
 };
@@ -282,15 +286,6 @@ function bend(): string {
   // Trees where the river comes round the bend.
   s.push(path(puff(190, 236, 30, 13, 6, 71, 0.16), { fill: '#3e3a5a', stroke: INK, sw: 1.2 }));
   s.push(path(puff(236, 226, 26, 16, 6, 73, 0.16), { fill: '#4a5a44', stroke: INK, sw: 1.2 }));
-  // The Hölderlinturm: a round yellow tower under a pointed roof, at the water.
-  const tx = 270;
-  s.push(inked(`M${tx - 12} 252V214Q${tx} 210 ${tx + 12} 214V252Z`, '#e8bc68', 1.8));
-  s.push(path(`M${tx - 12} 214Q${tx - 9} 212 ${tx - 6} 212V252H${tx - 12}Z`, { fill: '#fff0b0', opacity: 0.5 }));
-  s.push(path(`M${tx + 3} 212V252H${tx + 12}V214Q${tx + 8} 212 ${tx + 3} 212Z`, { fill: '#3a2058', opacity: 0.25 }));
-  s.push(inked(poly([[tx - 15, 215], [tx + 15, 215], [tx, 184]]), '#5a4a6e', 1.8));
-  s.push(line([tx - 15, 215], [tx, 184], '#ff9a5a', 1.4, 0.8));
-  s.push(line([tx, 184], [tx, 177], INK, 1.2));
-  s.push(rect(tx - 7, 224, 4, 6, { fill: LIT, stroke: INK, sw: 0.8 }) + rect(tx + 2, 224, 4, 6, { fill: DARK_PANE, stroke: INK, sw: 0.8 }) + rect(tx - 2, 237, 4, 6, { fill: DARK_PANE, stroke: INK, sw: 0.8 }));
   s.push(willow(238, 234, 0.9, 81));
   s.push(willow(296, 238, 1.05, 83));
   return s.join('');
@@ -412,16 +407,59 @@ function leftBank(): string {
 
 // ---- the jetty, the steps, the bridge deck ---------------------------------------------------
 
-/** The jetty at the Hölderlinturm, small in the distance, with steps down from the promenade. */
+/** The Hölderlinturm: a round yellow tower under a pointed roof, standing
+ *  in the water in front of the quay wall, a big willow beside it. */
+function hoelderlinturm(): string {
+  const { x, base } = NK.turm;
+  const lit = (wx: number, wy: number, on: boolean) =>
+    rect(wx - 2, wy - 3.2, 4, 6.4, { fill: on ? LIT : DARK_PANE, stroke: INK, sw: 0.7 }) + path(`M${wx} ${wy - 3.2}v6.4`, { stroke: on ? '#a8742a' : '#5a5078', sw: 0.5 });
+  const tower = [
+    inked('M-12 0V-38Q0 -42 12 -38V0Z', '#e8bc68', 1.1),
+    path('M-12 -38Q-9 -40 -6 -40V0H-12Z', { fill: '#fff0b0', opacity: 0.55 }),
+    path('M3 -40V0H12V-38Q8 -40 3 -40Z', { fill: '#3a2058', opacity: 0.25 }),
+    path('M-12 -20H12M-12 -6H12', { stroke: '#b88a48', sw: 0.6 }),
+    inked(poly([[-15, -37], [15, -37], [0, -69]]), '#5a4a6e', 1.1),
+    path(poly([[0, -69], [15, -37], [3, -37]]), { fill: '#1e1038', opacity: 0.3 }),
+    line([-15, -37], [0, -69], '#ff9a5a', 0.9, 0.85),
+    line([0, -69], [0, -76], INK, 0.8),
+    circle(0, -77, 1, { fill: '#ffd34a', stroke: INK, sw: 0.5 }),
+    lit(-6, -29, true) + lit(0, -30, true) + lit(6, -29, false),
+    lit(-6, -13, false) + lit(1, -13, true),
+    // Damp at the waterline.
+    path('M-12 -4Q0 -2 12 -4V0H-12Z', { fill: '#3a4a40', opacity: 0.5 }),
+  ];
+  return [
+    // Its reflection, and the willow's.
+    path(`M${x - 24} ${base + 2}h48l-6 44h-34z`, { fill: '#ffd070', opacity: 0.28 }),
+    willow(x - 56, base - 36, 2.2, 85),
+    group(tower, `translate(${x} ${base}) scale(2.2)`),
+  ].join('');
+}
+
+/** The jetty at the Hölderlinturm, and the stairs down the wall to it. */
 function jetty(): string {
   const s: string[] = [];
   const [a, b, c, d] = NK.jetty;
-  for (const x of [208, 228, 248]) s.push(inked(`M${x - 1} 256v6h2v-6z`, '#4a2e22', 0.8));
-  s.push(inked(poly([a, b, c, d]), '#b07a42', 1.4));
-  s.push(line(lerp(a, d, 0.5), lerp(b, c, 0.5), '#6a4422', 0.8));
-  s.push(inked('M252 252L286 240L290 242L254 256Z', '#9a8078', 1));
-  for (let k = 1; k < 5; k++) s.push(line([252 + k * 7, 252.5 - k * 2.4], [254 + k * 7, 255.5 - k * 2.6], '#5a4650', 0.8));
-  s.push(inked('M206 244v8h2.4v-8z', '#6a4422', 0.8));
+  const { top, bottom } = NK.stairs;
+  // Stairs: treads between the promenade's edge and the jetty.
+  const tl: Pt = [top[0], quayTopY(top[0])];
+  const tr: Pt = [top[1], quayTopY(top[1])];
+  const bl: Pt = [bottom[0], 300];
+  const br: Pt = [bottom[1], 303];
+  s.push(inked(poly([tl, tr, br, bl]), '#8a747c', 1.6));
+  for (let k = 1; k < 8; k++) s.push(line(lerp(tl, bl, k / 8), lerp(tr, br, k / 8), '#4a3a4a', 1.2));
+  s.push(line(tl, bl, '#ffb070', 1.2, 0.7));
+  // The jetty itself, on its posts.
+  for (const t of [0.1, 0.5, 0.9]) {
+    const [px, py] = lerp(d, c, t);
+    s.push(inked(`M${px - 2} ${py - 2}v12h4v-12z`, '#4a2e22', 1.2));
+  }
+  s.push(inked(poly([a, b, c, d]), '#b07a42', 2));
+  for (let k = 1; k < 4; k++) s.push(line(lerp(a, d, k / 4), lerp(b, c, k / 4), '#6a4422', 1));
+  s.push(inked(poly([d, c, [c[0], c[1] + 4], [d[0], d[1] + 4]]), '#7a5028', 1.4));
+  // A mooring post with a rope.
+  s.push(inked(`M${b[0] - 8} ${b[1] - 14}v16h5v-16z`, '#6a4422', 1.4));
+  s.push(path(`M${b[0] - 8} ${b[1] - 9}q-9 6 -5 11`, { stroke: '#e8d8a8', sw: 1.6 }));
   return s.join('');
 }
 
@@ -468,6 +506,7 @@ export function neckarBg(): string {
     eckhaus(),
     river(),
     leftBank(),
+    hoelderlinturm(),
     jetty(),
     deck(),
     // Dusk: everything warms towards the sun and sinks into violet near us.
@@ -782,9 +821,9 @@ export const PUNT_ACTOR: SvgActorAsset = {
 
 // ---- loose props -------------------------------------------------------------------
 
-/** The cap that floats ashore, small in the distance (20×12 box). */
+/** The cap that floats to the jetty (32×20 box). */
 export function floatingCap(): string {
-  return group(ellipse(20, 18, 17, 4, { fill: '#fff0d0', opacity: 0.5 }) + couleurCap(20, 18, 1.6, -14), 'scale(0.5)');
+  return group(ellipse(20, 18, 17, 4, { fill: '#fff0d0', opacity: 0.5 }) + couleurCap(20, 18, 1.6, -14), 'scale(0.8)');
 }
 
 /** The worm-eaten chair leg, in flight (36×14, centred). */

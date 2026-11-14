@@ -11,8 +11,8 @@ import { NK, PUNT_ACTOR, balustrade, eckhausLayer, floatingCap, flyingLeg, necka
 //
 // From the right end of the bridge the player can walk round the back of
 // the corner house (its own occluder layer hides them on the way) onto the
-// promenade on top of the quay wall, and along the whole Neckarfront into
-// the distance, down to the jetty at the Hölderlinturm.
+// promenade on top of the quay wall, and along the Neckarfront to the
+// Hölderlinturm, where stairs lead down the wall to a jetty.
 //
 // Every so often a Stocherkahn full of Burschenschaftler comes down the
 // river along the quay wall, turns in front of the bridge (as they do) and
@@ -38,15 +38,16 @@ function scaling(x: number, y: number): number {
   return riverScale(y);
 }
 
-/** The promenade: its far end at the Hölderlinturm, where the jetty is. */
+/** The promenade ends at the Hölderlinturm; stairs lead down to the jetty at its foot. */
 const PROM = NK.prom;
-const TOWER_SPOT = P(PROM.x0 + 4, quayTopY(PROM.x0 + 4) - 3);
+const TOWER_SPOT = P(478, 304);
+const JETTY_SPOT = P(504, 314);
 
 // ---- the punt ------------------------------------------------------------------------
 
 /** Its course: down from the bend along the quay wall, a turn in front of
  *  the bridge, and back upstream along the island (a Catmull-Rom spline). */
-const COURSE: Vec2[] = [P(198, 250), P(300, 270), P(430, 306), P(540, 344), P(520, 364), P(400, 360), P(256, 332), P(160, 296), P(122, 264), P(152, 247)];
+const COURSE: Vec2[] = [P(198, 250), P(262, 268), P(352, 306), P(470, 346), P(572, 363), P(540, 369), P(410, 364), P(262, 334), P(160, 296), P(122, 264), P(152, 247)];
 const PASS_MS = 26000;
 /** Within reach of a throw from the bridge (fraction of the course). */
 const REACH = { t0: 0.26, t1: 0.72 };
@@ -54,7 +55,7 @@ const REACH = { t0: 0.26, t1: 0.72 };
 const OFF = P(-400, 300);
 /** Where the player throws from, and where the cap washes up. */
 const THROW_SPOT = P(680, 420);
-const CAP_SPOT = P(232, 262);
+const CAP_SPOT = P(506, 332);
 
 function course(t: number): Vec2 {
   const n = COURSE.length - 1;
@@ -178,9 +179,9 @@ async function throwLeg(ctx: ScriptContext): Promise<void> {
 
   // Only a cap comes back up, and drifts over to the jetty.
   const cap = ctx.layerObj('cap');
-  cap.setOrigin(0.5).setPosition(target.x, kahn.y - 4).setScale(2.4).setVisible(true);
+  cap.setOrigin(0.5).setPosition(target.x, kahn.y - 4).setScale(1.5).setVisible(true);
   await ctx.wait(500);
-  // ... upstream, of all directions, shrinking into the distance.
+  // ... upstream, of all directions.
   await ctx.tween(cap, { x: CAP_SPOT.x, y: CAP_SPOT.y, scale: 1, ease: 'Sine.easeInOut' }, 4200);
   ctx.setFlag('capAshore');
   await ctx.animate('kahn', null);
@@ -290,10 +291,10 @@ const HOTSPOTS: HotspotDef[] = [
     // The promenade: no verb of its own, a click just walks there.
     id: 'uferweg',
     name: 'Uferweg',
-    polygon: [P(250, 229), P(742, 257), P(742, 281), P(250, 237)],
-    on: { lookat: 'Der Weg oben auf der Ufermauer, die ganze Neckarfront entlang bis zum Hölderlinturm.' },
+    polygon: [P(478, 243), P(742, 257), P(742, 281), P(478, 258)],
+    on: { lookat: 'Der Weg oben auf der Ufermauer, die Neckarfront entlang bis zum Hölderlinturm.' },
   },
-  at('turm', 'Hölderlinturm', R(254, 180, 32, 54), TOWER_SPOT, 'left', {
+  at('turm', 'Hölderlinturm', R(408, 132, 64, 166), TOWER_SPOT, 'left', {
     on: {
       lookat: async (ctx) => {
         await ctx.playerSay('Der Hölderlinturm. Hier hat Hölderlin sechsunddreißig Jahre gewohnt.');
@@ -302,8 +303,8 @@ const HOTSPOTS: HotspotDef[] = [
       open: 'Zu. Aber irgendwas sagt mir: Da komm ich noch rein.',
     },
   }),
-  at('weide', 'Trauerweiden', R(220, 208, 34, 40), TOWER_SPOT, 'left', {
-    on: { lookat: 'Trauerweiden. Hängen die Zweige ins Wasser, als hätten sie die Nacht im Picasso verbracht.' },
+  at('weide', 'Trauerweide', R(346, 216, 62, 86), TOWER_SPOT, 'left', {
+    on: { lookat: 'Eine Trauerweide. Hängt die Zweige ins Wasser, als hätte sie die Nacht im Picasso verbracht.' },
   }),
   at('platanen', 'Neckarinsel', R(0, 0, 112, 300), P(150, 424), 'up', {
     on: {
@@ -330,11 +331,18 @@ const HOTSPOTS: HotspotDef[] = [
     },
   }),
   {
+    // The stairs down the wall: a click just walks there.
+    id: 'treppe',
+    name: 'Treppe zum Steg',
+    polygon: [P(510, 256), P(528, 258), P(502, 304), P(484, 300)],
+    on: { lookat: 'Eine schmale Treppe die Ufermauer runter, zum Steg am Hölderlinturm.' },
+  },
+  {
     id: 'steg',
     name: 'Steg',
-    polygon: [P(200, 248), P(288, 240), P(292, 246), P(256, 260), P(200, 260)],
-    walkTo: TOWER_SPOT,
-    facing: 'left',
+    polygon: NK.jetty.map(([x, y]) => P(x, y)),
+    walkTo: JETTY_SPOT,
+    facing: 'down',
     on: {
       lookat: 'Ein kleiner Bootssteg am Hölderlinturm. Hier legen die Stocherkähne an, wenn die Burschen mal müssen.',
     },
@@ -358,7 +366,7 @@ const HOTSPOTS: HotspotDef[] = [
       open: toForest,
     },
   }),
-  at('muetze', 'Mütze', R(CAP_SPOT.x - 16, CAP_SPOT.y - 10, 32, 20), TOWER_SPOT, 'left', {
+  at('muetze', 'Mütze', R(CAP_SPOT.x - 20, CAP_SPOT.y - 12, 40, 24), JETTY_SPOT, 'down', {
     defaultVerb: 'pickup',
     visible: (state) => !!state.getFlag('capAshore') && !state.getFlag('capTaken'),
     on: {
@@ -419,10 +427,10 @@ export const neckarRoom: RoomDef = {
     {
       id: 'cap',
       depth: 300,
-      x: CAP_SPOT.x - 10,
-      y: CAP_SPOT.y - 6,
-      w: 20,
-      h: 12,
+      x: CAP_SPOT.x - 16,
+      y: CAP_SPOT.y - 10,
+      w: 32,
+      h: 20,
       svg: floatingCap(),
       visible: (state) => !!state.getFlag('capAshore') && !state.getFlag('capTaken'),
     },
@@ -437,6 +445,15 @@ export const neckarRoom: RoomDef = {
     P(0, 414),
     P(880, 414),
     P(PROM.x1 + 8, quayTopY(PROM.x1 + 8) - 1),
+    // ... the stairs down the wall, the jetty, and back up ...
+    P(NK.stairs.top[1], quayTopY(NK.stairs.top[1]) - 1),
+    P(NK.stairs.bottom[1], 303),
+    P(544, 318),
+    P(540, 326),
+    P(462, 307),
+    P(468, 299),
+    P(NK.stairs.bottom[0], 301),
+    P(NK.stairs.top[0], quayTopY(NK.stairs.top[0]) - 1),
     P(PROM.x0, quayTopY(PROM.x0) - 1),
     P(PROM.x0, quayTopY(PROM.x0) - promGap(PROM.x0) + 1),
     P(PROM.x1 + 8, quayTopY(PROM.x1 + 8) - promGap(PROM.x1 + 8) + 1),
