@@ -92,8 +92,6 @@ async function pigeonLife(ctx: ScriptContext): Promise<void> {
   send(ctx, p.id, a.x + (Math.random() - 0.5) * 220, a.y + (Math.random() - 0.5) * 70);
 }
 
-/** Feed the pigeons: Flaschenfloh crumbles the pretzel and calls them —
- *  "Put, put, put!" — and one of them starts saying it too. */
 /** Flaschenfloh's two worries: his own stomach first, then his pigeons. */
 async function feedFloh(ctx: ScriptContext): Promise<void> {
   ctx.removeItem('doener');
@@ -107,6 +105,8 @@ async function feedFloh(ctx: ScriptContext): Promise<void> {
   await ctx.say('floh', 'Jetzt fehlt nur noch was für meine Kollegen. Die gucken schon ganz neidisch.');
 }
 
+/** Feed the pigeons: Flaschenfloh crumbles the pretzel and calls them —
+ *  "Put, put, put!" — and one of them starts saying it too. */
 async function feedPigeons(ctx: ScriptContext): Promise<void> {
   if (!ctx.flag('flohSatt')) {
     await ctx.say('floh', 'Krümel für die Tauben? Schön und gut.');
@@ -217,7 +217,14 @@ async function toNeckar(ctx: ScriptContext): Promise<void> {
 }
 
 /** Flaschenfloh guards his trolley. */
+/** Flaschenfloh works here — until he follows the player to the Goa. */
+const flohHere = (s: { getFlag: (k: string) => unknown }) => !s.getFlag('wormholeUsed');
+
 async function handsOff(ctx: ScriptContext): Promise<void> {
+  if (!flohHere(ctx.state)) {
+    await ctx.playerSay('Flaschenflohs Wagen. Er selbst ist schon auf der Goa. Der Wagen bleibt trotzdem stehen.');
+    return;
+  }
   await ctx.say('floh', 'Finger weg von meiner Altersvorsorge!');
 }
 
@@ -287,17 +294,18 @@ const HOTSPOTS: HotspotDef[] = [
     on: {
       lookat: async (ctx) => {
         await ctx.playerSay('Grünglas, Weißglas, Braunglas. Daneben stehen zwei Pfandflaschen.');
-        await ctx.say('floh', 'Pfand gehört daneben! Das ist ein Gesetz der Straße.');
+        if (flohHere(ctx.state)) await ctx.say('floh', 'Pfand gehört daneben! Das ist ein Gesetz der Straße.');
       },
       pickup: async (ctx) => {
-        await ctx.say('floh', 'Die zwei da sind reserviert. Für mich.');
+        if (flohHere(ctx.state)) await ctx.say('floh', 'Die zwei da sind reserviert. Für mich.');
+        else await ctx.playerSay('Die gehören Flaschenfloh. Ehrensache.');
       },
       open: 'Da kommt man nur von oben rein. Und nicht wieder raus.',
     },
     onItem: {
       use: {
         dose: async (ctx) => {
-          await ctx.say('floh', 'Halt! Dosen gehören nicht ins Altglas. Und auf der ist Pfand!');
+          if (flohHere(ctx.state)) await ctx.say('floh', 'Halt! Dosen gehören nicht ins Altglas. Und auf der ist Pfand!');
           await ctx.playerSay('Stimmt. Die bring ich lieber zurück.');
         },
         magicwoman: 'Die ist noch voll. Und kein Glas.',
@@ -339,6 +347,7 @@ const HOTSPOTS: HotspotDef[] = [
     id: 'floh',
     name: 'Flaschenfloh',
     actor: 'floh',
+    visible: flohHere,
     walkTo: P(FLOH.x - 76, FLOH.y + 8),
     facing: 'right',
     defaultVerb: 'talkto',
@@ -419,6 +428,8 @@ export const epplehausRoom: RoomDef = {
   actors: [{ id: 'floh', x: FLOH.x, y: FLOH.y, facing: 'down' }, ...PIGEONS],
 
   async onEnter(ctx) {
+    // Once the wormhole was used, Flaschenfloh has followed to the Goa.
+    if (!flohHere(ctx.state)) ctx.place('floh', -400, 400);
     // The parroting pigeon: pecking crumbs by Flaschenfloh, or in the pocket.
     if (pocketed(ctx.state)) ctx.place(PUT_TAUBE, -200, 400);
     else if (pecking(ctx.state)) ctx.place(PUT_TAUBE, PUT_SPOT.x, PUT_SPOT.y, 'right');
@@ -434,7 +445,7 @@ export const epplehausRoom: RoomDef = {
       // Flaschenfloh, talking shop to himself and to the pigeons.
       every: [12000, 22000],
       run: async (ctx) => {
-        if (ctx.busy) return;
+        if (ctx.busy || !flohHere(ctx.state)) return;
         await ctx.say(
           'floh',
           pick([

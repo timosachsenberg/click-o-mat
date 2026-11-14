@@ -31,7 +31,7 @@ export const ACTORS: Record<string, ActorDef> = {
     textureSet: 'cop',
     // His frames carry extra room above the cap (snoring z's).
     headroom: 12,
-    // Seated and watchful (idle), until the Magic Woman knocks him out.
+    // Seated and watchful (idle), until three ouzos have him dance himself to sleep.
     stance: (state) => (state.getFlag('copAsleep') ? 'sleep' : undefined),
   },
   kahn: {

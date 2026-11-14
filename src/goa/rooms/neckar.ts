@@ -363,7 +363,7 @@ const HOTSPOTS: HotspotDef[] = [
     on: {
       lookat: async (ctx) => {
         await ctx.playerSay('Die Sonne geht gleich unter. Genau über der Flussbiegung, wie bestellt.');
-        await ctx.playerSay('Wenn sie weg ist, fängt im Wald der Bass an.');
+        await ctx.playerSay('Bis ich im Wald bin, ist es dunkel. Genau richtig für eine Goa.');
       },
       pickup: 'Die ist in ein paar Minuten sowieso weg.',
     },
@@ -397,7 +397,7 @@ const HOTSPOTS: HotspotDef[] = [
   at('toPicasso', 'Zum Epplehaus', R(930, 408, 30, 42), P(948, 432), 'right', {
     defaultVerb: 'use',
     on: {
-      lookat: 'Da geht’s zurück zum Epplehaus. Dahinter die Dönerbude und die Treppe runter ins Picasso.',
+      lookat: 'Da geht’s in die Stadt, zum Epplehaus. Dahinter die Dönerbude und die Treppe runter ins Picasso.',
       use: toPicasso,
       open: toPicasso,
     },

@@ -19,10 +19,10 @@ import '@fontsource/fredoka/500.css';
 import '@fontsource/fredoka/700.css';
 
 /**
- * "Folge dem Bass" — the adventure proper (in German). It starts in the
- * Picasso, Ali's basement bar, with nothing but a two-euro coin; the goal is
- * the password for tonight's Goa party in the forest. The engine demo ships alongside it
- * (src/game); the title screen picks between the two.
+ * "Folge dem Bass" — the adventure proper (in German). It starts with the
+ * player getting off the bus on the Neckarbrücke with nothing but a two-euro
+ * coin; the goal is tonight's Goa party in the forest. The engine demo ships
+ * alongside it (src/game); the title screen picks between the two.
  */
 export const CONTENT: GameContent = {
   id: 'goa',

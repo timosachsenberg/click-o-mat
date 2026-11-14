@@ -188,7 +188,7 @@ export const goaEingangRoom: RoomDef = {
       every: [9000, 16000],
       run: async (ctx) => {
         if (ctx.busy) return;
-        const lines = ['Klirr.', 'Noch eine Grüne. Wunderbar.', 'Ravers trinken viel Wasser. Aus Pfandflaschen. Ich liebe Ravers.'];
+        const lines = ['Klirr.', 'Noch eine Grüne. Wunderbar.', 'Raver trinken viel Wasser. Aus Pfandflaschen. Ich liebe Raver.'];
         await ctx.say('floh', lines[Math.floor(Math.random() * lines.length)]);
       },
     },

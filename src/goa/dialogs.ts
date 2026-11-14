@@ -121,7 +121,7 @@ export const DIALOGS: Record<string, DialogDef> = {
             text: 'Was ist das für ein Glas neben dir?',
             script: async (ctx) => {
               await ctx.say('ali', 'Mein Feierabend-Ouzo. Finger weg, mein Lieber.');
-              await ctx.say('cop', 'Ich hab ein Auge drauf.');
+              if (!ctx.flag('copAsleep')) await ctx.say('cop', 'Ich hab ein Auge drauf.');
               if (ctx.easyMode) await ctx.say('ali', 'Außer bei meinem Lied. Da singen wir alle mit. Mit geschlossenen Augen.');
             },
           },
