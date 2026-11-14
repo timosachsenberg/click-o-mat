@@ -71,4 +71,29 @@ export const ITEMS: Record<string, ItemDef> = {
     },
     use: 'Aufsetzen? Über meine Mütze? Später vielleicht. Im richtigen Moment.',
   },
+  loch: {
+    id: 'loch',
+    name: 'tragbares Loch',
+    icon: 'icon-loch',
+    lookAt: async (ctx) => {
+      await ctx.playerSay('Ein tragbares schwarzes Loch. Dünn wie ein Pfannkuchen, tief wie das Weltall.');
+      await ctx.playerSay('In der modernen Zeitebene gelten offenbar Zeichentrick-Gesetze. Ich frag lieber nicht, wie.');
+    },
+    use: 'Auf den Boden legen und reinspringen? Nein. Ich weiß nicht, wo das rauskommt.',
+  },
+  taschenattraktor: {
+    id: 'taschenattraktor',
+    name: 'Taschen-Attraktor',
+    icon: 'icon-taschenattraktor',
+    lookAt: async (ctx) => {
+      await ctx.playerSay('Otto R.s Taschen-Attraktor. Eine Rössler-Spirale zum Mitnehmen.');
+      await ctx.playerSay('Sie summt leise. Und zwar im Takt von einem Bass, ganz weit weg.');
+    },
+    use: async (ctx) => {
+      await ctx.playerSay('Ich dreh an der Spirale ...');
+      ctx.sfx('zap');
+      await ctx.playerSay('Nichts. Otto meinte, hier draußen braucht es dafür mehr Chaos.');
+      await ctx.playerSay('Im Wald, auf der Goa, gibt’s genug davon.');
+    },
+  },
 };

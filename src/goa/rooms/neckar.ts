@@ -205,6 +205,15 @@ async function toPicasso(ctx: ScriptContext): Promise<void> {
   await ctx.goToRoom('epplehaus', 'neckar');
 }
 
+/** Into the Hölderlinturm, from the end of the promenade. */
+async function toTower(ctx: ScriptContext): Promise<void> {
+  await ctx.once('turmDoor', async () => {
+    await ctx.playerSay('Die Tür klemmt nur. Hölderlin hatte wohl selten Besuch, der kräftig drücken konnte.');
+  });
+  ctx.sfx('open');
+  await ctx.goToRoom('hoelderlinturm', 'door');
+}
+
 async function toForest(ctx: ScriptContext): Promise<void> {
   if (!ctx.flag('password')) {
     await ctx.playerSay('Ohne zu wissen, wo die Goa steigt, bringt mir der Wald nichts.');
@@ -221,6 +230,7 @@ async function toForest(ctx: ScriptContext): Promise<void> {
     return;
   }
   await ctx.playerSay('Folge dem Bass. Chakabunga. Und Mütze auf, wenn’s drauf ankommt.');
+  if (ctx.hasItem('taschenattraktor')) await ctx.playerSay('Und Ottos Taschen-Attraktor summt schon im Takt.');
   ctx.setFlag('chapterDone');
   ctx.sfx('win');
   ctx.showTitle('FORTSETZUNG FOLGT …');
@@ -299,8 +309,10 @@ const HOTSPOTS: HotspotDef[] = [
       lookat: async (ctx) => {
         await ctx.playerSay('Der Hölderlinturm. Hier hat Hölderlin sechsunddreißig Jahre gewohnt.');
         await ctx.playerSay('Gedichtet, aufs Wasser geschaut, Besuch verwirrt. Klingt nach einem guten Leben.');
+        if (ctx.flag('ottoFree')) await ctx.playerSay('Und oben drin dreht sich eine Spirale durch drei Zeitebenen. Kein Witz.');
       },
-      open: 'Zu. Aber irgendwas sagt mir: Da komm ich noch rein.',
+      open: toTower,
+      use: toTower,
     },
   }),
   at('weide', 'Trauerweide', R(346, 216, 62, 86), TOWER_SPOT, 'left', {
@@ -469,6 +481,8 @@ export const neckarRoom: RoomDef = {
 
   entries: {
     picasso: { x: 930, y: 432, facing: 'left' },
+    // Out of the Hölderlinturm, at the end of the promenade.
+    turm: { x: TOWER_SPOT.x, y: TOWER_SPOT.y, facing: 'right' },
   },
 
   actors: [{ id: 'kahn', x: OFF.x, y: OFF.y, facing: 'right' }],
