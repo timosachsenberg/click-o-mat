@@ -39,6 +39,105 @@ function intercom(): string {
   return s.join('');
 }
 
+/** A leaf blob of ivy / shrub: a few overlapping ovals. */
+function leaves(cx: number, cy: number, rx: number, ry: number, seed: number, cols = ['#3a6a34', '#55783a', '#6a8a3a']): string {
+  const r = rng(seed);
+  let out = '';
+  const n = Math.max(5, Math.round((rx * ry) / 40));
+  for (let i = 0; i < n; i++) {
+    const x = cx + (r() - 0.5) * 2 * rx;
+    const y = cy + (r() - 0.5) * 2 * ry;
+    out += ellipse(x, y, 5 + r() * 4, 3.4 + r() * 3, { fill: cols[i % cols.length], stroke: INK, sw: 0.9 });
+  }
+  return out;
+}
+
+/** The Stocherkahn mooring below the promenade, on the tower's river side. */
+function mooring(): string {
+  const s: string[] = [];
+  // The bank: a strip of grass and a bush at the tower's foot.
+  s.push(path('M150 330Q200 300 250 304V330Z', { fill: '#4a6a34', stroke: INK, sw: 2 }));
+  // The jetty: planks on posts, out into the river.
+  for (const px of [40, 110, 180]) s.push(path(`M${px} 306v26`, { stroke: INK, sw: 6 }) + path(`M${px} 306v26`, { stroke: '#5a3a22', sw: 3 }));
+  s.push(inked('M18 300H214L206 312H26Z', '#8a5a34', 2.2));
+  for (let x = 40; x < 206; x += 22) s.push(line([x, 301], [x - 3, 311], '#4a2e18', 1.2, 0.8));
+  // Two punts tied up alongside, one behind and one in front of the jetty.
+  const punt = (x: number, y: number, len: number, col: string) =>
+    ellipse(x + len / 2, y + 9, len / 2, 3, { fill: '#2a1a40', opacity: 0.3 }) +
+    inked(`M${x} ${y}Q${x + 6} ${y + 9} ${x + 18} ${y + 9}H${x + len - 18}Q${x + len - 6} ${y + 9} ${x + len} ${y}Z`, col, 2) +
+    path(`M${x + 10} ${y + 3}H${x + len - 10}`, { stroke: '#3a2412', sw: 1.4 }) +
+    [0.3, 0.5, 0.7].map((t) => path(`M${x + len * t} ${y + 1}v7`, { stroke: '#3a2412', sw: 1.6 })).join('');
+  s.push(punt(30, 286, 150, '#7a4a2a'));
+  s.push(punt(10, 314, 170, '#9a6a3a'));
+  // Poles standing in a rack, a mooring post with a rope, a small sign.
+  for (const [px, top] of [[196, 214], [203, 206], [210, 222]] as Array<[number, number]>) s.push(path(`M${px} 306L${px + 4} ${top}`, { stroke: INK, sw: 4 }) + path(`M${px} 306L${px + 4} ${top}`, { stroke: '#c89a5a', sw: 2 }));
+  s.push(path('M150 300v-22', { stroke: INK, sw: 7 }) + path('M150 300v-22', { stroke: '#6a4428', sw: 4 }));
+  s.push(path('M150 284Q136 296 128 290', { stroke: INK, sw: 3 }) + path('M150 284Q136 296 128 290', { stroke: '#e8dcc8', sw: 1.4 }));
+  s.push(path('M77 280v20', { stroke: INK, sw: 3 }) + inked('M44 256h66v24h-66z', '#f4efe4', 1.8));
+  s.push(text(77, 266.5, 'STOCHERKAHN', { size: 6.6, fill: INK, weight: 900 }) + text(77, 275.5, 'ANLEGESTELLE', { size: 5.8, fill: '#a0302a', weight: 900 }));
+  // Reeds along the bank.
+  const r = rng(23);
+  for (let i = 0; i < 26; i++) {
+    const x = 150 + r() * 96;
+    const hgt = 26 + r() * 34;
+    const lean = (r() - 0.5) * 12;
+    s.push(path(`M${x.toFixed(0)} 330q${(lean / 2).toFixed(1)} ${(-hgt / 2).toFixed(0)} ${lean.toFixed(1)} ${(-hgt).toFixed(0)}`, { stroke: i % 3 ? '#5a7a3a' : '#88a84a', sw: 2.2 }));
+    if (i % 4 === 0) s.push(ellipse(x + lean, 330 - hgt - 4, 2.2, 6, { fill: '#6a3a1e', stroke: INK, sw: 0.8 }));
+  }
+  s.push(leaves(236, 312, 20, 14, 5));
+  return s.join('');
+}
+
+/** Ivy climbing the tower's lit edge and a vine over the door's arch. */
+function ivy(): string {
+  const s: string[] = [];
+  const { wall, door, ground } = TT;
+  s.push(path(`M${wall.x0 + 8} ${ground}Q${wall.x0 + 26} 220 ${wall.x0 + 10} 120T${wall.x0 + 22} 0`, { stroke: '#3a2a1a', sw: 3 }));
+  for (let y = 10; y < ground; y += 26) s.push(leaves(wall.x0 + 14 + Math.sin(y / 40) * 8, y, 12 + (y % 3) * 3, 11, y));
+  s.push(leaves(wall.x0 + 30, ground - 30, 26, 18, 91));
+  // Over the arch: a vine with a few late roses.
+  const cx = door.x + door.w / 2;
+  for (let k = 0; k < 9; k++) {
+    const t = k / 8;
+    const x = door.x - 22 + (door.w + 44) * t;
+    const y = door.y + 44 - Math.sin(t * Math.PI) * 78;
+    s.push(leaves(x, y, 10, 8, 200 + k));
+    if (k % 2 === 1) s.push(circle(x + 3, y - 2, 3.4, { fill: '#ff6a8a', stroke: INK, sw: 0.9 }));
+  }
+  s.push(leaves(cx + door.w / 2 + 26, door.y + 110, 8, 44, 61));
+  // The shaded side: a climbing rose up the right edge.
+  for (let y = 120; y < ground; y += 30) s.push(leaves(wall.x1 - 16, y, 9, 12, 300 + y, ['#2a4a34', '#3a5a3a', '#4a6a3a']));
+  return s.join('');
+}
+
+/** Pots and tubs on the promenade: geraniums by the door, an oleander, lavender. */
+function planters(): string {
+  const s: string[] = [];
+  const g = TT.ground;
+  const pot = (x: number, w: number, h: number) => inked(`M${x - w / 2} ${g - h}h${w}l-4 ${h + 6}h${-(w - 8)}z`, '#b8623a', 2) + path(`M${x - w / 2} ${g - h + 4}h${w}`, { stroke: '#7a3a1e', sw: 2 });
+  // Geraniums either side of the door.
+  for (const x of [TT.door.x - 34, TT.door.x + TT.door.w + 30]) {
+    s.push(leaves(x, g - 34, 16, 10, x));
+    for (const [dx, dy] of [[-8, -6], [2, -10], [9, -4]]) s.push(circle(x + dx, g - 38 + dy, 4, { fill: '#e8323a', stroke: INK, sw: 1 }));
+    s.push(pot(x, 30, 22));
+  }
+  // An oleander in a tub at the wall's right end, lavender at its left.
+  s.push(path(`M716 ${g - 30}v-60`, { stroke: INK, sw: 4 }) + path(`M716 ${g - 30}v-60`, { stroke: '#5a3a22', sw: 2 }));
+  s.push(leaves(716, g - 104, 30, 26, 44, ['#2a5a3a', '#3a6a3a', '#4a7a44']));
+  for (const [dx, dy] of [[-16, -6], [6, -18], [18, 4], [-4, 10]]) s.push(circle(716 + dx, g - 104 + dy, 4, { fill: '#ff9ac0', stroke: INK, sw: 1 }));
+  s.push(pot(716, 44, 30));
+  for (let k = 0; k < 9; k++) s.push(path(`M${284 + k * 3 - 12} ${g - 18}l${(k - 4) * 2.4} -26`, { stroke: '#6a8a5a', sw: 1.6 }) + ellipse(284 + k * 3 - 12 + (k - 4) * 2.4, g - 46, 2, 5, { fill: '#9a6ad8', stroke: INK, sw: 0.7 }));
+  s.push(pot(284, 34, 18));
+  // Grass in the joints of the flagstones.
+  const r = rng(71);
+  for (let i = 0; i < 18; i++) {
+    const x = 20 + r() * 920;
+    const y = g + 6 + r() * 110;
+    s.push(path(`M${x.toFixed(0)} ${y.toFixed(0)}l-3 -7M${x.toFixed(0)} ${y.toFixed(0)}l1 -9M${x.toFixed(0)} ${y.toFixed(0)}l4 -6`, { stroke: '#6a8a4a', sw: 1.3, opacity: 0.8 }));
+  }
+  return s.join('');
+}
+
 export function turmtuerBg(): string {
   const { ground, wall, door, graffiti, plaque } = TT;
   const s: string[] = [];
@@ -68,8 +167,9 @@ export function turmtuerBg(): string {
   s.push(rect(0, 0, 960, 340, { fill: 'url(#ttSky)' }));
   s.push(glow('ttSun', 130, 250, 300, '#ffd27a', 0.6, 200));
   s.push(band(-40, 300, 60, 14, 11) + band(700, 1000, 90, 12, 13));
-  s.push(path('M0 262Q120 236 250 258V340H0Z', { fill: '#5a3a70' }));
-  s.push(path('M0 286H250V340H0ZM770 286H960V340H770Z', { fill: '#f08a6a' }));
+  s.push(path('M0 244Q120 226 250 240V272H0Z', { fill: '#5a3a70' }));
+  s.push(path('M0 264H250V340H0ZM770 286H960V340H770Z', { fill: '#f08a6a' }));
+  s.push(path('M10 272h60M96 280h80M150 270h70', { stroke: '#fff0b0', sw: 1.4, opacity: 0.6 }));
   s.push(path('M20 300h70M120 312h90M800 300h60M870 314h70', { stroke: '#fff0b0', sw: 1.6, opacity: 0.7 }));
   // The bridge, far off on the right.
   s.push(inked('M770 262H964V280H770Z', '#b98274', 2));
@@ -113,13 +213,18 @@ export function turmtuerBg(): string {
   s.push(glow('ttIcGlow', ic.x + ic.w / 2, ic.y + ic.h / 2, 80, '#55ffff', 0.3, 40));
   s.push(path(`M${ic.x + ic.w / 2} ${ic.y - 5}V${ic.y - 40}Q${ic.x + ic.w / 2} ${ic.y - 60} ${ic.x + 60} ${ic.y - 60}`, { stroke: INK, sw: 4 }));
   s.push(intercom());
+  // The punt mooring on the left: a jetty, two punts tied up, poles, reeds.
+  s.push(`<g transform="translate(-34 -112.2) scale(1.34)">${mooring()}</g>`);
+  // Green on the tower: ivy up its lit edge, a vine over the door's arch.
+  s.push(ivy());
   // The promenade: flagstones, the edge of the quay wall, a railing on the left.
   s.push(rect(0, ground, 960, 120, { fill: 'url(#ttGround)' }));
   s.push(path(`M0 ${ground}H960`, { stroke: INK, sw: 3 }));
   for (let gy = ground + 26; gy < 450; gy += 30) s.push(line([0, gy], [960, gy], '#3a2a50', 1.2, 0.45));
   for (let i = 0; i < 16; i++) s.push(line([i * 64 + ((i * 37) % 30), ground + 2], [i * 64 - 30 + ((i * 37) % 30), 450], '#3a2a50', 1.2, 0.35));
-  for (const px of [30, 130, 230]) s.push(path(`M${px} ${ground + 4}V${ground - 52}`, { stroke: INK, sw: 6 }) + path(`M${px} ${ground + 4}V${ground - 52}`, { stroke: '#5a5a6a', sw: 3 }));
-  s.push(path(`M0 ${ground - 52}H240M0 ${ground - 28}H240`, { stroke: INK, sw: 5 }) + path(`M0 ${ground - 52}H240M0 ${ground - 28}H240`, { stroke: '#7a7a8a', sw: 2.4 }));
+  // The quay's kerb, and steps down to the mooring.
+  s.push(inked(`M0 ${ground - 6}H250V${ground + 4}H0Z`, '#c0a8a0', 2));
+  s.push(inked(`M96 ${ground - 6}h54v10h-54z`, '#8a7078', 1.6) + path(`M100 ${ground - 2}h46`, { stroke: INK, sw: 1.2 }));
   // Willow twigs hanging in from the top left.
   const rw = rng(9);
   for (let i = 0; i < 14; i++) {
@@ -127,6 +232,7 @@ export function turmtuerBg(): string {
     const len = 90 + rw() * 130;
     s.push(path(`M${wx} -6q${8 + rw() * 10} ${len / 2} ${-4 + rw() * 8} ${len}`, { stroke: INK, sw: 4.4 }) + path(`M${wx} -6q${8 + rw() * 10} ${len / 2} ${-4 + rw() * 8} ${len}`, { stroke: i % 2 ? '#6a8a3a' : '#88a84a', sw: 2.6 }));
   }
+  s.push(planters());
   s.push(ellipse(480, ground + 14, 130, 12, { fill: '#ffe08a', opacity: 0.16 }));
   s.push(rect(0, 0, 960, 450, { fill: '#ff7a3a', opacity: 0.06 }));
   s.push(vignette('ttVig', 960, 450, 0.42, '#241040'));

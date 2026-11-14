@@ -87,6 +87,30 @@ const HOTSPOTS: HotspotDef[] = [
   at('neckar', 'Neckar', R(0, 240, 250, 90), P(180, 366), 'left', {
     on: { lookat: 'Der Neckar, im Abendrot. Von hier unten hört man ihn sogar.' },
   }),
+  at('anleger', 'Stocherkahn-Anlegestelle', R(0, 204, 222, 126), P(150, 366), 'up', {
+    on: {
+      lookat: async (ctx) => {
+        await ctx.playerSay('Die Stocherkahn-Anlegestelle. Zwei Kähne, festgemacht, die Stangen ordentlich im Ständer.');
+        if (ctx.flag('puntSunk')) await ctx.playerSay('Einer fehlt. Ich weiß auch, welcher. Und warum.');
+        else await ctx.playerSay('Von hier legen sie ab, die Burschen mit ihren Mützen und ihrem Liedgut.');
+      },
+      use: 'Stochern? Ich? Ich würd mich im Kreis drehen, bis mir schlecht ist. Und die Kähne sind angekettet.',
+      pickup: 'Einen ganzen Kahn? Der passt nicht mal in meine Vorstellung, geschweige denn in die Tasche.',
+    },
+    onItem: { use: { drahtschere: 'Einen Kahn losknipsen und damit zur Goa? Der Neckar fließt in die falsche Richtung.', stuhlbein: 'Noch einen Kahn versenken? Einer am Abend reicht.' } },
+  }),
+  at('pflanzen', 'Efeu', R(TT.wall.x0, 0, 46, TT.ground), P(300, 366), 'up', {
+    on: {
+      lookat: 'Efeu, den ganzen Turm hoch. Und über der Tür ranken späte Rosen. Hier gießt jemand. Oder es war mal jemand hier, der gegossen hat.',
+      pickup: 'Der Efeu hält den Turm zusammen. Oder der Turm den Efeu. Ich misch mich da nicht ein.',
+    },
+  }),
+  at('geranien', 'Blumentöpfe', R(TT.door.x - 54, TT.ground - 56, 40, 60), P(TT.door.x - 34, 366), 'up', {
+    on: {
+      lookat: 'Geranien, Lavendel, da hinten ein Oleander. Für einen Turm, in dem seit 1987 keiner rauskommt, erstaunlich gepflegt.',
+      pickup: 'Blumen klauen vorm Hölderlinturm? So tief sink ich nicht. Heute nicht.',
+    },
+  }),
   at('schild', 'Messingschild', R(TT.plaque.x, TT.plaque.y, TT.plaque.w, TT.plaque.h), P(330, 366), 'up', {
     on: {
       lookat: '„Hölderlinturm“. Darunter, kleiner: „Besichtigung nach Vereinbarung. Vereinbarung nach Parole.“',
