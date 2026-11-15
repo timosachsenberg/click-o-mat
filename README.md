@@ -1237,6 +1237,19 @@ The engine has built-in procedural tracks (`lab-theme`, `hall-theme`,
 `GameContent.music` — a map of `MusicTrack`s (a bpm plus bass/lead note rows),
 playable by key like the built-ins; see `src/goa/music.ts`.
 
+A `MusicTrack` is a plain two-voice loop by default. Optional fields give it
+more colour without leaving the generator (so anything timed to its beat stays
+in step):
+
+| Field | Effect |
+|---|---|
+| `warmBass: true` | an analog-style bass (detuned saws and a sub through a resonant low-pass) instead of a bare oscillator |
+| `leadDuty: 0.125 \| 0.25` | the lead as a pulse wave of that duty instead of `leadType` |
+| `arp: [...]` | a third, quiet voice in the same format as `lead` |
+| `drums: { kick, snare, hat, clap }` | drum rows, one character per 8th note: `x` a hit, `o` a soft one, anything else a rest |
+| `echo: 0.3` | a feedback echo on lead and arp |
+| `leadLevel: 0.8` | lead volume relative to the default |
+
 ### Sound effects from scripts
 
 ```ts

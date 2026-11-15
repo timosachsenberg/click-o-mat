@@ -6,7 +6,9 @@ import type { AudioAsset } from '../engine/types';
  *  same key below (which stays as the fallback until the file has loaded). */
 export const musicFile = (key: string): AudioAsset => ({ key, url: `${import.meta.env.BASE_URL}audio/${key}.mp3` });
 
-/** Procedural chiptune loops (semitones from A4; one entry per 8th note). */
+/** Procedural chiptune loops (semitones from A4; one entry per 8th note).
+ *  The jukebox songs and the disco use the generator's analog colours (warm
+ *  bass, drums, pulse lead, echo) so they sit next to the rendered songs. */
 export const GOA_MUSIC: Record<string, MusicTrack> = {
   // The Picasso: a lazy, slightly wistful Kneipen-Schlager shuffle in F.
   'pub-theme': {
@@ -77,6 +79,12 @@ export const GOA_MUSIC: Record<string, MusicTrack> = {
   // "Du hast mein Herz am Pfandautomat vergessen": slow, heartbroken, in C.
   'song-pfand': {
     bpm: 76,
+    warmBass: true,
+    leadDuty: 0.25,
+    leadLevel: 0.8,
+    echo: 0.35,
+    arp: [-9, -5, -2, -5, -12, -9, -5, -9, -7, -4, 0, -4, -14, -10, -7, -10],
+    drums: { kick: 'x.......', hat: '..o...o.' },
     bassType: 'triangle',
     leadType: 'triangle',
     bass: [-21, null, -14, null, -24, null, -17, null, -19, null, -12, null, -26, null, -19, null],
@@ -85,6 +93,10 @@ export const GOA_MUSIC: Record<string, MusicTrack> = {
   // "Barfuß am Baggersee": summer in a bottle, all major sixths.
   'song-baggersee': {
     bpm: 118,
+    warmBass: true,
+    leadDuty: 0.25,
+    echo: 0.25,
+    drums: { kick: 'x...x...', snare: '..o...x.', hat: 'oxoxoxox' },
     bassType: 'triangle',
     leadType: 'square',
     bass: [-21, -9, -14, -9, -19, -7, -14, -7, -17, -5, -12, -5, -19, -7, -14, -7],
@@ -93,6 +105,9 @@ export const GOA_MUSIC: Record<string, MusicTrack> = {
   // "Polonaise bis nach Wanne-Eickel": oom-pah, everybody hands on shoulders.
   'song-polonaise': {
     bpm: 140,
+    warmBass: true,
+    leadDuty: 0.125,
+    drums: { kick: 'x...x...', snare: '..x...x.', hat: '.x.x.x.x', clap: '..o...o.' },
     bassType: 'square',
     leadType: 'square',
     bass: [-26, null, -14, null, -19, null, -14, null, -26, null, -14, null, -21, null, -14, null],
@@ -101,6 +116,11 @@ export const GOA_MUSIC: Record<string, MusicTrack> = {
   // "Noch einen auf die Gemütlichkeit" — the verse sways along…
   'song-gemuetlichkeit': {
     bpm: 112,
+    warmBass: true,
+    leadLevel: 0.9,
+    echo: 0.3,
+    arp: [-9, -5, -2, -5, -9, -4, 0, -4, -9, -5, -2, -5, -7, -2, 2, -2],
+    drums: { kick: 'x...o...', hat: '..o...o.' },
     bassType: 'triangle',
     leadType: 'triangle',
     bass: [-21, null, -9, null, -16, null, -9, null, -21, null, -9, null, -14, null, -11, null],
@@ -109,6 +129,9 @@ export const GOA_MUSIC: Record<string, MusicTrack> = {
   // …and the refrain hammers it home: ♫ Trink, trink, trink! ♫
   'song-gemuetlichkeit-refrain': {
     bpm: 112,
+    warmBass: true,
+    leadDuty: 0.125,
+    drums: { kick: 'x...x...', snare: '..x...x.', hat: 'oxoxoxox', clap: '..x...x.' },
     bassType: 'square',
     leadType: 'square',
     bass: [-21, -9, -16, -9, -21, -9, -16, -9, -14, -2, -16, -4, -21, -9, -21, null],
@@ -118,6 +141,10 @@ export const GOA_MUSIC: Record<string, MusicTrack> = {
   // What plays in the Partykiller's head while he dances: four on the floor.
   'disco-theme': {
     bpm: 124,
+    warmBass: true,
+    leadDuty: 0.25,
+    echo: 0.3,
+    drums: { kick: 'x.x.x.x.', hat: '.x.x.x.x', clap: '..x...x.' },
     bassType: 'square',
     leadType: 'square',
     bass: [-24, -12, -24, -12, -22, -10, -22, -10, -27, -15, -27, -15, -26, -14, -26, -14],
