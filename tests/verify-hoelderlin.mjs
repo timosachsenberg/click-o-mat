@@ -342,6 +342,9 @@ await settle();
 // --- the wormhole pair: useless here, it wants throwing at the forest's barrier
 await verb('use');
 await click(522 + (await inv()).indexOf('wurmloch') * 112, 505);
+await page.waitForTimeout(200);
+check('"Benutze" + an item takes it in hand, even one with a use of its own', (await ev(() => window.__engine.pendingItem)) === 'wurmloch' && !(await ev(() => window.__engine.busy)));
+await click(522 + (await inv()).indexOf('wurmloch') * 112, 505); // a second click: use it on its own
 await settle();
 check('on the bridge the wormhole pair stays in the pocket', (await room()) === 'neckar' && (await inv()).includes('wurmloch') && !(await flag('portalOpen')));
 await goTo('waldrand', 945, 432);

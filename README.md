@@ -637,6 +637,7 @@ export const CONTENT: GameContent = {
   playerId: 'player', startRoom: 'neckar', startEntry: 'bus',
   startItems: ['euro'],   // carried from the very beginning
   easyMode: true,         // offer an easy/normal switch in the options
+  forgivingItems: true,   // "Use" + item takes it in hand first; use ≈ give
   strings: DE_STRINGS,    // the engine's UI text, translated (see below)
   music: GOA_MUSIC,       // extra procedural tracks, played by key
 };
@@ -654,6 +655,14 @@ export const CONTENT: GameContent = {
   the normal mode (default) and an easy one, remembered per game. Scripts read
   it as `ctx.easyMode` and give more explicit hints when it's on — the adventure
   keeps its normal-mode lines subtle.
+- **Forgiving items.** With `forgivingItems: true`, "Use" + an inventory item
+  always takes the item in hand ("Use X with …"), even if the item has a `use`
+  of its own — a second click on the item in hand runs that. Mark an item
+  `useNow: true` if its own `use` is its real purpose (a drink): then "Use" +
+  that item still runs at once. And a hotspot that only answers to "give X"
+  answers to "use X with" the same way (and vice versa). Without the option,
+  "Use" + an item with its own `use` runs it immediately and use/give are
+  strictly separate (the demo).
 - **UI strings.** Everything the engine itself writes — verb labels, the
   sentence line (`useWith`/`giveTo`/`walkTo`), the fallback responses for
   unhandled verbs, toasts, the title menu, the options panel and save slots —

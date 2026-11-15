@@ -353,9 +353,15 @@ await page.screenshot({ path: `${SHOT}/goa-03a-waldrand.png` });
 
 // --- a red herring: the pogo stick (from the Picasso) bends on the barrier
 await ev(() => window.__engine.makeContext().addItem('pogostick', { silent: true }));
+await verb('use', 318); // "Benutze" first, then the item: it must stay in hand for a target
 await click(522 + (await inv()).indexOf('pogostick') * 112, 505);
-await page.waitForTimeout(150);
+await page.waitForTimeout(200);
+check('"Benutze" + Pogo-Stick takes it in hand instead of using it up on the spot', (await ev(() => window.__engine.pendingItem)) === 'pogostick' && !(await ev(() => window.__engine.busy)));
 await click(420, 330);
+await waitFor(() => ev(() => window.__engine.roomScene.layerObj('pogo').alpha > 0.9), 15000, 'the pogo stick');
+await page.waitForTimeout(250);
+check('the pogo stick is visible under the player while hopping', await ev(() => window.__engine.roomScene.layerObj('pogo').alpha > 0.9));
+await page.screenshot({ path: `${SHOT}/goa-03b-pogo.png` });
 await waitFor(async () => !(await inv()).includes('pogostick'), 20000, 'pogo');
 await settle();
 check('the pogo stick loses against the barrier', !(await inv()).includes('pogostick') && (await room()) === 'waldrand');
