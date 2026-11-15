@@ -1,5 +1,6 @@
 import { Layer, type Facing, type HotspotDef, type Rect, type RoomDef, type Vec2 } from '../../engine/types';
 import type { ScriptContext } from '../../engine/ScriptContext';
+import { musicFile } from '../music';
 import { PIGEON_ACTORS } from '../art/epplehaus';
 import { VOICE_ACTOR } from '../art/turm';
 import { TT, doorAjar, intercomBlink, turmtuerBg } from '../art/turmtuer';
@@ -199,7 +200,7 @@ export const turmtuerRoom: RoomDef = {
 
   music: 'neckar-theme',
 
-  assets: { svgActors: [VOICE_ACTOR, ...PIGEON_ACTORS] },
+  assets: { audio: [musicFile('neckar-theme')], svgActors: [VOICE_ACTOR, ...PIGEON_ACTORS] },
 
   entries: {
     // Along the promenade from the bridge.

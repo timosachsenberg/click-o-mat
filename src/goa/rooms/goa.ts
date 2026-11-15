@@ -1,5 +1,6 @@
 import { Layer, type Facing, type HotspotDef, type LayerDef, type Rect, type RoomDef, type Vec2 } from '../../engine/types';
 import type { ScriptContext } from '../../engine/ScriptContext';
+import { musicFile } from '../music';
 import { DANCER_FRAMES, DANCER_SIZES, DH, DW, FAR, FAR_FRAMES, GO, LOOKS, dancerAnim, dancerKey, foregroundShrooms, goaBg, lasers, type DancerSize } from '../art/goa';
 import { VOICE_ACTOR } from '../art/turm';
 import { portalArt } from '../art/goaeingang';
@@ -272,6 +273,7 @@ export const goaRoom: RoomDef = {
   music: 'goa-theme',
 
   assets: {
+    audio: [musicFile('goa-theme')],
     svgImages: [...DANCER_FRAMES, ...FAR_FRAMES],
     anims: [
       { key: 'goa-far', textures: FAR_FRAMES.map((f) => f.key), frameRate: FPS },

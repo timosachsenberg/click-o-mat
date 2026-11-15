@@ -1,5 +1,6 @@
 import { Layer, type Facing, type HotspotDef, type Rect, type RoomDef, type Vec2 } from '../../engine/types';
 import type { ScriptContext } from '../../engine/ScriptContext';
+import { musicFile } from '../music';
 import { GATE_CROWD, GATE_CROWD_FRAMES, GE, goaEingangBg } from '../art/goaeingang';
 
 // ---- layout ----------------------------------------------------------------------
@@ -143,6 +144,7 @@ export const goaEingangRoom: RoomDef = {
   music: 'goa-theme',
 
   assets: {
+    audio: [musicFile('goa-theme')],
     svgImages: GATE_CROWD_FRAMES,
     anims: [{ key: 'goa-gatecrowd', textures: GATE_CROWD_FRAMES.map((f) => f.key), frameRate: 4000 / 856 }],
   },
