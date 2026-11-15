@@ -733,6 +733,12 @@ export class UIScene extends Phaser.Scene {
       void engine.runScript(item.use, engine.strings.defaultResponses.use);
       return;
     }
+    // A second click on an item in hand that has no use of its own: say so
+    // and put it away, instead of silently doing nothing.
+    if (inHand && !item.use && engine.forgivingItems) {
+      void engine.runScript(undefined, engine.strings.defaultResponses.use);
+      return;
+    }
     // 'use' or bare click both arm the item for "use X with ...".
     engine.setPendingItem(itemId, 'use');
   }

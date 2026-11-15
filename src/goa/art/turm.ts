@@ -944,8 +944,10 @@ export function blackHoleArt(era: Era): string {
   const { cx, cy, rx, ry } = TM.hole;
   if (era === 1) {
     const g = new PixGrid();
-    g.ellipse(cx, cy, rx + 6, ry + 3, 'm');
-    g.ellipse(cx, cy, rx, ry, 'k');
+    // (A bright rim: black on the black floor slab would read as a notch.)
+    g.ellipse(cx, cy - 2, rx + 12, ry + 6, 'w');
+    g.ellipse(cx, cy - 2, rx + 7, ry + 4, 'm');
+    g.ellipse(cx, cy - 2, rx, ry, 'k');
     return g.svg();
   }
   if (era === 2) {

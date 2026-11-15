@@ -58,7 +58,7 @@ const OTTO_HOME = on(KELLER, 760);
 
 /** Hölderlin's portrait above the desk, in each time layer's look — and, in
  *  the present, the museum's rope and plaque in front of the desk. */
-const PORTRAIT = { x: 226, y: 138, w: 34, h: 44 };
+const PORTRAIT = { x: 286, y: 138, w: 34, h: 44 };
 function portraitArt(e: Era): string {
   const { x, y, w, h } = PORTRAIT;
   if (e === 1) {
@@ -279,7 +279,7 @@ const HOTSPOTS: HotspotDef[] = [
       open: toNeckar,
     },
   }),
-  at('portrait', 'Porträt', R(PORTRAIT.x - 2, PORTRAIT.y - 2, PORTRAIT.w + 4, PORTRAIT.h + 4), on(STUBE, 244), 'up', {
+  at('portrait', 'Porträt', R(PORTRAIT.x - 2, PORTRAIT.y - 2, PORTRAIT.w + 4, PORTRAIT.h + 4), on(STUBE, PORTRAIT.x + 17), 'up', {
     on: {
       lookat: (ctx) =>
         byEra(ctx, [
@@ -417,7 +417,7 @@ const HOTSPOTS: HotspotDef[] = [
         if (ctx.flag('rugMoved')) return ctx.playerSay('Zusammengerollt. Darunter war das Loch.');
         await byEra(ctx, [
           'Ein alter Teppich. In der Mitte wölbt er sich ein bisschen. Und er zieht nach unten. Teppiche sollten nicht ziehen.',
-          'Ein rotes Oval mit gelbem Rand. In der Mitte ein Pixel, der dunkler ist als die anderen.',
+          'Ein rotes Oval mit gelbem Rand. In der Mitte ein Pixel, das dunkler ist als die anderen.',
           'Ein Teppich in fünf Grautönen. In der Mitte eine Beule.',
         ]);
       },
@@ -496,8 +496,6 @@ export const hoelderlinturmRoom: RoomDef = {
     { id: 'bg', depth: Layer.BEHIND, svg: (state) => turmBg(era(state)) },
     { id: 'glow', depth: Layer.BEHIND, svg: (state) => spiralGlow(era(state)) },
     { id: 'portrait', depth: Layer.BEHIND, svg: (state) => filmed(era(state), portraitArt(era(state))) },
-    // 1987: the parser prompt's cursor blinks after PUT PUT.
-    { id: 'cursor', depth: Layer.BEHIND, x: TM.graffiti.x + TM.graffiti.w - 6, y: TM.graffiti.y + TM.graffiti.h - 14, w: 10, h: 10, svg: '<rect width="10" height="10" fill="#55ffff"/>', visible: (state) => era(state) === 1 },
     { id: 'wallhole', depth: Layer.BEHIND, svg: (state) => wallHoleArt(era(state)), visible: (state) => !!state.getFlag('wallHole') && !state.getFlag('wallHoleTaken') },
     {
       id: 'hole',
@@ -545,17 +543,6 @@ export const hoelderlinturmRoom: RoomDef = {
         const f = ctx.layerObj('film');
         f.setAlpha(0.75 + Math.random() * 0.25);
         await ctx.wait(70);
-      },
-    },
-    {
-      // The cursor of the 1987 parser prompt blinks.
-      every: [10, 20],
-      run: async (ctx) => {
-        const c = ctx.layerObj('cursor');
-        c.setAlpha(1);
-        await ctx.wait(450);
-        c.setAlpha(0);
-        await ctx.wait(450);
       },
     },
     {

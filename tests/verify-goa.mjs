@@ -318,7 +318,7 @@ const seenAt = [];
 const nearby = await waitFor(async () => {
   const p = await punt();
   seenAt.push(Math.round(p.x));
-  return p.x > 420 && p.x < 600 && p.y > 322;
+  return p.x > 240 && p.x < 330 && p.y > 322; // its turn, clear of the jetty and the tower's door
 }, 40000, 'a punt within reach');
 check('a punt comes down the river', nearby, seenAt.slice(-4).join(','));
 const p1 = await punt();
@@ -363,6 +363,18 @@ await page.waitForTimeout(250);
 check('the pogo stick is visible under the player while hopping', await ev(() => window.__engine.roomScene.layerObj('pogo').alpha > 0.9));
 await page.screenshot({ path: `${SHOT}/goa-03b-pogo.png` });
 await waitFor(async () => !(await inv()).includes('pogostick'), 20000, 'pogo');
+await settle();
+// The balloon: skip the scene with Escape while floating — the player must end on the ground.
+await ev(() => window.__engine.makeContext().addItem('ballon', { silent: true }));
+await click(522 + (await inv()).indexOf('ballon') * 112, 505);
+await page.waitForTimeout(200);
+await click(420, 330);
+await waitFor(() => ev(() => window.__engine.roomScene.layerObj('ballon').alpha > 0.9), 15000, 'the balloon');
+await page.waitForTimeout(1500);
+check('the balloon is visible while floating', await ev(() => window.__engine.roomScene.layerObj('ballon').alpha > 0.9));
+for (let i = 0; i < 40 && (await ev(() => window.__engine.busy)); i++) { await page.keyboard.press('Escape'); await page.waitForTimeout(150); }
+const afterBalloon = await ev(() => { const a = window.__engine.roomScene.actors.get('player'); return { y: a.y, sy: a.sprite.y, layer: window.__engine.roomScene.layerObj('ballon').alpha }; });
+check('skipped mid-float: back on the ground, balloon gone', Math.abs(afterBalloon.sy - afterBalloon.y) < 1 && afterBalloon.y > 370 && afterBalloon.layer === 0 && !(await inv()).includes('ballon'), JSON.stringify(afterBalloon));
 await settle();
 check('the pogo stick loses against the barrier', !(await inv()).includes('pogostick') && (await room()) === 'waldrand');
 check('the removed red herrings are gone from the game', await ev(() => !window.__engine.items.drahtschere && !window.__engine.items.stange && !window.__engine.items.klappspaten));

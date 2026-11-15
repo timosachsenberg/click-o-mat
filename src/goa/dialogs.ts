@@ -427,7 +427,7 @@ export const DIALOGS: Record<string, DialogDef> = {
           },
           {
             text: 'Was ist mit den Burschen auf dem Stocherkahn?',
-            if: (s) => !!s.getFlag('once:neckarIntro'),
+            if: (s) => !!s.getFlag('once:neckarIntro') && !s.getFlag('puntSunk'),
             once: true,
             script: async (ctx) => {
               await ctx.say('floh', 'Die? Trinken aus Krügen. Kein Pfand. Kulturlos.');

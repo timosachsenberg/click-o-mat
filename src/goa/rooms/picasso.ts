@@ -712,7 +712,7 @@ const HOTSPOTS: HotspotDef[] = [
           await ctx.playerSay('Bloß nicht. Schlafende Polizisten soll man liegen lassen.');
         }
       },
-      pickup: 'Der ist schwerer als er aussieht. Und er sieht schwer aus.',
+      pickup: 'Der ist schwerer, als er aussieht. Und er sieht schwer aus.',
     },
     onItem: {
       give: {
@@ -915,7 +915,7 @@ export const picassoRoom: RoomDef = {
           'Ruhestörung. Schon vor 22 Uhr. Ich notier mir das trotzdem.',
           'Die Automaten da hängen nicht ordnungsgemäß.',
           'Falsch geparkt, draußen. Ich hab’s im Gefühl.',
-          'Ich hab mehr Partys beendet als ihr besucht habt.',
+          'Ich hab mehr Partys beendet, als ihr besucht habt.',
         ];
         await ctx.say('cop', lines[Math.floor(Math.random() * lines.length)]);
       },

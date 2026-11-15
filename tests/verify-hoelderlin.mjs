@@ -363,6 +363,12 @@ await waitFor(async () => (await room()) === 'goa', 20000, 'the dance floor');
 // The landing is a cutscene that ends in the Goazwerg's question.
 await waitFor(async () => { if (await ev(() => window.__engine.choicesShowing)) return true; await page.keyboard.press('Escape'); return false; }, 40000, 'the Goazwerg');
 check('out of the portal: in the middle of the dance floor', (await room()) === 'goa' && (await flag('wormholeUsed')) === true);
+// The AUTO save taken on arrival must hold the state before the landing scene
+// touched anything: on the ground, and still due the landing and the bouncer.
+const auto = await ev(() => JSON.parse(localStorage.getItem('pnc-save-goa-4') ?? 'null'));
+const autoPos = auto?.data?.chars?.[auto?.data?.activeChar]?.pos ?? null;
+check('the autosave on landing has the player on the floor, not in the air', !!autoPos && autoPos.y > 380, JSON.stringify(autoPos));
+check('and still owes the landing (a reload replays it, bouncer included)', JSON.stringify(auto).includes('"portalLanding":true') && !JSON.stringify(auto).includes('"once:goaIntro":true'));
 const landed = await ev(() => { const a = window.__engine.roomScene.actors.get('player'); return { x: a.x, y: a.y }; });
 check('the player landed on the floor, by the portal', Math.abs(landed.x - 384) < 30 && Math.abs(landed.y - 404) < 20, JSON.stringify(landed));
 check('everything in the pockets is lost on the way', pocketsBefore > 0 && (await inv()).length === 0, JSON.stringify(await inv()));

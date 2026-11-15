@@ -53,6 +53,7 @@ async function dance(ctx: ScriptContext): Promise<void> {
     await ctx.tween(sprite, { y, ease: 'Quad.easeIn' }, BEAT / 2);
     if (i === 3) ctx.face(ctx.activeCharId, pick<Facing>(['left', 'right']));
   }
+  sprite.y = y;
   ctx.face(ctx.activeCharId, 'down');
   if (!ctx.flag('goaDanced')) {
     ctx.setFlag('goaDanced');
@@ -290,7 +291,7 @@ export const goaRoom: RoomDef = {
   },
 
   entries: {
-    eingang: { x: 124, y: 412, facing: 'right' },
+    eingang: { x: 222, y: 440, facing: 'right' },
     // Out of the wormhole, in the middle of the floor.
     portal: { x: LANDING.x, y: LANDING.y, facing: 'down' },
   },

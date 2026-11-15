@@ -53,7 +53,8 @@ const JETTY_SPOT = P(504, 314);
 
 /** Its course: down from the bend along the quay wall, a turn in front of
  *  the bridge, and back upstream along the island (a Catmull-Rom spline). */
-const COURSE: Vec2[] = [P(198, 250), P(262, 268), P(352, 306), P(470, 346), P(572, 363), P(540, 369), P(410, 364), P(262, 334), P(160, 296), P(122, 264), P(152, 247)];
+// (The turn stays well left of the jetty and the tower's door: the punt must not sail over them.)
+const COURSE: Vec2[] = [P(198, 250), P(240, 264), P(280, 286), P(306, 314), P(312, 340), P(286, 358), P(236, 350), P(190, 322), P(150, 292), P(122, 264), P(152, 247)];
 const PASS_MS = 26000;
 /** Within reach of a throw from the bridge (fraction of the course). */
 const REACH = { t0: 0.26, t1: 0.72 };
@@ -117,7 +118,8 @@ async function puntPass(ctx: ScriptContext): Promise<void> {
           pass.t = prog.t;
           const p = course(prog.t);
           const to: Facing = Math.abs(p.x - kahn.x) < 0.05 ? heading : p.x > kahn.x ? 'right' : 'left';
-          if (to !== heading) ctx.face('kahn', (heading = to));
+          // (Every frame: a verb on the punt turns it to face the player.)
+          ctx.face('kahn', (heading = to));
           kahn.setPosition(p.x, p.y);
           if (!shouted && prog.t > 0.3) {
             shouted = true;
@@ -381,7 +383,7 @@ const HOTSPOTS: HotspotDef[] = [
   at('toForest', 'Richtung Wald', R(880, 330, 80, 120), P(948, 432), 'right', {
     defaultVerb: 'use',
     on: {
-      lookat: 'Über die Brücke, dann den Weg hoch zum Waldrand. Irgendwo da draußen wummert der Bass.',
+      lookat: 'Am Eckhaus vorbei, dann den Weg hoch zum Waldrand. Irgendwo da draußen wummert der Bass.',
       use: toForest,
       open: toForest,
     },

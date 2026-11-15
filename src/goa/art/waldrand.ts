@@ -223,7 +223,7 @@ function harvester(): string {
 /** A chainsaw, left on top of the stack. */
 function chainsaw(): string {
   const x = WR.logs.x + 96;
-  const y = WR.logs.y - 34;
+  const y = WR.logs.y - 16;
   return (
     inked(`M${x} ${y + 4}h34v6h-34z`, '#c8c8d0', 1.4) +
     path(`M${x + 2} ${y + 7}h30`, { stroke: '#5a5a6a', sw: 1.2, extra: 'stroke-dasharray="2 2"' }) +
@@ -379,13 +379,16 @@ export function waldrandBg(): string {
       s.push(tuft(x, y, 7 + rr() * 9, i, rr() < 0.5 ? '#3a5a3e' : '#2a4a3a'));
     }
   }
-  // The way back, signposted.
-  s.push(inked('M248 372L254 372L256 432L246 432Z', '#5a4030', 2.2));
-  s.push(inked(wobble([[296, 376], [230, 372], [220, 384], [230, 396], [294, 398]], { seed: 71, wobble: 1 }), '#8a6440', 2.2));
-  s.push(text(260, 390, '← NECKAR', { size: 8, fill: '#2a1a10', rotate: 2 }));
   s.push(vignette('wrVig', 960, 450, 0.5, '#0a0618'));
   s.push(grainOverlay(960, 450, 0.38, 0.3));
   return s.join('');
+}
+
+/** The signpost back to the bridge: its own layer, so the player can pass
+ *  behind and in front of it (a 90×70 box at 214,366). */
+export const NECKAR_SIGN = { x: 214, y: 366, w: 90, h: 70, base: 432 };
+export function neckarSign(): string {
+  return `<g transform="translate(${-NECKAR_SIGN.x} ${-NECKAR_SIGN.y})">` + inked('M248 372L254 372L256 432L246 432Z', '#5a4030', 2.2) + inked(wobble([[296, 376], [230, 372], [220, 384], [230, 396], [294, 398]], { seed: 71, wobble: 1 }), '#8a6440', 2.2) + text(260, 390, '← NECKAR', { size: 8, fill: '#2a1a10', rotate: 2 }) + '</g>';
 }
 
 /** The Goa's lights behind the trees: a pulsing coloured haze (its own layer,

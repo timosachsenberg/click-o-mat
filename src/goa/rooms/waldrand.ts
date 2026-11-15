@@ -1,6 +1,6 @@
 import { Layer, type Facing, type HotspotDef, type Rect, type RoomDef, type Vec2 } from '../../engine/types';
 import type { ScriptContext } from '../../engine/ScriptContext';
-import { OWL, OWL_FRAMES, WR, fireflies, fog, foregroundTree, goaGlow, lampFlash, waldrandBg } from '../art/waldrand';
+import { NECKAR_SIGN, OWL, OWL_FRAMES, WR, neckarSign, fireflies, fog, foregroundTree, goaGlow, lampFlash, waldrandBg } from '../art/waldrand';
 import { BALLOON_ART, PIGEON_ACTORS } from '../art/epplehaus';
 import { portalArt } from '../art/goaeingang';
 
@@ -78,7 +78,7 @@ async function hop(ctx: ScriptContext, height: number, ms: number): Promise<void
 /** After the first failed attempt: a nudge away from tools. */
 async function afterFail(ctx: ScriptContext): Promise<void> {
   await ctx.once('herringHint', async () => {
-    await ctx.playerSay('Mit Sportgerät komm ich an diesem Gitter nicht vorbei. Ich bräuchte eher eine Abkürzung.');
+    await ctx.playerSay('So komm ich an diesem Gitter nicht vorbei. Ich bräuchte eher eine Abkürzung.');
   });
 }
 
@@ -135,6 +135,7 @@ async function balloon(ctx: ScriptContext): Promise<void> {
   b.setAlpha(0);
   await ctx.say('waldtaube', 'Pock.');
   await ctx.tween(sprite, { y, ease: 'Quad.easeIn' }, 350);
+  sprite.y = y;
   ctx.shake(220, 0.01);
   await ctx.tween(ctx.actor('waldtaube').sprite, { x: -80, y: y - 200 }, 1100);
   ctx.place('waldtaube', -200, 300);
@@ -205,6 +206,7 @@ const HOTSPOTS: HotspotDef[] = [
         await ctx.playerSay('Da komm ich nicht bis zur Goa. Da komm ich bis zur Notaufnahme.');
       },
     },
+    onItem: { use: { wurmloch: throwWormhole } },
   }),
   at('lichter', 'Lichter', R(WR.glow.x - 110, WR.glow.y - 90, 220, 130), BARRIER_SPOT, 'up', {
     on: {
@@ -263,7 +265,7 @@ const HOTSPOTS: HotspotDef[] = [
       open: 'Abgeschlossen. Das Forstamt kennt seine Pappenheimer.',
     },
   }),
-  at('motorsaege', 'Motorsäge', R(WR.logs.x + 90, WR.logs.y - 42, 62, 26), P(250, 380), 'up', {
+  at('motorsaege', 'Motorsäge', R(WR.logs.x + 90, WR.logs.y - 24, 62, 26), P(250, 380), 'up', {
     on: {
       lookat: 'Eine Motorsäge, oben auf dem Stapel vergessen. Die Kette ist abgenommen. Schade. Oder zum Glück.',
       pickup: 'Ohne Kette ist das nur ein sehr lauter Briefbeschwerer. Und zu hoch liegt sie auch.',
@@ -345,6 +347,7 @@ export const waldrandRoom: RoomDef = {
     { id: 'light', depth: Layer.FRONT, x: 0, y: 0, w: 960, h: 450, svg: '<rect width="960" height="450" fill="#1a1a5a"/>', alpha: 0.24 },
     { id: 'fireflies', depth: Layer.FRONT, x: 0, y: 0, w: 960, h: 450, svg: fireflies(), alpha: 0.6 },
     { id: 'fog', depth: Layer.FRONT, x: 0, y: 0, w: 960, h: 450, svg: fog() },
+    { id: 'wegweiser', depth: NECKAR_SIGN.base, x: NECKAR_SIGN.x, y: NECKAR_SIGN.y, w: NECKAR_SIGN.w, h: NECKAR_SIGN.h, svg: neckarSign() },
     // A big fir in front, on the left.
     { id: 'tree', depth: WR.tree.base, x: WR.tree.x, y: WR.tree.y, w: WR.tree.w, h: WR.tree.h, svg: foregroundTree() },
   ],
@@ -358,7 +361,7 @@ export const waldrandRoom: RoomDef = {
   music: 'wald-wummern',
 
   entries: {
-    neckar: { x: 270, y: 412, facing: 'right' },
+    neckar: { x: 340, y: 410, facing: 'right' },
     // Back out of the wormhole.
     portal: { x: PORTAL_SPOT.x, y: PORTAL_SPOT.y, facing: 'down' },
     // On foot from the Goa's entrance, through the woods on the other side.
