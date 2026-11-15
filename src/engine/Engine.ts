@@ -51,6 +51,14 @@ export interface GameContent {
   /** Offer an easy mode (more hints) in the options menu. Scripts read the
    *  player's choice as `ctx.easyMode`; the default is the normal mode. */
   easyMode?: boolean;
+  /** Forgiving item handling. "Use" + an inventory item always takes the
+   *  item in hand ("Use X with …") even when the item has a `use` of its own
+   *  — a second click on the item in hand runs that (items marked `useNow`
+   *  keep running it at once); and a hotspot that only
+   *  answers to "give X" answers to "use X with" the same way (and vice
+   *  versa). Off by default: then "Use" + an item with its own `use` runs it
+   *  at once, and use/give are strictly separate. */
+  forgivingItems?: boolean;
 }
 
 /** Several games built into one page: the title screen shows a picker, and
@@ -216,6 +224,7 @@ export class Engine {
     this.startRoom = content.startRoom;
     this.startEntry = content.startEntry;
     this.offersEasyMode = !!content.easyMode;
+    this.forgivingItems = !!content.forgivingItems;
     this.gameId = content.id ?? '';
     this.initParty(content.party ?? [content.playerId], content.startItems ?? []);
     // The legacy single-save key predates namespacing: it can only belong to
@@ -333,6 +342,8 @@ export class Engine {
   /** Whether the game offers an easy mode, and whether the player picked it
    *  (a per-game preference, off by default: the normal mode). */
   offersEasyMode = false;
+  /** See GameContent.forgivingItems. */
+  forgivingItems = false;
   easyMode = false;
   private gameId = '';
 

@@ -51,4 +51,7 @@ export const CONTENT: GameContent = {
   startEntry: 'bus',
   startItems: ['euro'],
   easyMode: true,
+  // „Benutze“ + Gegenstand nimmt ihn immer erst in die Hand; „Benutze X mit
+  // Person“ und „Gib X an Person“ gelten gleich.
+  forgivingItems: true,
 };

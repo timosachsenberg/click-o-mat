@@ -72,6 +72,10 @@ export interface ItemDef {
    *  item is clicked with the Use verb selected, or clicked again while it
    *  is in hand. Items without it are armed for "Use <item> with …". */
   use?: ScriptOrLine;
+  /** With `GameContent.forgivingItems`, "Use" + an item takes it in hand
+   *  first. Set this on an item whose `use` is its real purpose (a drink):
+   *  "Use" + that item still runs `use` at once. */
+  useNow?: boolean;
   /** Item-on-item combinations, keyed by the other item's id. */
   combine?: Record<string, ScriptOrLine>;
 }

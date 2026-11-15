@@ -833,8 +833,10 @@ export class RoomScene extends Phaser.Scene {
   ): ScriptOrLine | undefined {
     if (itemId) {
       const kind = verb === 'give' ? 'give' : 'use';
+      const other = kind === 'give' ? 'use' : 'give';
       return (
         hotspot.onItem?.[kind]?.[itemId] ??
+        (engine.forgivingItems ? hotspot.onItem?.[other]?.[itemId] : undefined) ??
         (kind === 'give' ? engine.strings.notWanted : engine.strings.noEffect)
       );
     }

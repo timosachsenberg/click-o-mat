@@ -57,6 +57,16 @@ async function tryBarrier(ctx: ScriptContext): Promise<void> {
 
 // ---- the red herrings: two ways past the barrier that don't work ----------------
 
+/** The pogo stick under the player while hopping: a 30×76 box, the footrests
+ *  `rest` px above its foot. */
+const POGO = { w: 30, h: 76, rest: 22 };
+const POGO_ART =
+  '<path d="M15 4V60" stroke="#1e1424" stroke-width="7" stroke-linecap="round"/><path d="M15 4V60" stroke="#e8323a" stroke-width="4" stroke-linecap="round"/>' +
+  '<path d="M4 6H26" stroke="#1e1424" stroke-width="6" stroke-linecap="round"/><path d="M4 6H26" stroke="#2a2a3a" stroke-width="3" stroke-linecap="round"/>' +
+  '<path d="M3 54H27" stroke="#1e1424" stroke-width="6" stroke-linecap="round"/><path d="M3 54H27" stroke="#c8c8d0" stroke-width="3" stroke-linecap="round"/>' +
+  '<path d="M15 58l-5 3l10 3l-10 3l10 3l-5 3" fill="none" stroke="#1e1424" stroke-width="3.4" stroke-linejoin="round"/><path d="M15 58l-5 3l10 3l-10 3l10 3l-5 3" fill="none" stroke="#f2c230" stroke-width="1.6" stroke-linejoin="round"/>' +
+  '<ellipse cx="15" cy="74" rx="5" ry="2" fill="#1e1424"/>';
+
 /** Bounce the player up and down (transient staging). */
 async function hop(ctx: ScriptContext, height: number, ms: number): Promise<void> {
   const sprite = ctx.player.sprite;
@@ -75,13 +85,27 @@ async function afterFail(ctx: ScriptContext): Promise<void> {
 async function pogo(ctx: ScriptContext): Promise<void> {
   await ctx.playerSay('Mit dem Pogo-Stick einfach drüberhüpfen. Was soll schon schiefgehen?');
   ctx.face(ctx.activeCharId, 'up');
+  // Up onto the footrests: the stick stands under the player and hops along.
+  const sprite = ctx.player.sprite;
+  const ground = sprite.y;
+  const stick = ctx.layerObj('pogo');
+  const sx = ctx.player.x - POGO.w / 2;
+  stick.setPosition(sx, ground - POGO.h).setAlpha(1).setAngle(0);
+  sprite.y = ground - POGO.rest;
   for (const h of [24, 40, 58]) {
     ctx.sfx('step');
-    await hop(ctx, h, 420);
+    await Promise.all([hop(ctx, h, 420), (async () => {
+      await ctx.tween(stick, { y: ground - POGO.h - h, ease: 'Quad.easeOut' }, 210);
+      await ctx.tween(stick, { y: ground - POGO.h, ease: 'Quad.easeIn' }, 210);
+    })()]);
   }
   ctx.sfx('deny');
   ctx.shake(400, 0.018);
   ctx.flash(0xffffff, 120);
+  // Off it again; the stick, bent, tips over and is gone.
+  sprite.y = ground;
+  await ctx.tween(stick, { angle: 80, x: sx + 26, y: ground - POGO.h + 30, alpha: 0 }, 380);
+  stick.setAlpha(0).setAngle(0);
   ctx.removeItem('pogostick');
   await ctx.playerSay('*BOING. BOING. KLONK.*');
   await ctx.playerSay('Ich hab das Gitter getroffen. Das Gitter hat gewonnen. Und der Pogo-Stick ist jetzt ein Pogo-Knick.');
@@ -312,6 +336,8 @@ export const waldrandRoom: RoomDef = {
     { id: 'owl', depth: Layer.BEHIND, x: OWL.x, y: OWL.y, anim: 'wald-owl' },
     // The wormhole pair: this end, standing beside the barrier, and the one in flight.
     { id: 'portal', depth: Layer.BEHIND, x: PORTAL.x - PORTAL.rx, y: PORTAL.y - PORTAL.ry, w: PORTAL.rx * 2, h: PORTAL.ry * 2, svg: portalArt(PORTAL.rx, PORTAL.ry, 'wrPortal'), visible: (state) => !!state.getFlag('portalOpen') },
+    // The pogo stick, shown only while the player hops on it.
+    { id: 'pogo', depth: Layer.FRONT, x: 0, y: 0, w: POGO.w, h: POGO.h, svg: POGO_ART, alpha: 0 },
     // The helium balloon, shown only while the player floats on it.
     { id: 'ballon', depth: Layer.FRONT, x: 0, y: 0, w: 60, h: 140, svg: BALLOON_ART, alpha: 0 },
     { id: 'wurf', depth: Layer.FRONT, x: 0, y: 0, w: 44, h: 28, svg: portalArt(22, 14, 'wrWurf'), alpha: 0 },

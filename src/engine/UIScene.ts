@@ -727,8 +727,9 @@ export class UIScene extends Phaser.Scene {
       return;
     }
     // An item usable on its own: Use + item, or a second click on it in hand.
+    // (With forgiving items, Use + item first takes it in hand like any other.)
     const inHand = engine.pendingItem === itemId && engine.pendingItemVerb === 'use';
-    if (item.use && (engine.selectedVerb === 'use' || inHand)) {
+    if (item.use && (inHand || (engine.selectedVerb === 'use' && (!engine.forgivingItems || item.useNow)))) {
       void engine.runScript(item.use, engine.strings.defaultResponses.use);
       return;
     }
