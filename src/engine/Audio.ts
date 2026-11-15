@@ -37,6 +37,22 @@ export interface MusicTrack {
   lead: (number | null)[];
   leadType?: OscillatorType;
   bassType?: OscillatorType;
+  // ---- optional colour: all of it off by default (a plain two-voice loop) ----
+  /** A warm analog-style bass instead of a bare oscillator: detuned saws and
+   *  a sub through a resonant low-pass with a pluck envelope. */
+  warmBass?: boolean;
+  /** Lead as a pulse wave of this duty (0.125 thin and nasal, 0.25 hollow)
+   *  instead of `leadType`. */
+  leadDuty?: number;
+  /** A third, quiet voice (a broken chord, say): same format as `lead`. */
+  arp?: (number | null)[];
+  /** Drum rows, one character per 8th note: `x` a hit, `o` a soft one,
+   *  anything else a rest. Rows loop on their own length. */
+  drums?: { kick?: string; snare?: string; hat?: string; clap?: string };
+  /** Feedback echo on lead and arp, 0…1 (about 0.3 is plenty). */
+  echo?: number;
+  /** Lead volume, 1 = the default; pull it down for unobtrusive tracks. */
+  leadLevel?: number;
 }
 
 type Track = MusicTrack;
@@ -100,8 +116,21 @@ function freq(semitoneFromA4: number): number {
   return 440 * Math.pow(2, semitoneFromA4 / 12);
 }
 
+/** A pulse wave of the given duty cycle (the NES's thin and hollow leads). */
+function pulseWave(ctx: AudioContext, duty: number): PeriodicWave {
+  const N = 32;
+  const real = new Float32Array(N);
+  const imag = new Float32Array(N);
+  for (let n = 1; n < N; n++) {
+    real[n] = (2 / (n * Math.PI)) * Math.sin(2 * Math.PI * n * duty);
+    imag[n] = (2 / (n * Math.PI)) * (1 - Math.cos(2 * Math.PI * n * duty));
+  }
+  return ctx.createPeriodicWave(real, imag);
+}
+
 /**
- * Schedules a looping two-voice chiptune on a WebAudio context using a
+ * Schedules a looping chiptune (two voices; optionally a warm bass, a third
+ * voice, drums and echo) on a WebAudio context using a
  * lookahead scheduler. Owns its own output gain so it can fade independently
  * of other tracks (enabling crossfades).
  */
@@ -115,6 +144,10 @@ class SynthMusic {
   /** Number of notes scheduled so far — used by tests to confirm progress. */
   noteCount = 0;
   private stopped = false;
+  /** Lead/arp bus: straight to the output, plus the echo send when asked for. */
+  private melody: GainNode;
+  private pulse: PeriodicWave | null = null;
+  private noiseBuf: AudioBuffer | null = null;
 
   constructor(
     private ctx: AudioContext,
@@ -126,6 +159,32 @@ class SynthMusic {
     this.out.gain.value = 0;
     this.out.connect(dest);
     this.stepDur = 60 / track.bpm / 2; // 8th notes
+    this.melody = ctx.createGain();
+    this.melody.connect(this.out);
+    if (track.echo) {
+      // A dotted-8th feedback echo on the melody voices.
+      const delay = ctx.createDelay(1.5);
+      delay.delayTime.value = Math.min(1.4, this.stepDur * 1.5);
+      const fb = ctx.createGain();
+      fb.gain.value = Math.min(0.6, track.echo);
+      const wet = ctx.createGain();
+      wet.gain.value = 0.5;
+      this.melody.connect(delay);
+      delay.connect(fb).connect(delay);
+      delay.connect(wet).connect(this.out);
+    }
+    if (track.leadDuty) this.pulse = pulseWave(ctx, track.leadDuty);
+    if (track.drums) {
+      // One second of noise, shared by snare, clap and hats.
+      const buf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      let seed = 12345;
+      for (let i = 0; i < d.length; i++) {
+        seed = (seed * 1103515245 + 12345) | 0;
+        d[i] = ((seed >>> 16) & 0x7fff) / 16384 - 1;
+      }
+      this.noiseBuf = buf;
+    }
   }
 
   start(): void {
@@ -143,11 +202,29 @@ class SynthMusic {
     while (this.nextTime < this.ctx.currentTime + 0.12) {
       const b = this.track.bass[this.step % this.track.bass.length];
       const l = this.track.lead[this.step % len];
+      const tr = this.track;
+      const t = this.nextTime;
       if (b !== null && b !== undefined) {
-        this.note(freq(b), this.nextTime, this.stepDur * 1.9, this.track.bassType ?? 'triangle', 0.22);
+        if (tr.warmBass) this.warmBass(freq(b), t, this.stepDur * 1.7);
+        else this.note(freq(b), t, this.stepDur * 1.9, tr.bassType ?? 'triangle', 0.22);
       }
       if (l !== null && l !== undefined) {
-        this.note(freq(l), this.nextTime, this.stepDur * 0.9, this.track.leadType ?? 'square', 0.1);
+        const lvl = 0.1 * (tr.leadLevel ?? 1);
+        this.note(freq(l), t, this.stepDur * 0.9, tr.leadType ?? 'square', this.pulse ? lvl * 0.9 : lvl, this.melody, this.pulse);
+      }
+      const a = tr.arp?.[this.step % tr.arp.length];
+      if (a !== null && a !== undefined) this.note(freq(a), t, this.stepDur * 0.7, 'square', 0.03, this.melody, this.pulse);
+      if (tr.drums) {
+        const hit = (row?: string) => (row ? row[this.step % row.length] : '.');
+        const amt = (c: string) => (c === 'x' ? 1 : c === 'o' ? 0.5 : 0);
+        const k = amt(hit(tr.drums.kick));
+        const sn = amt(hit(tr.drums.snare));
+        const h = amt(hit(tr.drums.hat));
+        const c = amt(hit(tr.drums.clap));
+        if (k) this.kick(t, 0.5 * k);
+        if (sn) this.noise(t, 0.15, 0.16 * sn, 'bandpass', 1900);
+        if (c) for (const d of [0, 0.011, 0.023]) this.noise(t + d, 0.08, 0.1 * c, 'bandpass', 1300);
+        if (h) this.noise(t, 0.045, 0.05 * h, 'highpass', 6500);
       }
       this.noteCount++;
       this.nextTime += this.stepDur;
@@ -155,15 +232,73 @@ class SynthMusic {
     }
   }
 
-  private note(f: number, time: number, dur: number, type: OscillatorType, peak: number): void {
+  /** Detuned saws and a sub an octave down, through a resonant low-pass whose
+   *  cutoff snaps shut after the attack: a round, warm bass pluck. */
+  private warmBass(f: number, time: number, dur: number): void {
+    const ctx = this.ctx;
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.Q.value = 3;
+    lp.frequency.setValueAtTime(900, time);
+    lp.frequency.exponentialRampToValueAtTime(170, time + 0.12);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, time);
+    g.gain.linearRampToValueAtTime(0.3, time + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0002, time + dur);
+    lp.connect(g).connect(this.out);
+    for (const [type, mul, det] of [['sawtooth', 1, 0], ['sawtooth', 1, 9], ['sine', 0.5, 0]] as Array<[OscillatorType, number, number]>) {
+      const osc = ctx.createOscillator();
+      osc.type = type;
+      osc.frequency.value = f * mul;
+      osc.detune.value = det;
+      const og = ctx.createGain();
+      og.gain.value = type === 'sine' ? 0.9 : 0.5;
+      osc.connect(og).connect(type === 'sine' ? g : lp);
+      osc.start(time);
+      osc.stop(time + dur + 0.02);
+    }
+  }
+
+  /** A round analog kick: a sine thump falling from 150 Hz to 46 Hz. */
+  private kick(time: number, peak: number): void {
     const osc = this.ctx.createOscillator();
     const g = this.ctx.createGain();
-    osc.type = type;
+    osc.frequency.setValueAtTime(150, time);
+    osc.frequency.exponentialRampToValueAtTime(46, time + 0.07);
+    g.gain.setValueAtTime(0, time);
+    g.gain.linearRampToValueAtTime(peak, time + 0.003);
+    g.gain.exponentialRampToValueAtTime(0.0002, time + 0.22);
+    osc.connect(g).connect(this.out);
+    osc.start(time);
+    osc.stop(time + 0.25);
+  }
+
+  /** A burst of filtered noise: snare and clap (band-pass), hats (high-pass). */
+  private noise(time: number, dur: number, peak: number, type: BiquadFilterType, fc: number): void {
+    if (!this.noiseBuf) return;
+    const src = this.ctx.createBufferSource();
+    src.buffer = this.noiseBuf;
+    const f = this.ctx.createBiquadFilter();
+    f.type = type;
+    f.frequency.value = fc;
+    const g = this.ctx.createGain();
+    g.gain.setValueAtTime(peak, time);
+    g.gain.exponentialRampToValueAtTime(0.0002, time + dur);
+    src.connect(f).connect(g).connect(this.out);
+    src.start(time, (time * 7.31) % 0.8);
+    src.stop(time + dur + 0.02);
+  }
+
+  private note(f: number, time: number, dur: number, type: OscillatorType, peak: number, dest: AudioNode = this.out, wave: PeriodicWave | null = null): void {
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    if (wave) osc.setPeriodicWave(wave);
+    else osc.type = type;
     osc.frequency.value = f;
     g.gain.setValueAtTime(0, time);
     g.gain.linearRampToValueAtTime(peak, time + 0.012);
     g.gain.exponentialRampToValueAtTime(0.0002, time + dur);
-    osc.connect(g).connect(this.out);
+    osc.connect(g).connect(dest);
     osc.start(time);
     osc.stop(time + dur + 0.02);
   }
