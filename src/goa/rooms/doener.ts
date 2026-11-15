@@ -1,5 +1,6 @@
 import { Layer, type Facing, type HotspotDef, type Rect, type RoomDef, type Vec2 } from '../../engine/types';
 import type { ScriptContext } from '../../engine/ScriptContext';
+import { musicFile } from '../music';
 import { DB, KNIFE, KNIFE_FRAMES, SPIT_FRAMES, doenerBg, openGlow, smell } from '../art/doener';
 import { PIGEON_ACTORS } from '../art/epplehaus';
 import { VOICE_ACTOR } from '../art/turm';
@@ -170,6 +171,7 @@ export const doenerRoom: RoomDef = {
   music: 'epple-theme',
 
   assets: {
+    audio: [musicFile('epple-theme')],
     svgImages: [...SPIT_FRAMES, ...KNIFE_FRAMES],
     anims: [
       { key: 'doener-spit', textures: SPIT_FRAMES.map((f) => f.key), frameRate: 5 },

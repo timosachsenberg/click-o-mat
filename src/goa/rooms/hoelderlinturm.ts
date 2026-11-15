@@ -1,6 +1,7 @@
 import { Layer, type Facing, type HotspotDef, type Rect, type RoomDef, type Vec2 } from '../../engine/types';
 import { makeWormhole } from '../items';
 import type { ScriptContext } from '../../engine/ScriptContext';
+import { musicFile } from '../music';
 import type { GameState } from '../../engine/GameState';
 import { FLOORS, OTTO_ACTOR, TM, blackHoleArt, film, filmOverlay, rugArt, spiralGlow, turmBg, wallHoleArt, type Era } from '../art/turm';
 
@@ -518,7 +519,7 @@ export const hoelderlinturmRoom: RoomDef = {
   // A side view: everyone keeps their size on every floor.
   scaling: () => 0.8,
 
-  assets: { svgActors: [OTTO_ACTOR] },
+  assets: { audio: [musicFile('turm-toon')], svgActors: [OTTO_ACTOR] },
 
   entries: {
     door: { x: 166, y: STUBE.back + 12, facing: 'right' },

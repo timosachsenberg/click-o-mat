@@ -223,6 +223,12 @@ hand-painted → **1987** (sixteen colours, chunky pixels) → a **1930s cartoon
 
 </details>
 
+The music is old meets new — warm analog bass and drums under chiptune
+melodies: the bridge, the Epplehaus, the Picasso, the tower and the Goa play
+songs rendered from code (`node tools/gen-music.mjs` → `public/audio/`), the
+forest's distant bass, the tower's other two time layers and the jukebox stay
+generated live.
+
 The scenes are alive beyond the riddles: the Plenum votes behind a lit window of
 the Epplehaus, a swan patrols the Neckar under hunting swallows, the Picasso's
 neon has a loose contact, an owl watches the forestry barrier, and Hölderlin's

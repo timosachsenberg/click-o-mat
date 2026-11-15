@@ -15,6 +15,7 @@ npm install                          # deps (Phaser, inkjs; Vite/TS/Playwright a
 npm run dev                          # Vite dev server on :5173, hot-reloads
 npm run build                        # tsc --noEmit (strict type-check) then vite build → dist/
 npm run preview                      # serve the built dist/
+node tools/gen-music.mjs             # re-render the adventure's music files → public/audio/ (needs ffmpeg)
 
 npx playwright install chromium      # one-time browser download before first test run
 npm test                             # all e2e suites (~15 min) — starts its own dev server on :5199
@@ -65,7 +66,7 @@ Art lives in `src/game/art/`: `toon.ts` is the style toolkit (`wobble`, `crooked
 
 One file per room in `rooms/`. Assets are declared per-room (`RoomDef.assets`, lazily loaded on first entry) rather than in a global manifest — keep new PNGs on the room that uses them. PNG files live in `public/img/` and URLs must be prefixed with `import.meta.env.BASE_URL` (the site deploys under a GitHub Pages subpath; `vite.config.ts` sets `base: './'`).
 
-The adventure (`src/goa/`) has the same layout, reuses the demo's `toon.ts` toolkit, UI panel art and puppet rig (`characters.ts` exports `humanDraw`, `drawHumanFront`, `drawHumanSide`, `HumanLook` with `head`/`torso` hooks), and adds `strings.ts` (German UI), `music.ts` (procedural tracks via `GameContent.music`) and `startItems`. Its text is German — keep new content for it in German.
+The adventure (`src/goa/`) has the same layout, reuses the demo's `toon.ts` toolkit, UI panel art and puppet rig (`characters.ts` exports `humanDraw`, `drawHumanFront`, `drawHumanSide`, `HumanLook` with `head`/`torso` hooks), and adds `strings.ts` (German UI), `music.ts` (procedural tracks via `GameContent.music`) and `startItems`. Its music mixes files and the generator: `public/audio/<key>.mp3` (warm analog bass and drums under chiptune leads, written as code in `tools/gen-music.mjs` and rendered with `tools/music/synth.mjs` + ffmpeg — re-run it after changing a song) is declared per room with `musicFile(key)` and overrides the procedural track of the same key; the forest's distant bass, the tower's 1987 and cartoon layers and the jukebox songs (the ouzo riddle hangs on their beat) stay procedural. Its text is German — keep new content for it in German.
 
 Spritesheet actors follow the animation key convention `<textureSet>-<pose>-<variant>` (pose: `idle|walk|talk`; variant: `front|back|side`) — that naming is the entire actor/engine contract.
 

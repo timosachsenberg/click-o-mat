@@ -1,4 +1,10 @@
 import type { MusicTrack } from '../engine/Audio';
+import type { AudioAsset } from '../engine/types';
+
+/** A music file for a room's assets: `public/audio/<key>.mp3`, rendered by
+ *  `tools/gen-music.mjs`. Loaded, it replaces the procedural track of the
+ *  same key below (which stays as the fallback until the file has loaded). */
+export const musicFile = (key: string): AudioAsset => ({ key, url: `${import.meta.env.BASE_URL}audio/${key}.mp3` });
 
 /** Procedural chiptune loops (semitones from A4; one entry per 8th note). */
 export const GOA_MUSIC: Record<string, MusicTrack> = {

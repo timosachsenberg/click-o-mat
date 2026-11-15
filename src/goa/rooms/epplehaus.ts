@@ -1,5 +1,6 @@
 import { Layer, type Facing, type HotspotDef, type Rect, type RoomDef, type Vec2 } from '../../engine/types';
 import type { ScriptContext } from '../../engine/ScriptContext';
+import { musicFile } from '../music';
 import { EP, PIGEON_ACTORS, PLENUM, PLENUM_FRAMES, epplehausBg, flyingPigeon, lightStringGlow } from '../art/epplehaus';
 
 // ---- layout ----------------------------------------------------------------------
@@ -455,6 +456,7 @@ export const epplehausRoom: RoomDef = {
   music: 'epple-theme',
 
   assets: {
+    audio: [musicFile('epple-theme')],
     svgActors: PIGEON_ACTORS,
     svgImages: PLENUM_FRAMES,
     anims: [{ key: 'epple-plenum', textures: PLENUM_FRAMES.map((f) => f.key), frameRate: 0.7 }],

@@ -1,5 +1,6 @@
 import { Layer, type Facing, type HotspotDef, type LayerDef, type Rect, type RoomDef, type SvgImageAsset, type Vec2 } from '../../engine/types';
 import type { ScriptContext } from '../../engine/ScriptContext';
+import { musicFile } from '../music';
 import { INK, circle, defs, ellipse, glow, grainDefs, grainOverlay, group, inked, line, linear, path, poly, rect, vignette } from '../../game/art/toon';
 import {
   PAL,
@@ -837,6 +838,7 @@ export const picassoRoom: RoomDef = {
 
   // The slot machines' animation frames.
   assets: {
+    audio: [musicFile('pub-theme')],
     svgImages: [...SLOT_FRAMES, ...AC_RIBBONS],
     anims: [
       { key: 'picasso-slots', textures: SLOT_FRAMES.map((f) => f.key), frameRate: 4 },
