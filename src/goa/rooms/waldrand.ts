@@ -1,7 +1,7 @@
 import { Layer, type Facing, type HotspotDef, type Rect, type RoomDef, type Vec2 } from '../../engine/types';
 import type { ScriptContext } from '../../engine/ScriptContext';
 import { OWL, OWL_FRAMES, WR, fireflies, fog, foregroundTree, goaGlow, lampFlash, waldrandBg } from '../art/waldrand';
-import { PIGEON_ACTORS } from '../art/epplehaus';
+import { BALLOON_ART, PIGEON_ACTORS } from '../art/epplehaus';
 import { portalArt } from '../art/goaeingang';
 
 // ---- layout ----------------------------------------------------------------------
@@ -93,15 +93,22 @@ async function balloon(ctx: ScriptContext): Promise<void> {
   ctx.face(ctx.activeCharId, 'up');
   const sprite = ctx.player.sprite;
   const y = sprite.y;
-  await ctx.tween(sprite, { y: y - 46, ease: 'Sine.easeOut' }, 1400);
+  // The balloon itself, its string's end in the player's raised hand.
+  const b = ctx.layerObj('ballon');
+  const bx = ctx.player.x + 14 - 34;
+  const by = y - 62 - 136;
+  b.setPosition(bx, by + 30).setAlpha(1).setScale(1);
+  await ctx.tween(b, { y: by, ease: 'Sine.easeOut' }, 500);
+  await Promise.all([ctx.tween(sprite, { y: y - 46, ease: 'Sine.easeOut' }, 1400), ctx.tween(b, { y: by - 46, ease: 'Sine.easeOut' }, 1400)]);
   await ctx.playerSay('Es klappt! Ich schwebe!');
   // A pigeon, all the way out here, flies in and has a go at the balloon.
   ctx.place('waldtaube', 980, y - 120, 'left');
-  await ctx.tween(ctx.actor('waldtaube').sprite, { x: ctx.player.x + 18, y: y - 104 }, 900);
+  await ctx.tween(ctx.actor('waldtaube').sprite, { x: ctx.player.x + 52, y: by - 46 + 58 }, 900);
   await ctx.say('waldtaube', 'Gurr?');
   ctx.sfx('zap');
   ctx.flash(0xff5ab4, 120);
   ctx.removeItem('ballon');
+  b.setAlpha(0);
   await ctx.say('waldtaube', 'Pock.');
   await ctx.tween(sprite, { y, ease: 'Quad.easeIn' }, 350);
   ctx.shake(220, 0.01);
@@ -305,6 +312,8 @@ export const waldrandRoom: RoomDef = {
     { id: 'owl', depth: Layer.BEHIND, x: OWL.x, y: OWL.y, anim: 'wald-owl' },
     // The wormhole pair: this end, standing beside the barrier, and the one in flight.
     { id: 'portal', depth: Layer.BEHIND, x: PORTAL.x - PORTAL.rx, y: PORTAL.y - PORTAL.ry, w: PORTAL.rx * 2, h: PORTAL.ry * 2, svg: portalArt(PORTAL.rx, PORTAL.ry, 'wrPortal'), visible: (state) => !!state.getFlag('portalOpen') },
+    // The helium balloon, shown only while the player floats on it.
+    { id: 'ballon', depth: Layer.FRONT, x: 0, y: 0, w: 60, h: 140, svg: BALLOON_ART, alpha: 0 },
     { id: 'wurf', depth: Layer.FRONT, x: 0, y: 0, w: 44, h: 28, svg: portalArt(22, 14, 'wrWurf'), alpha: 0 },
     { id: 'flash', depth: Layer.BEHIND, x: 0, y: 0, w: 960, h: 450, svg: lampFlash(), alpha: 0 },
     { id: 'light', depth: Layer.FRONT, x: 0, y: 0, w: 960, h: 450, svg: '<rect width="960" height="450" fill="#1a1a5a"/>', alpha: 0.24 },

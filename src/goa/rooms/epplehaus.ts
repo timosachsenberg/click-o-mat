@@ -1,7 +1,7 @@
 import { Layer, type Facing, type HotspotDef, type Rect, type RoomDef, type Vec2 } from '../../engine/types';
 import type { ScriptContext } from '../../engine/ScriptContext';
 import { musicFile } from '../music';
-import { EP, PIGEON_ACTORS, PLENUM, PLENUM_FRAMES, epplehausBg, flyingPigeon, lightStringGlow } from '../art/epplehaus';
+import { BALLOON_ART, EP, PIGEON_ACTORS, PLENUM, PLENUM_FRAMES, epplehausBg, flyingPigeon, lightStringGlow } from '../art/epplehaus';
 
 // ---- layout ----------------------------------------------------------------------
 // The forecourt of the Epplehaus, between the Picasso and the Neckarbrücke:
@@ -23,10 +23,6 @@ function at(id: string, name: string, r: Rect, walkTo: Vec2, facing: Facing, res
 /** Where everybody walks: the cobbles in front of the house. */
 const FLOOR = { x0: 20, x1: 940, y0: 342, y1: 444 };
 /** The heart balloon on its string (layer coordinates: 60×140 at 206,196). */
-const BALLOON_ART =
-  '<path d="M30 54Q24 90 34 136" fill="none" stroke="#e8e2d8" stroke-width="1.6"/>' +
-  '<path d="M30 52C4 30 12 6 30 18C48 6 56 30 30 52Z" fill="#ff5ab4" stroke="#1e1424" stroke-width="2.4" stroke-linejoin="round"/>' +
-  '<path d="M18 18Q21 13 26 16" fill="none" stroke="#ffffff" stroke-width="2.4" opacity="0.8"/>';
 
 const FLOH = P(556, 352);
 

@@ -373,6 +373,12 @@ export const PLENUM_FRAMES: SvgImageAsset[] = [0, 1].map((f) => {
   return { key: `epple-plenum-${f}`, width: PLENUM.w, height: PLENUM.h, svg: s.join('') };
 });
 
+/** The pink heart balloon on its string (a 60×140 box; the string's end at 34,136). */
+export const BALLOON_ART =
+  '<path d="M30 54Q24 90 34 136" fill="none" stroke="#e8e2d8" stroke-width="1.6"/>' +
+  '<path d="M30 52C4 30 12 6 30 18C48 6 56 30 30 52Z" fill="#ff5ab4" stroke="#1e1424" stroke-width="2.4" stroke-linejoin="round"/>' +
+  '<path d="M18 18Q21 13 26 16" fill="none" stroke="#ffffff" stroke-width="2.4" opacity="0.8"/>';
+
 /** A pigeon taking off from a sill (a small layer an ambient flies about). */
 export function flyingPigeon(): string {
   return path('M2 10Q8 0 14 8Q20 0 26 10', { stroke: INK, sw: 4 }) + path('M2 10Q8 0 14 8Q20 0 26 10', { stroke: '#9a9aae', sw: 2 }) + ellipse(14, 10, 4.4, 3, { fill: '#8a8a9c', stroke: INK, sw: 1 });
