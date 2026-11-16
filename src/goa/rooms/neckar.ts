@@ -3,7 +3,7 @@ import type { ScriptContext } from '../../engine/ScriptContext';
 import { musicFile } from '../music';
 import { VOICE_ACTOR } from '../art/turm';
 import { PIGEON_ACTORS } from '../art/epplehaus';
-import { NK, PUNT_ACTOR, balustrade, bus, cardOnDeck, swallows, swan, waterShimmer, eckhausLayer, floatingCap, flyingLeg, neckarBg, promGap, quayFootY, quayTopY } from '../art/neckar';
+import { NK, PUNT_ACTOR, balustrade, bus, cardOnDeck, swallows, swan as swanArt, waterShimmer, eckhausLayer, floatingCap, flyingLeg, neckarBg, promGap, quayFootY, quayTopY } from '../art/neckar';
 
 // ---- layout ----------------------------------------------------------------------
 // The Neckarbrücke in Tübingen at sunset, looking upstream along the
@@ -81,6 +81,13 @@ function course(t: number): Vec2 {
  *  visit stops touching the (rebuilt) actor. `halted` freezes the punt
  *  where it is — it's about to be eaten. */
 const pass = { gen: 0, running: false, t: 0, halted: false };
+
+/** The swan (a layer, top-left coordinates): its patrol, the bigger round
+ *  once the river is its own, and where it waits while a punt is about. */
+const SWAN_PATROL: Vec2[] = [P(96, 312), P(170, 334)];
+const SWAN_REIGN: Vec2[] = [P(96, 312), P(190, 286), P(300, 304), P(330, 338), P(200, 344)];
+const SWAN_REFUGE = P(10, 300);
+const swan = { leg: 0, fled: false };
 
 const SHOUTS = [
   'Ein Prosit der Gemütlichkeit!',
@@ -387,13 +394,18 @@ const HOTSPOTS: HotspotDef[] = [
       open: toForest,
     },
   }),
-  at('schwan', 'Schwan', R(180, 276, 170, 40), THROW_SPOT, 'up', {
-    on: {
-      lookat: 'Ein Schwan. Zieht seine Bahn, als gehörte ihm der Neckar. Tut er vermutlich auch.',
-      talkto: 'Er ignoriert mich. Mit Würde.',
-    },
-    onItem: { use: { stuhlbein: 'Auf den Schwan? Niemals. Der kann nichts dafür.' } },
-  }),
+  // The swan is a layer that swims about: its hotspot covers its waters —
+  // the left bank while punts pass, the whole river once they don't.
+  ...([[false, R(0, 294, 220, 72)], [true, R(0, 280, 380, 92)]] as Array<[boolean, Rect]>).map(([sunk, r]) =>
+    at(sunk ? 'schwan2' : 'schwan', 'Schwan', r, THROW_SPOT, 'up', {
+      visible: (state) => !!state.getFlag('puntSunk') === sunk,
+      on: {
+        lookat: (ctx) => ctx.playerSay(ctx.flag('puntSunk') ? 'Der Schwan. Seit der Kahn weg ist, gehört ihm der Neckar ganz allein. Er weiß das.' : 'Ein Schwan. Zieht seine Bahn, als gehörte ihm der Neckar. Nur wenn der Kahn kommt, macht er Platz. Fauchend.'),
+        talkto: 'Er ignoriert mich. Mit Würde.',
+      },
+      onItem: { use: { stuhlbein: 'Auf den Schwan? Niemals. Der kann nichts dafür.' } },
+    })
+  ),
   at('fahrplan', 'Fahrplan', R(722, 282, 36, 44), P(736, 424), 'up', {
     on: {
       lookat: async (ctx) => {
@@ -478,7 +490,7 @@ export const neckarRoom: RoomDef = {
     // The river's life: glitter on the water, swallows hunting, a swan.
     { id: 'shimmer', depth: Layer.BEHIND, x: 0, y: 0, w: 960, h: 450, svg: waterShimmer(), alpha: 0.5 },
     { id: 'schwalben', depth: Layer.BEHIND, x: -120, y: 80, w: 70, h: 30, svg: swallows() },
-    { id: 'schwan', depth: Layer.BEHIND, x: 190, y: 282, w: 42, h: 28, svg: swan() },
+    { id: 'schwan', depth: Layer.BEHIND, x: SWAN_PATROL[0].x, y: SWAN_PATROL[0].y, w: 42, h: 28, svg: swanArt() },
     { id: 'light', depth: Layer.FRONT, x: 0, y: 0, w: 960, h: 450, svg: '<rect width="960" height="450" fill="#c0507a"/>', alpha: 0.1 },
     // The corner house: whoever goes round it to the promenade is behind it.
     { id: 'eckhaus', depth: NK.parapetBase - 1, x: NK.eckhaus.x, y: NK.eckhaus.y, w: NK.eckhaus.w, h: NK.eckhaus.h, svg: eckhausLayer() },
@@ -544,6 +556,8 @@ export const neckarRoom: RoomDef = {
 
   actors: [
     { id: 'kahn', x: OFF.x, y: OFF.y, facing: 'right' },
+    // The swan's hiss (the swan itself is a layer).
+    { id: 'schwan', x: -300, y: 300, facing: 'down' },
   ],
 
   async onEnter(ctx) {
@@ -599,14 +613,37 @@ export const neckarRoom: RoomDef = {
       },
     },
     {
-      // The swan patrols its stretch of river.
-      every: [300, 900],
+      // The swan patrols its stretch of river — and gets out of the way when
+      // a punt comes down: over to the left bank, hissing, until it has gone.
+      // Once the punt is sunk, the whole river is the swan's.
+      every: [20, 60],
       run: async (ctx) => {
         const sw = ctx.layerObj('schwan');
-        sw.setFlipX(false);
-        await ctx.tween(sw, { x: 300, y: 300, ease: 'Sine.easeInOut' }, 13000, { skippable: false });
-        sw.setFlipX(true);
-        await ctx.tween(sw, { x: 190, y: 282, ease: 'Sine.easeInOut' }, 13000, { skippable: false });
+        const fleeing = pass.running && !ctx.flag('puntSunk');
+        if (fleeing && !swan.fled) {
+          swan.fled = true;
+          if (!ctx.busy) {
+            ctx.place('schwan', sw.x + 21, sw.y + 70, 'down');
+            void ctx.say('schwan', 'Chhhhh!').catch(() => {});
+          }
+        }
+        if (!fleeing && swan.fled) {
+          swan.fled = false;
+          swan.leg = 0;
+        }
+        const route = fleeing ? [SWAN_REFUGE] : ctx.flag('puntSunk') ? SWAN_REIGN : SWAN_PATROL;
+        const to = route[swan.leg % route.length];
+        const dist = Math.hypot(to.x - sw.x, to.y - sw.y);
+        if (dist < 2) {
+          if (fleeing) await ctx.tween(sw, { y: sw.y }, 500, { skippable: false }); // waiting it out
+          else swan.leg++;
+          return;
+        }
+        // One short stretch per run, so a punt turning up is noticed at once.
+        const speed = fleeing ? 95 : 9;
+        const step = Math.min(1, (speed * 1.2) / dist);
+        if (Math.abs(to.x - sw.x) > 1) sw.setFlipX(to.x < sw.x);
+        await ctx.tween(sw, { x: sw.x + (to.x - sw.x) * step, y: sw.y + (to.y - sw.y) * step, ease: 'Linear' }, (dist * step * 1000) / speed, { skippable: false });
       },
     },
     {
