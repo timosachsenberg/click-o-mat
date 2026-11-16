@@ -217,8 +217,8 @@ async function fillCap(ctx: ScriptContext): Promise<void> {
   ctx.addItem('muetzekruemel');
   ctx.setFlag('brezelTaken');
   await ctx.repaint();
-  await ctx.playerSay('Krümel rein in die Mütze. Passt genau. Die Burschen hätten’s nicht anders gewollt.');
-  await ctx.say('ali', 'Die Brezel von gestern? Nimm ruhig mit, mein Lieber. Die war eh härter als der Partykiller.');
+  await ctx.playerSay('Krümel rein in die Mütze. Die Burschis haben sie mit weniger gefüllt.');
+  await ctx.say('ali', 'Die Brezeln von der Silvesterparty? Nimm ruhig mit, mein Lieber. Härter ist nur der Partykiller.');
 }
 
 /** A pogo stick leaning against the back column (room coordinates). */
@@ -240,7 +240,7 @@ async function insertCoin(ctx: ScriptContext): Promise<void> {
   ctx.setFlag('jukeboxCredit');
   ctx.sfx('deny');
   await ctx.playerSay('Ich werf die 25 Cent ein ... und die Münze steckt fest.');
-  await ctx.say('ali', 'Dann gehört dir jetzt die Musik, mein Lieber.');
+  await ctx.say('ali', 'Dann hast du jetzt nen Musikabo, mein Lieber.');
   await ctx.dialog('jukebox');
 }
 
@@ -288,7 +288,7 @@ async function takeOuzo(ctx: ScriptContext): Promise<void> {
     return;
   }
   if (!ctx.flag('refrain')) {
-    if (await anzeige(ctx, 'Zugriff auf fremdes Anisgetränk. Hab ich gesehen.')) {
+    if (await anzeige(ctx, 'Zugriff auf fremdes Anisgetränk. Hab ich gesehen. Ist notiert.')) {
       await ctx.say('ali', 'Der bleibt hier.');
     } else {
       await ctx.say('ali', 'Der bleibt hier, mein Lieber.');
@@ -312,7 +312,7 @@ async function serveOuzo(ctx: ScriptContext): Promise<void> {
   ctx.setFlag('ouzoAt', 'cop');
   ctx.sfx('open');
   await ctx.repaint();
-  await ctx.playerSay('Direkt vor die Nase.');
+  await ctx.playerSay('Direkt vor die Nase. Wer kann da widerstehen...');
 }
 
 /** Out of the door, any time: the password only matters at the forest. */
@@ -343,18 +343,18 @@ async function sitDown(ctx: ScriptContext): Promise<void> {
   await ctx.playerSay('Autsch. Mein Steißbein. So viel zum Glück.');
   await ctx.walkTo(ctx.activeCharId, RICKETY.x - 58, 412);
   ctx.face(ctx.activeCharId, 'right');
-  if (!(await anzeige(ctx, 'Sachbeschädigung! Und Ruhestörung! Beides notiert!'))) {
+  if (!(await anzeige(ctx, 'Sachbeschädigung! Und Ruhestörung! Verdacht auf Linksextremismus. Ist notiert!'))) {
     await ctx.playerSay('Gut, dass der Partykiller schläft.');
   }
-  await ctx.say('ali', 'Der Zocker-Hocker! Auf dem hat eh noch nie einer gewonnen, mein Lieber. Holzwurm.');
-  await ctx.playerSay('Eins der Beine ist ganz durchlöchert. Und es knuspert immer noch.');
+  await ctx.say('ali', 'Der Zocker-Hocker! Auf dem hat eh noch nie einer gewonnen, mein Lieber. Ist verflucht und hat Würmer.');
+  await ctx.playerSay('Eins der Beine ist ganz durchlöchert. Man hört die Holzwürmer knuspern.');
 }
 
 async function takeLeg(ctx: ScriptContext): Promise<void> {
   ctx.setFlag('legTaken');
   ctx.addItem('stuhlbein');
   await ctx.repaint();
-  await ctx.playerSay('Ein wurmstichiges Stuhlbein. Die Würmer darin haben Hunger. Großen Hunger.');
+  await ctx.playerSay('Ein wurmstichiges Stuhlbein. Die Holzwürmer darin haben Hunger. Großen Hunger.');
 }
 
 // ---- hotspots --------------------------------------------------------------------
@@ -374,15 +374,15 @@ const HOTSPOTS: HotspotDef[] = [
   at('wc', 'Klotür', R(20, 128, 80, 148), P(58, 282), 'up', {
     defaultVerb: 'open',
     on: {
-      lookat: 'Das Klo. Zwei Stufen rauf. Nach dem dritten Bier sind es gefühlt fünf.',
+      lookat: 'Das Picasso-Klo – hier durfte ich bereits ein ganz besonderes Naturschauspiel bestaunen: die legendären Picassokaskaden.',
       open: async (ctx) => {
         ctx.sfx('deny');
         await ctx.playerSay('Klemmt.');
-        await ctx.say('ali', 'Fester drücken, mein Lieber. Und dabei „Picasso“ sagen.');
+        await ctx.say('ali', 'Kennst du meinen Cousin Ali Baba? Hat zu oft "Sesam, schliesse dich" gesagt.');
         await ctx.playerSay('Ich muss eh nicht.');
       },
       push: 'Ich muss eh nicht.',
-      close: 'Ist zu. Und soll so bleiben.',
+      close: 'Ist zu. Ist auch besser so.',
     },
   }),
   at('steps', 'Stufen', R(8, 276, 108, 54), P(60, 338), 'up', {
@@ -405,7 +405,7 @@ const HOTSPOTS: HotspotDef[] = [
     },
   }),
   at('discoball', 'Discokugel', R(176, 54, 36, 44), P(194, 326), 'up', {
-    on: { lookat: 'Eine Discokugel. Dreht sich nur, wenn jemand tanzt. Also nur für Hilde.' },
+    on: { lookat: 'Eine Discokugel. Für die wilde Hilde.' },
   }),
   at('pogo', 'Pogo-Stick', R(232, 226, 30, 80), P(240, 328), 'up', {
     defaultVerb: 'pickup',
@@ -416,20 +416,20 @@ const HOTSPOTS: HotspotDef[] = [
         ctx.setFlag('pogoTaken');
         ctx.addItem('pogostick');
         await ctx.repaint();
-        await ctx.say('ali', 'Nimm ihn mit, mein Lieber. Bevor Hilde wieder draufspringt.');
+        await ctx.say('ali', 'Nimm ihn mit, mein Lieber. Bevor Hilde wieder durchs Picasso springt.');
       },
       use: 'Hier drin? Ich würde mir den Kopf an der Lüftung stoßen.',
     },
   }),
   at('dj', 'DJ-Pult', R(136, 200, 116, 100), P(194, 326), 'up', {
     on: {
-      lookat: 'Zwei Plattenspieler, ein Mischpult, Kopfhörer. Hier legte DJ Ali auf. 1994.',
+      lookat: 'Zwei CD Player, kein Mischpult, keine Kopfhörer. Hier legte der legendäre DJ Freddi.',
       use: async (ctx) => {
         if (!(await anzeige(ctx, 'Musik? Um diese Uhrzeit? Ruhestörung!'))) {
-          await ctx.playerSay('Ohne Platte keine Party. Und die Party ist eh im Wald.');
+          await ctx.playerSay('Ohne DJ bleibt uns nur die Jukebox.');
         }
       },
-      pickup: 'Die Kopfhörer kleben fest. Ich frag lieber nicht, womit.',
+      pickup: 'Die Goa hat bestimmt schon ne bessere Anlage.',
     },
   }),
   {
@@ -448,29 +448,29 @@ const HOTSPOTS: HotspotDef[] = [
         await ctx.say('hilde', 'Goa? Früher hieß das Dorfdisco.');
       },
       pickup: 'Sie würde es mögen. Genau deshalb nicht.',
-      push: 'Die schubst zurück. Ich hab’s gesehen.',
+      push: 'Die grabscht zurück. Ich hab’s gesehen.',
     },
     onItem: {
       give: {
         euro: async (ctx) => {
-          await ctx.say('hilde', 'Für mich? Behalt dein Geld, Schnuckelchen. Ein Tanz reicht.');
+          await ctx.say('hilde', 'Für mich? Sehe ich aus wie ein leichtes Mädchen? Behalt dein Geld, Schnuckelchen. Ein Tanz reicht.');
         },
       },
     },
   },
   at('column', 'Säule', R(100, 0, 46, 410), P(160, 404), 'left', {
     on: {
-      lookat: 'Eine Säule. Antik, sagt Ali. Baumarkt, sagt die Säule.',
-      push: 'Die trägt das Haus. Lassen wir das.',
+      lookat: 'Eine Säule. Antikes Griechenland, sagt Ali.',
+      push: 'Ich bin doch nicht lebensmüde!',
     },
   }),
   at('table', 'Stehtisch', R(0, 330, 96, 118), P(120, 404), 'left', {
-    on: { lookat: 'Ein Stehtisch. Für die, die nicht am Tresen sitzen wollen. Also für niemanden.' },
+    on: { lookat: 'Ein Stehtisch. Für Stammgäste bedeutet der mehr Ergonomie.' },
   }),
   at('door', 'Ausgang', R(280, 142, 62, 158), P(311, 322), 'up', {
     defaultVerb: 'open',
     on: {
-      lookat: 'Die Treppe rauf, raus auf die Straße. Da vorne die Dönerbude, dann das Epplehaus, dann der Neckar.',
+      lookat: 'Raus auf die Straße. Da vorne die Dönerbude, dann das Epplehaus, dann der Neckar.',
       open: leave,
       use: leave,
       close: 'Die Tür oben ist zu. Ich bin ja noch hier unten.',
@@ -480,7 +480,7 @@ const HOTSPOTS: HotspotDef[] = [
     on: {
       lookat: async (ctx) => {
         await ctx.playerSay('Eine Jukebox. Draufgeklebt: „Ein Lied: 25 Cent.“');
-        if (ctx.flag('jukeboxCredit')) await ctx.playerSay('Meine Münze steckt immer noch drin. Die Musik gehört mir.');
+        if (ctx.flag('jukeboxCredit')) await ctx.playerSay('Meine Münze steckt immer noch drin. Das Abo gehört mir.');
       },
       use: async (ctx) => {
         if (ctx.flag('jukeboxCredit')) {
@@ -491,7 +491,7 @@ const HOTSPOTS: HotspotDef[] = [
           await ctx.playerSay('Ein Lied: 25 Cent. Hab ich nicht.');
         }
       },
-      push: 'Ein Schlag aufs Gehäuse. Keine Musik. Nur Schmerz.',
+      push: 'Aua!',
     },
     onItem: {
       use: {
@@ -502,9 +502,9 @@ const HOTSPOTS: HotspotDef[] = [
   }),
   at('ac', 'Klimaanlage', R(400, 52, 102, 72), P(402, 396), 'up', {
     on: {
-      lookat: 'Eine Klimaanlage. Sie bläst warme Luft. Gegen den Willen aller.',
+      lookat: 'Eine Klimaanlage. Sie verwirbelt die warme, rauchige Luft.',
       use: async (ctx) => {
-        if (!(await anzeige(ctx, 'Finger weg von der Haustechnik! Ich zeig das an!'))) {
+        if (!(await anzeige(ctx, 'Finger weg von der Haustechnik! Anzeige ist raus!'))) {
           await ctx.playerSay('Die macht eh, was sie will.');
         }
       },
@@ -524,9 +524,9 @@ const HOTSPOTS: HotspotDef[] = [
     on: {
       lookat: async (ctx) => {
         await ctx.playerSay('Fotos von Stammgästen. Dauerwellen, Schnurrbärte, Schulterpolster.');
-        await ctx.playerSay('Auf einem: eine junge Frau im Discofox, 1979. Die Hilde. Auf einem anderen ein junger Polizist, der lächelt. Das glaubt mir keiner.');
+        await ctx.playerSay('Auf einem: die junge Hilde. Auf einem anderen ein junger Polizist, der lächelt verschmitzt. Hat Handschellen in der Hand. Mehr will ich nicht wissen.');
       },
-      pickup: 'Die hängen hier seit Jahrzehnten. Die Wand dahinter hat eine andere Farbe.',
+      pickup: 'Die hängen hier seit Jahrzehnten. Die Wand dahinter ist vermutlich noch weiss.',
     },
   }),
   at('painting', 'Gemälde', R(520, 100, 60, 66), P(520, 404), 'up', {
@@ -537,8 +537,8 @@ const HOTSPOTS: HotspotDef[] = [
         await ctx.playerSay('Signiert mit „P.“ in Kugelschreiber.');
       },
       pickup: async (ctx) => {
-        if (!(await anzeige(ctx, 'Kunstraub! Unter meinen Augen!'))) {
-          await ctx.playerSay('Ich klau doch keinen Picasso. Nicht mal einen falschen.');
+        if (!(await anzeige(ctx, 'Halt STOPP! Kunstraub!'))) {
+          await ctx.playerSay('Quatsch - ich klau doch keinen Picasso. Nicht mal einen falschen.');
         }
       },
     },
@@ -554,7 +554,7 @@ const HOTSPOTS: HotspotDef[] = [
         else await ctx.playerSay('Ohne Geld spielen die nicht mit mir.');
       },
       push: async (ctx) => {
-        if (!(await anzeige(ctx, 'Gewalt gegen Sachen! Ich zeig das an!'))) {
+        if (!(await anzeige(ctx, 'Sachbeschädigung! Anzeige ist raus!'))) {
           await ctx.playerSay('Sie geben nichts her. Typisch.');
         }
       },
@@ -587,7 +587,7 @@ const HOTSPOTS: HotspotDef[] = [
     defaultVerb: 'pickup',
     visible: (state) => !state.getFlag('brezelTaken'),
     on: {
-      lookat: 'Eine Schale mit zerbröselter Brezel. Von gestern. Oder von 1998. Bei Ali weiß man das nie.',
+      lookat: 'Eine Schale mit zerbröselten Brezeln. Von gestern? Oder von 1998. Bei Ali weiß man das nie.',
       pickup: takeCrumbs,
       use: 'Reinbeißen? Damit könnte man Nägel einschlagen.',
     },
@@ -603,7 +603,7 @@ const HOTSPOTS: HotspotDef[] = [
       },
       use: sitDown,
       pickup: 'Den schlepp ich nicht rum. Der fällt ja schon beim Angucken auseinander.',
-      push: 'Er schwankt bedenklich. Und fängt sich wieder. Knapp.',
+      push: 'Er schwankt bedenklich. Die Katze in mir würde ihn gerne umwerfen.',
     },
   }),
   at('debris', 'Hockertrümmer', R(494, 378, 62, 26), P(492, 414), 'up', {
@@ -611,7 +611,7 @@ const HOTSPOTS: HotspotDef[] = [
     on: {
       lookat: 'Was vom Zocker-Hocker übrig ist. Ruhe in Spänen.',
       pickup: 'Brennholz brauch ich nicht. Nur das eine Bein.',
-      use: 'Draufsetzen? Nicht noch mal.',
+      use: 'Draufsetzen und nen Speissen im Po riskieren? Nicht mit mir.',
     },
   }),
   at('leg', 'wurmstichiges Stuhlbein', R(RICKETY.x + 2, RICKETY.floor - 6, 34, 16), P(RICKETY.x + 22, 414), 'up', {
@@ -647,11 +647,11 @@ const HOTSPOTS: HotspotDef[] = [
   at('ali', 'Ali', R(696, 236, 50, 84), P(705, 428), 'up', {
     defaultVerb: 'talkto',
     on: {
-      lookat: 'Ali. Wirt, Barmann, Seelsorger. Poliert seit 1987 dasselbe Glas.',
+      lookat: 'Ali. Wirt, Barmann, Seelsorger. Eine Legende.',
       talkto: async (ctx) => {
         await ctx.dialog('ali');
       },
-      pickup: 'Ali ist hier eher das Inventar.',
+      pickup: 'Ali gibt.',
     },
     onItem: {
       give: {
@@ -666,7 +666,7 @@ const HOTSPOTS: HotspotDef[] = [
         },
         dose: async (ctx) => {
           ctx.removeItem('dose');
-          await ctx.say('ali', 'Leer? Sehr gut, mein Lieber. Pfand, wie’s auf der Karte steht.');
+          await ctx.say('ali', 'Leer? Sehr gut, mein Lieber. Pfand zurück.');
           ctx.addItem('cent25');
         },
         ouzo: async (ctx) => {
@@ -703,7 +703,7 @@ const HOTSPOTS: HotspotDef[] = [
         turnCop(ctx, false);
       },
       push: async (ctx) => {
-        if (!(await anzeige(ctx, 'Körperverletzung! Versuchte! Ich zeig das an!'))) {
+        if (!(await anzeige(ctx, 'Körperverletzung! Versuchte! Anzeige ist raus!'))) {
           await ctx.playerSay('Bloß nicht. Schlafende Polizisten soll man liegen lassen.');
         }
       },
@@ -720,7 +720,7 @@ const HOTSPOTS: HotspotDef[] = [
           if (await anzeige(ctx, 'Bestechung eines Beamten? Ich zeig das an!')) {
             await ctx.playerSay('Er zeigt wirklich alles an.');
           } else {
-            await ctx.playerSay('Der schläft. Und die zwei Euro behalte ich.');
+            await ctx.playerSay('Der schläft. Die zwei Euro behalte ich.');
           }
         },
         magicwoman: async (ctx) => {
@@ -884,7 +884,7 @@ export const picassoRoom: RoomDef = {
     if (ctx.flag('introDone')) return;
     ctx.setFlag('introDone');
     await ctx.wait(400);
-    await ctx.playerSay('Das Picasso. Hier unten fühlt es sich immer an wie kurz nach Mitternacht.');
+    await ctx.playerSay('Das Picasso. Bar, Institution, lebendes Kunstwerk.');
     await ctx.playerSay('Zwei Euro hab ich noch. Das muss reichen.');
   },
 
@@ -912,7 +912,7 @@ export const picassoRoom: RoomDef = {
       run: async (ctx) => {
         if (ctx.busy || ctx.flag('copAsleep') || ctx.flag('song')) return;
         const lines = [
-          'Ruhestörung. Schon vor 22 Uhr. Ich notier mir das trotzdem.',
+          'Ruhestörung. Schon vor 22 Uhr. Protokolliert mit Datum und Uhrzeit.',
           'Die Automaten da hängen nicht ordnungsgemäß.',
           'Falsch geparkt, draußen. Ich hab’s im Gefühl.',
           'Ich hab mehr Partys beendet, als ihr besucht habt.',
