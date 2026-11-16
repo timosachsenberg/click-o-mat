@@ -9,19 +9,19 @@ import { FLOORS, OTTO_ACTOR, TM, blackHoleArt, film, filmOverlay, rugArt, spiral
 // The Hölderlinturm as a doll's house, seen from the Neckar with its front
 // wall cut away, all on one screen: upstairs the Turmstube (the door from
 // the promenade opens onto it), downstairs the vaulted cellar at the
-// river's level, joined by a flight of stairs — a side view, so no
+// river's level, joined by a flight of stairs – a side view, so no
 // perspective scaling. In the Turmstube stands Otto R.'s Rössler
 // attractor: turn it, and the whole picture jumps between three time
 // layers (flag `turmEra`):
 //
 //   0  the house style, like everywhere else
-//   1  a 1987 pixel adventure (sixteen colours) — where Otto R. is stuck
-//   2  a 1930s cartoon reel, black and white — where holes are portable
+//   1  a 1987 pixel adventure (sixteen colours) – where Otto R. is stuck
+//   2  a 1930s cartoon reel, black and white – where holes are portable
 //
 // The riddle: Otto R. sits in the cellar on his own strange attractor in
 // 1987 and needs a way out. Under the rug upstairs there's a black hole; only
 // in the cartoon layer can it be picked up (cartoon physics). Put it on the
-// cellar wall where his graffiti says PUT PUT — in 1987, where Otto is — and
+// cellar wall where his graffiti says PUT PUT – in 1987, where Otto is – and
 // he walks out through it, leaving his pocket attractor behind.
 //
 // State: `turmEra` (0|1|2), `rugMoved`, `holeTaken`, `ottoMet`, `wallHole`,
@@ -56,9 +56,9 @@ const RUG_SPOT = on(STUBE, TM.rug.cx - TM.rug.rx - 12);
 const WALL_SPOT = on(KELLER, 600);
 const OTTO_HOME = on(KELLER, 760);
 
-/** Hölderlin's portrait above the desk, in each time layer's look — and, in
+/** Hölderlin's portrait above the desk, in each time layer's look – and, in
  *  the present, the museum's rope and plaque in front of the desk. */
-const PORTRAIT = { x: 226, y: 138, w: 34, h: 44 };
+const PORTRAIT = { x: 286, y: 138, w: 34, h: 44 };
 function portraitArt(e: Era): string {
   const { x, y, w, h } = PORTRAIT;
   if (e === 1) {
@@ -202,7 +202,7 @@ async function putHole(ctx: ScriptContext): Promise<void> {
   ctx.face('otto', 'left');
   await ctx.say('otto', 'Danke, Hochauflösender. Hier, nimm meinen Taschen-Attraktor.');
   ctx.addItem('taschenattraktor');
-  await ctx.say('otto', 'Wenn du dem Bass folgst: Der zeigt dir, wo das Chaos am schönsten ist.');
+  await ctx.say('otto', 'Der zeigt dir, wo das Chaos am schönsten ist. Immer dem Wummern nach.');
   await ctx.say('otto', 'Aber denk dran: Ein Attraktor braucht was, um das er kreisen kann. Was Schweres. Was Schwarzes.');
   await ctx.playerSay('Und wohin gehst du?');
   await ctx.say('otto', 'Ich nehme die Abkürzung durch die Wand. Irgendwo da draußen gibt’s eine Ebene mit mehr als sechzehn Farben.');
@@ -279,7 +279,7 @@ const HOTSPOTS: HotspotDef[] = [
       open: toNeckar,
     },
   }),
-  at('portrait', 'Porträt', R(PORTRAIT.x - 2, PORTRAIT.y - 2, PORTRAIT.w + 4, PORTRAIT.h + 4), on(STUBE, 244), 'up', {
+  at('portrait', 'Porträt', R(PORTRAIT.x - 2, PORTRAIT.y - 2, PORTRAIT.w + 4, PORTRAIT.h + 4), on(STUBE, PORTRAIT.x + 17), 'up', {
     on: {
       lookat: (ctx) =>
         byEra(ctx, [
@@ -300,7 +300,7 @@ const HOTSPOTS: HotspotDef[] = [
         }
         await ctx.playerSay('Hölderlins Schreibpult. Feder, Tinte, eine Kerze und ein Stapel Gedichte.');
         await ctx.playerSay('Ganz oben: „Mit gelben Birnen hänget / Und voll mit wilden Rosen / Das Land in den See.“');
-        await ctx.playerSay('Darunter, mit Kugelschreiber: „Rössler-Attraktor: a = 0,2, b = 0,2, c = 5,7. Nicht drehen! — O. R.“');
+        await ctx.playerSay('Darunter, mit Kugelschreiber: „Rössler-Attraktor: a = 0,2, b = 0,2, c = 5,7. Nicht drehen! – O. R.“');
       },
       pickup: 'Hölderlins Feder? Die bleibt hier. Ich schreib eh nur Nachrichten mit Daumen.',
       use: 'Ich und dichten? „Bass, du Bass, du tiefer Bass ...“ Nein. Das lass ich lieber.',
@@ -311,7 +311,7 @@ const HOTSPOTS: HotspotDef[] = [
       lookat: async (ctx) => {
         const e = era(ctx.state);
         if (e === 1) {
-          await ctx.playerSay('„>PUT PUT_“ — wie eine Eingabezeile in einem uralten Textparser. Der Cursor blinkt.');
+          await ctx.playerSay('„>PUT PUT_“ – wie eine Eingabezeile in einem uralten Textparser. Der Cursor blinkt.');
           await ctx.playerSay('PUT heißt „lege“. Lege was? Wohin? Der Pfeil zeigt auf den gestrichelten Bogen.');
           return;
         }
@@ -387,7 +387,7 @@ const HOTSPOTS: HotspotDef[] = [
     on: {
       lookat: async (ctx) => {
         await byEra(ctx, [
-          'Eine Drahtspirale auf einem Sockel. Sie kreist und kreist, kommt nie zweimal an dieselbe Stelle — und doch nie davon los.',
+          'Eine Drahtspirale auf einem Sockel. Sie kreist und kreist, kommt nie zweimal an dieselbe Stelle – und doch nie davon los.',
           'Gelbe Pixel, die eine Spirale bilden. Wenn man blinzelt, sieht man einen Tornado.',
           'Die Spirale, schneeweiß und zittrig, mit Bewegungsstrichen dran. Sie dreht sich im Takt der Klaviermusik.',
         ]);
@@ -414,10 +414,10 @@ const HOTSPOTS: HotspotDef[] = [
     facing: 'right',
     on: {
       lookat: async (ctx) => {
-        if (ctx.flag('rugMoved')) return ctx.playerSay('Zusammengerollt. Darunter war das Loch.');
+        if (ctx.flag('rugMoved')) return ctx.playerSay(ctx.flag('holeTaken') ? 'Zusammengerollt. Darunter war das Loch.' : 'Zusammengerollt. Darunter: das Loch.');
         await byEra(ctx, [
           'Ein alter Teppich. In der Mitte wölbt er sich ein bisschen. Und er zieht nach unten. Teppiche sollten nicht ziehen.',
-          'Ein rotes Oval mit gelbem Rand. In der Mitte ein Pixel, der dunkler ist als die anderen.',
+          'Ein rotes Oval mit gelbem Rand. In der Mitte ein Pixel, das dunkler ist als die anderen.',
           'Ein Teppich in fünf Grautönen. In der Mitte eine Beule.',
         ]);
       },
@@ -496,8 +496,6 @@ export const hoelderlinturmRoom: RoomDef = {
     { id: 'bg', depth: Layer.BEHIND, svg: (state) => turmBg(era(state)) },
     { id: 'glow', depth: Layer.BEHIND, svg: (state) => spiralGlow(era(state)) },
     { id: 'portrait', depth: Layer.BEHIND, svg: (state) => filmed(era(state), portraitArt(era(state))) },
-    // 1987: the parser prompt's cursor blinks after PUT PUT.
-    { id: 'cursor', depth: Layer.BEHIND, x: TM.graffiti.x + TM.graffiti.w - 6, y: TM.graffiti.y + TM.graffiti.h - 14, w: 10, h: 10, svg: '<rect width="10" height="10" fill="#55ffff"/>', visible: (state) => era(state) === 1 },
     { id: 'wallhole', depth: Layer.BEHIND, svg: (state) => wallHoleArt(era(state)), visible: (state) => !!state.getFlag('wallHole') && !state.getFlag('wallHoleTaken') },
     {
       id: 'hole',
@@ -506,7 +504,7 @@ export const hoelderlinturmRoom: RoomDef = {
       visible: (state) => !!state.getFlag('rugMoved') && !state.getFlag('holeTaken'),
     },
     { id: 'rug', depth: Layer.BEHIND, svg: (state) => filmed(era(state), rugArt(era(state), !!state.getFlag('rugMoved'))) },
-    // The third layer is an old reel: grain, scratches, an iris — over everything.
+    // The third layer is an old reel: grain, scratches, an iris – over everything.
     { id: 'film', depth: Layer.FRONT, svg: filmOverlay(), visible: (state) => era(state) === 2 },
   ],
 
@@ -545,17 +543,6 @@ export const hoelderlinturmRoom: RoomDef = {
         const f = ctx.layerObj('film');
         f.setAlpha(0.75 + Math.random() * 0.25);
         await ctx.wait(70);
-      },
-    },
-    {
-      // The cursor of the 1987 parser prompt blinks.
-      every: [10, 20],
-      run: async (ctx) => {
-        const c = ctx.layerObj('cursor');
-        c.setAlpha(1);
-        await ctx.wait(450);
-        c.setAlpha(0);
-        await ctx.wait(450);
       },
     },
     {

@@ -53,12 +53,12 @@ const HOTSPOTS: HotspotDef[] = [
     on: { lookat: 'Leuchtende Fäden, vom Baum zum Tor gespannt. Jeder einzelne gerade, alle zusammen eine Kurve.' },
   }),
   at('wegweiser', 'Wegweiser', R(662, 258, 92, 44), P(700, 352), 'up', {
-    on: { lookat: '„MAINFLOOR“ geradeaus. „CHAI · CHILL“ irgendwo links. Erst mal Mainfloor.' },
+    on: { lookat: '„MAINFLOOR“ zeigt aufs Tor. „CHAI · CHILL“ irgendwo dahinter. Erst mal Mainfloor.' },
   }),
   at('toWald', 'Zurück in den Wald', R(0, 300, 70, 146), P(36, 410), 'left', {
     defaultVerb: 'use',
     on: {
-      lookat: 'Ein Trampelpfad durch den Wald, zurück zur Absperrung. Von dieser Seite ist sie kein Hindernis.',
+      lookat: 'Ein Trampelpfad, steil den Hang runter bis zur Absperrung. Runter rutscht man. Rauf kommt keiner.',
       use: toForest,
       open: toForest,
     },
@@ -151,7 +151,7 @@ export const goaEingangRoom: RoomDef = {
 
   entries: {
     // Back out of the Goa, through the gate.
-    tor: { x: 660, y: 356, facing: 'left' },
+    tor: { x: 628, y: 370, facing: 'left' },
     // On foot from the edge of the forest.
     wald: { x: 80, y: 410, facing: 'right' },
   },

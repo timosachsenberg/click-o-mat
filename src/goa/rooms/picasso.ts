@@ -548,7 +548,7 @@ const HOTSPOTS: HotspotDef[] = [
   }),
   at('slots', 'Spielautomaten', R(518, 184, 234, 116), P(600, 412), 'up', {
     on: {
-      lookat: 'Vier Spielautomaten. Sie blinken mich an, als wüssten sie von den zwei Euro.',
+      lookat: 'Vier Spielautomaten. Sie blinken mich an, als hätte ich Geld.',
       use: async (ctx) => {
         if (ctx.hasItem('euro')) await ctx.playerSay('Die wollen Geld. Ich hab nur die zwei Euro, und die sind verplant.');
         else await ctx.playerSay('Ohne Geld spielen die nicht mit mir.');
@@ -666,7 +666,7 @@ const HOTSPOTS: HotspotDef[] = [
         },
         dose: async (ctx) => {
           ctx.removeItem('dose');
-          await ctx.say('ali', 'Leer? Sehr gut, mein Lieber. Pfand, wie versprochen.');
+          await ctx.say('ali', 'Leer? Sehr gut, mein Lieber. Pfand, wie’s auf der Karte steht.');
           ctx.addItem('cent25');
         },
         ouzo: async (ctx) => {
@@ -712,7 +712,7 @@ const HOTSPOTS: HotspotDef[] = [
           await ctx.playerSay('Bloß nicht. Schlafende Polizisten soll man liegen lassen.');
         }
       },
-      pickup: 'Der ist schwerer als er aussieht. Und er sieht schwer aus.',
+      pickup: 'Der ist schwerer, als er aussieht. Und er sieht schwer aus.',
     },
     onItem: {
       give: {
@@ -884,7 +884,7 @@ export const picassoRoom: RoomDef = {
     if (ctx.flag('introDone')) return;
     ctx.setFlag('introDone');
     await ctx.wait(400);
-    await ctx.playerSay('Das Picasso. Hier unten ist es immer kurz nach Mitternacht.');
+    await ctx.playerSay('Das Picasso. Hier unten fühlt es sich immer an wie kurz nach Mitternacht.');
     await ctx.playerSay('Zwei Euro hab ich noch. Das muss reichen.');
   },
 
@@ -915,7 +915,7 @@ export const picassoRoom: RoomDef = {
           'Ruhestörung. Schon vor 22 Uhr. Ich notier mir das trotzdem.',
           'Die Automaten da hängen nicht ordnungsgemäß.',
           'Falsch geparkt, draußen. Ich hab’s im Gefühl.',
-          'Ich hab mehr Partys beendet als ihr besucht habt.',
+          'Ich hab mehr Partys beendet, als ihr besucht habt.',
         ];
         await ctx.say('cop', lines[Math.floor(Math.random() * lines.length)]);
       },

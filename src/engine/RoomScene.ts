@@ -260,6 +260,9 @@ export class RoomScene extends Phaser.Scene {
       engine.beginBusy();
       void (async () => {
         try {
+          // One tick later: a caller's autosave right after loadRoom() must
+          // hold the state before onEnter touched anything (flags, staging).
+          await Promise.resolve();
           if (def.onEnter) await def.onEnter(engine.makeContext());
           if (narrate) await this.narrateFeatures(def);
         } finally {

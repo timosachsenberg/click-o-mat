@@ -170,6 +170,10 @@ const pigeonHotspot = (id: string): HotspotDef => ({
         await ctx.playerSay('Die Put-Put-Taube. Pickt Brezelkrümel und plappert dabei Flaschenflohs Lockruf nach.');
         return;
       }
+      if (id === PUT_TAUBE && ctx.flag('turmOpen')) {
+        await ctx.playerSay('Die Put-Put-Taube. Wieder zu Hause, als wär nichts gewesen.');
+        return;
+      }
       if (id === PUT_TAUBE) {
         await ctx.playerSay('Die hier ist anders. Grau wie die anderen, aber mit einem gelben Schopf und drei bunten Schwanzfedern. Rot, gelb, blau.');
         await ctx.playerSay('Als hätte jemand eine Taube mit einem Papagei gekreuzt.');
@@ -251,7 +255,7 @@ const HOTSPOTS: HotspotDef[] = [
     on: {
       lookat: async (ctx) => {
         await ctx.playerSay('Graffiti vom Gehweg bis in den ersten Stock. „EPPLE“, „GOA“, „BASS“, „1972“, „PLENUM!“.');
-        await ctx.playerSay('Und dazwischen überall „PUT PUT“. Wer schreibt das bloß? Und warum?');
+        await ctx.playerSay(ctx.flag('ottoExplained') ? 'Und dazwischen überall „PUT PUT“. Ottos Merkzettel. Hat sich rumgesprochen.' : 'Und dazwischen überall „PUT PUT“. Wer schreibt das bloß? Und warum?');
         ctx.setFlag('putSeen');
         if (ctx.flag('knowsPartykiller')) await ctx.playerSay('Und „KEIN BASS IST ILLEGAL“. Das sollte man dem Partykiller mal zeigen.');
       },
@@ -417,7 +421,7 @@ const HOTSPOTS: HotspotDef[] = [
           await ctx.say('floh', 'Behalt sie. Die mag dich. Und sie hält mir keine Vorträge über Mehrweg.');
         },
         muetze: async (ctx) => {
-          await ctx.say('floh', 'Eine Burschenmütze! Die Burschen trinken aus Krügen. Kein Pfand. Kulturlos.');
+          await ctx.say('floh', 'Eine Burschenmütze! Die hatten einen ganzen Kasten an Bord und haben nie was abgegeben. Kulturlos.');
           if (ctx.easyMode) await ctx.say('floh', 'Aber als Futtersack für die Tauben, da wär sie was. Wenn was drin wär.');
         },
       },

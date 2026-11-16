@@ -168,10 +168,12 @@ export class Engine {
   skipping = false;
 
   /** Script-created tweens currently in flight, so a skip can finish them. */
-  private activeTweens = new Set<Phaser.Tweens.Tween>();
+  /** Skippable tweens in flight, each with a function that puts its targets
+   *  at their end values (Tween.complete() alone doesn't move them). */
+  private activeTweens = new Map<Phaser.Tweens.Tween, () => void>();
 
-  trackTween(t: Phaser.Tweens.Tween): void {
-    this.activeTweens.add(t);
+  trackTween(t: Phaser.Tweens.Tween, finish: () => void = () => {}): void {
+    this.activeTweens.set(t, finish);
   }
 
   untrackTween(t: Phaser.Tweens.Tween): void {
@@ -189,8 +191,9 @@ export class Engine {
     this.events.emit('skipLine'); // dismiss the currently showing speech
     this.events.emit('skipCutscene'); // release in-flight ctx.wait()s
     this.roomScene.finishWalks();
-    for (const t of [...this.activeTweens]) {
+    for (const [t, finish] of [...this.activeTweens]) {
       try {
+        finish();
         t.complete();
       } catch {
         // a tween whose target died with a room change — ignore

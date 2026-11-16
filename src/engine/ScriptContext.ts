@@ -10,6 +10,9 @@ import { ROOM_H, GAME_W } from './constants';
  * The API surface game scripts use to drive the engine. One instance is
  * created per script run; all methods are safe to await in sequence.
  */
+/** Tween config keys that are not target properties. */
+const TWEEN_CONFIG_KEYS = new Set(['ease', 'easeParams', 'delay', 'duration', 'hold', 'repeat', 'repeatDelay', 'yoyo', 'flipX', 'flipY', 'paused', 'persist', 'props', 'onStart', 'onUpdate', 'onComplete', 'onRepeat', 'onYoyo', 'callbackScope', 'completeDelay', 'loop', 'loopDelay', 'interpolation']);
+
 export class ScriptContext {
   constructor(private eng: Engine) {}
 
@@ -70,6 +73,8 @@ export class ScriptContext {
 
   removeItem(id: string, char?: string): void {
     this.state.removeItem(id, char ?? this.state.activeChar);
+    // An item taken away while it is in hand must not stay selected.
+    if (this.eng.pendingItem === id && !this.state.hasItem(id, this.state.activeChar)) this.eng.clearSelection();
     this.eng.events.emit('ui');
   }
 
@@ -211,6 +216,29 @@ export class ScriptContext {
     // Ambient motion (a passing boat, drifting smoke) passes skippable: false
     // so a fast-forwarded cutscene elsewhere doesn't snap it to its end.
     const skippable = opts.skippable ?? true;
+    // What "finished" means for this tween: its targets at their end values.
+    // A fast-forwarded cutscene must leave them there, not wherever they were.
+    const list = (Array.isArray(targets) ? targets : [targets]) as Array<Record<string, unknown>>;
+    const ends: Array<[Record<string, unknown>, string, number]> = [];
+    if (skippable && !props.yoyo) {
+      for (const [key, v] of Object.entries(props)) {
+        if (TWEEN_CONFIG_KEYS.has(key)) continue;
+        for (const tg of list) {
+          if (!tg || typeof tg[key] !== 'number') continue;
+          if (typeof v === 'number') ends.push([tg, key, v]);
+          else if (typeof v === 'string' && /^[+-]=/.test(v)) ends.push([tg, key, (tg[key] as number) + (v[0] === '-' ? -1 : 1) * parseFloat(v.slice(2))]);
+        }
+      }
+    }
+    const finish = () => {
+      for (const [tg, key, v] of ends) {
+        try {
+          tg[key] = v;
+        } catch {
+          // a target that died with a room change
+        }
+      }
+    };
     return new Promise((resolve) => {
       const t = this.eng.roomScene.tweens.add({
         targets,
@@ -222,8 +250,11 @@ export class ScriptContext {
         },
       } as Phaser.Types.Tweens.TweenBuilderConfig);
       if (!skippable) return;
-      this.eng.trackTween(t);
-      if (this.eng.skipping) t.complete();
+      this.eng.trackTween(t, finish);
+      if (this.eng.skipping) {
+        finish();
+        t.complete();
+      }
     });
   }
 

@@ -155,7 +155,7 @@ a **cap** floats away — to the jetty at the **Hölderlinturm**. Walk there alo
 the Neckarfront (round the corner house at the right end of the bridge, then
 along the top of the quay wall) and take the cap.
 
-**The forest is closed.** Over the bridge to the right you reach the **edge of the
+**The forest is closed.** Past the corner house at the bridge's right end you reach the **edge of the
 forest**: the Goa's lights pulse behind the trees and you can hear the bass — but
 the path is closed for *Baumfällarbeiten*. Two things lying around look like a
 way past the barrier, and neither is: the **pogo stick** in the Picasso (you
@@ -198,7 +198,7 @@ hand-painted → **1987** (sixteen colours, chunky pixels) → a **1930s cartoon
    hole under the rug upstairs, he says.
 2. **Pull the rug** in front of the sofa (any layer): it rolls up off a black hole.
 3. In 1987 the hole is part of the floor; in the hand-painted layer it would
-   take *you*. Turn on to **today**: cartoon physics — its edge curls up like a
+   take *you*. Turn on to the **cartoon reel**: cartoon physics — its edge curls up like a
    pancake. **Pick up the portable hole**.
 4. Back to **1987** (pull the attractor) and **use the hole with PUT PUT**.
    Otto walks out through the wall and leaves you his **Taschen-Attraktor**

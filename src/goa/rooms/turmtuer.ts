@@ -89,6 +89,13 @@ const HOTSPOTS: HotspotDef[] = [
         await ctx.playerSay('Oben brennt Licht. Aber durchs Fenster sieht man niemanden.');
       },
     },
+    onItem: {
+      use: {
+        taube: async (ctx) => {
+          await ctx.playerSay('Der Turm hört nicht zu. Die Sprechanlage schon.');
+        },
+      },
+    },
   }),
   at('neckar', 'Neckar', R(0, 240, 250, 90), P(180, 366), 'left', {
     on: { lookat: 'Der Neckar, im Abendrot. Von hier unten hört man ihn sogar.' },
@@ -103,7 +110,7 @@ const HOTSPOTS: HotspotDef[] = [
       use: 'Stochern? Ich? Ich würd mich im Kreis drehen, bis mir schlecht ist. Und die Kähne sind angekettet.',
       pickup: 'Einen ganzen Kahn? Der passt nicht mal in meine Vorstellung, geschweige denn in die Tasche.',
     },
-    onItem: { use: { stuhlbein: 'Noch einen Kahn versenken? Einer am Abend reicht.' } },
+    onItem: { use: { stuhlbein: 'Die liegen an der Kette und sind leer. Wenn schon versenken, dann einen, der fährt.' } },
   }),
   at('pflanzen', 'Efeu', R(TT.wall.x0, 0, 46, TT.ground), P(300, 366), 'up', {
     on: {
@@ -113,7 +120,7 @@ const HOTSPOTS: HotspotDef[] = [
   }),
   at('geranien', 'Blumentöpfe', R(TT.door.x - 54, TT.ground - 56, 40, 60), P(TT.door.x - 34, 366), 'up', {
     on: {
-      lookat: 'Geranien, Lavendel, da hinten ein Oleander. Für einen Turm, in dem seit 1987 keiner rauskommt, erstaunlich gepflegt.',
+      lookat: 'Geranien, Lavendel, da hinten ein Oleander. Für einen Turm, in dem angeblich keiner wohnt, erstaunlich gepflegt.',
       pickup: 'Blumen klauen vorm Hölderlinturm? So tief sink ich nicht. Heute nicht.',
     },
   }),
@@ -153,7 +160,7 @@ const HOTSPOTS: HotspotDef[] = [
         taube: async (ctx) => {
           await ctx.playerSay('Die Tür hört nicht zu. Die Sprechanlage schon.');
         },
-        pogostick: 'Über den Turm hüpfen? Der ist dreimal so hoch wie das Absperrgitter im Wald.',
+        pogostick: 'Über den Turm hüpfen? So viel Feder hat kein Pogo-Stick.',
       },
     },
   }),
@@ -161,7 +168,7 @@ const HOTSPOTS: HotspotDef[] = [
     defaultVerb: 'push',
     on: {
       lookat: async (ctx) => {
-        await ctx.playerSay('Eine Gegensprechanlage. Aber guck dir die an: grobe Pixel, vier Farben, alles ruckelt ein bisschen.');
+        await ctx.playerSay('Eine Gegensprechanlage. Aber guck dir die an: grobe Pixel, sechzehn Farben, alles ruckelt ein bisschen.');
         await ctx.playerSay('Die ist nicht alt. Die ist von damals. Als hätte jemand ein Stück 1987 in die Wand geschraubt.');
       },
       push: ring,

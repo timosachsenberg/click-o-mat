@@ -161,8 +161,8 @@ function uvDeco(): string {
   s.push(glowShroom('geSh5', 218, GE.ground + 8, 44, NEON[3], 6));
   // A hand-painted signpost.
   s.push(inked(`M704 ${GE.ground + 6}v-58h5v58z`, '#6a4a2a', 1.6));
-  s.push(inked('M690 262h52l8 8l-8 8h-52z', '#160a2a', 1.8) + text(716, 274, 'MAINFLOOR', { size: 7.4, fill: NEON[2], weight: 900 }));
-  s.push(inked('M724 282h-52l-8 8l8 8h52z', '#160a2a', 1.8) + text(698, 294, 'CHAI · CHILL', { size: 7, fill: NEON[3], weight: 900 }));
+  s.push(inked('M724 262h-52l-8 8l8 8h52z', '#160a2a', 1.8) + text(698, 274, 'MAINFLOOR', { size: 7.4, fill: NEON[2], weight: 900 }));
+  s.push(inked('M690 282h52l8 8l-8 8h-52z', '#160a2a', 1.8) + text(716, 294, 'CHAI · CHILL', { size: 7, fill: NEON[3], weight: 900 }));
   return s.join('');
 }
 
