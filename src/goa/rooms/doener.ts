@@ -49,14 +49,14 @@ async function redeemCard(ctx: ScriptContext): Promise<void> {
 }
 
 const HOTSPOTS: HotspotDef[] = [
-  at('haeuser', 'Altstadthäuser', R(0, 0, 960, 120), P(480, 380), 'up', {
-    on: { lookat: 'Altstadthäuser. In den Küchen brennt Licht, und keiner kocht. Wozu auch, mit dem Döner unten.' },
+  at('haeuser', 'Häuser', R(0, 0, 960, 120), P(480, 380), 'up', {
+    on: { lookat: 'Häuser. Eine der besten Wohnlagen in Tübingen mit Döner, Picasso und Epple. Essen, Trinken, Tanzen - was will man mehr.' },
   }),
   at('bude', 'Dönerbude', R(DB.kiosk.x - 16, DB.kiosk.y - 34, DB.kiosk.w + 32, 64), COUNTER_SPOT, 'up', {
     on: {
       lookat: async (ctx) => {
         await ctx.playerSay('„Neckar-Kebap“. Seit Jahrzehnten an derselben Ecke. Älter als manche Fakultät.');
-        await ctx.playerSay('Und es riecht ... himmlisch.');
+        await ctx.playerSay('Und es riecht ... himmlisch. Schade dass ich ne Dönerdiät mache.');
       },
     },
   }),
@@ -67,7 +67,7 @@ const HOTSPOTS: HotspotDef[] = [
   at('spiess', 'Dönerspieß', R(DB.spit.x, DB.spit.y, DB.spit.w, DB.spit.h), COUNTER_SPOT, 'up', {
     on: {
       lookat: 'Der Spieß dreht sich langsam und glänzt. Ich schau lieber nicht zu lange hin, sonst werd ich schwach.',
-      pickup: 'Den ganzen Spieß? Der Mann hat ein langes Messer. Und Erfahrung.',
+      pickup: 'Den ganzen Spieß? Dönermann hat ein scharfes Messer und wird nie müde. Viel zu riskant.',
     },
   }),
   at('karte', 'Speisekarte', R(DB.kiosk.x + DB.kiosk.w - 58, DB.kiosk.y + 44, 52, 112), COUNTER_SPOT, 'up', {
@@ -87,18 +87,18 @@ const HOTSPOTS: HotspotDef[] = [
     facing: 'left',
     defaultVerb: 'talkto',
     on: {
-      lookat: 'Der Dönermann. Weiße Mütze, mächtiger Schnurrbart, das Messer immer in Bewegung.',
+      lookat: 'Der Dönermann. Weiße Mütze, mächtiger Schnurrbart, das Messer immer in Bewegung und wird nie müde.',
       talkto: async (ctx) => {
         await ctx.playerSay('Guten Abend!');
-        await ctx.say('doenermann', pick(['Einmal mit alles, mein Freund?', 'Mit scharf? Mit Zwiebel? Mit Liebe?', 'Heute Abend Goa im Wald? Dann brauchst du Kraft! Döner!']));
-        await ctx.playerSay(ctx.hasItem('euro') ? 'Ich hab nur zwei Euro. Und die brauch ich für was anderes.' : 'Ich bin leider pleite.');
+        await ctx.say('doenermann', pick(['Einmal mit alles, mein Freund?', 'Mit scharf? Mit Zwiebel? Mit Liebe?', 'Hab gehört heute Abend Goa im Wald? Dann brauchst du Kraft! Döner!']));
+        await ctx.playerSay(ctx.hasItem('euro') ? 'Ich hab nur zwei Euro.' : 'Ich bin leider pleite.');
         await ctx.say('doenermann', pick(['Dann riech wenigstens. Riechen ist umsonst.', 'Komm wieder, wenn du reich bist. Ich bin immer da.']));
       },
     },
     onItem: {
       give: {
         euro: async (ctx) => {
-          await ctx.say('doenermann', 'Zwei Euro? Dafür kriegst du eine Zwiebel. Eine halbe.');
+          await ctx.say('doenermann', 'Zwei Euro? Dafür kriegst du eine Zwiebel auf den Kopf.');
           await ctx.playerSay('Dann behalt ich sie lieber.');
         },
         stempelkarte: redeemCard,
@@ -109,7 +109,7 @@ const HOTSPOTS: HotspotDef[] = [
   at('tische', 'Stehtische', R(DB.tables[0] - 36, DB.ground - 40, DB.tables[1] - DB.tables[0] + 72, 90), P(760, 380), 'up', {
     on: {
       lookat: 'Stehtische mit Serviettenspendern. Und einem einsamen Zwiebelring.',
-      pickup: 'Der Zwiebelring hat schon bessere Zeiten gesehen. Und mehrere Tauben.',
+      pickup: 'Der Zwiebelring hat schon bessere Zeiten gesehen.',
     },
   }),
   {
@@ -128,15 +128,15 @@ const HOTSPOTS: HotspotDef[] = [
     },
   },
   at('katze', 'Katze', R(704, 136, 44, 22), P(760, 380), 'up', {
-    on: { lookat: 'Eine schwarze Katze auf dem Fensterbrett. Sie beobachtet die Taube. Die Taube beobachtet den Zwiebelring. Kreislauf des Lebens.' },
+    on: { lookat: 'Eine schwarze Katze auf dem Fensterbrett. Sie beobachtet die Taube. Die Taube beobachtet den Zwiebelring. Der Zwiebelring die Katze. Kreislauf des Lebens.' },
   }),
   at('balkon', 'Balkon', R(188, 160, 86, 40), P(240, 380), 'up', {
-    on: { lookat: 'Ein Balkon mit Wäscheleine. Vier Socken, keine zwei gleich. Hier wohnen Studenten.' },
+    on: { lookat: 'Ein Balkon mit Wäscheleine. Vier Socken, keine zwei gleich. Hier wohnen StudentInnen.' },
   }),
   at('toPicasso', 'Treppe zum Picasso', R(DB.cellar.x - 10, DB.cellar.y - 50, DB.cellar.w + 20, DB.cellar.h + 50), P(DB.cellar.x + 39, 348), 'up', {
     defaultVerb: 'use',
     on: {
-      lookat: 'Die Kellertreppe runter ins Picasso. Die Leuchtschrift flackert hier draußen genauso wie drinnen.',
+      lookat: 'Die Treppe ins Picasso. Picasso - ein lebendes Meisterwerk der modernen Eckkneipenkunst.',
       use: toPicasso,
       open: toPicasso,
     },
