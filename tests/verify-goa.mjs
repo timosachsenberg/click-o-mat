@@ -65,10 +65,31 @@ const settle = async (watch) => {
 const choices = () => ev(() => window.__engine.uiScene.choiceContainer.list
   .filter((t) => t.type === 'Text' && t.visible && t.text.startsWith('●'))
   .map((t) => { const b = t.getBounds(); return { text: t.text.slice(2), x: b.centerX, y: b.centerY }; }));
+/** Every choice on offer, across all pages (ends on the page it started on). */
+const allChoices = async () => {
+  const seen = [];
+  for (let p = 0; p < 6; p++) {
+    const page1 = await choices();
+    if (page1.length && seen.some((t) => t === page1[0].text)) break;
+    seen.push(...page1.map((c) => c.text));
+    await ev(() => window.__engine.uiScene.choiceChangePage?.(1));
+    await page.waitForTimeout(120);
+  }
+  return [...new Set(seen)];
+};
 const pick = async (prefix) => {
   for (let i = 0; i < 40 && !(await ev(() => window.__engine.choicesShowing)); i++) await page.waitForTimeout(150);
-  const list = await choices();
-  const c = list.find((l) => l.text.startsWith(prefix));
+  let list = await choices();
+  let c = list.find((l) => l.text.startsWith(prefix));
+  // Long lists paginate (how many fit depends on the browser's text metrics):
+  // leaf through the pages until the choice turns up.
+  for (let p = 0; !c && p < 4; p++) {
+    await ev(() => window.__engine.uiScene.choiceChangePage?.(1));
+    await page.waitForTimeout(120);
+    const more = await choices();
+    list = [...list, ...more.filter((m) => !list.some((l) => l.text === m.text))];
+    c = more.find((l) => l.text.startsWith(prefix));
+  }
   if (!c) throw new Error(`no choice "${prefix}" in: ${list.map((l) => l.text).join(' | ')}`);
   await click(c.x, c.y);
   await page.waitForTimeout(200);
@@ -198,7 +219,7 @@ await click(720, 280, { button: 'right' }); // talk to Ali
 await settle();
 await pick('Ich suche die Goa');
 check('learned about the Partykiller', (await flag('knowsPartykiller')) === true);
-let texts = (await choices()).map((c) => c.text);
+let texts = await allChoices();
 check('no password while he listens', !texts.some((t) => t.startsWith('Also. Die Party')), texts.join(' | '));
 
 // --- the free choice of drinks
