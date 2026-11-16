@@ -30,7 +30,7 @@ async function toForest(ctx: ScriptContext): Promise<void> {
 
 async function throughTheGate(ctx: ScriptContext): Promise<void> {
   if (!ctx.flag('goaEntered')) {
-    await ctx.say('tuersteher', 'Moment, Kollege. Erst die das Passwort. Partykiller wollen wir hier nicht.');
+    await ctx.say('tuersteher', 'Moment, Kollege. Erst das Passwort. Partykiller wollen wir hier nicht.');
     return;
   }
   await ctx.once('throughGate', async () => {
@@ -94,7 +94,7 @@ const HOTSPOTS: HotspotDef[] = [
           await ctx.say('tuersteher', 'Na los, rein mit dir. Der Bass wartet nicht.');
           return;
         }
-        await ctx.say('tuersteher', 'Abend. Parole?');
+        await ctx.say('tuersteher', 'Abend. Passwort?');
         await ctx.dialog('tuersteher');
       },
       push: 'Einen Goazwerg schubst man nicht. Der steht fester als das Tor.',
@@ -116,7 +116,7 @@ const HOTSPOTS: HotspotDef[] = [
         if (ctx.flag('flohFollows')) {
           await ctx.say('floh', 'Ich bin dir gefolgt.');
           await ctx.playerSay('Durch ein Wurmloch?');
-          await ctx.say('floh', 'Ne um die Absperrung herumgelaufen.');
+          await ctx.say('floh', 'Ne, um die Absperrung herumgelaufen.');
         } else {
           await ctx.say('floh', 'Wo Leergut ist, da bin ich. Und auf einer Goa ist viel Leergut.');
         }
@@ -165,7 +165,7 @@ export const goaEingangRoom: RoomDef = {
     await ctx.once('goaArrival', async () => {
       await ctx.playerSay('Das Tor. Von außen. So rum war das eigentlich gedacht.');
       await ctx.say('floh', ctx.flag('goaEntered') ? 'Na, frische Luft schnappen? Klirr.' : 'Na, rausgeflogen? Klirr. Passiert den Besten.');
-      if (!ctx.flag('goaEntered')) await ctx.say('tuersteher', 'Erst Parole, dann Tor. Nicht erst Loch, dann Tanzfläche.');
+      if (!ctx.flag('goaEntered')) await ctx.say('tuersteher', 'Erst Passwort, dann Tor. Nicht erst Loch, dann Tanzfläche.');
     });
   },
 

@@ -258,7 +258,7 @@ const HOTSPOTS: HotspotDef[] = [
     facing: 'up',
     on: {
       lookat: async (ctx) => {
-        await ctx.playerSay('Die Neckarfront. Bunte Giebel, Fensterläden, Postkartenmotiv à l`excellence.');
+        await ctx.playerSay('Die Neckarfront. Bunte Giebel, Fensterläden, Postkartenmotiv par excellence.');
         await ctx.playerSay('In jedem zweiten Haus eine WG, in jedem dritten eine Verbindung.');
       },
     },

@@ -423,7 +423,7 @@ const HOTSPOTS: HotspotDef[] = [
   }),
   at('dj', 'DJ-Pult', R(136, 200, 116, 100), P(194, 326), 'up', {
     on: {
-      lookat: 'Zwei CD Player, kein Mischpult, keine Kopfhörer. Hier legte der legendäre DJ Freddi.',
+      lookat: 'Zwei CD Player, ein Mischpult, und Kopfhörer wie neu. Hier legte der legendäre DJ Freddi auf. Mit Kopfhörer hat er nie aufgelegt.',
       use: async (ctx) => {
         if (!(await anzeige(ctx, 'Musik? Um diese Uhrzeit? Ruhestörung!'))) {
           await ctx.playerSay('Ohne DJ bleibt uns nur die Jukebox.');

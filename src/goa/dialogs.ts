@@ -107,11 +107,11 @@ export const DIALOGS: Record<string, DialogDef> = {
               await ctx.say('ali', 'Genau, mein Lieber. Und jetzt weißt du auch, wofür du die Energie brauchst.');
               ctx.setFlag('password', 'Chakabunga');
               ctx.sfx('win');
-              ctx.toast('Parole erhalten: Chakabunga');
+              ctx.toast('Passwort erhalten: Chakabunga');
             },
           },
           {
-            text: 'Wie war die Parole nochmal?',
+            text: 'Wie war das Passwort nochmal?',
             if: (s) => !!s.getFlag('password'),
             script: async (ctx) => {
               await ctx.say('ali', 'Chakabunga. Und jetzt ab in den Wald, mein Lieber.');
@@ -250,7 +250,7 @@ export const DIALOGS: Record<string, DialogDef> = {
           {
             text: 'Ali schickt mich.',
             script: async (ctx) => {
-              await ctx.say('tuersteher', 'Ali schickt jeden. Parole?');
+              await ctx.say('tuersteher', 'Ali schickt jeden. Passwort?');
             },
           },
           {
@@ -258,14 +258,14 @@ export const DIALOGS: Record<string, DialogDef> = {
             once: true,
             script: async (ctx) => {
               await ctx.say('tuersteher', 'Saunamütze. Reiner Filz. Schützt vor Hitze, Kälte, Regen und schlechtem Techno.');
-              await ctx.say('tuersteher', 'Jeder Goazwerg hat eine. Ohne Mütze kein Zwerg. Ohne Parole kein Einlass.');
+              await ctx.say('tuersteher', 'Jeder Goazwerg hat eine. Ohne Mütze kein Zwerg. Ohne Passwort kein Einlass.');
             },
           },
           {
             text: 'Ich steh auf der Gästeliste.',
             once: true,
             script: async (ctx) => {
-              await ctx.say('tuersteher', 'Hier gibt’s keine Liste. Hier gibt’s nur die Parole.');
+              await ctx.say('tuersteher', 'Hier gibt’s keine Liste. Hier gibt’s nur das Passwort.');
             },
           },
           {
@@ -305,7 +305,7 @@ export const DIALOGS: Record<string, DialogDef> = {
             text: 'Chakabunga?',
             if: (s) => !!s.getFlag('password'),
             script: async (ctx) => {
-              await ctx.say('ottoTuer', 'Nie gehört. Klingt nach einer Parole aus einer anderen Zeit. Hier gilt meine.');
+              await ctx.say('ottoTuer', 'Nie gehört. Klingt nach einem Passwort aus einer anderen Zeit. Hier gilt meine Parole.');
             },
           },
           {
@@ -410,7 +410,7 @@ export const DIALOGS: Record<string, DialogDef> = {
               await ctx.say('floh', 'Die Goa! Nach so einer Nacht liegt da Pfand für drei Monatsmieten.');
               await ctx.say('floh', 'Aber wo die steigt, sagt mir keiner. Die wollen ihre Flaschen angeblich selber wegbringen.');
               if (ctx.flag('password')) {
-                await ctx.playerSay('Ich weiß, wo sie ist. Aber ich darf’s nicht sagen. Parole und so.');
+                await ctx.playerSay('Ich weiß, wo sie ist. Aber ich darf’s nicht sagen. Passwort und so.');
                 await ctx.say('floh', 'Musst du auch nicht. Ich lauf dir einfach nach. Ganz unauffällig.');
                 await ctx.say('floh', 'Klirr.');
                 ctx.setFlag('flohFollows');

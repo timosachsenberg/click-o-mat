@@ -135,7 +135,7 @@ async function feedPigeons(ctx: ScriptContext): Promise<void> {
   await ctx.playerSay('Daher die bunten Federn.');
   await ctx.say(PUT_TAUBE, 'Put put! Put put!');
   await ctx.say('floh', 'Und jetzt ist sie so mit den Krümeln beschäftigt, die merkt nicht mal, wenn die Welt untergeht.');
-  await ctx.say('floh', 'Die Mütze behalt ich, wenn’s recht ist. Als Sitzkissen. Riecht nach Bier UND Brezel - lecker!');
+  await ctx.say('floh', 'Die Mütze behalt ich, wenn’s recht ist. Als Futtersack. Riecht nach Bier UND Brezel - lecker!');
   await ctx.playerSay('Behalt sie. Steht dir eh besser als den Burschis.');
 }
 
@@ -513,7 +513,7 @@ export const epplehausRoom: RoomDef = {
           pick([
             'Pfand gehört daneben!',
             'Klirr, klirr. Das ist Musik.',
-            'Acht Cent sind acht Cent.',            
+            'Acht Cent sind acht Cent.',
             'Ksch! Weg von meinen Flaschen!',
             'Nach dem Plenum gibt’s wieder massig Leergut. Ich kann warten.',
             ...(ctx.flag('flohSatt') ? ['Satt und zufrieden. Jetzt fehlt nur noch Leergut.'] : ['Mein Magen knurrt lauter als der Glascontainer.', 'Riecht ihr das? Der Neckar-Kebap.']),

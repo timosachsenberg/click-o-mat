@@ -38,7 +38,7 @@ async function tryBarrier(ctx: ScriptContext): Promise<void> {
   ctx.sfx('deny');
   await ctx.playerSay('„Baumfällarbeiten. Durchgang verboten.“ Ausgerechnet heute.');
   if (!ctx.flag('password')) {
-    await ctx.playerSay(ctx.flag('portalOpen') || ctx.hasItem('wurmloch') ? 'Wobei: Rüber käm ich schon. Aber ohne Parole lässt mich da drüben keiner tanzen.' : 'Wobei: Ohne Parole käm ich da eh nicht rein.');
+    await ctx.playerSay(ctx.flag('portalOpen') || ctx.hasItem('wurmloch') ? 'Wobei: Rüber käm ich schon. Aber ohne Passwort lässt mich da drüben keiner tanzen.' : 'Wobei: Ohne Passwort käm ich da eh nicht rein.');
     return;
   }
   await ctx.once('forestClosed', async () => {
@@ -174,8 +174,8 @@ async function enterPortal(ctx: ScriptContext): Promise<void> {
   // Without the password the Goazwerg would throw the player out — and the
   // portal takes the pockets (the two euros for Ali's drink). So: not yet.
   if (!ctx.flag('password')) {
-    await ctx.playerSay('Moment. Da drüben steht bestimmt ein Türsteher. Und ich kenn die Parole nicht.');
-    await ctx.playerSay(ctx.easyMode ? 'Ali im Picasso weiß sie. Erst die Parole, dann das Loch.' : 'Erst die Parole. Dann das Loch.');
+    await ctx.playerSay('Moment. Da drüben steht bestimmt ein Türsteher. Und ich kenn das Passwort nicht.');
+    await ctx.playerSay(ctx.easyMode ? 'Ali im Picasso weiß es. Erst das Passwort, dann das Loch.' : 'Erst das Passwort. Dann das Loch.');
     return;
   }
   ctx.setFlag('portalLanding');

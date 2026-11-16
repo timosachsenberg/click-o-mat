@@ -64,7 +64,7 @@ async function dance(ctx: ScriptContext): Promise<void> {
     ctx.showTitle('FORTSETZUNG FOLGT …');
     return;
   }
-  await ctx.playerSay(pick(['Wann fängt das Lied eigentlich an? Ich warte seit drei Stunden auf den Refrain.', 'Ich hoffe sehr, dass der Pilz nicht echt ist. Da hat gerader einer reingebissen.', 'Die Magic Woman wirkt immer noch! Mein Herz schlägt mit 145 BPM.']));
+  await ctx.playerSay(pick(['Wann fängt das Lied eigentlich an? Ich warte seit drei Stunden auf den Refrain.', 'Ich hoffe sehr, dass der Pilz nicht echt ist. Da hat gerade einer reingebissen.', 'Die Magic Woman wirkt immer noch! Mein Herz schlägt mit 145 BPM.']));
 }
 
 /** The far end of the wormhole pair: it came down on the dance floor. */
@@ -108,13 +108,13 @@ async function bouncerCheck(ctx: ScriptContext): Promise<void> {
   await ctx.walkTo('tuersteher', LANDING.x - 84, 442);
   ctx.face(ctx.activeCharId, 'left');
   if (ctx.flag('bouncerMetFloor')) {
-    await ctx.say('tuersteher', 'Du schon wieder. Aus dem Loch. Parole?');
+    await ctx.say('tuersteher', 'Du schon wieder. Aus dem Loch. Passwort?');
   } else {
     ctx.setFlag('bouncerMetFloor');
     await ctx.say('tuersteher', 'Halt! Stopp! Musik ... nein, Musik bleibt an.');
-    await ctx.playerSay('Und wer bist du? Ein ... Goazwerg?');
+    await ctx.playerSay('Und wer bist du? Ein ... Gartenzwerg?');
     await ctx.say('tuersteher', 'Goazwerg. Türsteher. Und das ist eine Saunamütze, bevor du fragst.');
-    await ctx.say('tuersteher', 'Du bist nicht durchs Tor gekommen. Du bist aus einem Loch im Boden gefallen. Respekt. Trotzdem: Parole?');
+    await ctx.say('tuersteher', 'Du bist nicht durchs Tor gekommen. Du bist aus einem Loch im Boden gefallen. Respekt. Trotzdem: Passwort?');
   }
   await ctx.dialog('tuersteher');
   if (ctx.flag('goaEntered')) {
@@ -123,7 +123,7 @@ async function bouncerCheck(ctx: ScriptContext): Promise<void> {
     ctx.place('tuersteher', -300, 420);
     return;
   }
-  await ctx.say('tuersteher', 'Ohne Parole wird hier nicht getanzt. Könntest ja nen Zivi sein. Ab vors Tor.');
+  await ctx.say('tuersteher', 'Ohne Passwort wird hier nicht getanzt. Könntest ja nen Zivi sein. Ab vors Tor.');
   ctx.place('tuersteher', -300, 420);
   await ctx.goToRoom('goaeingang', 'tor');
 }
