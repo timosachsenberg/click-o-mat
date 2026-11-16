@@ -99,7 +99,7 @@ async function feedFloh(ctx: ScriptContext): Promise<void> {
   await ctx.wait(600);
   await ctx.say('floh', 'Mmmpf. Mmmh. Mmmmmh!');
   await ctx.say('floh', 'Das war der beste Döner seit der Einführung des Dosenpfands. Danke.');
-  await ctx.say('floh', 'Jetzt fehlt nur noch was für meine Kollegen. Die gucken schon ganz neidisch.');
+  await ctx.say('floh', 'Jetzt fehlt nur noch was für meine Kollegen. Die gucken schon ganz neidisch. Das bricht mir das Herz.');
 }
 
 /** Feed the pigeons: Flaschenfloh crumbles the pretzel and calls them —
@@ -107,7 +107,7 @@ async function feedFloh(ctx: ScriptContext): Promise<void> {
 async function feedPigeons(ctx: ScriptContext): Promise<void> {
   if (!ctx.flag('flohSatt')) {
     await ctx.say('floh', 'Krümel für die Tauben? Schön und gut.');
-    await ctx.say('floh', 'Aber erst ich, dann die Tauben. Mit leerem Magen ruf ich kein Put put.');
+    await ctx.say('floh', 'Aber erst ich, dann die Tauben! Mit leerem Magen lässt es sich schlecht füttern.');
     return;
   }
   ctx.removeItem('muetzekruemel');
@@ -128,22 +128,22 @@ async function feedPigeons(ctx: ScriptContext): Promise<void> {
   await ctx.walkTo(PUT_TAUBE, PUT_SPOT.x, PUT_SPOT.y);
   ctx.place(PUT_TAUBE, PUT_SPOT.x, PUT_SPOT.y, 'right');
   ctx.setFlag('putHeard');
-  await ctx.say(PUT_TAUBE, 'Put put!');
+  await ctx.say(PUT_TAUBE, 'Pu- ... Pu- ..., Put put! ... PUT PUT!');
   await ctx.playerSay('Hat die Taube gerade „Put put“ gesagt?');
   await ctx.say('floh', 'Die da? Die plappert alles nach. Wie ein Papagei.');
-  await ctx.say('floh', 'Ich kenne ihre Mutter ... die hatte mal was mit ’nem Papagei. Aus der Zoohandlung in der Neckargasse. Großer Skandal auf dem Dach.');
+  await ctx.say('floh', 'Ich kenne ihre Mutter ... die hatte mal was mit ’nem Papagei. Großer Skandal damals in der Zoologie.');
   await ctx.playerSay('Daher die bunten Federn.');
   await ctx.say(PUT_TAUBE, 'Put put! Put put!');
   await ctx.say('floh', 'Und jetzt ist sie so mit den Krümeln beschäftigt, die merkt nicht mal, wenn die Welt untergeht.');
-  await ctx.say('floh', 'Die Mütze behalt ich, wenn’s recht ist. Als Futtersack. Riecht nach Bier UND Brezel, die Kollegen lieben das.');
-  await ctx.playerSay('Behalt sie. Steht dir besser als den Burschen.');
+  await ctx.say('floh', 'Die Mütze behalt ich, wenn’s recht ist. Als Sitzkissen. Riecht nach Bier UND Brezel - lecker!');
+  await ctx.playerSay('Behalt sie. Steht dir eh besser als den Burschis.');
 }
 
 /** Catch the parroting pigeon — only while it's busy with the crumbs. */
 async function catchPutTaube(ctx: ScriptContext): Promise<void> {
   if (!pecking(ctx.state)) {
     flee(ctx, PUT_TAUBE, ctx.player);
-    await ctx.playerSay('Zu schnell. Ohne Ablenkung krieg ich keine Taube zu fassen.');
+    await ctx.playerSay('Zu schnell. Ohne Ablenkung krieg ich die Taube nicht zu fassen.');
     return;
   }
   ctx.setFlag('taubeCaught');
@@ -156,7 +156,7 @@ async function catchPutTaube(ctx: ScriptContext): Promise<void> {
 
 /** Crumbs straight to the pigeons: not from my hand. */
 async function crumbsNotMe(ctx: ScriptContext): Promise<void> {
-  await ctx.playerSay('Wenn ich die Mütze hinhalte, flattert der ganze Schwarm auf mich drauf. Flaschenfloh hat da mehr Übung.');
+  await ctx.playerSay('Wenn ich die Mütze hinhalte, flattert der ganze Schwarm auf mich drauf. Hitchcock lässt grüßen. Flaschenfloh hat da mehr Übung.');
 }
 
 const pigeonHotspot = (id: string): HotspotDef => ({
@@ -171,11 +171,11 @@ const pigeonHotspot = (id: string): HotspotDef => ({
         return;
       }
       if (id === PUT_TAUBE && ctx.flag('turmOpen')) {
-        await ctx.playerSay('Die Put-Put-Taube. Wieder zu Hause, als wär nichts gewesen.');
+        await ctx.playerSay('Die Put-Put-Taube. Ab nach Hause, was man liebt lässt man frei. Kommt es zurück will es bei dir bleiben.');
         return;
       }
       if (id === PUT_TAUBE) {
-        await ctx.playerSay('Die hier ist anders. Grau wie die anderen, aber mit einem gelben Schopf und drei bunten Schwanzfedern. Rot, gelb, blau.');
+        await ctx.playerSay('Die hier ist anders. Grau wie die anderen, aber mit einem gelben Schopf und drei bunten Schwanzfedern.');
         await ctx.playerSay('Als hätte jemand eine Taube mit einem Papagei gekreuzt.');
         return;
       }
@@ -213,7 +213,7 @@ const pigeonHotspot = (id: string): HotspotDef => ({
     give: {
       muetzekruemel: crumbsNotMe,
       stuhlbein: 'Die Holzwürmer wären ein Festmahl für sie. Aber die Würmer brauch ich noch.',
-      magicwoman: 'Energydrink für Tauben? Die sind schon nervös genug.',
+      magicwoman: 'Energydrink für Tauben? Flügel hat sie schon und nervös sind die auch schon!',
     },
   },
 });
@@ -234,10 +234,10 @@ const flohHere = (s: { getFlag: (k: string) => unknown }) => !s.getFlag('wormhol
 
 async function handsOff(ctx: ScriptContext): Promise<void> {
   if (!flohHere(ctx.state)) {
-    await ctx.playerSay('Flaschenflohs Wagen. Er selbst ist schon auf der Goa. Der Wagen bleibt trotzdem stehen.');
+    await ctx.playerSay('Flaschenflohs Wagen. Ist bestimmt auf der Goa - work life balance.');
     return;
   }
-  await ctx.say('floh', 'Finger weg von meiner Altersvorsorge!');
+  await ctx.say('floh', 'Finger weg von meiner Altersvorsorge! Ich fummel doch auch nicht an deinem Lambo rum.');
 }
 
 // ---- hotspots --------------------------------------------------------------------
@@ -247,7 +247,7 @@ const HOTSPOTS: HotspotDef[] = [
     on: {
       lookat: async (ctx) => {
         await ctx.playerSay('Das Epplehaus. Selbstverwaltetes Jugendzentrum seit 1972.');
-        await ctx.playerSay('Hier hab ich mein erstes Konzert gesehen. Und mein Gehör zum ersten Mal verloren.');
+        await ctx.playerSay('Hier hab ich mein erstes Konzert gesehen. Und mein Gehör verloren.');
       },
     },
   }),
@@ -255,12 +255,12 @@ const HOTSPOTS: HotspotDef[] = [
     on: {
       lookat: async (ctx) => {
         await ctx.playerSay('Graffiti vom Gehweg bis in den ersten Stock. „EPPLE“, „GOA“, „BASS“, „1972“, „PLENUM!“.');
-        await ctx.playerSay(ctx.flag('ottoExplained') ? 'Und dazwischen überall „PUT PUT“. Ottos Merkzettel. Hat sich rumgesprochen.' : 'Und dazwischen überall „PUT PUT“. Wer schreibt das bloß? Und warum?');
+        await ctx.playerSay(ctx.flag('ottoExplained') ? 'Und dazwischen überall „PUT PUT“. Otto der alte Tagger.' : 'Und dazwischen überall „PUT PUT“. Wer schreibt das bloß? Und warum?');
         ctx.setFlag('putSeen');
         if (ctx.flag('knowsPartykiller')) await ctx.playerSay('Und „KEIN BASS IST ILLEGAL“. Das sollte man dem Partykiller mal zeigen.');
       },
       use: 'Ohne Sprühdose? Ich könnte höchstens was mit dem Finger in den Dreck malen.',
-      pickup: 'Das ist drangesprüht. Und Kulturgut.',
+      pickup: 'Das ist drangesprühtes Kulturgut.',
     },
   }),
   at('banner', 'Bettlaken', R(390, 148, 180, 40), P(480, 350), 'up', {
@@ -272,7 +272,7 @@ const HOTSPOTS: HotspotDef[] = [
   at('plakate', 'Konzertplakate', R(370, 200, 62, 50), P(410, 346), 'up', {
     on: {
       lookat: async (ctx) => {
-        await ctx.playerSay('Konzertplakate. „DIE PFANDPIRATEN – Releaseparty“. Flaschenflohs Lieblingsband, wetten?');
+        await ctx.playerSay('Konzertplakate. „DIE PFANDPIRATEN – Releaseparty“. Flaschenflohs Lieblingspunkband!');
         await ctx.playerSay('Und „PLENUM OF DOOM – Doom Metal, Einlass nach Konsens“.');
       },
       pickup: 'Die kleben hier seit Jahren übereinander. Das ist tragende Bausubstanz.',
@@ -282,7 +282,7 @@ const HOTSPOTS: HotspotDef[] = [
     on: {
       lookat: 'Ein Sofa vor der Tür. Weinrot, durchgesessen, eine Feder guckt raus. Hier haben schon Generationen den Bus verpasst.',
       use: 'Wenn ich mich da reinsetze, komm ich nie wieder hoch. Das Sofa hat schon ganze Semester verschluckt.',
-      pickup: 'Das Sofa gehört zum Haus wie das Plenum.',
+      pickup: 'Das Sofa gehört allen.',
     },
   }),
   at('plenum', 'Fenster', R(PLENUM.x - 4, PLENUM.y - 4, PLENUM.w + 8, PLENUM.h + 8), P(345, 346), 'up', {
@@ -295,7 +295,8 @@ const HOTSPOTS: HotspotDef[] = [
       open: async (ctx) => {
         ctx.sfx('deny');
         await ctx.playerSay('Zu. Am Türrahmen klebt ein Zettel:');
-        await ctx.playerSay('„Heute Plenum. Dauert, bis alle einverstanden sind. Also lang.“');
+        await ctx.playerSay('„Heute Plenum. Dauert, bis alle einverstanden sind.“');
+        await ctx.playerSay('Das kann ne Weile dauern. Steigt dann weisser Rauch auf.');
       },
       use: 'Klopfen bringt nichts. Beim Plenum hört keiner zu. Dem Plenum auch nicht.',
       close: 'Ist zu. Bis das Plenum fertig ist.',
@@ -305,7 +306,7 @@ const HOTSPOTS: HotspotDef[] = [
     defaultVerb: 'pickup',
     visible: (state) => !state.getFlag('ballonTaken'),
     on: {
-      lookat: 'Ein pinker Herzballon, an den Fahrradständer geknotet. Vom letzten Konzert übrig. Er zerrt an der Schnur.',
+      lookat: 'Ein pinker Herzballon, an den Fahrradständer geknotet. Vom letzten Pinkpunker-Konzert übrig.',
       pickup: async (ctx) => {
         ctx.setFlag('ballonTaken');
         ctx.addItem('ballon');
@@ -317,7 +318,7 @@ const HOTSPOTS: HotspotDef[] = [
   at('raeder', 'Fahrräder', R(EP.bikes.x, EP.bikes.y, EP.bikes.w, EP.bikes.h), P(310, 346), 'up', {
     on: {
       lookat: 'Zwei Fahrräder am Ständer. Beide mit drei Schlössern. Wir sind hier schließlich in Tübingen.',
-      pickup: 'Fahrraddiebstahl? Nicht mit mir. Und nicht mit drei Schlössern.',
+      pickup: 'Fahrraddiebstahl? Kein Kavaliersdelikt!',
       use: 'Sind abgeschlossen. Dreifach.',
     },
   }),
@@ -356,12 +357,12 @@ const HOTSPOTS: HotspotDef[] = [
     on: { lookat: '„Neckarbrücke“ nach rechts. Und: „Wald 4 km“. Der Bass ist also schon ausgeschildert.' },
   }),
   at('lichterkette', 'Lichterkette', R(EP.x1 + 4, 110, 70, 84), P(820, 348), 'up', {
-    on: { lookat: 'Eine Lichterkette, vom Haus zum Wegweiser gespannt. Jede zweite Birne brennt. Reicht.' },
+    on: { lookat: 'Eine Lichterkette, jede zweite Birne brennt.' },
   }),
   at('toDoener', 'Zur Dönerbude', R(0, 140, 70, 306), P(24, 400), 'left', {
     defaultVerb: 'use',
     on: {
-      lookat: 'Da lang geht’s zur Dönerbude. Und dahinter die Treppe runter ins Picasso. Es riecht bis hierher.',
+      lookat: 'Da lang geht’s zur Dönerbude. Und dahinter ins Picasso. Es riecht bis hierher.',
       use: toDoener,
       open: toDoener,
     },
@@ -369,7 +370,7 @@ const HOTSPOTS: HotspotDef[] = [
   at('toNeckar', 'Zur Neckarbrücke', R(890, 250, 70, 196), P(932, 400), 'right', {
     defaultVerb: 'use',
     on: {
-      lookat: 'Da vorne ist die Neckarbrücke. Dahinter irgendwo: der Wald.',
+      lookat: 'Da vorne ist die Neckarbrücke. Dahinter irgendwo: der Schönbuch.',
       use: toNeckar,
       open: toNeckar,
     },
@@ -384,8 +385,8 @@ const HOTSPOTS: HotspotDef[] = [
     defaultVerb: 'talkto',
     on: {
       lookat: async (ctx) => {
-        await ctx.playerSay('Der Flaschenfloh. Sammelt Pfandflaschen, seit es Pfand gibt.');
-        await ctx.playerSay('Bommelmütze, Parka, und ein Blick für alles, was klirrt.');
+        await ctx.playerSay('Der Flaschenfloh. Sammelt Pfandflaschen, seit es Pfand gibt. Mindestens.');
+        await ctx.playerSay('Bommelmütze, Parka, und ein Herz für Tauben.');
       },
       talkto: async (ctx) => {
         await ctx.dialog('floh');
@@ -397,7 +398,7 @@ const HOTSPOTS: HotspotDef[] = [
       use: { muetzekruemel: feedPigeons, doener: feedFloh },
       give: {
         dose: async (ctx) => {
-          await ctx.say('floh', 'Magic Woman? Die nimmt kein Automat der Welt. Zu lila.');
+          await ctx.say('floh', 'Magic Woman? Die nimmt kein Automat der Welt. Ist ja mittlerweile illegal.');
           if (ctx.easyMode) {
             await ctx.say('floh', 'Die nimmt nur einer zurück: Ali. Fünfundzwanzig Cent. Ehrensache.');
             await ctx.playerSay('Gut zu wissen.');
@@ -407,18 +408,18 @@ const HOTSPOTS: HotspotDef[] = [
           await ctx.say('floh', 'Voll? Ich handel nur mit leer. Erst austrinken, dann reden wir.');
         },
         euro: async (ctx) => {
-          await ctx.say('floh', 'Almosen? Ich bin Unternehmer! Behalt dein Geld und gib mir lieber deine Flaschen.');
+          await ctx.say('floh', 'Almosen? Ich bin Recyclingunternehmer im Bereich Wertstoffe!');
         },
         cent25: async (ctx) => {
-          await ctx.say('floh', 'Ein Fünfundzwanziger! Selten. Aber geschenkt nehm ich nichts. Ich hab Prinzipien. Und Pfand.');
+          await ctx.say('floh', 'Ein Fünfundzwanziger! Äusserst selten. Aber Geld will ich nicht geschenkt. Ich hab Prinzipien.');
         },
         stuhlbein: async (ctx) => {
-          await ctx.say('floh', 'Holz? Da ist kein Pfand drauf. Und es knuspert. Nimm das weg.');
+          await ctx.say('floh', 'Holz? Da ist kein Pfand drauf.');
         },
         muetzekruemel: feedPigeons,
         doener: feedFloh,
         taube: async (ctx) => {
-          await ctx.say('floh', 'Behalt sie. Die mag dich. Und sie hält mir keine Vorträge über Mehrweg.');
+          await ctx.say('floh', 'Behalt sie. Die mag dich und mir labert sie ne Kartoffel ans Ohr.');
         },
         muetze: async (ctx) => {
           await ctx.say('floh', 'Eine Burschenmütze! Die hatten einen ganzen Kasten an Bord und haben nie was abgegeben. Kulturlos.');
@@ -477,7 +478,7 @@ export const epplehausRoom: RoomDef = {
     else if (pecking(ctx.state)) ctx.place(PUT_TAUBE, PUT_SPOT.x, PUT_SPOT.y, 'right');
     await ctx.once('eppleIntro', async () => {
       await ctx.wait(400);
-      await ctx.playerSay('Das Epplehaus. Und mehr Tauben als Gäste.');
+      await ctx.playerSay('Ah, das Epplehaus. Innen Taube - draußen Tauben.');
     });
   },
 
@@ -510,12 +511,12 @@ export const epplehausRoom: RoomDef = {
         await ctx.say(
           'floh',
           pick([
-            'Klirr, klirr. Das ist Musik.',
-            'Acht Cent sind acht Cent.',
             'Pfand gehört daneben!',
-            'Ksch! Weg von meinen Flaschen, ihr Ratten der Lüfte!',
-            'Nach dem Plenum gibt’s Leergut. Ich kann warten.',
-            ...(ctx.flag('flohSatt') ? ['Satt und zufrieden. Jetzt fehlt nur noch Leergut.'] : ['Mein Magen knurrt lauter als der Glascontainer.', 'Riecht ihr das? Der Neckar-Kebap. Grausam.']),
+            'Klirr, klirr. Das ist Musik.',
+            'Acht Cent sind acht Cent.',            
+            'Ksch! Weg von meinen Flaschen!',
+            'Nach dem Plenum gibt’s wieder massig Leergut. Ich kann warten.',
+            ...(ctx.flag('flohSatt') ? ['Satt und zufrieden. Jetzt fehlt nur noch Leergut.'] : ['Mein Magen knurrt lauter als der Glascontainer.', 'Riecht ihr das? Der Neckar-Kebap.']),
           ])
         );
       },
