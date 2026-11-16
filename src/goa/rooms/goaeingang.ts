@@ -58,7 +58,7 @@ const HOTSPOTS: HotspotDef[] = [
   at('toWald', 'Zurück in den Wald', R(0, 300, 70, 146), P(36, 410), 'left', {
     defaultVerb: 'use',
     on: {
-      lookat: 'Ein Trampelpfad durch den Wald, zurück zur Absperrung. Von dieser Seite ist sie kein Hindernis.',
+      lookat: 'Ein Trampelpfad, steil den Hang runter bis zur Absperrung. Runter rutscht man. Rauf kommt keiner.',
       use: toForest,
       open: toForest,
     },

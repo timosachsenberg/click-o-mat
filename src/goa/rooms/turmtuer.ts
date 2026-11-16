@@ -120,7 +120,7 @@ const HOTSPOTS: HotspotDef[] = [
   }),
   at('geranien', 'Blumentöpfe', R(TT.door.x - 54, TT.ground - 56, 40, 60), P(TT.door.x - 34, 366), 'up', {
     on: {
-      lookat: 'Geranien, Lavendel, da hinten ein Oleander. Für einen Turm, aus dem seit 1987 keiner rauskommt, erstaunlich gepflegt.',
+      lookat: 'Geranien, Lavendel, da hinten ein Oleander. Für einen Turm, in dem angeblich keiner wohnt, erstaunlich gepflegt.',
       pickup: 'Blumen klauen vorm Hölderlinturm? So tief sink ich nicht. Heute nicht.',
     },
   }),
@@ -160,7 +160,7 @@ const HOTSPOTS: HotspotDef[] = [
         taube: async (ctx) => {
           await ctx.playerSay('Die Tür hört nicht zu. Die Sprechanlage schon.');
         },
-        pogostick: 'Über den Turm hüpfen? Der ist dreimal so hoch wie das Absperrgitter im Wald.',
+        pogostick: 'Über den Turm hüpfen? So viel Feder hat kein Pogo-Stick.',
       },
     },
   }),
@@ -168,7 +168,7 @@ const HOTSPOTS: HotspotDef[] = [
     defaultVerb: 'push',
     on: {
       lookat: async (ctx) => {
-        await ctx.playerSay('Eine Gegensprechanlage. Aber guck dir die an: grobe Pixel, vier Farben, alles ruckelt ein bisschen.');
+        await ctx.playerSay('Eine Gegensprechanlage. Aber guck dir die an: grobe Pixel, sechzehn Farben, alles ruckelt ein bisschen.');
         await ctx.playerSay('Die ist nicht alt. Die ist von damals. Als hätte jemand ein Stück 1987 in die Wand geschraubt.');
       },
       push: ring,

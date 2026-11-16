@@ -107,11 +107,11 @@ export const DIALOGS: Record<string, DialogDef> = {
               await ctx.say('ali', 'Genau, mein Lieber. Und jetzt weißt du auch, wofür du die Energie brauchst.');
               ctx.setFlag('password', 'Chakabunga');
               ctx.sfx('win');
-              ctx.toast('Passwort erhalten: Chakabunga');
+              ctx.toast('Parole erhalten: Chakabunga');
             },
           },
           {
-            text: 'Wie war das Passwort nochmal?',
+            text: 'Wie war die Parole nochmal?',
             if: (s) => !!s.getFlag('password'),
             script: async (ctx) => {
               await ctx.say('ali', 'Chakabunga. Und jetzt ab in den Wald, mein Lieber.');
@@ -235,7 +235,7 @@ export const DIALOGS: Record<string, DialogDef> = {
               await ctx.say('tuersteher', 'Chakabunga. Korrekt.');
               await ctx.say('tuersteher', 'Eine Frage noch: Hast du Energie? Die Nacht ist lang. Wer hier schlappmacht, liegt um drei im Moos.');
               await ctx.playerSay('Ich hatte eine Magic Woman. Ali meinte, die Energie brauch ich später noch.');
-              await ctx.say('tuersteher', 'Ali weiß Bescheid. Dann rein mit dir. Folge dem Bass.');
+              await ctx.say('tuersteher', 'Ali weiß Bescheid. Passt. Folge dem Bass.');
               ctx.setFlag('goaEntered');
               ctx.sfx('open');
             },
@@ -305,7 +305,7 @@ export const DIALOGS: Record<string, DialogDef> = {
             text: 'Chakabunga?',
             if: (s) => !!s.getFlag('password'),
             script: async (ctx) => {
-              await ctx.say('ottoTuer', 'Das ist die Parole für den Wald. Hier ist der Turm. Andere Party.');
+              await ctx.say('ottoTuer', 'Nie gehört. Klingt nach einer Parole aus einer anderen Zeit. Hier gilt meine.');
             },
           },
           {
@@ -384,6 +384,10 @@ export const DIALOGS: Record<string, DialogDef> = {
             text: 'Du und die Tauben, ihr seid Freunde?',
             script: async (ctx) => {
               await ctx.say('floh', 'Freunde? Kollegen. Ich füttere sie, sie lassen meine Flaschen in Ruhe. Meistens.');
+              if (ctx.flag('putTaube')) {
+                await ctx.say('floh', 'Heute sind sie satt. Dank dir und der Mütze.');
+                return;
+              }
               await ctx.say('floh', 'Aber heute hab ich nix für sie.');
               if (ctx.easyMode) {
                 await ctx.say('floh', 'Brezelkrümel wären schön. Ali hat immer welche auf dem Tresen.');
@@ -396,7 +400,7 @@ export const DIALOGS: Record<string, DialogDef> = {
             if: (s) => !s.getFlag('flohSatt'),
             script: async (ctx) => {
               await ctx.say('floh', 'Hungrig. Pfand macht nicht satt. Man kann es nur gegen Essen tauschen. Wenn genug zusammenkommt.');
-              if (ctx.easyMode) await ctx.say('floh', 'Ein Döner vom Neckar-Kebap, das wär’s. Aber der kostet mehr als hundert Flaschen.');
+              if (ctx.easyMode) await ctx.say('floh', 'Ein Döner vom Neckar-Kebap, das wär’s. Aber der kostet fast hundert Bierflaschen. Und heute ist Plenum, kein Konzert.');
             },
           },
           {
@@ -406,7 +410,7 @@ export const DIALOGS: Record<string, DialogDef> = {
               await ctx.say('floh', 'Die Goa! Nach so einer Nacht liegt da Pfand für drei Monatsmieten.');
               await ctx.say('floh', 'Aber wo die steigt, sagt mir keiner. Die wollen ihre Flaschen angeblich selber wegbringen.');
               if (ctx.flag('password')) {
-                await ctx.playerSay('Ich weiß, wo sie ist. Aber ich darf’s nicht sagen. Passwort und so.');
+                await ctx.playerSay('Ich weiß, wo sie ist. Aber ich darf’s nicht sagen. Parole und so.');
                 await ctx.say('floh', 'Musst du auch nicht. Ich lauf dir einfach nach. Ganz unauffällig.');
                 await ctx.say('floh', 'Klirr.');
                 ctx.setFlag('flohFollows');
@@ -430,7 +434,7 @@ export const DIALOGS: Record<string, DialogDef> = {
             if: (s) => !!s.getFlag('once:neckarIntro') && !s.getFlag('puntSunk'),
             once: true,
             script: async (ctx) => {
-              await ctx.say('floh', 'Die? Trinken aus Krügen. Kein Pfand. Kulturlos.');
+              await ctx.say('floh', 'Die? Ein ganzer Kasten an Bord, und abgeben tun sie nichts. Kulturlos.');
               if (ctx.easyMode) {
                 await ctx.say('floh', 'Und der Kahn ist so morsch, den halten nur noch die Holzwürmer zusammen. Händchen haltend.');
                 await ctx.playerSay('Holzwürmer, sagst du.');
@@ -480,7 +484,7 @@ export const DIALOGS: Record<string, DialogDef> = {
             once: true,
             script: async (ctx) => {
               await ctx.say('otto', 'Mein Merkzettel! Im Parser-Dialekt. Damals hat man Adventures noch getippt: PUT irgendwas, PUT hierhin.');
-              await ctx.say('otto', 'Ich wusste nur nie, WAS ich da hinlegen soll. Vergesslich, wir Genies.');
+              await ctx.say('otto', 'Ich wusste nur jahrelang nicht, WAS da hin muss. Inzwischen weiß ich’s: ein Loch. Hab bloß keins zur Hand.');
             },
           },
           {
@@ -510,8 +514,8 @@ export const DIALOGS: Record<string, DialogDef> = {
             text: 'Kennst du die Goa im Wald?',
             once: true,
             script: async (ctx) => {
-              await ctx.say('otto', 'Natürlich. Was ist Goa anderes als ein sehr ordentlich getaktetes Chaos?');
-              await ctx.say('otto', 'Hundertvierzig Schläge pro Minute, und keine Tanzbewegung kommt zweimal gleich. Ein Attraktor mit Bass.');
+              await ctx.say('otto', 'Goa? Kenn ich nur als Wummern in der Sprechanlage. Aber was ich da höre, ist ein sehr ordentlich getaktetes Chaos.');
+              await ctx.say('otto', 'Ich hab mitgezählt: hundertvierzig Schläge pro Minute, und kein Takt klingt zweimal gleich. Ein Attraktor mit Bass.');
             },
           },
           {

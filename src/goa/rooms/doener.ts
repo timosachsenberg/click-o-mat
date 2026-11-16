@@ -73,7 +73,7 @@ const HOTSPOTS: HotspotDef[] = [
   at('karte', 'Speisekarte', R(DB.kiosk.x + DB.kiosk.w - 58, DB.kiosk.y + 44, 52, 112), COUNTER_SPOT, 'up', {
     on: {
       lookat: async (ctx) => {
-        await ctx.playerSay('Döner 7,50. Dürüm 8,00. Ayran 2,50.');
+        await ctx.playerSay('Döner 7,50. Dürüm 8,00. Pommes 4,00. Ayran 2,50.');
         await ctx.playerSay(ctx.hasItem('euro') ? 'Meine zwei Euro reichen nicht mal für den Ayran.' : 'Und ich hab genau gar nichts.');
         await ctx.playerSay('Ganz unten, klein: „Stempelkarte voll? Döner gratis!“');
       },

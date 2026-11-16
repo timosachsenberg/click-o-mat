@@ -38,7 +38,7 @@ async function tryBarrier(ctx: ScriptContext): Promise<void> {
   ctx.sfx('deny');
   await ctx.playerSay('„Baumfällarbeiten. Durchgang verboten.“ Ausgerechnet heute.');
   if (!ctx.flag('password')) {
-    await ctx.playerSay(ctx.flag('portalOpen') || ctx.hasItem('wurmloch') ? 'Wobei: Rüber käm ich schon. Aber ohne Parole lässt mich da drüben keiner tanzen.' : 'Wobei: Ohne Passwort käm ich da eh nicht rein.');
+    await ctx.playerSay(ctx.flag('portalOpen') || ctx.hasItem('wurmloch') ? 'Wobei: Rüber käm ich schon. Aber ohne Parole lässt mich da drüben keiner tanzen.' : 'Wobei: Ohne Parole käm ich da eh nicht rein.');
     return;
   }
   await ctx.once('forestClosed', async () => {
@@ -202,6 +202,10 @@ const HOTSPOTS: HotspotDef[] = [
         await ctx.playerSay('So nah. Und doch hinter einem Absperrgitter.');
       },
       use: async (ctx) => {
+        if (ctx.flag('wormholeUsed')) {
+          await ctx.playerSay('Den Hang wieder rauf? Den bin ich nur runtergerutscht. Zur Goa geht’s durchs Wurmloch.');
+          return;
+        }
         await ctx.playerSay('Querfeldein? Im Dunkeln, zwischen frisch gefällten Bäumen?');
         await ctx.playerSay('Da komm ich nicht bis zur Goa. Da komm ich bis zur Notaufnahme.');
       },
@@ -212,7 +216,7 @@ const HOTSPOTS: HotspotDef[] = [
     on: {
       lookat: async (ctx) => {
         await ctx.playerSay('Bunte Lichter zwischen den Stämmen. Laser. Und sie pulsieren im Takt.');
-        await ctx.playerSay('Die Goa! Keine zwei Kilometer weit weg.');
+        await ctx.playerSay('Die Goa! Keine zweihundert Meter weit weg.');
       },
     },
     onItem: { use: { wurmloch: throwWormhole } },

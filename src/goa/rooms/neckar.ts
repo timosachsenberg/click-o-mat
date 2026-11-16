@@ -237,9 +237,9 @@ const HOTSPOTS: HotspotDef[] = [
     facing: 'up',
     on: {
       lookat: async (ctx) => {
-        await ctx.playerSay('Der Neckar im Abendrot. Rosa, orange, gemütlich, voller Stocherkähne.');
+        await ctx.playerSay(ctx.flag('puntSunk') ? 'Der Neckar im Abendrot. Rosa, orange, gemütlich.' : 'Der Neckar im Abendrot. Rosa, orange, gemütlich, voller Stocherkähne.');
         if (!ctx.flag('puntSunk')) await ctx.playerSay('Alle naslang kommt einer vorbei und wendet vor der Brücke. Mit Burschenschaftlern drin.');
-        else await ctx.playerSay('Jetzt mit einem Kahn weniger. Und einem Schwarm satter Holzwürmer.');
+        else await ctx.playerSay('Seit dem Untergang traut sich keiner mehr vor die Brücke. Und die Holzwürmer sind satt.');
       },
       use: 'Baden? Ohne Badehose? Doch nicht vor der ganzen Altstadt.',
       pickup: 'Den ganzen Neckar? So groß sind meine Taschen nicht.',
@@ -306,7 +306,7 @@ const HOTSPOTS: HotspotDef[] = [
         await ctx.playerSay('Unten an die Turmwand hat jemand „PUT PUT“ gesprüht. Sogar hier.');
         if (!ctx.flag('turmOpen')) await ctx.playerSay('Unten ist eine Tür, mit Klingel. Im Turm brennt Licht.');
         ctx.setFlag('putSeen');
-        if (ctx.flag('ottoFree')) await ctx.playerSay('Und oben drin dreht sich eine Spirale durch drei Zeitebenen. Kein Witz.');
+        if (ctx.flag('ottoMet') || ctx.flag('ottoFree')) await ctx.playerSay('Und oben drin dreht sich eine Spirale durch drei Zeitebenen. Kein Witz.');
       },
       open: toTower,
       use: toTower,
@@ -573,7 +573,7 @@ export const neckarRoom: RoomDef = {
       ctx.face(ctx.activeCharId, 'down');
       await ctx.playerSay('Der Neckar im Abendrot. Kitschig. Schön.');
       await ctx.playerSay('Heute Nacht steigt im Wald eine Goa. Und ohne Passwort kommt da keiner rein.');
-      if (ctx.easyMode) await ctx.playerSay('Wenn das einer weiß, dann Ali. Im Picasso, gleich hinterm Epplehaus.');
+      if (ctx.easyMode) await ctx.playerSay('Wenn das einer weiß, dann Ali. Im Picasso, hinterm Epplehaus, an der Dönerbude vorbei.');
     });
   },
 
