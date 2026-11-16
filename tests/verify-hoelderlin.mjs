@@ -65,10 +65,31 @@ const settle = async () => {
 const choices = () => ev(() => window.__engine.uiScene.choiceContainer.list
   .filter((t) => t.type === 'Text' && t.visible && t.text.startsWith('●'))
   .map((t) => { const b = t.getBounds(); return { text: t.text.slice(2), x: b.centerX, y: b.centerY }; }));
+/** Every choice on offer, across all pages (ends on the page it started on). */
+const allChoices = async () => {
+  const seen = [];
+  for (let p = 0; p < 6; p++) {
+    const page1 = await choices();
+    if (page1.length && seen.some((t) => t === page1[0].text)) break;
+    seen.push(...page1.map((c) => c.text));
+    await ev(() => window.__engine.uiScene.choiceChangePage?.(1));
+    await page.waitForTimeout(120);
+  }
+  return [...new Set(seen)];
+};
 const pick = async (prefix) => {
   for (let i = 0; i < 40 && !(await ev(() => window.__engine.choicesShowing)); i++) await page.waitForTimeout(150);
-  const list = await choices();
-  const c = list.find((l) => l.text.startsWith(prefix));
+  let list = await choices();
+  let c = list.find((l) => l.text.startsWith(prefix));
+  // Long lists paginate (how many fit depends on the browser's text metrics):
+  // leaf through the pages until the choice turns up.
+  for (let p = 0; !c && p < 4; p++) {
+    await ev(() => window.__engine.uiScene.choiceChangePage?.(1));
+    await page.waitForTimeout(120);
+    const more = await choices();
+    list = [...list, ...more.filter((m) => !list.some((l) => l.text === m.text))];
+    c = more.find((l) => l.text.startsWith(prefix));
+  }
   if (!c) throw new Error(`no choice "${prefix}" in: ${list.map((l) => l.text).join(' | ')}`);
   await click(c.x, c.y);
   await page.waitForTimeout(200);
@@ -202,7 +223,7 @@ check('a close-up of the door: door, intercom and graffiti', (await hotspotAt(48
 await click(480, 250); // default verb: open — locked, so the intercom
 await waitFor(() => ev(() => window.__engine.choicesShowing), 25000, 'the intercom');
 check('the door is locked: Otto asks for the password', (await room()) === 'turmtuer' && (await flag('turmAsked')) === true);
-said = (await choices()).map((c) => c.text);
+said = await allChoices();
 check('no Chakabunga at the intercom before Ali said it', !said.some((t) => t.startsWith('Chakabunga')), said.join(' | '));
 await pick('Put put?');
 check('saying "Put put" yourself: the voice is wrong', (await flag('putTried')) === true && !(await flag('turmOpen')));
@@ -372,7 +393,7 @@ check('and still owes the landing (a reload replays it, bouncer included)', JSON
 const landed = await ev(() => { const a = window.__engine.roomScene.actors.get('player'); return { x: a.x, y: a.y }; });
 check('the player landed on the floor, by the portal', Math.abs(landed.x - 384) < 30 && Math.abs(landed.y - 404) < 20, JSON.stringify(landed));
 check('everything in the pockets is lost on the way', pocketsBefore > 0 && (await inv()).length === 0, JSON.stringify(await inv()));
-said = (await choices()).map((c) => c.text);
+said = await allChoices();
 check('the Goazwerg wants the password on the dance floor', said.some((t) => t.startsWith('Chakabunga')), said.join(' | '));
 const zwerg = await ev(() => { const a = window.__engine.roomScene.actors.get('tuersteher'); return { y: a.y, depth: a.sprite.depth }; });
 check('the Goazwerg stands in front of the dancers while he asks', zwerg.y >= 440, JSON.stringify(zwerg));
