@@ -301,8 +301,8 @@ const HOTSPOTS: HotspotDef[] = [
     on: {
       lookat: async (ctx) => {
         await ctx.playerSay('Der Hölderlinturm. Hier hat Hölderlin sechsunddreißig Jahre gewohnt.');
-        await ctx.playerSay('Gedichtet, aufs Wasser geschaut, Besuch verwirrt.');
-        await ctx.playerSay('Unten an die Turmwand hat jemand „PUT PUT“ gesprüht. Sogar hier.');
+        await ctx.playerSay('Gedichtet, aufs Wasser geschaut, sich der mentalen Gesundheit gewidmet.');
+        await ctx.playerSay('Unten an die Turmwand hat jemand „PUT PUT“ gesprüht. Sogar hier - verrückt!');
         if (!ctx.flag('turmOpen')) await ctx.playerSay('Unten ist eine Tür, mit Klingel. Im Turm brennt Licht.');
         ctx.setFlag('putSeen');
         if (ctx.flag('ottoMet') || ctx.flag('ottoFree')) await ctx.playerSay('Und oben drin dreht sich eine Spirale durch drei Zeitebenen. Kein Witz.');
@@ -316,7 +316,7 @@ const HOTSPOTS: HotspotDef[] = [
   at('turmtuer', 'Turmtür', R(448, 268, 22, 32), TOWER_SPOT, 'left', {
     defaultVerb: 'use',
     on: {
-      lookat: 'Die Tür zum Hölderlinturm, mit Laterne und Klingel. Das schau ich mir aus der Nähe an.',
+      lookat: 'Die Tür zum Hölderlinturm. Das schau ich mir aus der Nähe an.',
       open: toTower,
       use: toTower,
       talkto: toTower,
