@@ -47,7 +47,7 @@ async function dance(ctx: ScriptContext): Promise<void> {
   const sprite = ctx.player.sprite;
   const y = sprite.y;
   ctx.face(ctx.activeCharId, 'down');
-  await ctx.playerSay(pick(['Und jetzt: tanzen.', 'Der Bass geht direkt in die Knie. Gut so.', 'Augen zu. Und los.']));
+  await ctx.playerSay(pick(['Und jetzt: tanzen.', 'Der Bass geht direkt in die Knie.', 'Augen zu. Und los.']));
   for (let i = 0; i < 8; i++) {
     await ctx.tween(sprite, { y: y - 14, ease: 'Quad.easeOut' }, BEAT / 2);
     await ctx.tween(sprite, { y, ease: 'Quad.easeIn' }, BEAT / 2);
@@ -58,13 +58,13 @@ async function dance(ctx: ScriptContext): Promise<void> {
   if (!ctx.flag('goaDanced')) {
     ctx.setFlag('goaDanced');
     ctx.setFlag('chapterDone');
-    await ctx.playerSay('Zwei Euro, eine Magic Woman, drei Ouzo für einen Polizisten, ein versenkter Kahn und ein Wurmloch.');
-    await ctx.playerSay('Jeder Schritt hat sich gelohnt.');
+    await ctx.playerSay('War ja ein Kinderspiel.');
+    await ctx.playerSay('Bei der Halloweenparty reinzukommen war schwieriger.');
     ctx.sfx('win');
     ctx.showTitle('FORTSETZUNG FOLGT …');
     return;
   }
-  await ctx.playerSay(pick(['Noch eine Runde!', 'Ich könnte ewig so weitermachen.', 'Die Magic Woman wirkt immer noch.']));
+  await ctx.playerSay(pick(['Wann fängt das Lied eigentlich an? Ich warte seit drei Stunden auf den Refrain.', 'Ich hoffe sehr, dass der Pilz nicht echt ist. Da hat gerade einer reingebissen.', 'Die Magic Woman wirkt immer noch! Mein Herz schlägt mit 145 BPM.']));
 }
 
 /** The far end of the wormhole pair: it came down on the dance floor. */
@@ -108,13 +108,13 @@ async function bouncerCheck(ctx: ScriptContext): Promise<void> {
   await ctx.walkTo('tuersteher', LANDING.x - 84, 442);
   ctx.face(ctx.activeCharId, 'left');
   if (ctx.flag('bouncerMetFloor')) {
-    await ctx.say('tuersteher', 'Du schon wieder. Aus dem Loch. Parole?');
+    await ctx.say('tuersteher', 'Du schon wieder. Aus dem Loch. Passwort?');
   } else {
     ctx.setFlag('bouncerMetFloor');
     await ctx.say('tuersteher', 'Halt! Stopp! Musik ... nein, Musik bleibt an.');
     await ctx.playerSay('Und wer bist du? Ein ... Gartenzwerg?');
     await ctx.say('tuersteher', 'Goazwerg. Türsteher. Und das ist eine Saunamütze, bevor du fragst.');
-    await ctx.say('tuersteher', 'Du bist nicht durchs Tor gekommen. Du bist aus einem Loch im Boden gefallen. Respekt. Trotzdem: Parole?');
+    await ctx.say('tuersteher', 'Du bist nicht durchs Tor gekommen. Du bist aus einem Loch im Boden gefallen. Respekt. Trotzdem: Passwort?');
   }
   await ctx.dialog('tuersteher');
   if (ctx.flag('goaEntered')) {
@@ -123,7 +123,7 @@ async function bouncerCheck(ctx: ScriptContext): Promise<void> {
     ctx.place('tuersteher', -300, 420);
     return;
   }
-  await ctx.say('tuersteher', 'Ohne Parole wird hier nicht getanzt. Hausordnung. Raus mit dir, vors Tor.');
+  await ctx.say('tuersteher', 'Ohne Passwort wird hier nicht getanzt. Könntest ja nen Zivi sein. Ab vors Tor.');
   ctx.place('tuersteher', -300, 420);
   await ctx.goToRoom('goaeingang', 'tor');
 }
@@ -142,22 +142,22 @@ const HOTSPOTS: HotspotDef[] = [
         await ctx.playerSay('Tausende leuchtende Fäden, von Baum zu Baum gespannt. Sie biegen sich zu Kurven, obwohl jeder einzelne gerade ist.');
         await ctx.playerSay('Otto würde sagen: ein Attraktor. Ich sage: wunderschön.');
       },
-      pickup: 'Wenn ich an einem ziehe, hab ich den ganzen Wald in der Hand.',
+      pickup: 'Wenn ich an einem ziehe, locke ich vielleicht ne Spinne an.',
     },
   }),
   at('pilze', 'Leuchtpilze', R(150, 190, 160, 140), P(250, 350), 'up', {
     on: {
       lookat: 'Riesige Pilze, die von innen leuchten. Pink, Türkis, Grün. Echt? Deko? Hier fragt das keiner.',
-      pickup: 'Der kleinste ist größer als ich. Und der Goazwerg zählt bestimmt nach.',
+      pickup: 'Ich kenn mich nur mit Röhrlingen aus.',
       use: 'Anknabbern? Bei Pilzen, die von innen leuchten? Ich lass sie lieber den Zwergen.',
-      talkto: 'Hallo, Pilz. ... Er hat nicht geantwortet. Noch nicht.',
+      talkto: 'Hallo, Pilz. ... Er hat nicht geantwortet. Liegt wohl an mir.',
     },
   }),
   at('pilze2', 'Leuchtpilze', R(640, 170, 190, 160), P(720, 350), 'up', {
     on: {
       lookat: 'Noch mehr Zauberpilze. Der große grüne pulsiert im Takt. Oder ich.',
-      pickup: 'Der kleinste ist größer als ich. Und der Goazwerg zählt bestimmt nach.',
-      use: 'Anknabbern? Bei Pilzen, die von innen leuchten? Ich lass sie lieber den Zwergen.',
+      pickup: 'Das ist aber kein Maronenröhrling.',
+      use: 'Anknabbern? Bei Pilzen, die von innen leuchten? Ich sammel nur was ich bestimmen kann.',
     },
   }),
   at('chai', 'Chai-Stand', R(48, 230, 116, 96), P(150, 350), 'left', {
@@ -178,7 +178,7 @@ const HOTSPOTS: HotspotDef[] = [
       use: async (ctx) => {
         await ctx.playerSay('Ich stell mich direkt davor.');
         ctx.shake(500, 0.012);
-        await ctx.playerSay('WUMM. Meine Hose flattert. Meine Gedanken auch.');
+        await ctx.playerSay('Da flattert die Hose.');
       },
     },
   }),
@@ -188,8 +188,8 @@ const HOTSPOTS: HotspotDef[] = [
   at('mandala', 'Mandala', R(396, 80, 168, 120), P(480, 344), 'up', {
     on: {
       lookat: async (ctx) => {
-        await ctx.playerSay('Ein riesiges Mandala über der Bühne. In der Mitte ein Auge. Es schaut freundlich.');
-        await ctx.playerSay('Je länger ich hinschaue, desto mehr dreht es sich. Tut es aber nicht. Glaub ich.');
+        await ctx.playerSay('Ein riesiges Mandala über der Bühne. In der Mitte ein Auge.');
+        await ctx.playerSay('Je länger ich hinschaue, desto mehr fühle ich mich beobachtet. Nebeneffekt der Magic Woman. Glaub ich.');
       },
     },
   }),
@@ -201,11 +201,11 @@ const HOTSPOTS: HotspotDef[] = [
     facing: 'up',
     defaultVerb: 'talkto',
     on: {
-      lookat: 'Der DJ. Kopfhörer, eine Hand in der Luft, die andere am Regler. Er sieht aus, als wüsste er ein Geheimnis.',
+      lookat: 'Der DJ. Kopfhörer, eine Hand in der Luft - quasi Antenne - die andere am Regler.',
       talkto: async (ctx) => {
         await ctx.playerSay('HALLO! SUPER SET!');
-        await ctx.say('dj', pick(['WAS?', 'DANKE! GLAUB ICH!', 'WÜNSCHE NEHM ICH NICHT AN!']));
-        await ctx.playerSay('ICH WOLLTE GAR NICHTS WÜNSCHEN!');
+        await ctx.say('dj', pick(['WAS?', 'HÄ?!', 'WÜNSCHE NEHM ICH NICHT AN!']));
+        await ctx.playerSay('ICH WOLLTE DOCH GAR NICHTS WÜNSCHEN!');
         await ctx.say('dj', 'NOCH EINEN AUF DIE GEMÜTLICHKEIT? NUR ÜBER MEINE LEICHE!');
       },
     },
@@ -238,7 +238,7 @@ const HOTSPOTS: HotspotDef[] = [
   at('portal', 'Wurmloch', R(PORTAL.x - PORTAL.rx, PORTAL.y - PORTAL.ry - 4, PORTAL.rx * 2, PORTAL.ry * 2 + 8), P(PORTAL.x + 50, PORTAL.y + 6), 'left', {
     defaultVerb: 'use',
     on: {
-      lookat: 'Das andere Ende von meinem Wurmloch-Paar. Liegt flach auf der Tanzfläche. Die anderen tanzen einfach drum herum.',
+      lookat: 'Das andere Ende von meinem Wurmloch-Paar. Liegt flach auf der Tanzfläche. Die anderen tanzen einfach drum herum. Hoffe es fällt keiner rein.',
       open: backThroughPortal,
       use: backThroughPortal,
       pickup: 'Das klebt am Boden wie Kaugummi. Kosmischer Kaugummi.',

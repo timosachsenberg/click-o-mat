@@ -87,9 +87,8 @@ const SHOUTS = [
   'Stocher fester, Fuchs!',
   'Silentium! Der Kahn hat Vorfahrt!',
   'Ad fundum, Bundesbrüder!',
-  'Ahoi, ihr Landratten da oben!',
   'An der Brücke wird gewendet! Das ist Tradition!',
-  'He, du da oben! Was ist das auf deinem Kopf? DAS hier ist eine Mütze!',
+  'He, du Hippi da oben! Was ist das auf deinem Kopf? DAS hier ist eine Mütze!',
   'Schau mal, der Raver! Ohne Couleur, ohne Kahn, ohne Bier!',
 ];
 const pick = <T,>(list: T[]) => list[Math.floor(Math.random() * list.length)];
@@ -174,7 +173,7 @@ async function throwLeg(ctx: ScriptContext): Promise<void> {
   ctx.sfx('step');
 
   ctx.face('kahn', 'down');
-  await ctx.say('kahn', 'Hoppla! Wer wirft denn hier mit Möbeln?');
+  await ctx.say('kahn', 'Hoppla! Was war das?');
   await ctx.say('kahn', 'Ein Stuhlbein. Ist das ein Fehdehandschuh?');
   void ctx.animate('kahn', 'panic');
   ctx.sfx('zap');
@@ -204,7 +203,7 @@ async function throwLeg(ctx: ScriptContext): Promise<void> {
 
   await ctx.playerSay('Ups.');
   await ctx.playerSay('Keine Panik: Der Neckar ist hier nur hüfttief. Die waten schon ans andere Ufer.');
-  await ctx.playerSay('Und eine Mütze treibt ab. Flussaufwärts. Bis zum Steg am Hölderlinturm.');
+  await ctx.playerSay('Eine Mütze treibt ab. Flussaufwärts? Bis zum Steg am Hölderlinturm.');
   await ctx.playerSay('Der Neckar macht, was er will.');
 }
 
@@ -239,7 +238,7 @@ const HOTSPOTS: HotspotDef[] = [
       lookat: async (ctx) => {
         await ctx.playerSay(ctx.flag('puntSunk') ? 'Der Neckar im Abendrot. Rosa, orange, gemütlich.' : 'Der Neckar im Abendrot. Rosa, orange, gemütlich, voller Stocherkähne.');
         if (!ctx.flag('puntSunk')) await ctx.playerSay('Alle naslang kommt einer vorbei und wendet vor der Brücke. Mit Burschenschaftlern drin.');
-        else await ctx.playerSay('Seit dem Untergang traut sich keiner mehr vor die Brücke. Und die Holzwürmer sind satt.');
+      else await ctx.playerSay('Seit dem Untergang traut sich keiner mehr hier vorbei. Quasi Bermudadreieck.');
       },
       use: 'Baden? Ohne Badehose? Doch nicht vor der ganzen Altstadt.',
       pickup: 'Den ganzen Neckar? So groß sind meine Taschen nicht.',
@@ -259,17 +258,17 @@ const HOTSPOTS: HotspotDef[] = [
     facing: 'up',
     on: {
       lookat: async (ctx) => {
-        await ctx.playerSay('Die Neckarfront. Bunte Giebel, Fensterläden, und in den ersten Fenstern geht das Licht an.');
+        await ctx.playerSay('Die Neckarfront. Bunte Giebel, Fensterläden, Postkartenmotiv par excellence.');
         await ctx.playerSay('In jedem zweiten Haus eine WG, in jedem dritten eine Verbindung.');
       },
     },
   },
   at('schloss', 'Schloss', R(244, 134, 100, 36), P(400, 424), 'up', {
-    on: { lookat: 'Schloss Hohentübingen, oben auf dem Berg. Von da hat man alles im Blick. Außer die Goa.' },
+    on: { lookat: 'Schloss Hohentübingen, oben auf dem Berg. Von da hat man das einfache Fussvolk im Blick.' },
   }),
   at('stiftskirche', 'Stiftskirche', R(464, 56, 28, 80), P(478, 424), 'up', {
     on: {
-      lookat: 'Der Turm der Stiftskirche. Von da oben sieht man bestimmt bis in den Wald. Und den Bass.',
+      lookat: 'Der Turm der Stiftskirche. War ich noch nie.',
     },
   }),
   {
@@ -278,13 +277,13 @@ const HOTSPOTS: HotspotDef[] = [
     polygon: [P(250, 236), P(742, 280), P(742, 357), P(246, 250)],
     walkTo: P(600, 424),
     facing: 'up',
-    on: { lookat: 'Die alte Mauer am Ufer. Unten moosig, oben Laternen. Die brennen schon.' },
+    on: { lookat: 'Die alte Mauer am Ufer. Im Sommer sitzen dort Studenten. Ab und an fällt einer in den Neckar.' },
   },
   at('eckhaus', 'Eckhaus', R(742, 0, 218, 372), P(840, 424), 'up', {
     on: {
       lookat: async (ctx) => {
         await ctx.playerSay('Das Eckhaus an der Brücke, mit Erker und spitzem Dach.');
-        await ctx.playerSay('Im Erker brennt schon Licht. Da lernt wer für die Klausur. Oder tut so.');
+        await ctx.playerSay('Im Erker brennt schon Licht. Da lernt jemand für ne Klausur.');
       },
       open: 'Da wohn ich nicht. Leider. Bei dem Blick.',
     },
@@ -302,8 +301,8 @@ const HOTSPOTS: HotspotDef[] = [
     on: {
       lookat: async (ctx) => {
         await ctx.playerSay('Der Hölderlinturm. Hier hat Hölderlin sechsunddreißig Jahre gewohnt.');
-        await ctx.playerSay('Gedichtet, aufs Wasser geschaut, Besuch verwirrt. Klingt nach einem guten Leben.');
-        await ctx.playerSay('Unten an die Turmwand hat jemand „PUT PUT“ gesprüht. Sogar hier.');
+        await ctx.playerSay('Gedichtet, aufs Wasser geschaut, sich der mentalen Gesundheit gewidmet.');
+        await ctx.playerSay('Unten an die Turmwand hat jemand „PUT PUT“ gesprüht. Sogar hier - verrückt!');
         if (!ctx.flag('turmOpen')) await ctx.playerSay('Unten ist eine Tür, mit Klingel. Im Turm brennt Licht.');
         ctx.setFlag('putSeen');
         if (ctx.flag('ottoMet') || ctx.flag('ottoFree')) await ctx.playerSay('Und oben drin dreht sich eine Spirale durch drei Zeitebenen. Kein Witz.');
@@ -317,7 +316,7 @@ const HOTSPOTS: HotspotDef[] = [
   at('turmtuer', 'Turmtür', R(448, 268, 22, 32), TOWER_SPOT, 'left', {
     defaultVerb: 'use',
     on: {
-      lookat: 'Die Tür zum Hölderlinturm, mit Laterne und Klingel. Das schau ich mir aus der Nähe an.',
+      lookat: 'Die Tür zum Hölderlinturm. Das schau ich mir aus der Nähe an.',
       open: toTower,
       use: toTower,
       talkto: toTower,
@@ -331,8 +330,8 @@ const HOTSPOTS: HotspotDef[] = [
   at('platanen', 'Neckarinsel', R(0, 0, 112, 300), P(150, 424), 'up', {
     on: {
       lookat: async (ctx) => {
-        await ctx.playerSay('Die Neckarinsel mit der Platanenallee. Riesige alte Bäume, schwarz vor dem Abendrot.');
-        await ctx.playerSay('Älter als jede Burschenschaft. Knapp.');
+        await ctx.playerSay('Die Neckarinsel mit der Platanenallee. Riesige alte Bäume, schwarz vor dem Abendrot. Richtig ramontisch.'); // ramontisch ist kein typo
+        await ctx.playerSay('Älter als jede Burschenschaft.');
       },
       pickup: 'Ein Blatt vielleicht. Aber wozu.',
     },
@@ -340,7 +339,7 @@ const HOTSPOTS: HotspotDef[] = [
   at('sonne', 'Sonne', R(94, 198, 54, 44), P(150, 424), 'up', {
     on: {
       lookat: async (ctx) => {
-        await ctx.playerSay('Die Sonne geht gleich unter. Genau über der Flussbiegung, wie bestellt.');
+        await ctx.playerSay('Die Sonne geht gleich unter. Genau über der Flussbiegung. Ramontisch.'); // Ramontisch ist kein typo
         await ctx.playerSay('Bis ich im Wald bin, ist es dunkel. Genau richtig für eine Goa.');
       },
       pickup: 'Die ist in ein paar Minuten sowieso weg.',
@@ -366,7 +365,7 @@ const HOTSPOTS: HotspotDef[] = [
     walkTo: JETTY_SPOT,
     facing: 'down',
     on: {
-      lookat: 'Ein kleiner Bootssteg am Hölderlinturm. Hier legen die Stocherkähne an, wenn die Burschen mal müssen.',
+      lookat: 'Ein kleiner Bootssteg am Hölderlinturm. Hier legen die Stocherkähne an, wenn die Burschis ihr Bier loswerden müssen.',
     },
   },
   at('laterne', 'Laterne', R(850, 180, 44, 196), P(862, 424), 'up', {
@@ -375,7 +374,7 @@ const HOTSPOTS: HotspotDef[] = [
   at('toPicasso', 'Zum Epplehaus', R(0, 330, 80, 120), P(12, 432), 'left', {
     defaultVerb: 'use',
     on: {
-      lookat: 'Da geht’s in die Stadt, zum Epplehaus. Dahinter die Dönerbude und die Treppe runter ins Picasso.',
+      lookat: 'Da geht’s in die Stadt, zum Epplehaus. Dahinter die Dönerbude und ins Picasso.',
       use: toPicasso,
       open: toPicasso,
     },
@@ -398,7 +397,7 @@ const HOTSPOTS: HotspotDef[] = [
   at('fahrplan', 'Fahrplan', R(722, 282, 36, 44), P(736, 424), 'up', {
     on: {
       lookat: async (ctx) => {
-        await ctx.playerSay('Der Fahrplan. Linie 5: alle dreißig Minuten. Letzter Bus: 23:58 Uhr.');
+        await ctx.playerSay('Der Fahrplan. Linie 5: alle fünfzehn Minuten. Letzter Bus: 23:58 Uhr.');
         await ctx.playerSay('Darunter, mit Edding: „Nachtbus fährt, wenn er Lust hat.“ Zurück komm ich also zu Fuß. Oder gar nicht.');
       },
     },
@@ -445,7 +444,7 @@ const HOTSPOTS: HotspotDef[] = [
     visible: (state) => !state.getFlag('puntSunk'),
     on: {
       lookat: async (ctx) => {
-        await ctx.playerSay('Ein Stocherkahn voller Burschenschaftler. Mützen, Bänder, ein Kasten Bier.');
+        await ctx.playerSay('Ein Stocherkahn voller Burschenschaftler. Mützen, Bänder, ein Kasten Bier. Nicht nur in der Hand nen Stock.');
         await ctx.playerSay('Ein Holzkahn, der schon bessere Jahrzehnte gesehen hat.');
         if (ctx.easyMode) await ctx.playerSay('Altes Holz. Sehr altes, sehr trockenes Holz.');
       },
@@ -572,7 +571,7 @@ export const neckarRoom: RoomDef = {
       await ctx.repaint();
       ctx.face(ctx.activeCharId, 'down');
       await ctx.playerSay('Der Neckar im Abendrot. Kitschig. Schön.');
-      await ctx.playerSay('Heute Nacht steigt im Wald eine Goa. Und ohne Passwort kommt da keiner rein.');
+      await ctx.playerSay('Heute Nacht steigt im Wald eine Goa.');
       if (ctx.easyMode) await ctx.playerSay('Wenn das einer weiß, dann Ali. Im Picasso, hinterm Epplehaus, an der Dönerbude vorbei.');
     });
   },
