@@ -342,6 +342,9 @@ const nearby = await waitFor(async () => {
   return p.x > 240 && p.x < 330 && p.y > 322; // its turn, clear of the jetty and the tower's door
 }, 40000, 'a punt within reach');
 check('a punt comes down the river', nearby, seenAt.slice(-4).join(','));
+const swanAt = await ev(() => { const l = window.__engine.roomScene.layerObj('schwan'); return { x: l.x, y: l.y }; });
+check('the swan has made way for the punt (over at the left bank)', swanAt.x < 40 && swanAt.y < 312, JSON.stringify(swanAt));
+await page.screenshot({ path: `${SHOT}/goa-05b-swan.png` });
 const p1 = await punt();
 check('it shrinks into the distance (perspective)', p1.s > 0.5, `(scale ${p1.s.toFixed(2)})`);
 check('its hotspot follows it', (await hotspotAt(p1.x, p1.y - p1.h * 0.4)) === 'kahn');

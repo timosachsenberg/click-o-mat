@@ -34,6 +34,8 @@ export const ACTORS: Record<string, ActorDef> = {
     // Seated and watchful (idle), until three ouzos have him dance himself to sleep.
     stance: (state) => (state.getFlag('copAsleep') ? 'sleep' : undefined),
   },
+  // The swan on the Neckar is a layer; this is its voice when it hisses.
+  schwan: { id: 'schwan', name: 'Schwan', talkColor: '#f8f4ec', textureSet: 'voice' },
   kahn: {
     id: 'kahn',
     name: 'Stocherkahn',
