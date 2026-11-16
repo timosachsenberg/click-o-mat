@@ -30,7 +30,7 @@ async function toForest(ctx: ScriptContext): Promise<void> {
 
 async function throughTheGate(ctx: ScriptContext): Promise<void> {
   if (!ctx.flag('goaEntered')) {
-    await ctx.say('tuersteher', 'Moment, Kollege. Erst die Parole.');
+    await ctx.say('tuersteher', 'Moment, Kollege. Erst die das Passwort. Partykiller wollen wir hier nicht.');
     return;
   }
   await ctx.once('throughGate', async () => {
@@ -98,7 +98,7 @@ const HOTSPOTS: HotspotDef[] = [
         await ctx.dialog('tuersteher');
       },
       push: 'Einen Goazwerg schubst man nicht. Der steht fester als das Tor.',
-      pickup: 'Einstecken? Er ist klein genug. Aber er guckt, als hätte das schon mal einer versucht. Und bereut.',
+      pickup: 'Einstecken? Er ist klein genug... ne lass ich lieber. Beisst vielleicht.',
     },
 
   },
@@ -114,9 +114,9 @@ const HOTSPOTS: HotspotDef[] = [
       talkto: async (ctx) => {
         await ctx.playerSay('Flaschenfloh? Wie kommst du denn hierher?');
         if (ctx.flag('flohFollows')) {
-          await ctx.say('floh', 'Ich bin dir doch gefolgt. Ganz unauffällig. Mit zwanzig Metern Abstand. Klirr.');
+          await ctx.say('floh', 'Ich bin dir gefolgt.');
           await ctx.playerSay('Durch ein Wurmloch?');
-          await ctx.say('floh', 'Pfandsammler kennen jeden Weg. Auch die krummen.');
+          await ctx.say('floh', 'Ne um die Absperrung herumgelaufen.');
         } else {
           await ctx.say('floh', 'Wo Leergut ist, da bin ich. Und auf einer Goa ist viel Leergut.');
         }
@@ -198,7 +198,7 @@ export const goaEingangRoom: RoomDef = {
       every: [9000, 16000],
       run: async (ctx) => {
         if (ctx.busy) return;
-        const lines = ['Klirr.', 'Noch eine Grüne. Wunderbar.', 'Raver trinken viel Wasser. Aus Pfandflaschen. Ich liebe Raver.'];
+        const lines = ['Klirr.', 'Noch eine Flasche! Wunderbar.', 'Raver trinken viel Wasser. Aus Pfandflaschen. Ich liebe Raver.'];
         await ctx.say('floh', lines[Math.floor(Math.random() * lines.length)]);
       },
     },
