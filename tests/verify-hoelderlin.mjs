@@ -57,7 +57,9 @@ const settle = async () => {
     const st = await ev(() => ({ b: window.__engine.busy, i: window.__engine.interruptible, d: window.__engine.dialogMode, c: window.__engine.choicesShowing }));
     if (!st.b && !st.d) return;
     if (st.c) return;
-    if (st.b && !st.i) await click(480, 120);
+    // Skip the showing line the way a click would — but without a click: one
+    // that lands just after the line ended would hit whatever hotspot is there.
+    if (st.b && !st.i) await ev(() => { const e = window.__engine; if (e.busy && !e.interruptible) e.events.emit('skipLine'); });
     await page.waitForTimeout(200);
   }
   throw new Error('settle timeout');
@@ -391,12 +393,14 @@ check('and still owes the landing (a reload replays it, bouncer included)', JSON
 const landed = await ev(() => { const a = window.__engine.roomScene.actors.get('player'); return { x: a.x, y: a.y }; });
 check('the player landed on the floor, by the portal', Math.abs(landed.x - 384) < 30 && Math.abs(landed.y - 404) < 20, JSON.stringify(landed));
 check('the wormhole takes what is useless and leaves what the password still costs', JSON.stringify(await inv()) === '["euro"]', JSON.stringify(await inv()));
+await pick('Das Passwort lautet');
 said = await allChoices();
-check('the Goazwerg wants the password — and without it there is no Chakabunga to say', said.length > 0 && !said.some((t) => t.startsWith('Chakabunga')), said.join(' | '));
+check('the Goazwerg wants the password — the words on offer sound alike, and without Ali there is no Chakabunga among them',
+  said.some((t) => t.startsWith('Cowabunga')) && said.some((t) => t.startsWith('Chakalaka')) && !said.some((t) => t.startsWith('Chakabunga')), said.join(' | '));
 const zwerg = await ev(() => { const a = window.__engine.roomScene.actors.get('tuersteher'); return { y: a.y, depth: a.sprite.depth }; });
 check('the Goazwerg stands in front of the dancers while he asks', zwerg.y >= 440, JSON.stringify(zwerg));
 await page.screenshot({ path: `${SHOT}/hoel-07b-zwerg.png` });
-await pick('Ich komm gleich');
+await pick('Cowabunga'); // a guess: wrong
 await waitFor(async () => (await room()) === 'goaeingang', 20000, 'thrown out');
 await settle();
 check('without the password: thrown out, in front of the gate', (await room()) === 'goaeingang' && !(await flag('goaEntered')));
@@ -412,12 +416,14 @@ await click(724, 326);
 await waitFor(async () => (await room()) === 'goa', 20000, 'the dance floor again');
 await waitFor(async () => { if (await ev(() => window.__engine.choicesShowing)) return true; await page.keyboard.press('Escape'); return false; }, 40000, 'the Goazwerg again');
 check('landing again without having been let in: the Goazwerg asks again', (await room()) === 'goa' && (await ev(() => window.__engine.choicesShowing)) === true);
-said = await allChoices();
-check('with the password known, Chakabunga is on offer', said.some((t) => t.startsWith('Chakabunga')), said.join(' | '));
 check('and now the wormhole has taken everything: nothing is needed any more', (await inv()).length === 0, JSON.stringify(await inv()));
-await pick('Ich komm gleich');
+await pick('Das Passwort lautet');
+said = await allChoices();
+check('with the password known, Chakabunga is among the words', said.some((t) => t.startsWith('Chakabunga')) && said.some((t) => t.startsWith('Cowabunga')), said.join(' | '));
+await pick('Chakalaka'); // knowing it doesn't help if you say the wrong one
 await waitFor(async () => (await room()) === 'goaeingang', 20000, 'thrown out again');
 await settle();
+check('the wrong word, even with the password known: thrown out', (await room()) === 'goaeingang' && !(await flag('goaEntered')));
 check('bouncer, Flaschenfloh and the gate are there',
   (await hotspotAt(560, 334)) === 'tuersteher' && (await hotspotAt(790, 300)) === 'floh' && (await hotspotAt(560, 160)) === 'tor' && (await hotspotAt(110, 300)) !== 'wurmloch');
 await page.screenshot({ path: `${SHOT}/hoel-07-goa.png` });
@@ -433,9 +439,17 @@ await waitFor(() => ev(() => window.__engine.choicesShowing), 8000, 'bouncer');
 await pick('Put put?');
 await pick('Ich komm gleich');
 
+// --- a wrong word at the gate just ends the conversation
+await click(560, 334, { button: 'right' });
+await waitFor(() => ev(() => window.__engine.choicesShowing), 8000, 'bouncer');
+await pick('Das Passwort lautet');
+await pick('Tschakabumm');
+check('a wrong word at the gate: still outside, and free to try again', (await room()) === 'goaeingang' && !(await flag('goaEntered')) && !(await ev(() => window.__engine.choicesShowing)));
+
 // --- with the password: in through the gate
 await click(560, 334, { button: 'right' });
 await waitFor(() => ev(() => window.__engine.choicesShowing), 8000, 'bouncer');
+await pick('Das Passwort lautet');
 await pick('Chakabunga');
 check('Chakabunga: the bouncer lets you in', (await flag('goaEntered')) === true);
 const gateFrames = new Set();

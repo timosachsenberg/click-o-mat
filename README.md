@@ -214,9 +214,11 @@ hand-painted → **1987** (sixteen colours, chunky pixels) → a **1930s cartoon
    a huge mandala, a canopy of blacklight threads, giant glowing mushrooms,
    lasers, and dancers everywhere. Whatever you no longer need is lost on the
    way. The **bouncer** — a Goazwerg in a felt sauna hat — comes over from the
-   gate and wants the password anyway: say **Chakabunga** (from Ali) and you
-   may stay. Without it — the portal lets you through either way — you're
-   thrown out to the **Goa's entrance**, where Flaschenfloh is collecting
+   gate and wants the password anyway. He offers no help: you pick it from
+   words that sound alike (Cowabunga, Chakalaka, Tschakabumm …), and
+   **Chakabunga** is only among them once Ali has told you. Say it and you
+   may stay. With a wrong word, or without the password — the portal lets you
+   through either way — you're thrown out to the **Goa's entrance**, where Flaschenfloh is collecting
    empties: slide back down to the forest's edge, get the password from Ali
    (the wormhole leaves you the coin, or what has become of it, until you
    know it), and jump again or say it at the gate. **Use the dance floor** — to be continued. The portal stays open

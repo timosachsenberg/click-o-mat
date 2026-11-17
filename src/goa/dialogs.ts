@@ -221,6 +221,10 @@ export const DIALOGS: Record<string, DialogDef> = {
   },
 
   // The Goazwerg, bouncer at the Goa: here the password finally counts.
+  // The Goazwerg wants the Goa's password — and he wants it said. The words
+  // on offer sound alike; the right one is only among them once Ali has told
+  // it (`password`). A wrong word ends the conversation: on the dance floor
+  // that means out (rooms/goa.ts), at the gate it means try again.
   tuersteher: {
     id: 'tuersteher',
     start: 'root',
@@ -228,16 +232,10 @@ export const DIALOGS: Record<string, DialogDef> = {
       root: {
         choices: [
           {
-            text: 'Chakabunga!',
-            if: (s) => !!s.getFlag('password'),
-            end: true,
+            text: 'Das Passwort lautet …',
+            next: 'wort',
             script: async (ctx) => {
-              await ctx.say('tuersteher', 'Chakabunga. Korrekt.');
-              await ctx.say('tuersteher', 'Eine Frage noch: Hast du Energie? Die Nacht ist lang. Wer hier schlappmacht, liegt um drei im Moos.');
-              await ctx.playerSay('Ich hatte eine Magic Woman. Ali meinte, die Energie brauch ich später noch.');
-              await ctx.say('tuersteher', 'Ali weiß Bescheid. Passt. Folge dem Bass.');
-              ctx.setFlag('goaEntered');
-              ctx.sfx('open');
+              await ctx.say('tuersteher', 'Ich höre.');
             },
           },
           {
@@ -273,6 +271,51 @@ export const DIALOGS: Record<string, DialogDef> = {
             end: true,
             script: async (ctx) => {
               await ctx.say('tuersteher', 'Ich steh hier die ganze Nacht.');
+            },
+          },
+        ],
+      },
+      wort: {
+        choices: [
+          {
+            text: 'Cowabunga!',
+            end: true,
+            script: async (ctx) => {
+              await ctx.say('tuersteher', 'Cowabunga? Das rufen Schildkröten mit Pizza. Falscher Film, Kollege.');
+            },
+          },
+          {
+            text: 'Chakabunga!',
+            if: (s) => !!s.getFlag('password'),
+            end: true,
+            script: async (ctx) => {
+              await ctx.say('tuersteher', 'Chakabunga. Korrekt.');
+              await ctx.say('tuersteher', 'Eine Frage noch: Hast du Energie? Die Nacht ist lang. Wer hier schlappmacht, liegt um drei im Moos.');
+              await ctx.playerSay('Ich hatte eine Magic Woman. Ali meinte, die Energie brauch ich später noch.');
+              await ctx.say('tuersteher', 'Ali weiß Bescheid. Passt. Folge dem Bass.');
+              ctx.setFlag('goaEntered');
+              ctx.sfx('open');
+            },
+          },
+          {
+            text: 'Chakalaka!',
+            end: true,
+            script: async (ctx) => {
+              await ctx.say('tuersteher', 'Chakalaka ist eine Soße. Scharf, aber falsch.');
+            },
+          },
+          {
+            text: 'Tschakabumm!',
+            end: true,
+            script: async (ctx) => {
+              await ctx.say('tuersteher', 'Knapp daneben ist auch vorbei, Kollege.');
+            },
+          },
+          {
+            text: 'Äh … Moment.',
+            next: 'root',
+            script: async (ctx) => {
+              await ctx.say('tuersteher', 'Lass dir Zeit. Ich steh hier die ganze Nacht.');
             },
           },
         ],
