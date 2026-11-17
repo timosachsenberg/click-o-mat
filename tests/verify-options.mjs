@@ -1,4 +1,5 @@
 import { chromium } from 'playwright';
+import { makeSettle } from './helpers.mjs';
 
 // The engine-demo suites run the demo (the page's other game is the adventure).
 const BASE = process.env.BASE_URL ?? 'http://localhost:5173/?game=demo';
@@ -19,14 +20,7 @@ await page.waitForTimeout(1000);
 const gx = (x) => box.x + (x / 960) * box.width;
 const gy = (y) => box.y + (y / 600) * box.height;
 const click = (x, y, opts = {}) => page.mouse.click(gx(x), gy(y), opts);
-const settle = async () => {
-  for (let i = 0; i < 120; i++) {
-    const st = await page.evaluate(() => ({ b: window.__engine.busy, i: window.__engine.interruptible, d: window.__engine.dialogMode }));
-    if (!st.b && !st.d) return;
-    if (st.b && !st.i) await click(480, 240);
-    await page.waitForTimeout(250);
-  }
-};
+const settle = makeSettle(page);
 const check = (label, ok, extra = '') => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}${extra ? '  ' + extra : ''}`); if (!ok) process.exitCode = 1; };
 const playerPos = () => page.evaluate(() => {
   const p = window.__engine.roomScene.actors.get('norb');

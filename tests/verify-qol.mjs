@@ -1,4 +1,5 @@
 import { chromium } from 'playwright';
+import { makeSettle } from './helpers.mjs';
 
 // The engine-demo suites run the demo (the page's other game is the adventure).
 const BASE = process.env.BASE_URL ?? 'http://localhost:5173/?game=demo';
@@ -19,15 +20,7 @@ await page.waitForTimeout(1000);
 const gx = (x) => box.x + (x / 960) * box.width;
 const gy = (y) => box.y + (y / 600) * box.height;
 const click = (x, y, opts = {}) => page.mouse.click(gx(x), gy(y), opts);
-const settle = async () => {
-  for (let i = 0; i < 160; i++) {
-    const st = await page.evaluate(() => ({ b: window.__engine.busy, i: window.__engine.interruptible, d: window.__engine.dialogMode }));
-    if (!st.b && !st.d) return;
-    if (st.b && !st.i) await click(480, 240);
-    await page.waitForTimeout(250);
-  }
-  throw new Error('settle timeout');
-};
+const settle = makeSettle(page);
 const room = () => page.evaluate(() => window.__engine.state.currentRoom);
 const check = (label, ok, extra = '') => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}${extra ? '  ' + extra : ''}`); if (!ok) process.exitCode = 1; };
 
@@ -109,6 +102,28 @@ const slow = await timeSay();
 await page.evaluate(() => window.__engine.setTextSpeed(0.5));
 check('text speed: fast is fast, slow is slow', fast < 1100 && slow > 2800, `(fast=${fast.toFixed(0)}ms, slow=${slow.toFixed(0)}ms)`);
 check('text speed persisted', (await page.evaluate(() => localStorage.getItem('pnc-text-speed'))) === '0.5');
+
+// --- a click on the room dismisses the showing line. (The suites skip lines
+// through the engine event instead — see helpers.mjs — so this is the place
+// where the click itself is checked.)
+const norbAt = () => page.evaluate(() => { const a = window.__engine.roomScene.actors.get('norb'); return { x: a.x, y: a.y }; });
+await page.evaluate(() => window.__engine.setTextSpeed(0)); // slowest: left alone, the line stays for seconds
+const stood = await norbAt();
+await page.evaluate(() => { void window.__engine.runScript('x'.repeat(40), ''); }); // a line, with input locked
+await page.waitForTimeout(300);
+const lineUp = await page.evaluate(() => window.__engine.busy && !window.__engine.interruptible);
+const tClick = Date.now();
+await click(480, 240);
+let gone = null;
+for (let i = 0; i < 80 && gone === null; i++) {
+  if (await page.evaluate(() => window.__engine.busy)) await page.waitForTimeout(50);
+  else gone = Date.now() - tClick;
+}
+await page.waitForTimeout(300);
+const moved = await norbAt();
+check('a click on the room skips the showing line', lineUp && gone !== null && gone < 1200, `(gone after ${gone}ms; left alone it stays ${slow.toFixed(0)}ms)`);
+check('the skipping click is used up: the player stays put', Math.hypot(moved.x - stood.x, moved.y - stood.y) < 2 && !(await page.evaluate(() => window.__engine.busy)), `(${stood.x.toFixed(0)},${stood.y.toFixed(0)} -> ${moved.x.toFixed(0)},${moved.y.toFixed(0)})`);
+await page.evaluate(() => window.__engine.setTextSpeed(0.5));
 
 console.log('ERRORS:', errors.length ? '\n' + errors.slice(0, 8).join('\n') : 'none');
 if (errors.length) process.exitCode = 1;

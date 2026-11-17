@@ -1,4 +1,5 @@
 import { chromium } from 'playwright';
+import { makeSettle, skipLine } from './helpers.mjs';
 
 // The engine-demo suites run the demo (the page's other game is the adventure).
 const BASE = process.env.BASE_URL ?? 'http://localhost:5173/?game=demo';
@@ -23,27 +24,9 @@ const gx = (x) => box.x + (x / 960) * box.width;
 const gy = (y) => box.y + (y / 600) * box.height;
 const click = async (x, y, opts = {}) => page.mouse.click(gx(x), gy(y), opts);
 
-// Wait for the current interaction/cutscene to finish. While a speech line
-// is showing (busy, not interruptible) a click skips it; while auto-walking
-// (interruptible) we must NOT click or we'd cancel the interaction.
-const settle = async () => {
-  for (let i = 0; i < 200; i++) {
-    const st = await page.evaluate(() => ({
-      busy: window.__engine.busy,
-      inter: window.__engine.interruptible,
-      dialog: window.__engine.dialogMode,
-    }));
-    if (!st.busy && !st.dialog) return;
-    if (st.busy && !st.inter) await click(480, 240);
-    await page.waitForTimeout(250);
-  }
-  const st = await page.evaluate(() => ({
-    busy: window.__engine.busy, inter: window.__engine.interruptible,
-    dialog: window.__engine.dialogMode, room: window.__engine.state.currentRoom,
-  }));
-  await page.screenshot({ path: `${SHOT_DIR}/timeout.png` });
-  throw new Error('settle() timed out: ' + JSON.stringify(st));
-};
+// Wait for the current interaction/cutscene to finish, skipping speech lines
+// (auto-walks are left alone: cancelling one would cancel the interaction).
+const settle = makeSettle(page);
 const flags = () => page.evaluate(() => ({ ...window.__engine.state.flags }));
 const inv = () => page.evaluate(() => [...window.__engine.state.inventory]);
 
@@ -86,7 +69,7 @@ for (let i = 0; i < 100; i++) {
     const target = choices.find((c) => c.text.includes(wanted));
     if (target) { await click(target.x, target.y); await page.waitForTimeout(300); }
   } else if (st.busy && !st.inter) {
-    await click(480, 240); // skip lines, never cancel walks
+    await skipLine(page); // skip lines, never cancel walks
   }
 }
 check('learned what Ned wants', (await flags()).knowsWant === true);

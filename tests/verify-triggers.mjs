@@ -1,4 +1,5 @@
 import { chromium } from 'playwright';
+import { makeSettle } from './helpers.mjs';
 
 // The engine-demo suites run the demo (the page's other game is the adventure).
 const BASE = process.env.BASE_URL ?? 'http://localhost:5173/?game=demo';
@@ -26,15 +27,7 @@ const clickWorld = async (wx, wy, opts = {}) => {
   const s = await scroll();
   await click(wx - s.x, wy - s.y, opts);
 };
-const settle = async () => {
-  for (let i = 0; i < 160; i++) {
-    const st = await page.evaluate(() => ({ b: window.__engine.busy, i: window.__engine.interruptible, d: window.__engine.dialogMode }));
-    if (!st.b && !st.d) return;
-    if (st.b && !st.i) await click(480, 240);
-    await page.waitForTimeout(250);
-  }
-  throw new Error('settle timeout');
-};
+const settle = makeSettle(page);
 const busy = () => page.evaluate(() => window.__engine.busy);
 const flag = (k) => page.evaluate((key) => window.__engine.state.flags[key], k);
 const room = () => page.evaluate(() => window.__engine.state.currentRoom);

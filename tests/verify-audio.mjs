@@ -1,4 +1,5 @@
 import { chromium } from 'playwright';
+import { makeSettle } from './helpers.mjs';
 
 // The engine-demo suites run the demo (the page's other game is the adventure).
 const BASE = process.env.BASE_URL ?? 'http://localhost:5173/?game=demo';
@@ -26,14 +27,7 @@ const click = (x, y, opts = {}) => page.mouse.click(gx(x), gy(y), opts);
 
 const dbg = () => page.evaluate(() => window.__audio.debug());
 const room = () => page.evaluate(() => window.__engine.state.currentRoom);
-const settle = async () => {
-  for (let i = 0; i < 120; i++) {
-    const st = await page.evaluate(() => ({ b: window.__engine.busy, i: window.__engine.interruptible, d: window.__engine.dialogMode }));
-    if (!st.b && !st.d) return;
-    if (st.b && !st.i) await click(480, 240);
-    await page.waitForTimeout(250);
-  }
-};
+const settle = makeSettle(page);
 // Peak output level sampled over ~500ms.
 const peakLevel = async () => {
   let peak = 0;

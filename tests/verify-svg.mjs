@@ -5,6 +5,7 @@
  * bundled web font).
  */
 import { chromium } from 'playwright';
+import { makeSettle } from './helpers.mjs';
 
 // The engine-demo suites run the demo (the page's other game is the adventure).
 const BASE = process.env.BASE_URL ?? 'http://localhost:5173/?game=demo';
@@ -22,15 +23,7 @@ const box = await page.locator('canvas').boundingBox();
 await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2); // start game
 await page.waitForTimeout(1000);
 const click = (x, y) => page.mouse.click(box.x + (x / 960) * box.width, box.y + (y / 600) * box.height);
-const settle = async () => {
-  for (let i = 0; i < 120; i++) {
-    const st = await page.evaluate(() => ({ b: window.__engine.busy, i: window.__engine.interruptible, d: window.__engine.dialogMode }));
-    if (!st.b && !st.d) return;
-    if (st.b && !st.i) await click(480, 240);
-    await page.waitForTimeout(250);
-  }
-  throw new Error('settle timeout');
-};
+const settle = makeSettle(page);
 const check = (label, ok, extra = '') => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}${extra ? '  ' + extra : ''}`); if (!ok) process.exitCode = 1; };
 const layer = (id) => page.evaluate((lid) => {
   const o = window.__engine.roomScene.layerObj(lid);
