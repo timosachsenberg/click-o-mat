@@ -50,9 +50,15 @@ const pocketed = (s: { getFlag: (k: string) => unknown }) => !!s.getFlag('taubeC
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 const pick = <T,>(list: T[]) => list[Math.floor(Math.random() * list.length)];
 
+/** The pigeons keep out of the strips at both ends of the yard, where the
+ *  exits are: a pigeon standing there takes the click meant for the exit. */
+const EXIT_STRIP = 90;
+
 /** Send a pigeon towards a point (not awaited: they stroll on their own). */
 function send(ctx: ScriptContext, id: string, x: number, y: number): void {
-  void ctx.walkTo(id, clamp(x, FLOOR.x0 + 10, FLOOR.x1 - 10), clamp(y, FLOOR.y0 + 4, FLOOR.y1 - 4)).catch(() => {});
+  void ctx
+    .walkTo(id, clamp(x, FLOOR.x0 + EXIT_STRIP, FLOOR.x1 - EXIT_STRIP), clamp(y, FLOOR.y0 + 4, FLOOR.y1 - 4))
+    .catch(() => {});
 }
 
 /** A pigeon scurries away from a point. */
