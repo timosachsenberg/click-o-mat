@@ -1,4 +1,5 @@
 import type { DialogChoice, DialogDef } from '../engine/types';
+import type { ScriptContext } from '../engine/ScriptContext';
 import { SONGS, playSong, type SongId } from './jukebox';
 
 /** Ordering at the bar: the free choice of drinks. Shared by talking to Ali
@@ -72,6 +73,29 @@ function songChoice(id: SongId): DialogChoice {
   };
 }
 
+/** Ali won't talk about the Goa: the Partykiller sits right next to it. */
+async function partykillerListens(ctx: ScriptContext): Promise<void> {
+  await ctx.say('ali', 'Nicht so laut, mein Lieber. Neben dir sitzt der Partykiller.');
+  await ctx.playerSay('Ist der nicht im Ruhestand?');
+  await ctx.say('ali', 'Er schon. Seine Anzeigen nicht.');
+  await ctx.say('cop', 'Ich kann euch übrigens hören.');
+  ctx.setFlag('knowsPartykiller');
+}
+
+async function notWhileHeListens(ctx: ScriptContext): Promise<void> {
+  await ctx.say('ali', 'Nicht, solange er zuhört, mein Lieber.');
+  await ctx.say('cop', 'Ich höre immer zu. Vierzig Jahre Nachtschicht.');
+}
+
+/** The Partykiller sleeps: Ali has just said the Goa's password. */
+async function tellPassword(ctx: ScriptContext): Promise<void> {
+  await ctx.playerSay('Chakabunga.');
+  await ctx.say('ali', 'Genau, mein Lieber. Und jetzt weißt du auch, wofür du die Energie brauchst.');
+  ctx.setFlag('password', 'Chakabunga');
+  ctx.sfx('win');
+  ctx.toast('Passwort erhalten: Chakabunga');
+}
+
 export const DIALOGS: Record<string, DialogDef> = {
   ali: {
     id: 'ali',
@@ -79,35 +103,44 @@ export const DIALOGS: Record<string, DialogDef> = {
     nodes: {
       root: {
         choices: [
+          // The way to the password, asked two ways: by somebody still looking
+          // for the Goa — and by somebody who has already fallen out of the
+          // wormhole onto its dance floor and been thrown out (`wormholeUsed`).
           {
             text: 'Ich suche die Goa im Wald.',
-            if: (s) => !s.getFlag('knowsPartykiller') && !s.getFlag('copAsleep'),
-            script: async (ctx) => {
-              await ctx.say('ali', 'Nicht so laut, mein Lieber. Neben dir sitzt der Partykiller.');
-              await ctx.playerSay('Ist der nicht im Ruhestand?');
-              await ctx.say('ali', 'Er schon. Seine Anzeigen nicht.');
-              await ctx.say('cop', 'Ich kann euch übrigens hören.');
-              ctx.setFlag('knowsPartykiller');
-            },
+            if: (s) => !s.getFlag('knowsPartykiller') && !s.getFlag('copAsleep') && !s.getFlag('wormholeUsed'),
+            script: partykillerListens,
+          },
+          {
+            text: 'Ali, ich brauch das Passwort für die Goa im Wald.',
+            if: (s) => !s.getFlag('knowsPartykiller') && !s.getFlag('copAsleep') && !!s.getFlag('wormholeUsed'),
+            script: partykillerListens,
           },
           {
             text: 'Und die Goa? Nur ganz leise?',
-            if: (s) => !!s.getFlag('knowsPartykiller') && !s.getFlag('copAsleep'),
-            script: async (ctx) => {
-              await ctx.say('ali', 'Nicht, solange er zuhört, mein Lieber.');
-              await ctx.say('cop', 'Ich höre immer zu. Vierzig Jahre Nachtschicht.');
-            },
+            if: (s) => !!s.getFlag('knowsPartykiller') && !s.getFlag('copAsleep') && !s.getFlag('wormholeUsed'),
+            script: notWhileHeListens,
+          },
+          {
+            text: 'Und das Passwort? Nur ganz leise?',
+            if: (s) => !!s.getFlag('knowsPartykiller') && !s.getFlag('copAsleep') && !!s.getFlag('wormholeUsed'),
+            script: notWhileHeListens,
           },
           {
             text: 'Also. Die Party im Wald?',
-            if: (s) => !!s.getFlag('copAsleep') && !s.getFlag('password'),
+            if: (s) => !!s.getFlag('copAsleep') && !s.getFlag('password') && !s.getFlag('wormholeUsed'),
             script: async (ctx) => {
               await ctx.say('ali', 'Folge dem Bass, mein Lieber. Am Eingang sagst du Chakabunga.');
-              await ctx.playerSay('Chakabunga.');
-              await ctx.say('ali', 'Genau, mein Lieber. Und jetzt weißt du auch, wofür du die Energie brauchst.');
-              ctx.setFlag('password', 'Chakabunga');
-              ctx.sfx('win');
-              ctx.toast('Passwort erhalten: Chakabunga');
+              await tellPassword(ctx);
+            },
+          },
+          {
+            text: 'Also. Das Passwort für die Goa?',
+            if: (s) => !!s.getFlag('copAsleep') && !s.getFlag('password') && !!s.getFlag('wormholeUsed'),
+            script: async (ctx) => {
+              await ctx.say('ali', 'Ich hab’s schon gehört, mein Lieber: Einer fällt aus einem Loch, mitten auf die Tanzfläche. Das warst also du.');
+              await ctx.say('ali', 'Dem Zwerg am Tor sagst du Chakabunga.');
+              await tellPassword(ctx);
             },
           },
           {
@@ -220,8 +253,7 @@ export const DIALOGS: Record<string, DialogDef> = {
     },
   },
 
-  // The Goazwerg, bouncer at the Goa: here the password finally counts.
-  // The Goazwerg wants the Goa's password — and he wants it said. The words
+  // The Goazwerg, bouncer at the Goa, wants the Goa's password — and he wants it said. The words
   // on offer sound alike; the right one is only among them once Ali has told
   // it (`password`). A wrong word ends the conversation: on the dance floor
   // that means out (rooms/goa.ts), at the gate it means try again.
@@ -247,6 +279,7 @@ export const DIALOGS: Record<string, DialogDef> = {
           },
           {
             text: 'Ali schickt mich.',
+            if: (s) => !!s.getFlag('password'),
             script: async (ctx) => {
               await ctx.say('tuersteher', 'Ali schickt jeden. Passwort?');
             },
@@ -448,7 +481,7 @@ export const DIALOGS: Record<string, DialogDef> = {
           },
           {
             text: 'Kennst du die Goa im Wald?',
-            if: (s) => !s.getFlag('flohFollows'),
+            if: (s) => !s.getFlag('flohFollows') && !s.getFlag('wormholeUsed'),
             script: async (ctx) => {
               await ctx.say('floh', 'Die Goa! Nach so einer Nacht liegt da Pfand für drei Monatsmieten.');
               await ctx.say('floh', 'Aber wo die steigt, sagt mir keiner. Die wollen ihre Flaschen angeblich selber wegbringen.');
@@ -465,8 +498,18 @@ export const DIALOGS: Record<string, DialogDef> = {
             },
           },
           {
+            // Thrown out of the Goa without the password, and back in town.
+            text: 'Der Goazwerg will ein Passwort von mir.',
+            if: (s) => !!s.getFlag('wormholeUsed') && !s.getFlag('password'),
+            script: async (ctx) => {
+              await ctx.say('floh', 'Der mit der Saunamütze? An dem kommt keiner vorbei. Nicht mal ich, und ich komm überall hin.');
+              await ctx.say('floh', 'Frag Ali im Picasso. Der weiß alles.');
+              if (ctx.easyMode) await ctx.say('floh', 'Der sagt nur nichts, solange der Partykiller zuhört.');
+            },
+          },
+          {
             text: 'Und du läufst mir wirklich nach?',
-            if: (s) => !!s.getFlag('flohFollows'),
+            if: (s) => !!s.getFlag('flohFollows') && !s.getFlag('wormholeUsed'),
             script: async (ctx) => {
               await ctx.say('floh', 'Mit zwanzig Metern Abstand. Du wirst mich gar nicht bemerken.');
               await ctx.say('floh', 'Klirr, klirr.');

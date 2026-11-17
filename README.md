@@ -221,7 +221,9 @@ hand-painted → **1987** (sixteen colours, chunky pixels) → a **1930s cartoon
    through either way — you're thrown out to the **Goa's entrance**, where Flaschenfloh is collecting
    empties: slide back down to the forest's edge, get the password from Ali
    (the wormhole leaves you the coin, or what has become of it, until you
-   know it), and jump again or say it at the gate. **Use the dance floor** — to be continued. The portal stays open
+   know it; Flaschenfloh, who commutes between the gate and his trolley, is
+   back at the Epplehaus with a word on whom to ask), and jump again or say
+   it at the gate. **Use the dance floor** — to be continued. The portal stays open
    both ways.
 
 </details>

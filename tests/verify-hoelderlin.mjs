@@ -393,6 +393,8 @@ check('and still owes the landing (a reload replays it, bouncer included)', JSON
 const landed = await ev(() => { const a = window.__engine.roomScene.actors.get('player'); return { x: a.x, y: a.y }; });
 check('the player landed on the floor, by the portal', Math.abs(landed.x - 384) < 30 && Math.abs(landed.y - 404) < 20, JSON.stringify(landed));
 check('the wormhole takes what is useless and leaves what the password still costs', JSON.stringify(await inv()) === '["euro"]', JSON.stringify(await inv()));
+said = await allChoices();
+check('nobody has sent the player yet: no "Ali schickt mich." on offer', !said.some((t) => t.startsWith('Ali schickt')), said.join(' | '));
 await pick('Das Passwort lautet');
 said = await allChoices();
 check('the Goazwerg wants the password — the words on offer sound alike, and without Ali there is no Chakabunga among them',
@@ -410,13 +412,75 @@ check('thrown out beside the bouncer, not on top of him', Math.abs(ent.x - 560) 
 check('the entrance has a path back into the woods', (await hotspotAt(30, 400)) === 'toWald');
 await goTo('waldrand', 30, 400);
 check('back at the forest\'s edge with the coin: the password can still be had', (await room()) === 'waldrand' && (await inv()).includes('euro'));
-// Ali's password (verify-goa plays his riddle; here it is simply known from now on).
-await ev(() => window.__engine.state.setFlag('password', 'Chakabunga'));
-await click(724, 326);
-await waitFor(async () => (await room()) === 'goa', 20000, 'the dance floor again');
-await waitFor(async () => { if (await ev(() => window.__engine.choicesShowing)) return true; await page.keyboard.press('Escape'); return false; }, 40000, 'the Goazwerg again');
+const teleport = async (id, entry) => {
+  await ev(({ id, entry }) => window.__engine.roomScene.enterRoom(id, entry), { id, entry });
+  await waitFor(async () => (await room()) === id, 15000, id);
+  await settle();
+};
+/** Empty the pockets, then put these in. */
+const pockets = (items) => ev((items) => {
+  const c = window.__engine.makeContext();
+  for (const id of [...window.__engine.state.inventory]) c.removeItem(id);
+  for (const id of items) c.addItem(id, { silent: true });
+}, items);
+const jump = async (label) => {
+  await click(724, 326);
+  await waitFor(async () => (await room()) === 'goa', 20000, `the dance floor (${label})`);
+  await waitFor(async () => { if (await ev(() => window.__engine.choicesShowing)) return true; await page.keyboard.press('Escape'); return false; }, 40000, `the Goazwerg (${label})`);
+};
+// --- whatever the coin has turned into on the way to the password, the toll leaves that too
+for (const fare of ['magicwoman', 'dose', 'cent25']) {
+  await pockets([fare, 'pogostick']);
+  await jump(fare);
+  check(`jumping with the ${fare} and no password: the toll leaves it`, JSON.stringify(await inv()) === JSON.stringify([fare]), JSON.stringify(await inv()));
+  await pick('Ich komm gleich');
+  await waitFor(async () => (await room()) === 'goaeingang', 20000, 'thrown out');
+  await settle();
+  await teleport('waldrand', 'wald');
+}
+
+// --- back in town without the password: Flaschenfloh is at his trolley, and knows whom to ask
+await teleport('epplehaus', 'neckar');
+check('thrown out without the password: Flaschenfloh is still at the Epplehaus', (await hotspotAt(556, 300)) === 'floh');
+await click(556, 300, { button: 'right' }); // talk to him
+await waitFor(() => ev(() => window.__engine.choicesShowing), 15000, 'Flaschenfloh');
+check('he explains how he got back from the gate', (await flag('once:flohPendelt')) === true);
+said = await allChoices();
+check('he has a word about the Goazwerg, and no longer wonders where the Goa is',
+  said.some((t) => t.startsWith('Der Goazwerg will')) && !said.some((t) => t.startsWith('Kennst du die Goa')), said.join(' | '));
+await pick('Der Goazwerg will');
+await pick('Mach’s gut');
+
+// --- Ali is asked for the password — not for a party the player was just thrown out of
+await teleport('picasso', 'door');
+await click(720, 280, { button: 'right' }); // talk to Ali
+await waitFor(() => ev(() => window.__engine.choicesShowing), 15000, 'Ali');
+said = await allChoices();
+check('at Ali\'s the question is the password now, not where the Goa is',
+  said.some((t) => t.startsWith('Ali, ich brauch das Passwort')) && !said.some((t) => t.startsWith('Ich suche die Goa')), said.join(' | '));
+await pick('Ali, ich brauch das Passwort');
+check('and the Partykiller listens, as ever', (await flag('knowsPartykiller')) === true);
+await pick('Tschüss');
+// (verify-goa plays the riddle that puts the Partykiller to sleep; here he
+// simply sleeps, and the deposit coin has gone into the jukebox for it.)
+await pockets([]);
+await ev(() => window.__engine.state.setFlag('copAsleep', true));
+await click(720, 280, { button: 'right' });
+await waitFor(() => ev(() => window.__engine.choicesShowing), 15000, 'Ali again');
+await pick('Also. Das Passwort für die Goa');
+check('with the Partykiller asleep, Ali tells the password', (await flag('password')) === 'Chakabunga');
+await pick('Tschüss');
+await teleport('epplehaus', 'neckar');
+check('password known and the wormhole used: Flaschenfloh has moved on to the Goa', (await hotspotAt(556, 300)) !== 'floh');
+
+// --- the second jump, this time with the password
+await teleport('waldrand', 'wald');
+await pockets(['pogostick']);
+await jump('with the password');
 check('landing again without having been let in: the Goazwerg asks again', (await room()) === 'goa' && (await ev(() => window.__engine.choicesShowing)) === true);
 check('and now the wormhole has taken everything: nothing is needed any more', (await inv()).length === 0, JSON.stringify(await inv()));
+said = await allChoices();
+check('sent by Ali now: "Ali schickt mich." is on offer', said.some((t) => t.startsWith('Ali schickt')), said.join(' | '));
 await pick('Das Passwort lautet');
 said = await allChoices();
 check('with the password known, Chakabunga is among the words', said.some((t) => t.startsWith('Chakabunga')) && said.some((t) => t.startsWith('Cowabunga')), said.join(' | '));
