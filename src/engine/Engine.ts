@@ -3,6 +3,7 @@ import { GameState, type SaveData } from './GameState';
 import type {
   ActorDef,
   AssetManifest,
+  DevScene,
   DialogDef,
   Facing,
   ItemDef,
@@ -59,6 +60,10 @@ export interface GameContent {
    *  versa). Off by default: then "Use" + an item with its own `use` runs it
    *  at once, and use/give are strictly separate. */
   forgivingItems?: boolean;
+  /** Jump targets for the developer scene picker (`?dev` in the URL): rooms,
+   *  and rooms in a particular story state. Omitted, the picker lists every
+   *  room once. */
+  devScenes?: DevScene[];
 }
 
 /** Several games built into one page: the title screen shows a picker, and
@@ -228,6 +233,7 @@ export class Engine {
     this.startEntry = content.startEntry;
     this.offersEasyMode = !!content.easyMode;
     this.forgivingItems = !!content.forgivingItems;
+    this.contentDevScenes = content.devScenes ?? null;
     this.gameId = content.id ?? '';
     this.initParty(content.party ?? [content.playerId], content.startItems ?? []);
     // The legacy single-save key predates namespacing: it can only belong to
@@ -340,6 +346,42 @@ export class Engine {
       /* ignore */
     }
     this.events.emit('ui');
+  }
+
+  // ---- developer mode ------------------------------------------------------
+
+  /** Developer mode (`?dev` in the URL, set by main.ts): the UI gets a scene
+   *  picker that jumps to any room. Players never see it. */
+  devMode = false;
+  /** `?dev=<scene id>`: the scene the game starts in instead of the start room. */
+  devStart: string | null = null;
+  private contentDevScenes: DevScene[] | null = null;
+
+  /** The picker's jump targets: the game's own list, else every room once. */
+  get devScenes(): DevScene[] {
+    return (
+      this.contentDevScenes ??
+      Object.values(this.rooms).map((r) => ({ id: r.id, label: r.name ?? r.id, room: r.id }))
+    );
+  }
+
+  /** Put the scene's story state in place (flags, items) and say where to
+   *  enter. The rest of the running game is left alone. */
+  applyDevScene(scene: DevScene): { room: string; entry: string | undefined } {
+    for (const [key, value] of Object.entries(scene.flags ?? {})) this.state.setFlag(key, value);
+    for (const id of scene.items ?? []) this.state.addItem(id);
+    return { room: scene.room, entry: scene.entry ?? Object.keys(this.rooms[scene.room]?.entries ?? {})[0] };
+  }
+
+  /** Jump to a scene of the picker. Refused (false) while a scene or a
+   *  dialog runs — the same rule as loading a save. */
+  async devJump(scene: DevScene): Promise<boolean> {
+    if (!this.devMode || !this.canSaveOrLoadNow || !this.rooms[scene.room]) return false;
+    const { room, entry } = this.applyDevScene(scene);
+    this.clearSelection();
+    await this.roomScene.transitionTo(room, entry);
+    this.events.emit('ui');
+    return true;
   }
 
   /** Whether the game offers an easy mode, and whether the player picked it

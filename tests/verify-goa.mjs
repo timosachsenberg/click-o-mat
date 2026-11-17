@@ -152,6 +152,20 @@ await page.waitForTimeout(5000);
 const after = await pigeons();
 const moved = after.filter(([k, x, y], i) => Math.abs(x - before[i][1]) + Math.abs(y - before[i][2]) > 8).length;
 check('the pigeons walk about', moved >= 2, `(${moved} moved)`);
+// A pigeon in front of an exit would take the click meant for the exit (that
+// stalled this suite once): they keep out of the strips at both ends.
+await ev(() => {
+  const rs = window.__engine.roomScene;
+  rs.actors.get('taube8').setPosition(124, 404); // near the left exit ...
+  rs.actors.get('player').setPosition(170, 404); // ... and the player shoos it further left
+});
+await page.waitForTimeout(3500);
+const shooed = await ev(() => { const a = window.__engine.roomScene.actors.get('taube8'); return { x: Math.round(a.x), y: Math.round(a.y) }; });
+check('shooed towards the exit, a pigeon stops short of it', shooed.x >= 108 && shooed.x < 124, JSON.stringify(shooed));
+check('so the exits stay clickable with a pigeon as close as it gets',
+  (await hotspotAt(15, 400)) === 'toDoener' && (await hotspotAt(66, shooed.y - 6)) === 'toDoener' && (await hotspotAt(945, 400)) === 'toNeckar');
+const spread = (await pigeons()).map(([, x]) => x);
+check('no pigeon in the exit strips', spread.every((x) => x >= 108 && x <= 852), spread.join(','));
 await click(556, 300, { button: 'right' }); // talk to Flaschenfloh
 await settle();
 await pick('Wer bist du');

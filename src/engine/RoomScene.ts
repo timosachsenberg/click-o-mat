@@ -103,7 +103,13 @@ export class RoomScene extends Phaser.Scene {
   private async bootFirstRoom(): Promise<void> {
     const restore = engine.pendingRestore;
     engine.pendingRestore = null;
-    if (restore) await this.enterRoom(engine.state.currentRoom, undefined, restore);
+    // Developer mode, ?dev=<scene id>: start right in that scene.
+    const devScene = engine.devMode ? engine.devScenes.find((s) => s.id === engine.devStart) : undefined;
+    engine.devStart = null;
+    if (devScene && engine.rooms[devScene.room]) {
+      const { room, entry } = engine.applyDevScene(devScene);
+      await this.enterRoom(room, entry);
+    } else if (restore) await this.enterRoom(engine.state.currentRoom, undefined, restore);
     else await this.enterRoom(engine.startRoom, engine.startEntry);
   }
 

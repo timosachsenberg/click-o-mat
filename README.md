@@ -105,6 +105,7 @@ Phaser's own WebGL-first detection.
 | Options menu | **⚙ button** (top-right): volume sliders, mute, save slots — **Esc** closes |
 | Mute / unmute audio | **M**, or the 🔊 button (top-right) |
 | Debug overlay | **F1** (draws walk area, obstacles, hotspots) |
+| Jump to a scene (developers) | add **`?dev`** to the URL: a **DEV** button (or **F4**) lists the scenes — see [Developer mode](#developer-mode-jump-to-any-scene) |
 
 ### Playing the adventure („Folge dem Bass“)
 
@@ -532,6 +533,7 @@ hotspots and items, and script reactions.** Everything else in the engine
 | **Director's commentary** (opt-in) — the player narrates each room's demonstrated engine features on first entry; toggle in options or press `F2` | `engine/RoomScene.ts`, `engine/UIScene.ts` |
 | **Retro title screen** — pixel-upscaled lettering, New Game / Continue menu (Continue restores the save), game picker; the start click doubles as the audio-unlock gesture | `engine/TitleScene.ts` |
 | Debug overlay (walk area, holes, hotspots) — press `F1` | `engine/RoomScene.ts` |
+| **Developer mode** (`?dev`) — a scene picker that jumps to any room, or to a room in a story state the game names; `?dev=<id>` starts there | `engine/Engine.ts`, `engine/UIScene.ts` |
 | **QoL**: smart left-click, double-click run, Tab hotspot reveal, verb hotkeys, autosave, text-speed slider | `engine/RoomScene.ts`, `engine/UIScene.ts` |
 | **PNG assets** — image backgrounds + spritesheet-animated actors | `engine/assetLoader.ts`, `game/assets.ts` |
 
@@ -645,6 +647,7 @@ export const CONTENT: GameContent = {
   forgivingItems: true,   // "Use" + item takes it in hand first; use ≈ give
   strings: DE_STRINGS,    // the engine's UI text, translated (see below)
   music: GOA_MUSIC,       // extra procedural tracks, played by key
+  devScenes: DEV_SCENES,  // jump targets of the developer scene picker (?dev)
 };
 ```
 
@@ -660,6 +663,41 @@ export const CONTENT: GameContent = {
   the normal mode (default) and an easy one, remembered per game. Scripts read
   it as `ctx.easyMode` and give more explicit hints when it's on — the adventure
   keeps its normal-mode lines subtle.
+
+#### Developer mode: jump to any scene
+
+Add **`?dev`** to the URL (it works on a deployed build too, e.g.
+`…/?game=goa&dev`) and the UI gets a **DEV** button next to the options gear.
+It — or **F4** — opens a list of scenes; a click jumps there, **Esc** closes
+it. **`?dev=<scene id>`** starts the game right in a scene
+(`…/?game=goa&dev=goa`), which makes a scene a link you can bookmark. Without
+`?dev` none of this exists: players never see it.
+
+A scene is a room plus the story state it should show:
+
+```ts
+// (the adventure's list: src/goa/devScenes.ts)
+export const DEV_SCENES: DevScene[] = [
+  { id: 'waldrand', label: 'Waldrand', room: 'waldrand', entry: 'neckar', flags: { portalOpen: false } },
+  { id: 'waldrand-portal', label: 'Waldrand · Portal offen', room: 'waldrand', entry: 'neckar',
+    flags: { portalOpen: true, wormholeUsed: true } },
+];
+```
+
+- A jump sets the scene's `flags` (a `false` takes one back), gives its
+  `items`, and enters `room` at `entry` (default: the room's first) — the
+  rest of the running game stays as it is. So that a scene looks the same
+  whatever was jumped to before, let every scene start from one shared set of
+  switched-off flags (the adventure's `BASE`) and turn on what it shows.
+- A game that defines no `devScenes` gets one row per room.
+- A jump is a room transition like any other: the leaving room's `onExit` and
+  the new room's `onEnter` run (intros included — Esc skips them), and the
+  AUTO slot is refreshed. Like loading a save, it is refused while a scene or
+  a dialog runs.
+- The adventure's ids: `start`, `neckar`, `neckar-kahn`, `epplehaus`,
+  `epplehaus-tauben`, `doener`, `picasso`, `picasso-schlaf`, `turmtuer`,
+  `turmtuer-offen`, `turm`, `turm-1987`, `turm-film`, `waldrand`,
+  `waldrand-portal`, `goaeingang`, `goa`, `goa-landung`.
 - **Forgiving items.** With `forgivingItems: true`, "Use" + an inventory item
   always takes the item in hand ("Use X with …"), even if the item has a `use`
   of its own — a second click on the item in hand runs that. Mark an item
@@ -1305,15 +1343,15 @@ Bring Ned the Tentacle something *warm, fuzzy, and radioactive*:
 
 ## Testing
 
-The engine ships with an end-to-end Playwright harness (26 suites in
+The engine ships with an end-to-end Playwright harness (27 suites in
 `tests/`): the full demo puzzle, the adventure's pub riddle and game picker,
 the Hölderlinturm's time layers and riddle (`verify-hoelderlin`), layers/occlusion, SVG layers and their
 texture cache, renderer transparency, scrolling +
 world-coordinate input, ambients/scale-map/zoom, regions + cutscene skip,
 NPC-bound hotspots, ink dialogs (including save/load persistence), audio
 (verified through a WebAudio analyser — mute really silences output), the
-options menu, save slots with overwrite/delete confirmation, and the title
-screen's New Game/Continue.
+options menu, save slots with overwrite/delete confirmation, the title
+screen's New Game/Continue, and the developer scene picker (`verify-dev`).
 
 ```bash
 npm i                                  # playwright is a devDependency

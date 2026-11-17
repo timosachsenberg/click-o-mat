@@ -53,6 +53,7 @@ export const DE_STRINGS: Partial<UIStrings> = {
   difficultyState: (easy) => `Modus: ${easy ? 'EINFACH (mehr Hinweise)' : 'NORMAL'}  (klicken zum Wechseln)`,
   difficultyToast: (easy) => (easy ? 'Einfacher Modus: mehr Hinweise' : 'Normaler Modus'),
   saves: '— SPIELSTÄNDE —',
+  devTitle: 'ZUR SZENE SPRINGEN  (F4)',
   close: 'Schließen',
   save: 'Sichern',
   load: 'Laden',
