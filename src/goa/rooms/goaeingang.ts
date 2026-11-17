@@ -31,6 +31,7 @@ async function toForest(ctx: ScriptContext): Promise<void> {
 async function throughTheGate(ctx: ScriptContext): Promise<void> {
   if (!ctx.flag('goaEntered')) {
     await ctx.say('tuersteher', 'Moment, Kollege. Erst das Passwort. Partykiller wollen wir hier nicht.');
+    if (ctx.easyMode && !ctx.flag('password')) await ctx.playerSay('Ali im Picasso kennt jeden und alles. Der weiß das Passwort bestimmt.');
     return;
   }
   await ctx.once('throughGate', async () => {
@@ -120,6 +121,11 @@ const HOTSPOTS: HotspotDef[] = [
         } else {
           await ctx.say('floh', 'Wo Leergut ist, da bin ich. Und auf einer Goa ist viel Leergut.');
         }
+        if (!ctx.flag('goaEntered') && !ctx.flag('password')) {
+          await ctx.playerSay('Du kennst nicht zufällig das Passwort?');
+          await ctx.say('floh', 'Ich? Ich bleib draußen, da ist das Leergut. Aber Wirte wissen sowas. Immer als Erste.');
+          return;
+        }
         await ctx.say('floh', 'Geh ruhig rein. Ich bleib hier draußen. Hier ist das Geschäft.');
       },
     },
@@ -166,6 +172,10 @@ export const goaEingangRoom: RoomDef = {
       await ctx.playerSay('Das Tor. Von außen. So rum war das eigentlich gedacht.');
       await ctx.say('floh', ctx.flag('goaEntered') ? 'Na, frische Luft schnappen? Klirr.' : 'Na, rausgeflogen? Klirr. Passiert den Besten.');
       if (!ctx.flag('goaEntered')) await ctx.say('tuersteher', 'Erst Passwort, dann Tor. Nicht erst Loch, dann Tanzfläche.');
+      if (!ctx.flag('goaEntered') && !ctx.flag('password')) {
+        await ctx.playerSay('Ein Passwort also. Hätte mir ja mal einer sagen können.');
+        if (ctx.easyMode) await ctx.playerSay('Ali im Picasso kennt jeden und alles. Der weiß es bestimmt.');
+      }
     });
   },
 

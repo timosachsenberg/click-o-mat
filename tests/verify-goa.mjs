@@ -57,7 +57,9 @@ const settle = async (watch) => {
     const st = await ev(() => ({ b: window.__engine.busy, i: window.__engine.interruptible, d: window.__engine.dialogMode, c: window.__engine.choicesShowing }));
     if (!st.b && !st.d) return;
     if (st.c) return; // a dialog is waiting for a choice
-    if (st.b && !st.i) await click(480, 120);
+    // Skip the showing line the way a click would — but without a click: one
+    // that lands just after the line ended would hit whatever hotspot is there.
+    if (st.b && !st.i) await ev(() => { const e = window.__engine; if (e.busy && !e.interruptible) e.events.emit('skipLine'); });
     await page.waitForTimeout(200);
   }
   throw new Error('settle timeout');

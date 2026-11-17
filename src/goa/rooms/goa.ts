@@ -4,6 +4,7 @@ import { musicFile } from '../music';
 import { DANCER_FRAMES, DANCER_SIZES, DH, DW, FAR, FAR_FRAMES, GO, LOOKS, dancerAnim, dancerKey, foregroundShrooms, goaBg, lasers, type DancerSize } from '../art/goa';
 import { VOICE_ACTOR } from '../art/turm';
 import { portalArt } from '../art/goaeingang';
+import { wormholeToll } from './waldrand';
 
 // ---- layout ----------------------------------------------------------------------
 // The Goa: the dance floor in the forest, behind the gate. Blacklight, a
@@ -75,10 +76,12 @@ async function backThroughPortal(ctx: ScriptContext): Promise<void> {
   await ctx.playerSay('Zurück zum Waldrand? Na gut. Festhalten.');
   ctx.sfx('zap');
   ctx.flash(0xb06aff, 300);
-  const lost = [...ctx.state.inventory];
-  for (const id of lost) ctx.removeItem(id);
+  wormholeToll(ctx);
   await ctx.goToRoom('waldrand', 'portal');
 }
+
+/** What the wormhole's toll may leave in the pockets, as the player names it. */
+const KEPT: Record<string, string> = { euro: 'die Zwei-Euro-Münze', magicwoman: 'die Magic Woman', dose: 'die leere Dose', cent25: 'das 25-Cent-Stück' };
 
 /** First arrival: out of the hole, in the middle of the dance floor, with
  *  empty pockets — and the Goazwerg wants the password anyway. */
@@ -95,8 +98,14 @@ async function landing(ctx: ScriptContext): Promise<void> {
   await ctx.playerSay('Leuchtende Pilze. Fäden aus Licht bis in die Baumkronen. Und alle tanzen. Um mich rum.');
   await ctx.playerSay('Ich bin mitten auf der Tanzfläche gelandet!');
   if (ctx.flag('pocketsLost')) {
-    await ctx.playerSay('Moment. Meine Taschen. Leer! Alles weg.');
-    await ctx.playerSay('Das Wurmloch hat Zoll kassiert. Egal. Hier brauch ich nur noch Beine.');
+    const left = ctx.state.inventory.map((id) => KEPT[id]).filter(Boolean);
+    if (left.length) {
+      await ctx.playerSay('Moment. Meine Taschen. Fast alles weg!');
+      await ctx.playerSay(`Das Wurmloch hat Zoll kassiert. Nur ${left[0]} hat es mir gelassen. Kleingeld und Pfand nimmt es offenbar nicht.`);
+    } else {
+      await ctx.playerSay('Moment. Meine Taschen. Leer! Alles weg.');
+      await ctx.playerSay('Das Wurmloch hat Zoll kassiert. Egal. Hier brauch ich nur noch Beine.');
+    }
   }
 }
 

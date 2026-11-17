@@ -37,13 +37,11 @@ async function toNeckar(ctx: ScriptContext): Promise<void> {
 async function tryBarrier(ctx: ScriptContext): Promise<void> {
   ctx.sfx('deny');
   await ctx.playerSay('„Baumfällarbeiten. Durchgang verboten.“ Ausgerechnet heute.');
-  if (!ctx.flag('password')) {
-    await ctx.playerSay(ctx.flag('portalOpen') || ctx.hasItem('wurmloch') ? 'Wobei: Rüber käm ich schon. Aber ohne Passwort lässt mich da drüben keiner tanzen.' : 'Wobei: Ohne Passwort käm ich da eh nicht rein.');
-    return;
+  if (ctx.flag('password')) {
+    await ctx.once('forestClosed', async () => {
+      await ctx.playerSay('Ich weiß, wo die Goa ist. Ich hab das Passwort. Ich hör sogar den Bass. Und dazwischen: ein Absperrgitter.');
+    });
   }
-  await ctx.once('forestClosed', async () => {
-    await ctx.playerSay('Ich weiß, wo die Goa ist. Ich hab das Passwort. Ich hör sogar den Bass. Und dazwischen: ein Absperrgitter.');
-  });
   if (ctx.flag('portalOpen')) {
     await ctx.playerSay('Brauch ich auch nicht. Mein Wurmloch steht gleich daneben.');
   } else if (ctx.hasItem('wurmloch')) {
@@ -168,25 +166,30 @@ export async function throwWormhole(ctx: ScriptContext): Promise<void> {
   if (ctx.easyMode) await ctx.playerSay('Ein Schritt rein, und ich bin drüben.');
 }
 
-/** Into the portal: out in the middle of the dance floor. Whatever is in the
- *  pockets doesn't make it through. */
+/** What the Goa's password still costs: the coin for Ali's drink, or whatever
+ *  it has turned into on the way (can, empty can, deposit coin). */
+const STILL_NEEDED = ['euro', 'magicwoman', 'dose', 'cent25'];
+
+/** The wormhole's toll: everything in the pockets that isn't needed any more.
+ *  While the password is still to be had, what it costs stays — so somebody
+ *  who jumps without it and is thrown out can still go and get it. */
+export function wormholeToll(ctx: ScriptContext): void {
+  const keep = ctx.flag('password') ? [] : STILL_NEEDED;
+  const lost = ctx.state.inventory.filter((id) => !keep.includes(id));
+  for (const id of lost) ctx.removeItem(id);
+  if (lost.length) ctx.setFlag('pocketsLost');
+}
+
+/** Into the portal: out in the middle of the dance floor — password or not
+ *  (without it the Goazwerg throws the player out, and it has to be fetched). */
 async function enterPortal(ctx: ScriptContext): Promise<void> {
-  // Without the password the Goazwerg would throw the player out — and the
-  // portal takes the pockets (the two euros for Ali's drink). So: not yet.
-  if (!ctx.flag('password')) {
-    await ctx.playerSay('Moment. Da drüben steht bestimmt ein Türsteher. Und ich kenn das Passwort nicht.');
-    await ctx.playerSay(ctx.easyMode ? 'Ali im Picasso weiß es. Erst das Passwort, dann das Loch.' : 'Erst das Passwort. Dann das Loch.');
-    return;
-  }
   ctx.setFlag('portalLanding');
   await ctx.playerSay(ctx.flag('wormholeUsed') ? 'Noch mal durch. Festhalten.' : 'Augen zu, Luft anhalten, und ...');
   ctx.sfx('zap');
   ctx.shake(600, 0.02);
   ctx.flash(0xff5ab4, 400);
   await ctx.wait(400);
-  const lost = [...ctx.state.inventory];
-  for (const id of lost) ctx.removeItem(id);
-  if (lost.length) ctx.setFlag('pocketsLost');
+  wormholeToll(ctx);
   ctx.place(ctx.activeCharId, -400, ctx.player.y);
   ctx.flash(0x4ae8ff, 400);
   ctx.setFlag('wormholeUsed');
