@@ -3,7 +3,7 @@ import { engine, SAVE_SLOTS } from './Engine';
 import { audio } from './Audio';
 import { VERBS, verbLabel } from './verbs';
 import { GAME_W, GAME_H, ROOM_H, UI_H } from './constants';
-import type { VerbId } from './types';
+import type { DevScene, VerbId } from './types';
 
 const PANEL_BG = 0x1a1626;
 const SLOT_FRAME = 0x4a4370;
@@ -31,6 +31,11 @@ export class UIScene extends Phaser.Scene {
   private invNext!: Phaser.GameObjects.Text;
 
   private gameplayUI!: Phaser.GameObjects.Container;
+  /** Developer scene picker (`?dev`): its button, panel and rows — null and
+   *  empty for players. Public so tests can find them. */
+  devButton: Phaser.GameObjects.Text | null = null;
+  devPanel: Phaser.GameObjects.Container | null = null;
+  devRows: Array<{ scene: DevScene; text: Phaser.GameObjects.Text }> = [];
   /** Exposed for automated testing: the live choice text objects. */
   choiceContainer!: Phaser.GameObjects.Container;
   private choiceResolve: ((index: number) => void) | null = null;
@@ -100,6 +105,7 @@ export class UIScene extends Phaser.Scene {
 
     this.buildAudioButton();
     this.buildOptionsMenu();
+    this.buildDevPicker();
     this.input.keyboard?.on('keydown-M', () => this.toggleMute());
     this.input.keyboard?.on('keydown-F2', () => this.toggleCommentary());
 
@@ -129,8 +135,10 @@ export class UIScene extends Phaser.Scene {
       }
     );
     this.input.keyboard?.on('keydown-ESC', () => {
-      if (engine.menuOpen) this.toggleOptions(false);
-      else engine.startSkip(); // fast-forward the current cutscene, if any
+      if (engine.menuOpen) {
+        this.toggleOptions(false);
+        this.toggleDevPicker(false);
+      } else engine.startSkip(); // fast-forward the current cutscene, if any
     });
 
     this.buildPartyBar();
@@ -483,7 +491,8 @@ export class UIScene extends Phaser.Scene {
   }
 
   toggleOptions(open?: boolean): void {
-    const next = open ?? !engine.menuOpen;
+    const next = open ?? !this.optionsPanel.visible;
+    if (next) this.devPanel?.setVisible(false); // one panel at a time
     engine.menuOpen = next;
     this.pendingConfirm = null; // stale confirms never survive open/close
     this.optionsPanel.setVisible(next);
@@ -537,6 +546,99 @@ export class UIScene extends Phaser.Scene {
   // ---- audio (mute) control ----------------------------------------------
 
   private muteButton!: Phaser.GameObjects.Text;
+
+  // ---- developer scene picker (?dev) -----------------------------------------
+
+  /** A DEV button beside the options gear, and the panel it opens: one row
+   *  per scene (`engine.devScenes`); a click jumps there. Only built in
+   *  developer mode, so players never see it. */
+  private buildDevPicker(): void {
+    if (!engine.devMode) return;
+    const str = engine.strings;
+    const font = engine.theme.font;
+    this.devButton = this.add
+      .text(GAME_W - 96, 17, str.devButton, {
+        fontFamily: font,
+        fontSize: '14px',
+        fontStyle: 'bold',
+        color: '#ffd38a',
+        stroke: '#000000',
+        strokeThickness: 4,
+      })
+      .setOrigin(1, 0)
+      .setDepth(10000)
+      .setInteractive({ useHandCursor: true });
+    this.devButton.on('pointerdown', () => {
+      audio.resume();
+      this.toggleDevPicker();
+    });
+    this.input.keyboard?.addCapture('F4');
+    this.input.keyboard?.on('keydown-F4', () => this.toggleDevPicker());
+
+    // Up to three columns of rows; the panel grows with the list.
+    const scenes = engine.devScenes;
+    const cols = Math.min(3, Math.max(1, Math.ceil(scenes.length / 12)));
+    const perCol = Math.ceil(scenes.length / cols);
+    const colW = cols === 1 ? 380 : cols === 2 ? 340 : 296;
+    const rowH = Math.min(28, Math.floor(400 / Math.max(perCol, 1)));
+    const w = cols * colW + 40;
+    const h = 66 + perCol * rowH + 52;
+    const top = Math.max(8, Math.round((GAME_H - h) / 2) - 20);
+    const left = GAME_W / 2 - w / 2;
+
+    this.devPanel = this.add.container(0, 0).setDepth(30000).setVisible(false);
+    const bg = this.add.rectangle(GAME_W / 2, top + h / 2, w, h, 0x1a1626, 0.97).setStrokeStyle(2, 0xd49a4a);
+    bg.setInteractive(); // swallow clicks, like the options panel
+    this.devPanel.add(bg);
+    this.devPanel.add(
+      this.add
+        .text(GAME_W / 2, top + 30, str.devTitle, { fontFamily: font, fontSize: '18px', fontStyle: 'bold', color: '#ffd38a' })
+        .setOrigin(0.5)
+    );
+    scenes.forEach((scene, i) => {
+      const text = this.add
+        .text(left + 24 + Math.floor(i / perCol) * colW, top + 66 + (i % perCol) * rowH, scene.label, {
+          fontFamily: font,
+          fontSize: rowH < 24 ? '13px' : '15px',
+          color: '#c9f0ff',
+        })
+        .setOrigin(0, 0.5)
+        .setInteractive({ useHandCursor: true });
+      text.on('pointerover', () => text.setColor('#ffe066'));
+      text.on('pointerout', () => text.setColor(this.devRowColor(scene)));
+      text.on('pointerdown', () => {
+        this.toggleDevPicker(false);
+        void engine.devJump(scene).then((jumped) => {
+          if (!jumped) this.toast(engine.strings.notNow);
+        });
+      });
+      this.devPanel!.add(text);
+      this.devRows.push({ scene, text });
+    });
+    const close = this.add
+      .text(GAME_W / 2, top + h - 26, str.close, { fontFamily: font, fontSize: '16px', fontStyle: 'bold', color: '#d49a4a' })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true });
+    close.on('pointerover', () => close.setColor('#ffe066'));
+    close.on('pointerout', () => close.setColor('#d49a4a'));
+    close.on('pointerdown', () => this.toggleDevPicker(false));
+    this.devPanel.add(close);
+  }
+
+  /** Scenes of the room the player is in are lit. */
+  private devRowColor(scene: DevScene): string {
+    return scene.room === engine.state.currentRoom ? '#9be89b' : '#c9f0ff';
+  }
+
+  toggleDevPicker(open?: boolean): void {
+    if (!this.devPanel) return;
+    const next = open ?? !this.devPanel.visible;
+    if (next === this.devPanel.visible) return;
+    if (next) this.toggleOptions(false); // one panel at a time
+    this.devPanel.setVisible(next);
+    engine.menuOpen = next;
+    if (next) for (const row of this.devRows) row.text.setColor(this.devRowColor(row.scene));
+  }
 
   private buildAudioButton(): void {
     this.muteButton = this.add

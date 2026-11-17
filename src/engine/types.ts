@@ -174,6 +174,25 @@ export interface LayerDef {
   tile?: { scrollX?: number; scrollY?: number; scale?: number };
 }
 
+/** A jump target of the developer scene picker (`GameContent.devScenes`;
+ *  the picker is there with `?dev` in the URL). A jump moves the player
+ *  into the room and sets what the scene needs — everything else in the
+ *  running game stays as it is. */
+export interface DevScene {
+  /** Stable id: `?dev=<id>` starts the game right in this scene. */
+  id: string;
+  /** Row label in the picker. */
+  label: string;
+  room: string;
+  /** Named entry (default: the room's first). */
+  entry?: string;
+  /** Flags set before entering: the story state the scene shows (`false`
+   *  takes one back). */
+  flags?: Record<string, unknown>;
+  /** Items the active character gets, unless already carried. */
+  items?: string[];
+}
+
 export interface RoomDef {
   id: string;
   name?: string;

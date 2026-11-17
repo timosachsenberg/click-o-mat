@@ -42,6 +42,7 @@ const ALL_SUITES = [
   'verify-commentary.mjs',
   'verify-triggers.mjs',
   'verify-qol.mjs',
+  'verify-dev.mjs',
   'verify-speech.mjs',
   'verify-textlayout.mjs',
   'verify-scroll.mjs',

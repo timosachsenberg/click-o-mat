@@ -45,6 +45,14 @@ engine.launcher = {
   },
 };
 
+// Developer mode: ?dev adds a scene picker to the UI (jump to any room);
+// ?dev=<scene id> also starts the game right in that scene.
+const dev = new URLSearchParams(location.search).get('dev');
+if (dev !== null) {
+  engine.devMode = true;
+  engine.devStart = dev || null;
+}
+
 // Debugging aid: inspect engine/audio state from the browser console (dev only).
 if (import.meta.env.DEV) {
   Object.assign(window as unknown as Record<string, unknown>, { __engine: engine, __audio: audio });

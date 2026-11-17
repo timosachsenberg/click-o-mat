@@ -50,6 +50,9 @@ export interface UIStrings {
   difficultyState: (easy: boolean) => string;
   difficultyToast: (easy: boolean) => string;
   saves: string;
+  /** Developer scene picker (`?dev`): its button and its title. */
+  devButton: string;
+  devTitle: string;
   close: string;
   save: string;
   load: string;
@@ -129,6 +132,8 @@ export const DEFAULT_STRINGS: UIStrings = {
   difficultyState: (easy) => `Mode: ${easy ? 'EASY (more hints)' : 'NORMAL'}  (click to change)`,
   difficultyToast: (easy) => (easy ? 'Easy mode: more hints' : 'Normal mode'),
   saves: '— SAVES —',
+  devButton: 'DEV',
+  devTitle: 'JUMP TO SCENE  (F4)',
   close: 'Close',
   save: 'Save',
   load: 'Load',

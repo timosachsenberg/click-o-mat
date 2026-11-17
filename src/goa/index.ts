@@ -3,6 +3,7 @@ import { ACTORS } from './actors';
 import { ITEMS } from './items';
 import { DIALOGS } from './dialogs';
 import { PASSWORD_FARE } from './wormhole';
+import { DEV_SCENES } from './devScenes';
 import { DE_STRINGS } from './strings';
 import { GOA_MUSIC } from './music';
 import { picassoRoom } from './rooms/picasso';
@@ -55,6 +56,8 @@ export const CONTENT: GameContent = {
   // „Benutze“ + Gegenstand nimmt ihn immer erst in die Hand; „Benutze X mit
   // Person“ und „Gib X an Person“ gelten gleich.
   forgivingItems: true,
+  // ?dev in der URL: Szenenliste zum Springen (DEV-Knopf oder F4).
+  devScenes: DEV_SCENES,
 };
 
 // A renamed item must not silently drop out of the wormhole's exemptions:
