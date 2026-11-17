@@ -569,8 +569,13 @@ export const DIALOGS: Record<string, DialogDef> = {
             text: 'Was heißt PUT PUT?',
             once: true,
             script: async (ctx) => {
-              await ctx.say('otto', 'Mein Merkzettel! Im Parser-Dialekt. Damals hat man Adventures noch getippt: PUT irgendwas, PUT hierhin.');
-              await ctx.say('otto', 'Ich wusste nur jahrelang nicht, WAS da hin muss. Inzwischen weiß ich’s: ein Loch. Hab bloß keins zur Hand.');
+              // The slogan is real: sprayed on the university's walls in Tübingen.
+              // The game only hints at that quarrel and deliberately doesn't
+              // spell the letters out. (That PUT reads like a parser command
+              // is the player's own idea, in front of the 1987 wall.)
+              await ctx.say('otto', 'Ursprünglich? Ein alter Streit mit der Universität. Ich hab ihn an ihre Wände gesprüht. Die fanden das weniger gelungen als ich.');
+              await ctx.say('otto', 'Heute ist es mein Merkzettel. Irgendwas muss an diese Wand. Ich wusste nur jahrelang nicht, was.');
+              await ctx.say('otto', 'Inzwischen weiß ich’s: ein Loch. Hab bloß keins zur Hand.');
             },
           },
           {
