@@ -1,4 +1,5 @@
 import { chromium } from 'playwright';
+import { makeSettle } from './helpers.mjs';
 
 // "Folge dem Bass" — inside the Hölderlinturm: out of the Picasso, past the
 // Epplehaus onto the Neckarbrücke, along the promenade to the tower and in
@@ -52,18 +53,7 @@ const clickW = async (x, y, opts = {}) => {
 await click(480, 300); // start
 await page.waitForTimeout(1500);
 
-const settle = async () => {
-  for (let i = 0; i < 300; i++) {
-    const st = await ev(() => ({ b: window.__engine.busy, i: window.__engine.interruptible, d: window.__engine.dialogMode, c: window.__engine.choicesShowing }));
-    if (!st.b && !st.d) return;
-    if (st.c) return;
-    // Skip the showing line the way a click would — but without a click: one
-    // that lands just after the line ended would hit whatever hotspot is there.
-    if (st.b && !st.i) await ev(() => { const e = window.__engine; if (e.busy && !e.interruptible) e.events.emit('skipLine'); });
-    await page.waitForTimeout(200);
-  }
-  throw new Error('settle timeout');
-};
+const settle = makeSettle(page, { stopAtChoices: true, interval: 200 });
 const choices = () => ev(() => window.__engine.uiScene.choiceContainer.list
   .filter((t) => t.type === 'Text' && t.visible && t.text.startsWith('●'))
   .map((t) => { const b = t.getBounds(); return { text: t.text.slice(2), x: b.centerX, y: b.centerY }; }));

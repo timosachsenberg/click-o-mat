@@ -1,4 +1,5 @@
 import { chromium } from 'playwright';
+import { makeSettle, skipLine } from './helpers.mjs';
 
 // The engine-demo suites run the demo (the page's other game is the adventure).
 const BASE = process.env.BASE_URL ?? 'http://localhost:5173/?game=demo';
@@ -20,15 +21,7 @@ const gy = (y) => box.y + (y / 600) * box.height;
 const click = (x, y, opts = {}) => page.mouse.click(gx(x), gy(y), opts);
 const check = (label, ok, extra = '') => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}${extra ? '  ' + extra : ''}`); if (!ok) process.exitCode = 1; };
 
-const settle = async () => {
-  for (let i = 0; i < 160; i++) {
-    const st = await page.evaluate(() => ({ b: window.__engine.busy, i: window.__engine.interruptible, d: window.__engine.dialogMode }));
-    if (!st.b && !st.d) return;
-    if (st.b && !st.i) await click(480, 240);
-    await page.waitForTimeout(250);
-  }
-  throw new Error('settle timeout');
-};
+const settle = makeSettle(page);
 const choices = () => page.evaluate(() =>
   window.__engine.choicesShowing
     ? window.__engine.uiScene.choiceContainer.list
@@ -44,7 +37,7 @@ const pick = async (substr) => {
     const st = await page.evaluate(() => ({ b: window.__engine.busy, i: window.__engine.interruptible, c: window.__engine.choicesShowing, d: window.__engine.dialogMode }));
     if (st.c) { list = await choices(); break; }
     if (!st.d && !st.b) throw new Error(`dialog ended while waiting to pick "${substr}"`);
-    if (st.b && !st.i) await click(480, 240); // skip lines
+    await skipLine(page);
     await page.waitForTimeout(250);
   }
   if (!list) throw new Error(`no choices appeared for "${substr}"`);

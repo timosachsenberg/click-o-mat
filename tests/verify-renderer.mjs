@@ -8,6 +8,7 @@
  * exactly what is behind it (the same pixel with the layer hidden), not black.
  */
 import { chromium } from 'playwright';
+import { makeSettle } from './helpers.mjs';
 
 // The engine-demo suites run the demo (the page's other game is the adventure).
 const BASE = process.env.BASE_URL ?? 'http://localhost:5173/?game=demo';
@@ -30,12 +31,7 @@ async function bootAndSample(browser, url, tag) {
   await page.waitForTimeout(1000);
 
   // Fast-forward the lab intro.
-  for (let i = 0; i < 120; i++) {
-    const st = await page.evaluate(() => ({ b: window.__engine.busy, i: window.__engine.interruptible, d: window.__engine.dialogMode }));
-    if (!st.b && !st.d) break;
-    if (st.b && !st.i) await page.mouse.click(box.x + box.width / 2, box.y + (240 / 600) * box.height);
-    await page.waitForTimeout(250);
-  }
+  await makeSettle(page)();
 
   const rendererType = await page.evaluate(() => window.__engine.roomScene.sys.game.renderer.type);
   // snapshotPixel reads the real framebuffer in game coordinates (960×600).

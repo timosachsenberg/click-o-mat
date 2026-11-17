@@ -78,6 +78,7 @@ The README's "Content reference" section is the authoritative, detailed guide to
 - The suites drive the **demo**: their default `BASE_URL` (and the one `run-all.mjs` passes) carries `?game=demo`; `verify-goa.mjs` covers the adventure and the game picker, `verify-hoelderlin.mjs` the tower's time layers and riddle. Build URL variants with `new URL(BASE)` + `searchParams`, not string concatenation.
 - Each suite is a standalone `.mjs` script that exits non-zero on failure; `tests/run-all.mjs` lists them in `ALL_SUITES` (ordered fast → slow) — **add new suites to that list**.
 - Suites read `BASE_URL` and `SHOT_DIR` from the environment; failure screenshots go to `tests/screenshots/` (git-ignored).
+- `tests/helpers.mjs` is shared by the suites (it is not one): `makeSettle(page, opts?)` builds a suite's `settle()` — wait until the running interaction, cutscene or dialog is over, skipping speech lines — and `skipLine(page)` dismisses one line. Lines are skipped through the engine's `skipLine` event, never by clicking the room: a click that lands just after a line ended walks the player off or hits a hotspot (that race made suites time out). That a real click skips a line is checked once, in `verify-qol.mjs`. Don't write a private `settle` in a new suite.
 - Clicks map game coordinates through the FIT-scaled canvas bounding box (see any suite's `gx`/`gy` helpers).
 
 ## Conventions
