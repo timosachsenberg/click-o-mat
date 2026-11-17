@@ -3,6 +3,7 @@ import type { ScriptContext } from '../../engine/ScriptContext';
 import { NECKAR_SIGN, OWL, OWL_FRAMES, WR, neckarSign, fireflies, fog, foregroundTree, goaGlow, lampFlash, waldrandBg } from '../art/waldrand';
 import { BALLOON_ART, PIGEON_ACTORS } from '../art/epplehaus';
 import { portalArt } from '../art/goaeingang';
+import { wormholeToll } from '../wormhole';
 
 // ---- layout ----------------------------------------------------------------------
 // The edge of the forest, past the Neckarbrücke's left end, at dusk: the
@@ -12,7 +13,8 @@ import { portalArt } from '../art/goaeingang';
 // an ambient pulses the glow layer in time). The only way to the Goa is
 // Otto R.'s wormhole pair from the Hölderlinturm: one end is thrown over the
 // barrier towards the lights (`portalOpen`), the other stands here — step in
-// and you come out in the middle of the dance floor, with empty pockets.
+// and you come out in the middle of the dance floor, minus the wormhole's
+// toll (`wormholeToll`: the pockets, except what the password still costs).
 
 const P = (x: number, y: number): Vec2 => ({ x, y });
 const R = (x: number, y: number, w: number, h: number): Rect => ({ x, y, w, h });
@@ -164,20 +166,6 @@ export async function throwWormhole(ctx: ScriptContext): Promise<void> {
   await ctx.playerSay('Drüber! Weit drüber. Irgendwo zwischen den Lichtern ist es runtergekommen.');
   await ctx.playerSay('Und das andere Ende steht jetzt hier neben dem Gitter und wummert.');
   if (ctx.easyMode) await ctx.playerSay('Ein Schritt rein, und ich bin drüben.');
-}
-
-/** What the Goa's password still costs: the coin for Ali's drink, or whatever
- *  it has turned into on the way (can, empty can, deposit coin). */
-const STILL_NEEDED = ['euro', 'magicwoman', 'dose', 'cent25'];
-
-/** The wormhole's toll: everything in the pockets that isn't needed any more.
- *  While the password is still to be had, what it costs stays — so somebody
- *  who jumps without it and is thrown out can still go and get it. */
-export function wormholeToll(ctx: ScriptContext): void {
-  const keep = ctx.flag('password') ? [] : STILL_NEEDED;
-  const lost = ctx.state.inventory.filter((id) => !keep.includes(id));
-  for (const id of lost) ctx.removeItem(id);
-  if (lost.length) ctx.setFlag('pocketsLost');
 }
 
 /** Into the portal: out in the middle of the dance floor — password or not

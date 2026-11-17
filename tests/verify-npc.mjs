@@ -50,10 +50,12 @@ await page.evaluate(async () => await window.__engine.roomScene.enterRoom('galle
 await settle();
 const c0 = await critter();
 let cMoved = null;
-for (let i = 0; i < 50; i++) {
+// His strolls go to random spots every 6–11 s; one may end close to where he
+// started, so any real displacement counts, and there is time for several.
+for (let i = 0; i < 90; i++) {
   await page.waitForTimeout(500);
   const c = await critter();
-  if (Math.hypot(c.x - c0.x, c.y - c0.y) > 40) { cMoved = c; break; }
+  if (Math.hypot(c.x - c0.x, c.y - c0.y) > 12) { cMoved = c; break; }
 }
 check('Blobbo wanders (ambient walk)', cMoved !== null, cMoved ? `(${c0.x.toFixed(0)},${c0.y.toFixed(0)}) -> (${cMoved.x.toFixed(0)},${cMoved.y.toFixed(0)})` : '');
 

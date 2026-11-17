@@ -444,7 +444,7 @@ const HOTSPOTS: HotspotDef[] = [
       talkto: async (ctx) => {
         await ctx.playerSay('Guten Abend!');
         await ctx.say('hilde', 'Komm her, Jungchen, ich zeig dir den Discofox!');
-        await ctx.playerSay('Ich such eigentlich nur die Goa im Wald.');
+        await ctx.playerSay(ctx.flag('wormholeUsed') ? 'Ich such eigentlich nur das Passwort für die Goa im Wald.' : 'Ich such eigentlich nur die Goa im Wald.');
         await ctx.say('hilde', 'Goa? Früher hieß das Dorfdisco.');
       },
       pickup: 'Sie würde es mögen. Genau deshalb nicht.',

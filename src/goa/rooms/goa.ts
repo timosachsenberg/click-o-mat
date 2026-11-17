@@ -4,7 +4,7 @@ import { musicFile } from '../music';
 import { DANCER_FRAMES, DANCER_SIZES, DH, DW, FAR, FAR_FRAMES, GO, LOOKS, dancerAnim, dancerKey, foregroundShrooms, goaBg, lasers, type DancerSize } from '../art/goa';
 import { VOICE_ACTOR } from '../art/turm';
 import { portalArt } from '../art/goaeingang';
-import { wormholeToll } from './waldrand';
+import { sparedByToll, wormholeToll } from '../wormhole';
 
 // ---- layout ----------------------------------------------------------------------
 // The Goa: the dance floor in the forest, behind the gate. Blacklight, a
@@ -80,11 +80,9 @@ async function backThroughPortal(ctx: ScriptContext): Promise<void> {
   await ctx.goToRoom('waldrand', 'portal');
 }
 
-/** What the wormhole's toll may leave in the pockets, as the player names it. */
-const KEPT: Record<string, string> = { euro: 'die Zwei-Euro-Münze', magicwoman: 'die Magic Woman', dose: 'die leere Dose', cent25: 'das 25-Cent-Stück' };
-
-/** First arrival: out of the hole, in the middle of the dance floor, with
- *  empty pockets — and the Goazwerg wants the password anyway. */
+/** First arrival: out of the hole, in the middle of the dance floor, the
+ *  pockets lighter by the wormhole's toll — and the Goazwerg wants the
+ *  password anyway. */
 async function landing(ctx: ScriptContext): Promise<void> {
   const sprite = ctx.player.sprite;
   const y = sprite.y;
@@ -98,7 +96,7 @@ async function landing(ctx: ScriptContext): Promise<void> {
   await ctx.playerSay('Leuchtende Pilze. Fäden aus Licht bis in die Baumkronen. Und alle tanzen. Um mich rum.');
   await ctx.playerSay('Ich bin mitten auf der Tanzfläche gelandet!');
   if (ctx.flag('pocketsLost')) {
-    const left = ctx.state.inventory.map((id) => KEPT[id]).filter(Boolean);
+    const left = sparedByToll(ctx);
     if (left.length) {
       await ctx.playerSay('Moment. Meine Taschen. Fast alles weg!');
       await ctx.playerSay(`Das Wurmloch hat Zoll kassiert. Nur ${left[0]} hat es mir gelassen. Kleingeld und Pfand nimmt es offenbar nicht.`);

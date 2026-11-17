@@ -2,6 +2,7 @@ import type { GameContent } from '../engine/Engine';
 import { ACTORS } from './actors';
 import { ITEMS } from './items';
 import { DIALOGS } from './dialogs';
+import { PASSWORD_FARE } from './wormhole';
 import { DE_STRINGS } from './strings';
 import { GOA_MUSIC } from './music';
 import { picassoRoom } from './rooms/picasso';
@@ -55,3 +56,9 @@ export const CONTENT: GameContent = {
   // Person“ und „Gib X an Person“ gelten gleich.
   forgivingItems: true,
 };
+
+// A renamed item must not silently drop out of the wormhole's exemptions:
+// that would turn a jump without the password into a dead end.
+for (const id of Object.keys(PASSWORD_FARE)) {
+  if (!(id in ITEMS)) throw new Error(`wormhole.ts: PASSWORD_FARE names an unknown item "${id}"`);
+}

@@ -228,9 +228,11 @@ async function toNeckar(ctx: ScriptContext): Promise<void> {
   await ctx.goToRoom('neckar', 'picasso');
 }
 
-/** Flaschenfloh guards his trolley. */
-/** Flaschenfloh works here — until he follows the player to the Goa. */
-const flohHere = (s: { getFlag: (k: string) => unknown }) => !s.getFlag('wormholeUsed');
+/** Flaschenfloh works here — until the player is at the Goa with the password
+ *  in the pocket; then he stays out there with the empties. Somebody who
+ *  jumped without it and was thrown out still finds him at his trolley (he
+ *  commutes), with the hints that lead to Ali. */
+const flohHere = (s: { getFlag: (k: string) => unknown }) => !(s.getFlag('wormholeUsed') && s.getFlag('password'));
 
 async function handsOff(ctx: ScriptContext): Promise<void> {
   if (!flohHere(ctx.state)) {
@@ -337,8 +339,12 @@ const HOTSPOTS: HotspotDef[] = [
     onItem: {
       use: {
         dose: async (ctx) => {
-          if (flohHere(ctx.state)) await ctx.say('floh', 'Halt! Dosen gehören nicht ins Altglas. Und auf der ist Pfand!');
-          await ctx.playerSay('Stimmt. Die bring ich lieber zurück.');
+          if (flohHere(ctx.state)) {
+            await ctx.say('floh', 'Halt! Dosen gehören nicht ins Altglas. Und auf der ist Pfand!');
+            await ctx.playerSay('Stimmt. Die bring ich lieber zurück.');
+          } else {
+            await ctx.playerSay('Dosen gehören nicht ins Altglas. Und auf der ist Pfand. Die bring ich lieber zurück.');
+          }
         },
         magicwoman: 'Die ist noch voll. Und kein Glas.',
       },
@@ -389,6 +395,14 @@ const HOTSPOTS: HotspotDef[] = [
         await ctx.playerSay('Bommelmütze, Parka, und ein Herz für Tauben.');
       },
       talkto: async (ctx) => {
+        // He was at the Goa's gate a moment ago — and so was the player.
+        if (ctx.flag('wormholeUsed')) {
+          await ctx.once('flohPendelt', async () => {
+            await ctx.playerSay('Flaschenfloh? Du warst doch eben noch an der Goa.');
+            await ctx.say('floh', 'Leergut wegbringen. Der Wagen steht ja hier. Ich pendel.');
+            await ctx.say('floh', 'Klirr.');
+          });
+        }
         await ctx.dialog('floh');
       },
       pickup: 'Er sammelt. Er wird nicht gesammelt.',
