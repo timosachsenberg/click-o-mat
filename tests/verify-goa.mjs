@@ -153,19 +153,45 @@ const after = await pigeons();
 const moved = after.filter(([k, x, y], i) => Math.abs(x - before[i][1]) + Math.abs(y - before[i][2]) > 8).length;
 check('the pigeons walk about', moved >= 2, `(${moved} moved)`);
 // A pigeon in front of an exit would take the click meant for the exit (that
-// stalled this suite once): they keep out of the strips at both ends.
+// stalled this suite once): they keep out of the strips at both ends. One is
+// put right at the left strip's edge with the player on its other side, so
+// the next thing it does is flee towards the exit — and wherever the flock
+// goes meanwhile, nobody may ever be inside a strip.
 await ev(() => {
   const rs = window.__engine.roomScene;
-  rs.actors.get('taube8').setPosition(124, 404); // near the left exit ...
-  rs.actors.get('player').setPosition(170, 404); // ... and the player shoos it further left
+  const t = rs.actors.get('taube8');
+  t.stop(); // (it may be strolling: a walk in flight would carry it off again)
+  t.setPosition(114, 404);
+  rs.actors.get('player').setPosition(158, 404);
 });
-await page.waitForTimeout(3500);
-const shooed = await ev(() => { const a = window.__engine.roomScene.actors.get('taube8'); return { x: Math.round(a.x), y: Math.round(a.y) }; });
-check('shooed towards the exit, a pigeon stops short of it', shooed.x >= 108 && shooed.x < 124, JSON.stringify(shooed));
+let leftmost = Infinity;
+let rightmost = -Infinity;
+let fledLeft = false;
+for (let i = 0; i < 40; i++) {
+  const now = await pigeons();
+  for (const [k, x] of now) {
+    leftmost = Math.min(leftmost, x);
+    rightmost = Math.max(rightmost, x);
+    if (k === 'taube8' && x < 113) fledLeft = true;
+  }
+  await page.waitForTimeout(100);
+}
+check('shooed towards the exit, the pigeon runs that way', fledLeft);
+check('and no pigeon ever enters an exit strip', leftmost >= 108 && rightmost <= 852, `(x from ${leftmost} to ${rightmost})`);
+// With a pigeon as close to an exit as it can get, the exit still takes the click.
+const edges = await ev(() => {
+  const rs = window.__engine.roomScene;
+  const at = (x, y) => rs.hotspotAt({ x, y })?.id ?? null;
+  const t = rs.actors.get('taube8');
+  t.stop();
+  t.setPosition(110, 404);
+  const left = [at(15, 400), at(66, 398)];
+  t.setPosition(850, 404);
+  const right = [at(945, 400), at(894, 398)];
+  return { left, right };
+});
 check('so the exits stay clickable with a pigeon as close as it gets',
-  (await hotspotAt(15, 400)) === 'toDoener' && (await hotspotAt(66, shooed.y - 6)) === 'toDoener' && (await hotspotAt(945, 400)) === 'toNeckar');
-const spread = (await pigeons()).map(([, x]) => x);
-check('no pigeon in the exit strips', spread.every((x) => x >= 108 && x <= 852), spread.join(','));
+  edges.left.every((h) => h === 'toDoener') && edges.right.every((h) => h === 'toNeckar'), JSON.stringify(edges));
 await click(556, 300, { button: 'right' }); // talk to Flaschenfloh
 await settle();
 await pick('Wer bist du');
